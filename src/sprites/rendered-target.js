@@ -203,8 +203,6 @@ class RenderedTarget extends Target {
         this.onTargetMoved = null;
         this.onTargetVisualChange = null;
 
-        this.interpolationData = null;
-
         this.cameraBound = 'default';
     }
     cameraUpdateEvent() {

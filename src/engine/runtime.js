@@ -60,7 +60,8 @@ const defaultBlockPackages = {
     pm_liveTests: require('../blocks/pm_live tests')
 };
 
-const interpolate = require('./tw-interpolate');
+// PMDESKTOP_STAGE_PATCH: options that are always on (section 21)
+const PM_ALWAYS_ON = {maxClones: Infinity, miscLimits: false, fencing: false, dangerousOptimizations: true};
 const FrameLoop = require('./tw-frame-loop');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
@@ -525,11 +526,12 @@ class Runtime extends EventEmitter {
 
         this.debug = false;
 
-        this._lastStepTime = Date.now();
-        this.interpolationEnabled = false;
-        this.interpolate = interpolate;
-
         this._defaultStoredSettings = this._generateAllProjectOptions();
+        // PMDESKTOP_STAGE_PATCH (section 21): saved settings are compared with Scratch's defaults, except that
+        // disabled off-screen rendering is the default here (so turning it off is what gets saved).
+        this._defaultStoredSettings.runtimeOptions = Object.assign({}, this._defaultStoredSettings.runtimeOptions, {disableOffscreenRendering: true});
+        this.runtimeOptions = Object.assign({}, this.runtimeOptions, {disableOffscreenRendering: true}, PM_ALWAYS_ON);
+        this.compilerOptions = Object.assign({}, this.compilerOptions, {warpTimer: true});
 
         /**
          * TW: We support a "packaged runtime" mode. This can be used when:
@@ -752,28 +754,6 @@ class Runtime extends EventEmitter {
      */
     static get FRAMERATE_CHANGED () {
         return 'FRAMERATE_CHANGED';
-    }
-
-    /**
-     * Event name for interpolation changing.
-     * @const {string}
-     */
-    static get INTERPOLATION_CHANGED () {
-        return 'INTERPOLATION_CHANGED';
-    }
-
-    /**
-     * Event called before interpolation data is set.
-     */
-    static get BEFORE_INTERPOLATE () {
-        return 'BEFORE_INTERPOLATE';
-    }
-
-    /**
-     * Event called after interpolation data is set.
-     */
-    static get AFTER_INTERPOLATE () {
-        return 'AFTER_INTERPOLATE';
     }
 
     /**
@@ -3060,19 +3040,6 @@ class Runtime extends EventEmitter {
         this.threadMap.clear();
     }
 
-    _renderInterpolatedPositions () {
-        const frameStarted = this._lastStepTime;
-        const now = Date.now();
-        const timeSinceStart = now - frameStarted;
-        const progressInFrame = Math.min(1, Math.max(0, timeSinceStart / this.currentStepTime));
-
-        interpolate.interpolate(this, progressInFrame);
-
-        if (this.renderer) {
-            this.renderer.draw();
-        }
-    }
-
     updateThreadMap () {
         this.threadMap.clear();
         for (const thread of this.threads) {
@@ -3091,10 +3058,6 @@ class Runtime extends EventEmitter {
         // this runs before any processing of this new step
         this.frameLoop._stepCounter++;
         this.emit(Runtime.RUNTIME_STEP_START);
-
-        if (this.interpolationEnabled) {
-            interpolate.setupInitialState(this);
-        }
 
         if (this.profiler !== null) {
             if (stepProfilerId === -1) {
@@ -3146,10 +3109,8 @@ class Runtime extends EventEmitter {
                 }
                 this.profiler.start(rendererDrawProfilerId);
             }
-            // tw: do not draw if document is hidden or a rAF loop is running
-            // Checking for the animation frame loop is more reliable than using
-            // interpolationEnabled in some edge cases
-            if (!document.hidden && !this.frameLoop._interpolationAnimation) {
+            // tw: do not draw if document is hidden
+            if (!document.hidden) {
                 this.renderer.draw();
             }
             if (this.profiler !== null) {
@@ -3184,10 +3145,6 @@ class Runtime extends EventEmitter {
         if (this.profiler !== null) {
             this.profiler.stop();
             this.profiler.reportFrames();
-        }
-
-        if (this.interpolationEnabled) {
-            this._lastStepTime = Date.now();
         }
 
         // pm: RUNTIME_STEP_END runs after AFTER_EXECUTE
@@ -3261,21 +3218,11 @@ class Runtime extends EventEmitter {
     }
 
     /**
-     * tw: Enable or disable interpolation.
-     * @param {boolean} interpolationEnabled True if interpolation should be enabled.
-     */
-    setInterpolation (interpolationEnabled) {
-        this.interpolationEnabled = interpolationEnabled;
-        this.frameLoop.setInterpolation(this.interpolationEnabled);
-        this.emit(Runtime.INTERPOLATION_CHANGED, interpolationEnabled);
-    }
-
-    /**
      * tw: Update runtime options
      * @param {*} runtimeOptions New options
      */
     setRuntimeOptions (runtimeOptions) {
-        this.runtimeOptions = Object.assign({}, this.runtimeOptions, runtimeOptions);
+        this.runtimeOptions = Object.assign({}, this.runtimeOptions, runtimeOptions, PM_ALWAYS_ON);
         this.emit(Runtime.RUNTIME_OPTIONS_CHANGED, this.runtimeOptions);
         if (this.renderer) {
             this.renderer.offscreenTouching = !this.runtimeOptions.fencing;
@@ -3461,9 +3408,6 @@ class Runtime extends EventEmitter {
             this.turboMode = true;
             this.emit(Runtime.TURBO_MODE_ON);
         }
-        if (parsed.interpolation) {
-            this.setInterpolation(true);
-        }
         if (parsed.runtimeOptions) {
             this.setRuntimeOptions(parsed.runtimeOptions);
         }
@@ -3481,7 +3425,6 @@ class Runtime extends EventEmitter {
         return {
             framerate: this.frameLoop.framerate,
             runtimeOptions: this.runtimeOptions,
-            interpolation: this.interpolationEnabled,
             turbo: this.turboMode,
             hq: this.renderer ? this.renderer.useHighQualityRender : true,
             width: this.stageWidth,
@@ -3509,11 +3452,12 @@ class Runtime extends EventEmitter {
         return difference(this._defaultStoredSettings, this._generateAllProjectOptions());
     }
 
-    storeProjectOptions () {
+    storeProjectOptions (pmOnlyIfChanged) {
         const options = this.generateDifferingProjectOptions();
         // TODO: translate
         const text = `Configuration for https://penguinmod.com/\nYou can move, resize, and minimize this comment, but don't edit it by hand. This comment can be deleted to remove the stored settings.\n${ExtendedJSON.stringify(options)}${COMMENT_CONFIG_MAGIC}`;
         const existingComment = this.findProjectOptionsComment();
+        if (pmOnlyIfChanged && (existingComment ? existingComment.text === text : Object.keys(options).length === 0)) return;
         if (existingComment) {
             existingComment.text = text;
         } else {

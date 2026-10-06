@@ -1798,9 +1798,6 @@ class JSGenerator {
             const x = 'x' in node ? this.descendInput(node.x).asNumber() : 'target.x';
             const y = 'y' in node ? this.descendInput(node.y).asNumber() : 'target.y';
             this.source += `target.setXY(${x}, ${y});\n`;
-            if (this.descendedIntoModulo) {
-                this.source += `if (target.interpolationData) target.interpolationData = null;\n`;
-            }
             break;
         }
         case 'motion.step':

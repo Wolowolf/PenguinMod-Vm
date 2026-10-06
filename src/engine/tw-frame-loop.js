@@ -27,13 +27,10 @@ class FrameLoop {
         this.runtime = runtime;
         this.running = false;
         this.setFramerate(30);
-        this.setInterpolation(false);
 
         this.stepCallback = this.stepCallback.bind(this);
-        this.interpolationCallback = this.interpolationCallback.bind(this);
 
-        this._stepInterval = null;
-        this._interpolationAnimation = null;
+        this._stepInterval = null; // PMDESKTOP_STAGE_PATCH: no interpolation (section 21)
         this._stepAnimation = null;
         this._stepCounter = 0;
     }
@@ -43,17 +40,8 @@ class FrameLoop {
         this._restart();
     }
 
-    setInterpolation (interpolation) {
-        this.interpolation = interpolation;
-        this._restart();
-    }
-
     stepCallback () {
         this.runtime._step();
-    }
-
-    interpolationCallback () {
-        this.runtime._renderInterpolatedPositions();
     }
 
     _restart () {
@@ -69,10 +57,6 @@ class FrameLoop {
             this._stepAnimation = animationFrameWrapper(this.stepCallback);
             this.runtime.currentStepTime = 1000 / 60;
         } else {
-            // Interpolation should never be enabled when framerate === 0 as that's just redundant
-            if (this.interpolation) {
-                this._interpolationAnimation = animationFrameWrapper(this.interpolationCallback);
-            }
             this._stepInterval = setInterval(this.stepCallback, 1000 / this.framerate);
             this.runtime.currentStepTime = 1000 / this.framerate;
         }
@@ -81,13 +65,9 @@ class FrameLoop {
     stop () {
         this.running = false;
         clearInterval(this._stepInterval);
-        if (this._interpolationAnimation) {
-            this._interpolationAnimation.cancel();
-        }
         if (this._stepAnimation) {
             this._stepAnimation.cancel();
         }
-        this._interpolationAnimation = null;
         this._stepAnimation = null;
     }
 }

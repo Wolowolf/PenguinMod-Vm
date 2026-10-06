@@ -205,15 +205,6 @@ class VirtualMachine extends EventEmitter {
         this.runtime.on(Runtime.FRAMERATE_CHANGED, framerate => {
             this.emit(Runtime.FRAMERATE_CHANGED, framerate);
         });
-        this.runtime.on(Runtime.INTERPOLATION_CHANGED, framerate => {
-            this.emit(Runtime.INTERPOLATION_CHANGED, framerate);
-        });
-        this.runtime.on(Runtime.BEFORE_INTERPOLATE, target => {
-            this.emit(Runtime.BEFORE_INTERPOLATE, target);
-        });
-        this.runtime.on(Runtime.AFTER_INTERPOLATE, target => {
-            this.emit(Runtime.AFTER_INTERPOLATE, target);
-        });
         this.runtime.on(Runtime.STAGE_SIZE_CHANGED, (width, height) => {
             this.emit(Runtime.STAGE_SIZE_CHANGED, width, height);
         });
@@ -342,9 +333,8 @@ class VirtualMachine extends EventEmitter {
         this.runtime.setFramerate(framerate);
     }
 
-    setInterpolation (interpolationEnabled) {
-        this.runtime.setInterpolation(interpolationEnabled);
-    }
+    // PMDESKTOP_STAGE_PATCH: interpolation was removed (section 21); kept so extensions that call it don't fail
+    setInterpolation () {}
 
     setRuntimeOptions (runtimeOptions) {
         this.runtime.setRuntimeOptions(runtimeOptions);
@@ -737,6 +727,8 @@ class VirtualMachine extends EventEmitter {
      */
     toJSON (optTargetId, serializationOptions, beautiful) {
         this.emit('SERIALIZE', optTargetId);
+        // PMDESKTOP_STAGE_PATCH: store the settings in the project when it is saved (section 21)
+        if (!optTargetId && this.runtime.getTargetForStage()) this.runtime.storeProjectOptions(true);
         const sb3 = require('./serialization/sb3');
         return StringUtil.stringify(sb3.serialize(this.runtime, optTargetId, serializationOptions), beautiful);
     }
@@ -762,6 +754,13 @@ class VirtualMachine extends EventEmitter {
     deserializeProject (projectJSON, zip) {
         // Clear the current runtime
         this.clear();
+        // PMDESKTOP_STAGE_PATCH (section 21): a new project (pmNewProject, set by project-fetcher-hoc) starts at
+        // 60 FPS and 1920x1080; an opened one at Scratch's 30 FPS and 480x360 until its stored settings apply.
+        const pmNewProject = this.pmNewProject === true;
+        this.pmNewProject = false;
+        this.runtime.setFramerate(pmNewProject ? 60 : 30);
+        this.runtime.setStageSize(pmNewProject ? 1920 : 480, pmNewProject ? 1080 : 360);
+        this.runtime.setRuntimeOptions({disableOffscreenRendering: true, disableDirectionClamping: false});
 
         if (typeof performance !== 'undefined') {
             performance.mark('scratch-vm-deserialize-start');
