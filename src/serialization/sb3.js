@@ -582,6 +582,7 @@ const serializeCostume = function (costume) {
 
     obj.rotationCenterX = costumeToSerialize.rotationCenterX;
     obj.rotationCenterY = costumeToSerialize.rotationCenterY;
+    if (costume.pmCredit) obj.pmCredit = costume.pmCredit; // PMDESKTOP_STAGE_PATCH: asset credit (section 16)
 
     return obj;
 };
@@ -608,6 +609,7 @@ const serializeSound = function (sound) {
     // but that change should be made carefully since it is very
     // pervasive
     obj.md5ext = soundToSerialize.md5;
+    if (sound.pmCredit) obj.pmCredit = sound.pmCredit;
     return obj;
 };
 
@@ -1241,7 +1243,8 @@ const parseScratchAssets = function (object, runtime, zip) {
             name: costumeSource.name,
             bitmapResolution: costumeSource.bitmapResolution,
             rotationCenterX: costumeSource.rotationCenterX,
-            rotationCenterY: costumeSource.rotationCenterY
+            rotationCenterY: costumeSource.rotationCenterY,
+            pmCredit: costumeSource.pmCredit
         };
         const dataFormat =
             costumeSource.dataFormat ||
@@ -1274,7 +1277,8 @@ const parseScratchAssets = function (object, runtime, zip) {
             // moment, so this translation is very important
             md5: soundSource.md5ext,
             dataFormat: soundSource.dataFormat,
-            data: null
+            data: null,
+            pmCredit: soundSource.pmCredit
         };
         // deserializeSound should be called on the sound object we're
         // creating above instead of the source sound object, because this way
