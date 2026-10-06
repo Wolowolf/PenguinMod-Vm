@@ -2665,6 +2665,7 @@ class Runtime extends EventEmitter {
      */
     addMonitorScript (topBlockId, optTarget) {
         if (!optTarget) optTarget = this._editingTarget;
+        if (!optTarget) return; // PMDESKTOP_STAGE_PATCH: no sprite yet, try again next frame (section 17)
         for (let i = 0; i < this.threads.length; i++) {
             // Don't re-add the script if it's already running
             if (this.threads[i].topBlock === topBlockId && this.threads[i].status !== Thread.STATUS_DONE &&
