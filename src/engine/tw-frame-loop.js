@@ -9,14 +9,35 @@ const _cancelAnimationFrame = typeof requestAnimationFrame === 'function' ?
     cancelAnimationFrame :
     clearTimeout;
 
+// PMDESKTOP: a minimised window gets no animation frames; a timer takes over until they come back,
+// so "screen refresh rate" projects keep running in the background.
 const animationFrameWrapper = callback => {
     let id;
-    const handle = () => {
-        id = _requestAnimationFrame(handle);
+    let timer;
+    let interval = null;
+    const onStall = () => {
+        // No frame for 100 ms: step 60 times a second (an interval keeps that rate on Windows,
+        // chained timeouts get rounded up to every other clock tick) until frames come back.
+        interval = setInterval(callback, 1000 / 60);
         callback();
     };
-    const cancel = () => _cancelAnimationFrame(id);
-    id = _requestAnimationFrame(handle);
+    const watch = () => {
+        id = _requestAnimationFrame(onFrame);
+        timer = setTimeout(onStall, 100);
+    };
+    const onFrame = () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+        interval = null;
+        watch();
+        callback();
+    };
+    const cancel = () => {
+        _cancelAnimationFrame(id);
+        clearTimeout(timer);
+        clearInterval(interval);
+    };
+    watch();
     return {
         cancel
     };
