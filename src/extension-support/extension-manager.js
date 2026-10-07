@@ -34,8 +34,6 @@ const defaultBuiltinExtensions = {
     wedo2: () => require('../extensions/scratch3_wedo2'),
     music: () => require('../extensions/scratch3_music'),
     microbit: () => require('../extensions/scratch3_microbit'),
-    text2speech: () => require('../extensions/scratch3_text2speech'),
-    translate: () => require('../extensions/scratch3_translate'),
     videoSensing: () => require('../extensions/scratch3_video_sensing'),
     ev3: () => require('../extensions/scratch3_ev3'),
     makeymakey: () => require('../extensions/scratch3_makeymakey'),
@@ -81,8 +79,6 @@ const defaultBuiltinExtensions = {
     jgIframe: () => require("../extensions/jg_iframe"),
     // jgExtendedAudio: ok this is my real last call for help (for legal reasons this is a joj)
     jgExtendedAudio: () => require("../extensions/jg_audio"),
-    // jgScratchAuthenticate: easy to add its one block lol!
-    jgScratchAuthenticate: () => require("../extensions/jg_scratchAuth"),
     // JgPermissionBlocks: someones gonna get mad at me for this one i bet
     JgPermissionBlocks: () => require("../extensions/jg_permissions"),
     // jgClones: funny clone manager
@@ -117,8 +113,6 @@ const defaultBuiltinExtensions = {
     // jgAnimation: animate idk
     jgAnimation: () => require("../extensions/jg_animation"),
 
-    // jgStorage: event extension requested by Fir & silvxrcat
-    jgStorage: () => require("../extensions/jg_storage"),
     // jgTimers: event extension requested by Arrow
     jgTimers: () => require("../extensions/jg_timers"),
     // jgAdvancedText: event extension requested by silvxrcat
