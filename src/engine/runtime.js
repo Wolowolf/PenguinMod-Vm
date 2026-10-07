@@ -3725,8 +3725,12 @@ class Runtime extends EventEmitter {
      * @return {?Target} Target representing a sprite of the given name.
      */
     getSpriteTargetByName (spriteName) {
-        const json = validateJSON(spriteName);
-        if (json.id) return this.getTargetById(json.id);
+        // Only names that look like JSON are parsed: validateJSON throws and catches an error for every other name,
+        // which made this lookup (used by touching, distance to, of, go to, ...) slow when many clones call it.
+        if (typeof spriteName === 'string' && spriteName.startsWith('{')) {
+            const json = validateJSON(spriteName);
+            if (json.id) return this.getTargetById(json.id);
+        }
         for (let i = 0; i < this.targets.length; i++) {
             const target = this.targets[i];
             if (target.isStage) {

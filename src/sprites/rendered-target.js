@@ -221,6 +221,7 @@ class RenderedTarget extends Target {
         if (this.renderer) {
             this.drawableID = this.renderer.createDrawable(layerGroup);
         }
+        if (this.sprite && this.sprite.clearTouchingCandidates) this.sprite.clearTouchingCandidates();
         // If we're a clone, start the hats.
         if (!this.isOriginal) {
             this.runtime.startHats(
@@ -934,8 +935,7 @@ class RenderedTarget extends Target {
         // Filter out dragging targets. This means a sprite that is being dragged
         // can detect other sprites using touching <sprite>, but cannot be detected
         // by other sprites while it is being dragged. This matches Scratch 2.0 behavior.
-        const drawableCandidates = firstClone.sprite.clones.filter(clone => !clone.dragging)
-            .map(clone => clone.drawableID);
+        const drawableCandidates = firstClone.sprite.getTouchingCandidates(false);
         return this.renderer.isTouchingDrawables(
             this.drawableID, drawableCandidates);
     }
@@ -969,8 +969,7 @@ class RenderedTarget extends Target {
         // Filter out dragging targets. This means a sprite that is being dragged
         // can detect other sprites using touching <sprite>, but cannot be detected
         // by other sprites while it is being dragged. This matches Scratch 2.0 behavior.
-        const drawableCandidates = firstClone.sprite.clones.filter(clone => !clone.dragging && !clone.isOriginal)
-            .map(clone => clone.drawableID);
+        const drawableCandidates = firstClone.sprite.getTouchingCandidates(true);
         return this.renderer.isTouchingDrawables(
             this.drawableID, drawableCandidates);
     }
@@ -1241,6 +1240,22 @@ class RenderedTarget extends Target {
     /**
      * Put the sprite into the drag state. While in effect, setXY must be forced
      */
+    /**
+     * Drag state of this rendered target. If true, x/y position can't be changed by blocks.
+     * @type {boolean}
+     */
+    get dragging () {
+        return this._dragging;
+    }
+
+    set dragging (dragging) {
+        if (this._dragging !== dragging) {
+            this._dragging = dragging;
+            // dragged clones are left out of touching queries
+            if (this.sprite && this.sprite.clearTouchingCandidates) this.sprite.clearTouchingCandidates();
+        }
+    }
+
     startDrag () {
         this.dragging = true;
     }

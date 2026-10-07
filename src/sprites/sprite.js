@@ -50,6 +50,13 @@ class Sprite {
          */
         this.clones = [];
 
+        /**
+         * Cached drawable IDs for touching queries (see getTouchingCandidates), or null.
+         * @type {?Array.<number>}
+         */
+        this._touchingCandidates = null;
+        this._touchingCandidatesUnoriginal = null;
+
         this.soundBank = null;
         if (this.runtime && this.runtime.audioEngine) {
             this.soundBank = this.runtime.audioEngine.createBank();
@@ -110,6 +117,7 @@ class Sprite {
         const newClone = new RenderedTarget(this, this.runtime);
         newClone.isOriginal = this.clones.length === 0;
         this.clones.push(newClone);
+        this.clearTouchingCandidates();
         newClone.initAudio();
         if (newClone.isOriginal) {
             // Default to the sprite layer group if optLayerGroup is not provided
@@ -133,6 +141,37 @@ class Sprite {
         if (cloneIndex >= 0) {
             this.clones.splice(cloneIndex, 1);
         }
+        this.clearTouchingCandidates();
+    }
+
+    /**
+     * Drawable IDs of this sprite's clones (including the original) that are not being dragged, for touching
+     * queries. The same array is returned until a clone is created or removed, gets its drawable, or starts or
+     * stops being dragged, so the renderer can reuse work for it. Do not modify the returned array.
+     * @param {boolean} unoriginalOnly - if true, leave out the original sprite.
+     * @return {Array.<number>} the drawable IDs.
+     */
+    getTouchingCandidates (unoriginalOnly) {
+        if (unoriginalOnly) {
+            if (!this._touchingCandidatesUnoriginal) {
+                this._touchingCandidatesUnoriginal = this.clones.filter(clone => !clone.dragging && !clone.isOriginal)
+                    .map(clone => clone.drawableID);
+            }
+            return this._touchingCandidatesUnoriginal;
+        }
+        if (!this._touchingCandidates) {
+            this._touchingCandidates = this.clones.filter(clone => !clone.dragging)
+                .map(clone => clone.drawableID);
+        }
+        return this._touchingCandidates;
+    }
+
+    /**
+     * Forget the cached touching candidates (see getTouchingCandidates).
+     */
+    clearTouchingCandidates () {
+        this._touchingCandidates = null;
+        this._touchingCandidatesUnoriginal = null;
     }
 
     duplicate () {
