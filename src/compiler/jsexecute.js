@@ -711,7 +711,23 @@ const scopedEval = source => {
     }
 };
 
+// PMDESKTOP_FOLD (section 44): evaluates an expression that uses no project state (only the runtime helpers
+// below, which are the very same source text compiled scripts get) while a script is being compiled.
+// The helpers and the evaluating function are made once; each call is a plain eval of the expression.
+const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan", "mod", "tan"];
+let pureEvaluator = null;
+const evalPure = (source, runtime) => {
+    if (pureEvaluator === null) {
+        let helpers = baseRuntime;
+        for (const name of PURE_HELPER_NAMES) helpers += `${runtimeFunctions[name]};`;
+        helpers += "return (runtime, source) => eval(source);";
+        pureEvaluator = new Function("globalState", helpers)(globalState);
+    }
+    return pureEvaluator(runtime, source);
+};
+
 execute.scopedEval = scopedEval;
+execute.evalPure = evalPure;
 execute.runtimeFunctions = runtimeFunctions;
 execute.saveGlobalState = saveGlobalState;
 execute.restoreGlobalState = restoreGlobalState;

@@ -338,6 +338,76 @@ const isSafeConstantForEqualsOptimization = input => {
 };
 
 /**
+ * PMDESKTOP_FOLD (section 44): kinds of input that change nothing and always give the same answer for the same
+ * inputs: only arithmetic, comparison, logic and text operations. Anything that reads or changes variables, lists,
+ * the timer, random numbers, sprites, the stage or an extension is not in this list.
+ */
+const FOLDABLE_KINDS = new Set([
+    'op.add', 'op.subtract', 'op.multiply', 'op.divide', 'op.mod', 'op.power',
+    'op.abs', 'op.floor', 'op.ceiling', 'op.round', 'op.sqrt', 'op.sign',
+    'op.sin', 'op.cos', 'op.tan', 'op.asin', 'op.acos', 'op.atan',
+    'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^',
+    'op.equals', 'op.greater', 'op.less', 'op.and', 'op.or', 'op.not',
+    'op.join', 'op.length', 'op.letterOf', 'op.contains'
+]);
+
+/**
+ * PMDESKTOP_FOLD (section 44): whether generated code is one unbroken term whose meaning cannot change with the
+ * code around it: `(...)`, `name(...)`, `"text"`, any of those followed by `.name`, or `!` in front of one.
+ * (Some generated code, e.g. "not" of a text, is not: it reads differently depending on what it is put into.
+ * That code is never folded, so it stays exactly as it was.)
+ * @param {string} source Generated JavaScript for one input.
+ * @returns {boolean} true if the source is one unbroken term.
+ */
+const isUnbrokenTerm = source => {
+    const length = source.length;
+    let i = 0;
+    while (source.charCodeAt(i) === 33) i++; // "!"
+    const first = source[i];
+    if (first === '"') {
+        i = skipStringLiteral(source, i);
+        if (i < 0) return false;
+    } else {
+        // optional name (Math.abs, mod, compareEqual …) then a bracket pair
+        while (i < length && /[\w$.]/.test(source[i])) i++;
+        if (source[i] !== '(') return false;
+        let depth = 0;
+        for (; i < length; i++) {
+            const c = source[i];
+            if (c === '"' || c === "'") {
+                i = skipStringLiteral(source, i) - 1;
+                if (i < 0) return false;
+            } else if (c === '(') {
+                depth++;
+            } else if (c === ')') {
+                depth--;
+                if (depth === 0) break;
+                if (depth < 0) return false;
+            }
+        }
+        if (depth !== 0) return false;
+        i++;
+    }
+    // only property reads such as .length may follow
+    return i === length || /^(\.[A-Za-z_$][\w$]*)+$/.test(source.slice(i));
+};
+
+/**
+ * @param {string} source JavaScript.
+ * @param {number} start Index of the opening quote.
+ * @returns {number} Index just after the closing quote, or -1.
+ */
+const skipStringLiteral = (source, start) => {
+    const quote = source[start];
+    for (let i = start + 1; i < source.length; i++) {
+        const c = source[i];
+        if (c === '\\') i++;
+        else if (c === quote) return i + 1;
+    }
+    return -1;
+};
+
+/**
  * A frame contains some information about the current substack being compiled.
  */
 class Frame {
@@ -428,6 +498,12 @@ class JSGenerator {
         this.descendedIntoModulo = false;
         this.isInHat = false;
 
+        /**
+         * Input nodes that were worked out at compile time (section 44).
+         * @type {WeakSet<object>}
+         */
+        this.foldedNodes = new WeakSet();
+
         this.debug = this.target.runtime.debug;
     }
 
@@ -517,11 +593,87 @@ class JSGenerator {
     }
 
     /**
+     * PMDESKTOP_FOLD (section 44): compile an input; when it is a calculation whose inputs are all fixed values,
+     * work out the answer now instead of every time the script runs.
      * @param {object} node Input node to compile.
      * @param {boolean} visualReport if this is being called to get visual reporter content
      * @returns {Input} Compiled input.
      */
     descendInput (node, visualReport = false) {
+        const input = this.descendInputUnfolded(node, visualReport);
+        if (!FOLDABLE_KINDS.has(node.kind) || !(input instanceof TypedInput)) return input;
+        // (never when an extension has registered its own code for the "op" blocks: then the answer is not ours to know)
+        if (this.target.runtime.pmNoConstantFolding || JSGenerator.hasExtensionJs('op') || !this.hasOnlyFixedInputs(node)) return input;
+        return this.foldFixedInput(node, input);
+    }
+
+    /**
+     * @param {object} node Input node of a foldable kind.
+     * @returns {boolean} true if every input of the node is a fixed value (or a calculation folded to one).
+     */
+    hasOnlyFixedInputs (node) {
+        for (const key in node) {
+            if (key === 'kind') continue;
+            const child = node[key];
+            if (child === null || typeof child !== 'object') continue;
+            if (Array.isArray(child) || typeof child.kind !== 'string') return false;
+            if (child.kind === 'constant') {
+                const type = typeof child.value;
+                if (type !== 'string' && type !== 'number' && type !== 'boolean') return false;
+            } else if (child.kind !== 'op.true' && child.kind !== 'op.false' && !this.foldedNodes.has(child)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Work out the answer of a calculation whose inputs are all fixed values. The calculation is the code that
+     * would have been written for it anyway, run with the same helper functions the compiled script gets, so the
+     * answer is the one the script would have computed. Left unchanged when the answer is not an ordinary
+     * number (NaN, infinity, -0), a string or a boolean, or when running it fails.
+     * @param {object} node The input node.
+     * @param {TypedInput} input The code written for the node.
+     * @returns {Input} The answer as a fixed value, or `input`.
+     */
+    foldFixedInput (node, input) {
+        // Only code that reads the same wherever it is put (see isUnbrokenTerm).
+        if (!isUnbrokenTerm(input.source)) return input;
+        let value;
+        try {
+            value = jsexecute.evalPure(input.source, this.target.runtime);
+        } catch (e) {
+            return input;
+        }
+        // The answer keeps the type the code was written with, so the code around it is written as before.
+        let source;
+        switch (input.type) {
+        case TYPE_NUMBER:
+        case TYPE_NUMBER_NAN:
+            if (typeof value !== 'number' || !Number.isFinite(value) || Object.is(value, -0)) return input;
+            source = `(${value})`;
+            break;
+        case TYPE_BOOLEAN:
+            if (typeof value !== 'boolean') return input;
+            source = `(${value})`;
+            break;
+        case TYPE_STRING:
+            if (typeof value !== 'string') return input;
+            source = `("${sanitize(value)}")`;
+            break;
+        default:
+            return input;
+        }
+        this.foldedNodes.add(node);
+        return new TypedInput(source, input.type);
+    }
+
+    /**
+     * @param {object} node Input node to compile.
+     * @param {boolean} visualReport if this is being called to get visual reporter content
+     * @returns {Input} Compiled input.
+     */
+    descendInputUnfolded (node, visualReport = false) {
         // check if we have extension js for this kind
         const extensionId = String(node.kind).split('.')[0];
         const blockId = String(node.kind).replace(extensionId + '.', '');
