@@ -348,7 +348,15 @@ const FOLDABLE_KINDS = new Set([
     'op.sin', 'op.cos', 'op.tan', 'op.asin', 'op.acos', 'op.atan',
     'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^',
     'op.equals', 'op.greater', 'op.less', 'op.and', 'op.or', 'op.not',
-    'op.join', 'op.length', 'op.letterOf', 'op.contains'
+    'op.join', 'op.length', 'op.letterOf', 'op.contains',
+    // PenguinMod's expandable math / and-or / compare blocks (their inputs are lists of inputs)
+    'op.expandmath', 'op.expandBool', 'op.expandCompare',
+    // the "Operators Expansion" extension's calculations (bit operations, if-falsey/truthy, pitch, atan2); they
+    // are compiled by the extension itself, only the answer is worked out here
+    'pmOperatorsExpansion.shiftLeft', 'pmOperatorsExpansion.shiftRight', 'pmOperatorsExpansion.binnaryAnd',
+    'pmOperatorsExpansion.binnaryOr', 'pmOperatorsExpansion.binnaryXor', 'pmOperatorsExpansion.binnaryNot',
+    'pmOperatorsExpansion.orIfFalsey', 'pmOperatorsExpansion.ifIsTruthy', 'pmOperatorsExpansion.speedToPitch',
+    'pmOperatorsExpansion.pitchToSpeed', 'pmOperatorsExpansion.atan2'
 ]);
 
 /**
@@ -613,18 +621,29 @@ class JSGenerator {
      */
     hasOnlyFixedInputs (node) {
         for (const key in node) {
-            if (key === 'kind') continue;
-            const child = node[key];
-            if (child === null || typeof child !== 'object') continue;
-            if (Array.isArray(child) || typeof child.kind !== 'string') return false;
-            if (child.kind === 'constant') {
-                const type = typeof child.value;
-                if (type !== 'string' && type !== 'number' && type !== 'boolean') return false;
-            } else if (child.kind !== 'op.true' && child.kind !== 'op.false' && !this.foldedNodes.has(child)) {
-                return false;
-            }
+            if (key !== 'kind' && !this.isFixedValue(node[key])) return false;
         }
         return true;
+    }
+
+    /**
+     * @param {*} value A field of an input node: plain data, a child node, or a list of those.
+     * @returns {boolean} true if it is plain data or a fixed child node.
+     */
+    isFixedValue (value) {
+        if (value === null || typeof value !== 'object') return true;
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                if (!this.isFixedValue(item)) return false;
+            }
+            return true;
+        }
+        if (typeof value.kind !== 'string') return false;
+        if (value.kind === 'constant') {
+            const type = typeof value.value;
+            return type === 'string' || type === 'number' || type === 'boolean';
+        }
+        return value.kind === 'op.true' || value.kind === 'op.false' || this.foldedNodes.has(value);
     }
 
     /**
@@ -641,7 +660,8 @@ class JSGenerator {
         if (!isUnbrokenTerm(input.source)) return input;
         let value;
         try {
-            value = jsexecute.evalPure(input.source, this.target.runtime);
+            // (only the sin / cos tables are reachable from the expression, not the project)
+            value = jsexecute.evalPure(input.source, this.pureRuntime || (this.pureRuntime = {optimizationUtil: this.target.runtime.optimizationUtil}));
         } catch (e) {
             return input;
         }
@@ -660,6 +680,19 @@ class JSGenerator {
         case TYPE_STRING:
             if (typeof value !== 'string') return input;
             source = `("${sanitize(value)}")`;
+            break;
+        case TYPE_UNKNOWN:
+            // (extension calculations whose answer can be any kind of value)
+            if (typeof value === 'number') {
+                if (!Number.isFinite(value) || Object.is(value, -0)) return input;
+                source = `(${value})`;
+            } else if (typeof value === 'boolean') {
+                source = `(${value})`;
+            } else if (typeof value === 'string') {
+                source = `("${sanitize(value)}")`;
+            } else {
+                return input;
+            }
             break;
         default:
             return input;
