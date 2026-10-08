@@ -3217,6 +3217,10 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.FRAMERATE_CHANGED, framerate);
     }
 
+    // PMDESKTOP_STAGE_PATCH: interpolation was removed (section 21); kept so extensions that call it
+    // (e.g. SharkPool Camera) don't fail while loading
+    setInterpolation () {}
+
     /**
      * tw: Update runtime options
      * @param {*} runtimeOptions New options
