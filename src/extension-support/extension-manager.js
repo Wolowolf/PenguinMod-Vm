@@ -57,8 +57,6 @@ const defaultBuiltinExtensions = {
     jgPrism: () => require("../extensions/jg_prism"),
     // jgIframe: my last call for help (for legal reasons this is a joke)
     jgIframe: () => require("../extensions/jg_iframe"),
-    // jgExtendedAudio: ok this is my real last call for help (for legal reasons this is a joj)
-    jgExtendedAudio: () => require("../extensions/jg_audio"),
     // jgTween: epic animation
     jgTween: () => require("../extensions/jg_tween"),
     // jgTailgating: follow sprites like in an RPG
