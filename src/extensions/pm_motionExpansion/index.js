@@ -1,4 +1,4 @@
-// Most of the blocks here are from More Motion by NexusKitten:
+// All of the blocks of More Motion by NexusKitten (which this extension replaced) are here:
 // https://scratch.mit.edu/users/NamelessCat/
 // https://github.com/NexusKitten
 
@@ -64,6 +64,9 @@ ${blockSeparator}
 %block1>
 ${blockSeparator}
 %block0>
+%block8>
+%block9>
+%block10>
 %block4>
 %block5>
 `
@@ -278,7 +281,60 @@ class pmMotionExpansion {
                         { isNoop: true }
                     ]
                 },
-            ]
+                {
+                    opcode: "directionto",
+                    blockType: BlockType.REPORTER,
+                    text: "direction to x: [X] y: [Y]",
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: "0",
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: "0",
+                        },
+                    },
+                },
+                {
+                    opcode: "distanceto",
+                    blockType: BlockType.REPORTER,
+                    text: "distance from x: [X] y: [Y]",
+                    arguments: {
+                        X: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: "0",
+                        },
+                        Y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: "0",
+                        },
+                    },
+                },
+                {
+                    opcode: "spritewh",
+                    blockType: BlockType.REPORTER,
+                    text: "sprite [WHAT]",
+                    disableMonitor: true,
+                    arguments: {
+                        WHAT: {
+                            type: ArgumentType.STRING,
+                            menu: "WHAT",
+                        },
+                    },
+                },
+            ],
+            menus: {
+                WHAT: {
+                    acceptReporters: true,
+                    items: [
+                        { text: "width", value: "width" },
+                        { text: "height", value: "height" },
+                        { text: "costume width", value: "costume width" },
+                        { text: "costume height", value: "costume height" },
+                    ],
+                },
+            },
         };
     }
 
@@ -292,6 +348,30 @@ class pmMotionExpansion {
             [util.target.x, util.target.y]
         );
         util.target.setXY(newpos[0], newpos[1]);
+    }
+
+    directionto(args, util) {
+        // Returns values from -180 to 180, like the direction reporter.
+        const x = Cast.toNumber(args.X);
+        const y = Cast.toNumber(args.Y);
+        return (180 / Math.PI) * Math.atan2(x - util.target.x, y - util.target.y);
+    }
+
+    distanceto(args, util) {
+        const x = Cast.toNumber(args.X);
+        const y = Cast.toNumber(args.Y);
+        return Math.sqrt((x - util.target.x) ** 2 + (y - util.target.y) ** 2);
+    }
+
+    spritewh(args, util) {
+        if (args.WHAT === "width" || args.WHAT === "height") {
+            const bounds = this.runtime.renderer.getBounds(util.target.drawableID);
+            return Math.ceil(args.WHAT === "width" ? bounds.width : bounds.height);
+        }
+        if (args.WHAT === "costume width" || args.WHAT === "costume height") {
+            const costume = util.target.sprite.costumes[util.target.currentCostume];
+            return Math.ceil(args.WHAT === "costume width" ? costume.size[0] : costume.size[1]);
+        }
     }
 
     steptowards(args, util) {
@@ -336,7 +416,7 @@ class pmMotionExpansion {
         if (bottom > top) {
             let temp = bottom;
             bottom = top;
-            bottom = temp;
+            top = temp;
         }
 
         const drawable = this.runtime.renderer._allDrawables[util.target.drawableID];

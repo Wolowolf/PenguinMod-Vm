@@ -1282,43 +1282,6 @@ class JSGenerator {
             console.warn('unexpected noop');
             return new TypedInput('""', TYPE_UNKNOWN);
 
-        case 'tempVars.get': {
-            const name = this.descendInput(node.var);
-            const hostObj = node.runtime
-                ? 'runtime.variables'
-                : node.thread
-                    ? 'thread.variables'
-                    : 'tempVars';
-            const code = this.isOptimized
-                ? `${hostObj}[${name.asString()}]`
-                : `get(${hostObj}, ${name.asString()})`;
-            if (environment.supportsNullishCoalescing) {
-                return new TypedInput(`(${code} ?? "")`, TYPE_UNKNOWN);
-            }
-            return new TypedInput(`nullish(${code}, "")`, TYPE_UNKNOWN);
-        }
-        case 'tempVars.exists': {
-            const name = this.descendInput(node.var);
-            const hostObj = node.runtime
-                ? 'runtime.variables'
-                : node.thread
-                    ? 'thread.variables'
-                    : 'tempVars';
-            const code = this.isOptimized
-                ? `${name.asString()} in ${hostObj}`
-                : `includes(${hostObj}, ${name.asString()})`;
-            return new TypedInput(code, TYPE_BOOLEAN);
-        }
-        case 'tempVars.all':
-            const hostObj = node.runtime
-                ? 'runtime.variables'
-                : node.thread
-                    ? 'thread.variables'
-                    : 'tempVars';
-            if (node.runtime || node.thread) {
-                return new TypedInput(`Object.keys(${hostObj}).join(',')`, TYPE_STRING);
-            }
-            return new TypedInput(`JSON.stringify(Object.keys(tempVars))`, TYPE_STRING);
         case 'control.dualBlock':
             return new TypedInput('"dual block works!"', TYPE_STRING);
         case 'control.fromToIndex':
@@ -2174,59 +2137,6 @@ class JSGenerator {
             break;
         }
 
-        case 'tempVars.set': {
-            const name = this.descendInput(node.var).asString();
-            const val = this.descendInput(node.val).asUnknown();
-            const hostObj = node.runtime ? 'runtime.variables' : node.thread ? 'thread.variables' : 'tempVars';
-
-            this.source += this.isOptimized
-                ? `${hostObj}[${name}] = ${val};\n`
-                : `set(${hostObj}, ${name}, ${val});\n`;
-            break;
-        }
-        case 'tempVars.change': {
-            const name = this.descendInput(node.var).asString();
-            const val = this.descendInput(node.val).asNumber();
-            const hostObj = node.runtime ? 'runtime.variables' : node.thread ? 'thread.variables' : 'tempVars';
-
-            this.source += this.isOptimized
-                ? `${hostObj}[${name}] = Number(${hostObj}[${name}]) + ${val};\n`
-                : `set(${hostObj}, ${name}, Number(get(${hostObj}, ${name})) + ${val});\n`;
-            break;
-        }
-        case 'tempVars.delete': {
-            const name = this.descendInput(node.var).asString();
-            const hostObj = node.runtime ? 'runtime.variables' : node.thread ? 'thread.variables' : 'tempVars';
-
-            this.source += this.isOptimized
-                ? `delete ${hostObj}[${name}];\n`
-                : `remove(${hostObj}, ${name});\n`;
-            break;
-        }
-        case 'tempVars.deleteAll': {
-            const hostObj = node.runtime ? 'runtime.variables' : node.thread ? 'thread.variables' : 'tempVars';
-            this.source += `${hostObj} = Object.create(null);\n`;
-            break;
-        }
-        case 'tempVars.forEach': {
-            const name = this.descendInput(node.var).asString();
-            const loops = this.descendInput(node.loops).asNumber();
-            const hostObj = node.runtime ? 'runtime.variables' : node.thread ? 'thread.variables' : 'tempVars';
-
-            const rootVar = this.localVariables.next();
-            const keyVar = this.localVariables.next();
-            const index = this.isOptimized ? `${hostObj}[${name}]` : `${rootVar}[${keyVar}]`;
-            if (!this.isOptimized) {
-                this.source += `const [${rootVar},${keyVar}] = _resolveKeyPath(${hostObj}, ${name}); `;
-            }
-            this.source += `${index} = 0; `;
-            this.source += `while (${index} < ${loops}) { `;
-            this.source += `${index}++;\n`;
-            this.descendStack(node.do, new Frame(true, 'tempVars.forEach'));
-            if (this.script.yields) this.yieldLoop();
-            this.source += '}\n';
-            break;
-        }
         case 'control.dualBlock':
             this.source += `console.log("dual block works");\n`
             break
@@ -2450,7 +2360,6 @@ class JSGenerator {
             script += args.join(',');
         }
         script += ') {\n';
-        script += 'let tempVars = Object.create(null);';
 
         // pm: check if we are spoofing the target
         // ex: as (Sprite) {} block needs to replace the target

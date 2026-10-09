@@ -16,14 +16,12 @@ const uid = require('../util/uid');
 const MathUtil = require('../util/math-util');
 const StringUtil = require('../util/string-util');
 const VariableUtil = require('../util/variable-util');
-const Clone = require('../util/clone');
 const compress = require('./tw-compress-sb3');
 const OldExtensions = require('./extension patcher');
 
 const {loadCostume} = require('../import/load-costume.js');
 const {loadSound} = require('../import/load-sound.js');
 const {deserializeCostume, deserializeSound} = require('./deserialize-assets.js');
-const replacersPatch = require('./replacers patch.json');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -165,21 +163,6 @@ const ExtensionPatches = {
                         [TEXT_PRIMITIVE, "g"]
                     ];
                 }
-            }
-            // handle replacer blocks
-            if (block.opcode === 'jwUnite_setReplacer' || block.opcode === 'jwUnite_replaceWithReplacers') {
-                if (!patcher.loaded.includes('jgJSON')) {
-                    runtime.extensionManager.loadExtensionURL('jgJSON');
-                    patcher.loaded.push('jgJSON');
-                }
-                blocks = Object.assign(blocks, Clone.simple(replacersPatch.blocks));
-                object.variables = Object.assign(object.variables, Clone.simple(replacersPatch.variables));
-                const repBlock = block.opcode === 'jwUnite_setReplacer'
-                    ? "setReplacerToDisplay"
-                    : "replaceWithReplacersDisplay";
-                const replacment = Clone.simple(replacersPatch.blocks[repBlock]);
-                block.opcode = 'procedures_call';
-                block.mutation = replacment.mutation;
             }
             blocks[blockIDs[idx]] = block;
         }

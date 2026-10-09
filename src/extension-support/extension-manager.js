@@ -31,15 +31,8 @@ const defaultBuiltinExtensions = {
     coreExample: () => require('../blocks/scratch3_core_example'),
     // These are the non-core built-in extensions.
     pen: () => require('../extensions/scratch3_pen'),
-    wedo2: () => require('../extensions/scratch3_wedo2'),
     music: () => require('../extensions/scratch3_music'),
-    microbit: () => require('../extensions/scratch3_microbit'),
     videoSensing: () => require('../extensions/scratch3_video_sensing'),
-    ev3: () => require('../extensions/scratch3_ev3'),
-    makeymakey: () => require('../extensions/scratch3_makeymakey'),
-    boost: () => require('../extensions/scratch3_boost'),
-    gdxfor: () => require('../extensions/scratch3_gdx_for'),
-    text: () => require('../extensions/scratchLab_animatedText'),
 
     // garbomuffin: *silence*
     // tw: core extension
@@ -67,8 +60,6 @@ const defaultBuiltinExtensions = {
     jgFiles: () => require('../extensions/jg_files'),
     // jgWebsiteRequests: fetch GET and POST requests to apis & websites
     jgWebsiteRequests: () => require("../extensions/jg_websiteRequests"),
-    // jgJSON: handle JSON objects
-    jgJSON: () => require("../extensions/jg_json"),
     // jgJSONParsed: handle JSON objects BETTER
     // jgJSONParsed: () => require("../extensions/jg_jsonParsed"),
     // jgRuntime: edit stage and other stuff
@@ -113,8 +104,6 @@ const defaultBuiltinExtensions = {
     // jgAnimation: animate idk
     jgAnimation: () => require("../extensions/jg_animation"),
 
-    // jgTimers: event extension requested by Arrow
-    jgTimers: () => require("../extensions/jg_timers"),
     // jgAdvancedText: event extension requested by silvxrcat
     // hiding so fir doesnt touch
     // jgAdvancedText: () => require("../extensions/jg_advancedText"),
@@ -152,7 +141,6 @@ const defaultBuiltinExtensions = {
     // test ext for lambda functions or something
     jwLambda: () => require("../extensions/jwLambda"),
     // omega num port for penguinmod
-    jwNum: () => require("../extensions/jwNum"),
     // good color utilties
     jwColor: () => require("../extensions/jwColor"),
     // access to extraFiles
@@ -166,16 +154,12 @@ const defaultBuiltinExtensions = {
     // pointers
     jwPointer: () => require("../extensions/jwPointer"),
     // integers
-    jwInt: () => require("../extensions/jwInt"),
 
     // jw: They'll think its made by jwklong >:)
     // (but it's not (yet (maybe (probably not (but its made by ianyourgod)))))
     // this is the real jwklong speaking, one word shall be said about this: A N G E R Y
     // Structs: hehe structs for oop (look at c)
     jwStructs: () => require("../extensions/jw_structs"),
-    // mikedev: ghytfhygfvbl
-    // cl: () => require("../extensions/cl"),
-    Gamepad: () => require("../extensions/GamepadExtension"),
 
     // theshovel: ...
     // theshovelcanvaseffects: ...
@@ -195,8 +179,6 @@ const defaultBuiltinExtensions = {
     canvas: () => require('../extensions/gsa_canvas_old'),
     // the replacment for the above extension
     newCanvas: () => require('../extensions/gsa_canvas'),
-    // tempVars: fill out your introduction stupet!!!
-    tempVars: () => require('../extensions/gsa_tempVars'),
     // colors: fill out your introduction stupet!!!
     colors: () => require('../extensions/gsa_colorUtilBlocks'),
     // Camera: camera
@@ -216,15 +198,12 @@ const defaultBuiltinExtensions = {
     // lms: ...
     // lmsutilsblocks: ...
     lmsutilsblocks: () => require('../extensions/lmsutilsblocks'),
-    lmsTempVars2: () => require('../extensions/lily_tempVars2'),
 
     // xeltalliv: ...
     // xeltallivclipblend: ...
     xeltallivclipblend: () => require('../extensions/xeltalliv_clippingblending'),
 
     // DT: ...
-    // DTcameracontrols: ...
-    DTcameracontrols: () => require('../extensions/dt_cameracontrols'),
 
     // griffpatch: ...
     // griffpatch: () => require('../extensions/griffpatch_box2d')
