@@ -981,11 +981,6 @@ class ScriptTreeGenerator {
             };
         }
 
-        case 'tw_getLastKeyPressed':
-            return {
-                kind: 'tw.lastKeyPressed'
-            };
-
         case 'control_dualblock':
             return {
                 kind: 'control.dualBlock'

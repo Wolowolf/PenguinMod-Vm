@@ -8,11 +8,6 @@ const Cast = require('../util/cast');
 
 const AddonSwitches = require('./extension-addon-switchers');
 
-const urlParams = new URLSearchParams(location.search);
-
-const IsLocal = String(window.location.href).startsWith(`http://localhost:`);
-const IsLiveTests = urlParams.has('livetests');
-
 // thhank yoh random stack droverflwo person
 async function sha256(source) {
     const sourceBytes = new TextEncoder().encode(source);
@@ -35,8 +30,6 @@ const defaultBuiltinExtensions = {
     videoSensing: () => require('../extensions/scratch3_video_sensing'),
 
     // garbomuffin: *silence*
-    // tw: core extension
-    tw: () => require('../extensions/tw'),
     // twFiles: replaces jgFiles as it works better on other devices
     twFiles: () => require('../extensions/tw_files'),
 
@@ -52,12 +45,8 @@ const defaultBuiltinExtensions = {
     // pmEventsExpansion: extra event blocks that were in the category & new ones that werent
     pmEventsExpansion: () => require("../extensions/pm_eventsExpansion"),
 
-    // pmInlineBlocks: seperates the inline function block to prevent confusled
-    pmInlineBlocks: () => require("../extensions/pm_inlineblocks"),
 
     // jg: jeremyes esxsitenisonsnsn
-    // jgFiles: support for reading user files
-    jgFiles: () => require('../extensions/jg_files'),
     // jgWebsiteRequests: fetch GET and POST requests to apis & websites
     jgWebsiteRequests: () => require("../extensions/jg_websiteRequests"),
     // jgJSONParsed: handle JSON objects BETTER
@@ -70,56 +59,24 @@ const defaultBuiltinExtensions = {
     jgIframe: () => require("../extensions/jg_iframe"),
     // jgExtendedAudio: ok this is my real last call for help (for legal reasons this is a joj)
     jgExtendedAudio: () => require("../extensions/jg_audio"),
-    // JgPermissionBlocks: someones gonna get mad at me for this one i bet
-    JgPermissionBlocks: () => require("../extensions/jg_permissions"),
-    // jgClones: funny clone manager
-    jgClones: () => require("../extensions/jg_clones"),
     // jgTween: epic animation
     jgTween: () => require("../extensions/jg_tween"),
-    // jgDebugging: epic animation
-    jgDebugging: () => require("../extensions/jg_debugging"),
-    // jgEasySave: easy save stuff
-    jgEasySave: () => require("../extensions/jg_easySave"),
-    // jgPackagerApplications: uuhhhhhhh packager
-    jgPackagerApplications: () => require("../extensions/jg_packagerApplications"),
     // jgTailgating: follow sprites like in an RPG
     jgTailgating: () => require("../extensions/jg_tailgating"),
     // jgScripts: what you know about rollin down in the
     jgScripts: () => require("../extensions/jg_scripts"),
-    // jg3d: damn daniel
-    jg3d: () => require("../extensions/jg_3d"),
-    // jg3dVr: epic
-    jg3dVr: () => require("../extensions/jg_3dVr"),
-    // jgVr: excuse to use vr headset lol!
-    jgVr: () => require("../extensions/jg_vr"),
-    // jgInterfaces: easier UI
-    jgInterfaces: () => require("../extensions/jg_interfaces"),
     // jgCostumeDrawing: draw on costumes
     // hiding so fir doesnt touch
     // jgCostumeDrawing: () => require("../extensions/jg_costumeDrawing"),
     // jgJavascript: this is like the 3rd time we have implemented JS blocks man
     jgJavascript: () => require("../extensions/jg_javascript"),
-    // jgPathfinding: EZ pathfinding for beginners :D hopefully
-    jgPathfinding: () => require("../extensions/jg_pathfinding"),
-    // jgAnimation: animate idk
-    jgAnimation: () => require("../extensions/jg_animation"),
 
     // jgAdvancedText: event extension requested by silvxrcat
     // hiding so fir doesnt touch
     // jgAdvancedText: () => require("../extensions/jg_advancedText"),
 
-    // jgDev: test extension used for making core blocks
-    jgDev: () => require("../extensions/jg_dev"),
-    // jgDooDoo: test extension used for making test extensions
-    jgDooDoo: () => require("../extensions/jg_doodoo"),
-    // jgBestExtension: great extension used for making great extensions
-    jgBestExtension: () => require("../extensions/jg_bestextensioin"),
-    // jgChristmas: Christmas extension used for making Christmas extensions
-    jgChristmas: () => require("../extensions/jg_christmas"),
 
     // jw: hello it is i jwklong
-    // jwUnite: literal features that should of been added in the first place
-    jwUnite: () => require("../extensions/jw_unite"),
     // jwProto: placeholders, labels, defenitons, we got em
     jwProto: () => require("../extensions/jw_proto"),
     // jwPostLit: postlit real????
@@ -159,7 +116,6 @@ const defaultBuiltinExtensions = {
     // (but it's not (yet (maybe (probably not (but its made by ianyourgod)))))
     // this is the real jwklong speaking, one word shall be said about this: A N G E R Y
     // Structs: hehe structs for oop (look at c)
-    jwStructs: () => require("../extensions/jw_structs"),
 
     // theshovel: ...
     // shovellzcompresss: ...
@@ -169,12 +125,7 @@ const defaultBuiltinExtensions = {
 
     // gsa: fill out your introduction stupet!!!
     // no >:(
-    // canvas: kinda obvius if you know anything about html canvases
-    canvas: () => require('../extensions/gsa_canvas_old'),
     // the replacment for the above extension
-    newCanvas: () => require('../extensions/gsa_canvas'),
-    // colors: fill out your introduction stupet!!!
-    colors: () => require('../extensions/gsa_colorUtilBlocks'),
     // Camera: camera
     pmCamera: () => require('../extensions/pm_camera'),
 
@@ -184,8 +135,6 @@ const defaultBuiltinExtensions = {
     SPjavascriptV2: () => require("../extensions/sp_javascriptV2"),
 
     // silvxrcat: ...
-    // oddMessage: ...
-    oddMessage: () => require("../extensions/silvxrcat_oddmessages"),
 
     // TW extensions
 
@@ -206,8 +155,6 @@ const defaultBuiltinExtensions = {
     // iygPerlin:
     iygPerlin: () => require('../extensions/iyg_perlin_noise'),
     // fr: waw 3d physics!!
-    // fr3d:
-    fr3d: () => require('../extensions/fr_3d')
 };
 const CORE_EXTENSIONS = [
     'argument',
@@ -227,10 +174,6 @@ const CORE_EXTENSIONS = [
 const coreExtensionList = Object.getOwnPropertyNames(defaultBuiltinExtensions);
 
 const preload = [];
-
-if (IsLocal || IsLiveTests) {
-    preload.push("jgDev");
-}
 
 /**
  * @typedef {object} ArgumentInfo - Information about an extension block argument

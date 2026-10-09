@@ -3,7 +3,6 @@ const alwaysUnsafe = [
     "jgPrism_evaluate",
     "jgPrism_evaluate2",
     "jgPrism_evaluate3",
-    "jgFiles_downloadFile",
     "videoSensing_videoToggle",
     "jgPrism_screenshotStage"
 ];
