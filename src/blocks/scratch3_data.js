@@ -1,4 +1,7 @@
 const Cast = require('../util/cast');
+// PMDESKTOP_LISTLOOKUP (section 62): list blocks use the engine's own item storage (listLookup.items)
+// so that lists keep their lookup table; see engine/list-lookup.js.
+const listLookup = require('../engine/list-lookup');
 const { validateArray } = require('../util/json-block-utilities');
 
 class Scratch3DataBlocks {
@@ -105,19 +108,20 @@ class Scratch3DataBlocks {
         // If block is running for monitors, return copy of list as an array if changed.
         if (util.thread.updateMonitor) {
             // Return original list value if up-to-date, which doesn't trigger monitor update.
-            if (list._monitorUpToDate) return list.value;
+            if (list._monitorUpToDate) return listLookup.items(list);
             // If value changed, reset the flag and return a copy to trigger monitor update.
             // Because monitors use Immutable data structures, only new objects trigger updates.
             list._monitorUpToDate = true;
-            return list.value.slice();
+            return listLookup.items(list).slice();
         }
+        const items = listLookup.items(list);
 
         // Determine if the list is all single letters.
         // If it is, report contents joined together with no separator.
         // If it's not, report contents joined together with a space.
         let allSingleLetters = true;
-        for (let i = 0; i < list.value.length; i++) {
-            const listItem = list.value[i];
+        for (let i = 0; i < items.length; i++) {
+            const listItem = items[i];
             if (!((typeof listItem === 'string') &&
                   (listItem.length === 1))) {
                 allSingleLetters = false;
@@ -125,37 +129,39 @@ class Scratch3DataBlocks {
             }
         }
         if (allSingleLetters) {
-            return list.value.join('');
+            return items.join('');
         }
-        return list.value.join(' ');
+        return items.join(' ');
 
     }
 
     addToList (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        list.value.push(args.ITEM);
+        listLookup.items(list).push(args.ITEM);
         list._monitorUpToDate = false;
     }
 
     deleteOfList (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, list.value.length, true);
+        const items = listLookup.items(list);
+        const index = Cast.toListIndex(args.INDEX, items.length, true);
         if (index === Cast.LIST_INVALID) {
             return;
         } else if (index === Cast.LIST_ALL) {
-            list.value = [];
+            listLookup.setItems(list, []);
             return;
         }
-        list.value.splice(index - 1, 1);
+        items.splice(index - 1, 1);
+        listLookup.changed(list);
         list._monitorUpToDate = false;
     }
 
     deleteAllOfList (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        list.value = [];
+        listLookup.setItems(list, []);
         return;
     }
 
@@ -163,11 +169,13 @@ class Scratch3DataBlocks {
         const item = args.ITEM;
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, list.value.length + 1, false);
+        const items = listLookup.items(list);
+        const index = Cast.toListIndex(args.INDEX, items.length + 1, false);
         if (index === Cast.LIST_INVALID) {
             return;
         }
-        list.value.splice(index - 1, 0, item);
+        items.splice(index - 1, 0, item);
+        listLookup.changed(list);
         list._monitorUpToDate = false;
     }
 
@@ -175,22 +183,25 @@ class Scratch3DataBlocks {
         const item = args.ITEM;
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, list.value.length, false);
+        const items = listLookup.items(list);
+        const index = Cast.toListIndex(args.INDEX, items.length, false);
         if (index === Cast.LIST_INVALID) {
             return;
         }
-        list.value[index - 1] = item;
+        items[index - 1] = item;
+        listLookup.changed(list);
         list._monitorUpToDate = false;
     }
 
     getItemOfList (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, list.value.length, false);
+        const items = listLookup.items(list);
+        const index = Cast.toListIndex(args.INDEX, items.length, false);
         if (index === Cast.LIST_INVALID) {
             return '';
         }
-        return list.value[index - 1];
+        return items[index - 1];
     }
 
     getItemNumOfList (args, util) {
@@ -198,14 +209,22 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
 
+        const items = listLookup.items(list);
+        if (items.length >= listLookup.MIN_LENGTH) {
+            const found = listLookup.lookup(list, items, item);
+            if (found !== -1) return found;
+        }
+
         // Go through the list items one-by-one using Cast.compare. This is for
         // cases like checking if 123 is contained in a list [4, 7, '123'] --
         // Scratch considers 123 and '123' to be equal.
-        for (let i = 0; i < list.value.length; i++) {
-            if (Cast.compare(list.value[i], item) === 0) {
+        for (let i = 0; i < items.length; i++) {
+            if (Cast.compare(items[i], item) === 0) {
+                listLookup.searched(list, items, i + 1);
                 return i + 1;
             }
         }
+        listLookup.searched(list, items, items.length);
 
         // We don't bother using .indexOf() at all, because it would end up with
         // edge cases such as the index of '123' in [4, 7, 123, '123', 9].
@@ -224,36 +243,46 @@ class Scratch3DataBlocks {
     lengthOfList (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        return list.value.length;
+        return listLookup.items(list).length;
     }
 
     listContainsItem (args, util) {
         const item = args.ITEM;
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        if (list.value.indexOf(item) >= 0) {
+        const items = listLookup.items(list);
+        if (items.length >= listLookup.MIN_LENGTH) {
+            const found = listLookup.lookup(list, items, item);
+            if (found !== -1) return found !== 0;
+        }
+        const strictIndex = items.indexOf(item);
+        if (strictIndex >= 0) {
+            listLookup.searched(list, items, strictIndex + 1);
             return true;
         }
         // Try using Scratch comparison operator on each item.
         // (Scratch considers the string '123' equal to the number 123).
-        for (let i = 0; i < list.value.length; i++) {
-            if (Cast.compare(list.value[i], item) === 0) {
+        for (let i = 0; i < items.length; i++) {
+            if (Cast.compare(items[i], item) === 0) {
+                listLookup.searched(list, items, i + 1);
                 return true;
             }
         }
+        listLookup.searched(list, items, items.length);
         return false;
     }
 
     data_reverselist (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        list.value.reverse();
+        listLookup.items(list).reverse();
+        listLookup.changed(list);
         list._monitorUpToDate = false;
     }
     data_itemexistslist (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, list.value.length, false);
+        const index = Cast.toListIndex(args.INDEX, listLookup.items(list).length, false);
         if (index === Cast.LIST_INVALID) {
             return false;
         }
@@ -262,12 +291,12 @@ class Scratch3DataBlocks {
     data_listisempty (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        return list.value.length < 1;
+        return listLookup.items(list).length < 1;
     }
     data_listarray (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        return JSON.stringify(list.value);
+        return JSON.stringify(listLookup.items(list));
     }
     data_arraylist (args, util) {
         const list = util.target.lookupOrCreateList(
@@ -301,13 +330,13 @@ class Scratch3DataBlocks {
             if (typeof v === 'object') return JSON.stringify(v);
             return String(v);
         });
-        list.value = array;
+        listLookup.setItems(list, array);
     }
     data_listforeachnum (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         if (typeof util.stackFrame.loopCounter === 'undefined') {
-            util.stackFrame.loopCounter = list.value.length;
+            util.stackFrame.loopCounter = listLookup.items(list).length;
         }
         // Only execute once per frame.
         // When the branch finishes, `repeat` will be executed again and
@@ -327,7 +356,7 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         if (typeof util.stackFrame.loopCounter === 'undefined') {
-            util.stackFrame.loopCounter = list.value.length;
+            util.stackFrame.loopCounter = listLookup.items(list).length;
         }
         // Only execute once per frame.
         // When the branch finishes, `repeat` will be executed again and
@@ -338,7 +367,7 @@ class Scratch3DataBlocks {
         if (util.stackFrame.loopCounter >= 0) {
             this.setVariableTo({
                 VARIABLE: args.INDEX,
-                VALUE: list.value[util.stackFrame.loopCounter]
+                VALUE: listLookup.items(list)[util.stackFrame.loopCounter]
             }, util);
             util.startBranch(1, true);
         }

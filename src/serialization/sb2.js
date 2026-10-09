@@ -16,6 +16,9 @@ const MathUtil = require('../util/math-util');
 const specMap = require('./sb2_specmap');
 const Comment = require('../engine/comment');
 const Variable = require('../engine/variable');
+// PMDESKTOP_LISTLOOKUP (section 62): engine-made arrays go in without marking the list as seen by
+// outside code, so it can keep a lookup table (engine/list-lookup.js).
+const listLookup = require('../engine/list-lookup');
 const MonitorRecord = require('../engine/monitor-record');
 const StageLayering = require('../engine/stage-layering');
 const ScratchXUtilities = require('../extension-support/tw-scratchx-utilities');
@@ -716,7 +719,7 @@ const parseScratchObject = function (object, runtime, extensions, topLevel, zip,
                 Variable.LIST_TYPE,
                 false
             );
-            newVariable.value = list.contents;
+            listLookup.setItems(newVariable, list.contents);
             target.variables[newVariable.id] = newVariable;
         }
     }

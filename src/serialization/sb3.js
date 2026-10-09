@@ -8,6 +8,9 @@
 const Blocks = require('../engine/blocks');
 const Sprite = require('../sprites/sprite');
 const Variable = require('../engine/variable');
+// PMDESKTOP_LISTLOOKUP (section 62): engine-made arrays go in without marking the list as seen by
+// outside code, so it can keep a lookup table (engine/list-lookup.js).
+const listLookup = require('../engine/list-lookup');
 const Comment = require('../engine/comment');
 const MonitorRecord = require('../engine/monitor-record');
 const StageLayering = require('../engine/stage-layering');
@@ -656,7 +659,7 @@ const serializeVariables = function (obj, runtime, variables) {
                 obj.broadcasts[varId] = v.value; // name and value is the same for broadcast msgs
                 break;
             case Variable.LIST_TYPE:
-                obj.lists[varId] = [v.name, makeSafeForJSON(runtime, v.value)];
+                obj.lists[varId] = [v.name, makeSafeForJSON(runtime, listLookup.items(v))];
                 break;
             case Variable.SCALAR_TYPE:
                 obj.variables[varId] = [v.name, makeSafeForJSON(runtime, v.value)];
@@ -1452,7 +1455,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
                 Variable.LIST_TYPE,
                 false
             );
-            newList.value = list[1];
+            listLookup.setItems(newList, list[1]);
             target.variables[newList.id] = newList;
         }
     }

@@ -6,6 +6,19 @@
 const uid = require('../util/uid');
 const xmlEscape = require('../util/xml-escape');
 
+// PMDESKTOP_LISTLOOKUP (section 62): a list keeps its items in _value; reading or setting value marks
+// them as seen by outside code, which turns off the list's lookup table (see list-lookup.js).
+function getListValue () {
+    this._exposed = true;
+    this._lookup = null;
+    return this._value;
+}
+function setListValue (value) {
+    this._value = value;
+    this._exposed = true;
+    this._lookup = null;
+}
+
 class Variable {
     /**
      * @param {string} id Id of the variable.
@@ -24,7 +37,13 @@ class Variable {
             this.value = 0;
             break;
         case Variable.LIST_TYPE:
-            this.value = [];
+            Object.defineProperties(this, {
+                _value: {value: [], writable: true, configurable: true},
+                _exposed: {value: false, writable: true, configurable: true},
+                _lookup: {value: null, writable: true, configurable: true},
+                _lookupStats: {value: null, writable: true, configurable: true},
+                value: {get: getListValue, set: setListValue, enumerable: true, configurable: true}
+            });
             break;
         case Variable.BROADCAST_MESSAGE_TYPE:
             this.value = this.name;

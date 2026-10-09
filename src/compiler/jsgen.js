@@ -781,31 +781,31 @@ class JSGenerator {
         case 'list.contents':
             if (this.isOptimized) {
                 // pm: its more consistent to just return the list with spaces inbetween
-                return new TypedInput(`(${this.referenceVariable(node.list)}.value.join(' '))`, TYPE_STRING);
+                return new TypedInput(`(${this.listItems(node.list)}.join(' '))`, TYPE_STRING);
             }
             return new TypedInput(`listContents(${this.referenceVariable(node.list)})`, TYPE_STRING);
         case 'list.get': {
             const index = this.descendInput(node.index);
             if (environment.supportsNullishCoalescing) {
                 if (index.isAlwaysNumberOrNaN()) {
-                    return new TypedInput(`(${this.referenceVariable(node.list)}.value[(${index.asNumber()} | 0) - 1] ?? "")`, TYPE_UNKNOWN);
+                    return new TypedInput(`(${this.listItems(node.list)}[(${index.asNumber()} | 0) - 1] ?? "")`, TYPE_UNKNOWN);
                 }
                 if (index instanceof ConstantInput && index.constantValue === 'last') {
-                    return new TypedInput(`(${this.referenceVariable(node.list)}.value[${this.referenceVariable(node.list)}.value.length - 1] ?? "")`, TYPE_UNKNOWN);
+                    return new TypedInput(`(${this.listItems(node.list)}[${this.listItems(node.list)}.length - 1] ?? "")`, TYPE_UNKNOWN);
                 }
             }
             if (this.isOptimized) {
                 // pm: we can just use this as an index ignoring the string input, the nullish coalescing operator will just make sure we dont return undefined
-                return new TypedInput(`(${this.referenceVariable(node.list)}.value[${index.asUnknown()} - 1] ?? "")`, TYPE_UNKNOWN);
+                return new TypedInput(`(${this.listItems(node.list)}[${index.asUnknown()} - 1] ?? "")`, TYPE_UNKNOWN);
             }
-            return new TypedInput(`listGet(${this.referenceVariable(node.list)}.value, ${index.asUnknown()})`, TYPE_UNKNOWN);
+            return new TypedInput(`listGet(${this.listItems(node.list)}, ${index.asUnknown()})`, TYPE_UNKNOWN);
         }
         case 'list.indexOf':
             return new TypedInput(`listIndexOf(${this.referenceVariable(node.list)}, ${this.descendInput(node.item).asUnknown()})`, TYPE_NUMBER);
         case 'list.amountOf':
-            return new TypedInput(`${this.referenceVariable(node.list)}.value.filter((x) => x == ${this.descendInput(node.value).asUnknown()}).length`, TYPE_NUMBER);
+            return new TypedInput(`${this.listItems(node.list)}.filter((x) => x == ${this.descendInput(node.value).asUnknown()}).length`, TYPE_NUMBER);
         case 'list.length':
-            return new TypedInput(`${this.referenceVariable(node.list)}.value.length`, TYPE_NUMBER);
+            return new TypedInput(`${this.listItems(node.list)}.length`, TYPE_NUMBER);
 
         case 'list.filteritem':
             return new TypedInput('(thread._listFilterItem ?? [""])[(thread._listFilterItem ?? [""]).length - 1]', TYPE_UNKNOWN);
@@ -1731,12 +1731,12 @@ class JSGenerator {
             break;
         }
         case 'list.forEach': {
-            const list = this.referenceVariable(node.list);
+            const list = this.listItems(node.list);
             const set = this.descendVariable(node.variable);
             const to = node.num ? 'index + 1' : 'value';
             this.source +=
-            `for (let index = 0; index < ${list}.value.length; index++) {` +
-                `const value = ${list}.value[index];\n` +
+            `for (let index = 0; index < ${list}.length; index++) {` +
+                `const value = ${list}[index];\n` +
                 `${set.source} = ${to};\n`;
             this.descendStack(node.do, new Frame(true, 'list.forEach'));
             this.source += `};\n`;
@@ -1744,7 +1744,7 @@ class JSGenerator {
         }
         case 'list.add': {
             const list = this.referenceVariable(node.list);
-            this.source += `${list}.value.push(${this.descendInput(node.item).asSafe()});\n`;
+            this.source += `${this.listItems(node.list)}.push(${this.descendInput(node.item).asSafe()});\n`;
             this.source += `${list}._monitorUpToDate = false;\n`;
             break;
         }
@@ -1753,12 +1753,14 @@ class JSGenerator {
             const index = this.descendInput(node.index);
             if (index instanceof ConstantInput) {
                 if (index.constantValue === 'last') {
-                    this.source += `${list}.value.pop();\n`;
+                    this.source += `${this.listItems(node.list)}.pop();\n`;
+                    this.source += this.listChanged(node.list);
                     this.source += `${list}._monitorUpToDate = false;\n`;
                     break;
                 }
                 if (+index.constantValue === 1) {
-                    this.source += `${list}.value.shift();\n`;
+                    this.source += `${this.listItems(node.list)}.shift();\n`;
+                    this.source += this.listChanged(node.list);
                     this.source += `${list}._monitorUpToDate = false;\n`;
                     break;
                 }
@@ -1768,13 +1770,13 @@ class JSGenerator {
             break;
         }
         case 'list.deleteAll':
-            this.source += `${this.referenceVariable(node.list)}.value = [];\n`;
+            this.source += this.listSetItems(node.list, '[]');
             break;
         case 'list.shift': {
             const list = this.referenceVariable(node.list);
             const index = this.descendInput(node.index).asNumber();
             if (index <= 0) break;
-            this.source += `${list}.value = ${list}.value.slice(${index});\n`;
+            this.source += this.listSetItems(node.list, `${this.listItems(node.list)}.slice(${index})`);
             this.source += `${list}._monitorUpToDate = false;\n`;
             break;
         }
@@ -1786,7 +1788,8 @@ class JSGenerator {
             const index = this.descendInput(node.index);
             const item = this.descendInput(node.item);
             if (index instanceof ConstantInput && +index.constantValue === 1) {
-                this.source += `${list}.value.unshift(${item.asSafe()});\n`;
+                this.source += `${this.listItems(node.list)}.unshift(${item.asSafe()});\n`;
+                this.source += this.listChanged(node.list);
                 this.source += `${list}._monitorUpToDate = false;\n`;
                 break;
             }
@@ -1804,7 +1807,7 @@ class JSGenerator {
             const filterOutput = this.localVariables.next();
             this.source += `var ${filterOutput} = [];\n`
             const cloneList = this.localVariables.next();
-            this.source += `var ${cloneList} = [...${this.referenceVariable(node.list)}.value];\n`
+            this.source += `var ${cloneList} = [...${this.listItems(node.list)}];\n`
             this.source += `thread._listFilterItem ??= [];\n`;
             this.source += `thread._listFilterIndex ??= [];\n`;
             this.source += `thread._listFilterItem.push("");\n`;
@@ -1815,7 +1818,7 @@ class JSGenerator {
             this.source += `    ${lastItem} = ${cloneList}[${lastIndex} - 1];\n`;
             this.source += `    if (${this.descendInput(node.bool).asBoolean()}) ${filterOutput}.push(${lastItem});\n`;
             this.source += `};\n`;
-            this.source += `${this.referenceVariable(node.list)}.value = ${filterOutput};\n`;
+            this.source += this.listSetItems(node.list, filterOutput);
             this.source += `thread._listFilterItem.pop();\n`;
             this.source += `thread._listFilterIndex.pop();\n`;
             break;
@@ -2198,6 +2201,25 @@ class JSGenerator {
             return this.evaluateOnce(`target.variables["${sanitize(variable.id)}"]`);
         }
         return this.evaluateOnce(`stage.variables["${sanitize(variable.id)}"]`);
+    }
+
+    // PMDESKTOP_LISTLOOKUP (section 62): a list's items without marking them as seen by outside code
+    // (engine/list-lookup.js). isList is false when a list block points at another kind of variable
+    // (broken projects); that keeps the code from before.
+    listItems (list) {
+        return `${this.referenceVariable(list)}.${list.isList ? '_value' : 'value'}`;
+    }
+
+    // After changing a list's array in place in any way other than adding at the end.
+    listChanged (list) {
+        return list.isList ? `${this.referenceVariable(list)}._lookup = null;\n` : '';
+    }
+
+    // Puts a new array made by the script into a list.
+    listSetItems (list, array) {
+        const reference = this.referenceVariable(list);
+        if (!list.isList) return `${reference}.value = ${array};\n`;
+        return `${reference}._value = ${array};\n${reference}._exposed = false;\n${reference}._lookup = null;\n`;
     }
 
     evaluateOnce (source) {

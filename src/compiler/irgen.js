@@ -32,7 +32,9 @@ const createVariableData = (scope, varObj) => ({
     scope,
     id: varObj.id,
     name: varObj.name,
-    isCloud: varObj.isCloud
+    isCloud: varObj.isCloud,
+    // PMDESKTOP_LISTLOOKUP (section 62): a list variable with the engine's own item storage
+    isList: varObj._lookup !== undefined
 });
 
 /**

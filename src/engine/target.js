@@ -2,6 +2,9 @@ const EventEmitter = require('events');
 
 const Blocks = require('./blocks');
 const Variable = require('../engine/variable');
+// PMDESKTOP_LISTLOOKUP (section 62): engine-made arrays go in without marking the list as seen by
+// outside code, so it can keep a lookup table (engine/list-lookup.js).
+const listLookup = require('./list-lookup');
 const Comment = require('../engine/comment');
 const uid = require('../util/uid');
 const {Map} = require('immutable');
@@ -422,7 +425,7 @@ class Target extends EventEmitter {
                 originalVariable.isCloud
             );
             if (newVariable.type === Variable.LIST_TYPE) {
-                newVariable.value = originalVariable.value.slice(0);
+                listLookup.setItems(newVariable, listLookup.items(originalVariable).slice(0));
             } else {
                 newVariable.value = originalVariable.value;
             }

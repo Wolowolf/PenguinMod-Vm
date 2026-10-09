@@ -18,6 +18,8 @@ const log = require('../util/log');
 const maybeFormatMessage = require('../util/maybe-format-message');
 const StageLayering = require('./stage-layering');
 const Variable = require('./variable');
+// PMDESKTOP_LISTLOOKUP (section 62)
+const listLookup = require('./list-lookup');
 const xmlEscape = require('../util/xml-escape');
 const ScratchLinkWebSocket = require('../util/scratch-link-websocket');
 const FontManager = require('./tw-font-manager');
@@ -3783,16 +3785,19 @@ class Runtime extends EventEmitter {
         for (const target of this.targets) {
             for (const varId in target.variables) {
                 const variable = target.variables[varId];
+                // PMDESKTOP_LISTLOOKUP (section 62): read lists without marking them as seen by outside code
+                const items = listLookup.items(variable);
                 if (variable.type === Variable.LIST_TYPE) {
-                    for (const idx in variable.value) {
-                        const item = variable.value[idx];
+                    for (const idx in items) {
+                        const item = items[idx];
                         if (item.customType) {
                             const {deserialize} = this.serializers[item.typeId];
-                            variable.value[idx] = deserialize(item.serialized, target, variable);
+                            items[idx] = deserialize(item.serialized, target, variable);
+                            listLookup.changed(variable);
                         }
                     }
                 }
-                if (variable.value?.customType) {
+                if (items?.customType) {
                     const customData = variable.value;
                     const {deserialize} = this.serializers[customData.typeId];
                     variable.value = deserialize(customData.serialized, target, variable);

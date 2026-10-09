@@ -12,10 +12,13 @@ const globalState = {
     Cast: require('../util/cast'),
     log: require('../util/log'),
     blockUtility: require('./compat-block-utility'),
+    // PMDESKTOP_LISTLOOKUP (section 62)
+    listLookup: require('../engine/list-lookup'),
     thread: null
 };
 
 let baseRuntime = '';
+const listLookupMinLength = require('../engine/list-lookup').MIN_LENGTH;
 const runtimeFunctions = {};
 
 /**
@@ -418,6 +421,14 @@ runtimeFunctions.distance = `const distance = menu => {
  * @param {number} length Length of the list.
  * @returns {number} 0 based list index, or -1 if invalid.
  */
+/**
+ * PMDESKTOP_LISTLOOKUP (section 62): the items of a list without marking them as seen by outside code
+ * (engine/list-lookup.js). Only list variables have _lookup; broken projects can point a list block at
+ * another kind of variable, which keeps using value.
+ */
+baseRuntime += `const listLookup = globalState.listLookup;
+const listItems = list => (list._lookup === undefined ? list.value : list._value);`;
+
 baseRuntime += `const listIndexSlow = (index, length) => {
     if (index === 'last') {
         return length - 1;
@@ -462,11 +473,13 @@ runtimeFunctions.listGet = `const listGet = (list, idx) => {
  * @param {*} value The new value.
  */
 runtimeFunctions.listReplace = `const listReplace = (list, idx, value) => {
-    const index = listIndex(idx, list.value.length);
+    const items = listItems(list);
+    const index = listIndex(idx, items.length);
     if (index === -1) {
         return;
     }
-    list.value[index] = value;
+    items[index] = value;
+    if (list._lookup) list._lookup = null;
     list._monitorUpToDate = false;
 }`;
 
@@ -477,11 +490,13 @@ runtimeFunctions.listReplace = `const listReplace = (list, idx, value) => {
  * @param {*} value The value to insert.
  */
 runtimeFunctions.listInsert = `const listInsert = (list, idx, value) => {
-    const index = listIndex(idx, list.value.length + 1);
+    const items = listItems(list);
+    const index = listIndex(idx, items.length + 1);
     if (index === -1) {
         return;
     }
-    list.value.splice(index, 0, value);
+    items.splice(index, 0, value);
+    if (list._lookup) list._lookup = null;
     list._monitorUpToDate = false;
 }`;
 
@@ -492,14 +507,16 @@ runtimeFunctions.listInsert = `const listInsert = (list, idx, value) => {
  */
 runtimeFunctions.listDelete = `const listDelete = (list, idx) => {
     if (idx === 'all') {
-        list.value = [];
+        listLookup.setItems(list, []);
         return;
     }
-    const index = listIndex(idx, list.value.length);
+    const items = listItems(list);
+    const index = listIndex(idx, items.length);
     if (index === -1) {
         return;
     }
-    list.value.splice(index, 1);
+    items.splice(index, 1);
+    if (list._lookup) list._lookup = null;
     list._monitorUpToDate = false;
 }`;
 
@@ -510,15 +527,24 @@ runtimeFunctions.listDelete = `const listDelete = (list, idx) => {
  * @returns {boolean} True if the list contains the item
  */
 runtimeFunctions.listContains = `const listContains = (list, item) => {
+    const items = listItems(list);
+    if (items.length >= ${listLookupMinLength}) {
+        const found = listLookup.lookup(list, items, item);
+        if (found !== -1) return found !== 0;
+    }
     // TODO: evaluate whether indexOf is worthwhile here
-    if (list.value.indexOf(item) !== -1) {
+    const strictIndex = items.indexOf(item);
+    if (strictIndex !== -1) {
+        listLookup.searched(list, items, strictIndex + 1);
         return true;
     }
-    for (let i = 0; i < list.value.length; i++) {
-        if (compareEqual(list.value[i], item)) {
+    for (let i = 0; i < items.length; i++) {
+        if (compareEqual(items[i], item)) {
+            listLookup.searched(list, items, i + 1);
             return true;
         }
     }
+    listLookup.searched(list, items, items.length);
     return false;
 }`;
 
@@ -529,7 +555,14 @@ runtimeFunctions.listContains = `const listContains = (list, item) => {
  * @returns {boolean} True if the list contains the item
  */
 runtimeFunctions.listContainsFastest = `const listContainsFastest = (list, item) => {
-    return list.value.some(litem => compareEqual(litem, item));
+    const items = listItems(list);
+    if (items.length < ${listLookupMinLength}) return items.some(litem => compareEqual(litem, item));
+    const found = listLookup.lookup(list, items, item);
+    if (found !== -1) return found !== 0;
+    let compared = 0;
+    const result = items.some(litem => (compared++, compareEqual(litem, item)));
+    listLookup.searched(list, items, compared);
+    return result;
 }`;
 
 /**
@@ -539,11 +572,18 @@ runtimeFunctions.listContainsFastest = `const listContainsFastest = (list, item)
  * @returns {number} The 1-indexed index of the item in the list, otherwise 0
  */
 runtimeFunctions.listIndexOf = `const listIndexOf = (list, item) => {
-    for (let i = 0; i < list.value.length; i++) {
-        if (compareEqual(list.value[i], item)) {
+    const items = listItems(list);
+    if (items.length >= ${listLookupMinLength}) {
+        const found = listLookup.lookup(list, items, item);
+        if (found !== -1) return found;
+    }
+    for (let i = 0; i < items.length; i++) {
+        if (compareEqual(items[i], item)) {
+            listLookup.searched(list, items, i + 1);
             return i + 1;
         }
     }
+    listLookup.searched(list, items, items.length);
     return 0;
 }`;
 
@@ -553,15 +593,16 @@ runtimeFunctions.listIndexOf = `const listIndexOf = (list, item) => {
  * @returns {string} Stringified form of the list.
  */
 runtimeFunctions.listContents = `const listContents = list => {
-    for (let i = 0; i < list.value.length; i++) {
-        const listItem = list.value[i];
+    const items = listItems(list);
+    for (let i = 0; i < items.length; i++) {
+        const listItem = items[i];
         // this is an intentional break from what scratch 3 does to address our automatic string -> number conversions
         // it fixes more than it breaks
         if ((listItem + '').length !== 1) {
-            return list.value.join(' ');
+            return items.join(' ');
         }
     }
-    return list.value.join('');
+    return items.join('');
 }`;
 
 /**
