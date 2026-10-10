@@ -26,6 +26,13 @@ class RuntimeScriptCache {
          */
         this.blockId = blockId;
 
+        /**
+         * PMDESKTOP_EDGEHATS (section 63): what this edge-activated hat's condition reads (edge-hats.js), set on
+         * the first check. Declared here so every cache entry keeps the same shape.
+         * @type {object|boolean|undefined}
+         */
+        this.edgeHatPlan = undefined;
+
         const block = container.getBlock(blockId);
         const fields = container.getFields(block);
 

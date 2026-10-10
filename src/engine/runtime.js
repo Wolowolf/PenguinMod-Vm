@@ -65,6 +65,8 @@ const defaultBlockPackages = {
 // PMDESKTOP_STAGE_PATCH: options that are always on (section 21)
 const PM_ALWAYS_ON = {maxClones: Infinity, miscLimits: false, fencing: false, dangerousOptimizations: true};
 const FrameLoop = require('./tw-frame-loop');
+// PMDESKTOP_EDGEHATS (section 63)
+const edgeHats = require('./edge-hats');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -331,6 +333,13 @@ class Runtime extends EventEmitter {
          * @type {number}
          */
         this._nonMonitorThreadCount = 0;
+
+        /**
+         * PMDESKTOP_EDGEHATS (section 63): edge-activated hat checks skipped in this frame (see edge-hats.js).
+         * Counted as threads for the project's running state, like the threads those checks used to start.
+         * @type {number}
+         */
+        this._skippedEdgeHatChecks = 0;
 
         /**
          * All threads that finished running and were removed from this.threads
@@ -2722,12 +2731,24 @@ class Runtime extends EventEmitter {
         // inside the allScriptsByOpcodeDo callback below.
         const startingThreadListLength = this.threads.length;
 
+        // PMDESKTOP_EDGEHATS (section 63): hats whose answer cannot have changed since their last check are
+        // skipped (edge-hats.js). A skipped hat would not have started either way: its script is already
+        // running, or its check would give the same answer as last time.
+        const skipUnchanged = hatMeta.edgeActivated && !optMatchFields && !this.paused &&
+            (requestedHatOpcode === 'event_whenanything' || requestedHatOpcode === 'event_whengreaterthan');
+
         // Consider all scripts, looking for hats with opcode `requestedHatOpcode`.
         this.allScriptsByOpcodeDo(requestedHatOpcode, (script, target) => {
             const {
                 blockId: topBlockId,
                 fieldsOfInputs: hatFields
             } = script;
+
+            const edgePlan = skipUnchanged ? edgeHats.getPlan(script) : false;
+            if (edgePlan && edgeHats.isUnchanged(edgePlan, target, topBlockId, this)) {
+                this._skippedEdgeHatChecks++;
+                return;
+            }
 
             // Match any requested fields.
             // For example: ensures that broadcasts match.
@@ -2764,6 +2785,7 @@ class Runtime extends EventEmitter {
                 }
             }
             // Start the thread with this top block.
+            if (edgePlan) edgeHats.remember(edgePlan, target, topBlockId, this);
             newThreads.push(this._pushThread(topBlockId, target));
         }, optTarget);
         // For compatibility with Scratch 2, edge triggered hats need to be processed before
@@ -3073,6 +3095,7 @@ class Runtime extends EventEmitter {
         this.updateThreadMap();
 
         // Find all edge-activated hats, and add them to threads to be evaluated.
+        this._skippedEdgeHatChecks = 0;
         for (const hatType in this._hats) {
             if (!this._hats.hasOwnProperty(hatType)) continue;
             const hat = this._hats[hatType];
@@ -3098,7 +3121,7 @@ class Runtime extends EventEmitter {
         // Add done threads so that even if a thread finishes within 1 frame, the green
         // flag will still indicate that a script ran.
         this._emitProjectRunStatus(
-            this.threads.length + doneThreads.length -
+            this.threads.length + doneThreads.length + this._skippedEdgeHatChecks -
                 this._getMonitorThreadCount([...this.threads, ...doneThreads]));
         // Store threads that completed this iteration for testing and other
         // internal purposes.
