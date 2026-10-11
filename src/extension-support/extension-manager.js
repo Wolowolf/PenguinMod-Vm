@@ -51,8 +51,6 @@ const defaultBuiltinExtensions = {
     jgWebsiteRequests: () => require("../extensions/jg_websiteRequests"),
     // jgJSONParsed: handle JSON objects BETTER
     // jgJSONParsed: () => require("../extensions/jg_jsonParsed"),
-    // jgRuntime: edit stage and other stuff
-    jgRuntime: () => require("../extensions/jg_runtime"),
     // jgPrism: blocks for specific use cases or major convenience
     jgPrism: () => require("../extensions/jg_prism"),
     // jgIframe: my last call for help (for legal reasons this is a joke)
@@ -61,8 +59,6 @@ const defaultBuiltinExtensions = {
     jgTween: () => require("../extensions/jg_tween"),
     // jgTailgating: follow sprites like in an RPG
     jgTailgating: () => require("../extensions/jg_tailgating"),
-    // jgScripts: what you know about rollin down in the
-    jgScripts: () => require("../extensions/jg_scripts"),
     // jgCostumeDrawing: draw on costumes
     // hiding so fir doesnt touch
     // jgCostumeDrawing: () => require("../extensions/jg_costumeDrawing"),
@@ -83,31 +79,11 @@ const defaultBuiltinExtensions = {
     jwReflex: () => require("../extensions/jw_reflex"),
     // Blockly 2: a faithful recreation of the original blockly blocks
     blockly2math: () => require("../extensions/blockly-2/math.js"),
-    // jwXml: hi im back haha have funny xml
-    jwXml: () => require("../extensions/jw_xml"),
-    // vector type blah blah blah
-    jwVector: () => require("../extensions/jwVector"),
-    // my own array system yipee
-    jwArray: () => require("../extensions/jwArray"),
-    // mid extension but i need it
-    jwTargets: () => require("../extensions/jwTargets"),
-    // cool new physics extension
-    jwPsychic: () => require("../extensions/jwPsychic"),
-    // test ext for lambda functions or something
-    jwLambda: () => require("../extensions/jwLambda"),
     // omega num port for penguinmod
     // good color utilties
     jwColor: () => require("../extensions/jwColor"),
-    // access to extraFiles
-    jwStorage: () => require("../extensions/jwStorage"),
     // date type
     jwDate: () => require("../extensions/jwDate"),
-    // scoped variables
-    jwScope: () => require("../extensions/jwScope"),
-    // NEW xml extension
-    jwXML: () => require("../extensions/jwXML"),
-    // pointers
-    jwPointer: () => require("../extensions/jwPointer"),
     // integers
 
     // jw: They'll think its made by jwklong >:)

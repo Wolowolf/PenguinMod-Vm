@@ -1696,10 +1696,7 @@ class ScriptTreeGenerator {
             return {
                 kind: 'procedures.return',
                 return: this.descendInputOfBlock(block, 'return'),
-                isDefineClicked: topBlock && this.thread.topBlock === this.script.topBlockId && (topBlock.opcode === "procedures_return" || topBlock.opcode.startsWith("procedures_definition")),
-                compilerInfo: {
-                    jwArrayUnmodified: true
-                }
+                isDefineClicked: topBlock && this.thread.topBlock === this.script.topBlockId && (topBlock.opcode === "procedures_return" || topBlock.opcode.startsWith("procedures_definition"))
             };
         }
         case 'procedures_set': 

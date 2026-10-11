@@ -691,6 +691,7 @@ const serializeComments = function (comments) {
         serializedComment.height = comment.height;
         serializedComment.minimized = comment.minimized;
         serializedComment.text = comment.text;
+        if (comment.style) serializedComment.style = comment.style;
 
         obj[commentId] = serializedComment;
     }
@@ -1342,6 +1343,45 @@ const convertProcedureCompat = function (blockJSON, blocks) {
  * @param {boolean} fromSingleSprite - If true import certain data and merge to existing runtime.
  * @return {!Promise.<Target>} Promise for the target created (stage or sprite), or null for unsupported objects.
  */
+/**
+ * Better Comments (SharkPool's SPcomments extension) is part of the editor now. Its "place me in
+ * project to save" block (TurboWarp copies) is taken out of the scripts before they are loaded.
+ * @param {object} blocks The raw blocks of one sprite or the stage from the project file.
+ */
+const removeBetterCommentsBlocks = function (blocks) {
+    for (const id of Object.keys(blocks)) {
+        const block = blocks[id];
+        if (!block || typeof block !== 'object' || Array.isArray(block)) continue;
+        if (typeof block.opcode !== 'string' || !block.opcode.startsWith('SPcomments_')) continue;
+        const parent = block.parent && blocks[block.parent];
+        const next = block.next && blocks[block.next];
+        if (parent && parent.next === id) parent.next = block.next || null;
+        if (next) {
+            next.parent = parent ? block.parent : null;
+            if (!parent) {
+                next.topLevel = true;
+                next.x = block.x;
+                next.y = block.y;
+            }
+        }
+        delete blocks[id];
+    }
+};
+
+/**
+ * Take Better Comments out of the list of extensions to load and return the comment styles it saved
+ * (keyed by comment id), so they can be put on the comments themselves.
+ * @param {object} extensions The extension info being collected for this project.
+ * @returns {object} Comment id -> saved style.
+ */
+const takeBetterCommentsStyles = function (extensions) {
+    extensions.extensionIDs.delete('SPcomments');
+    extensions.extensionURLs.delete('SPcomments');
+    const data = extensions.extensionData.SPcomments;
+    delete extensions.extensionData.SPcomments;
+    return (data && data.storage && typeof data.storage === 'object') ? data.storage : {};
+};
+
 const parseScratchObject = function (object, runtime, extensions, zip, assets, fromSingleSprite) {
     if (!object.hasOwnProperty('name')) {
         // Watcher/monitor - skip this object until those are implemented in VM.
@@ -1359,6 +1399,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
         sprite.name = object.name;
     }
     if (object.hasOwnProperty('blocks')) {
+        removeBetterCommentsBlocks(object.blocks);
         // register and patch extensions
         for (const blockId in object.blocks) {
             if (!object.blocks.hasOwnProperty(blockId)) continue;
@@ -1509,6 +1550,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
             if (comment.blockId) {
                 newComment.blockId = comment.blockId;
             }
+            newComment.style = Comment.cleanStyle(comment.style);
             target.comments[newComment.id] = newComment;
         }
     }
@@ -1749,6 +1791,8 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
         // We're prioritizing the keys in extensionData over the ones in extensionStorage
     }
 
+    const betterCommentsStyles = takeBetterCommentsStyles(extensions);
+
     // Extract any custom fonts before loading costumes.
     let fontPromise;
     if (json.customFonts) {
@@ -1792,6 +1836,22 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
                 return t;
             }))
         .then(targets => replaceUnsafeCharsInVariableIds(targets))
+        .then(targets => {
+            // comment styles saved by the old Better Comments extension: found by comment id, or (the
+            // ids can change when a project is saved) by the comment's position, as the extension did
+            const oldStyles = Object.values(betterCommentsStyles).filter(s => s && typeof s === 'object');
+            const samePlace = (style, comment) => style.XY &&
+                Math.floor(style.XY.x) === Math.floor(comment.x) && Math.floor(style.XY.y) === Math.floor(comment.y);
+            for (const target of targets) {
+                for (const id in target.comments) {
+                    const comment = target.comments[id];
+                    if (comment.style) continue;
+                    const style = betterCommentsStyles[id] || oldStyles.find(s => samePlace(s, comment));
+                    if (style) comment.style = Comment.cleanStyle(style);
+                }
+            }
+            return targets;
+        })
         .then(targets => {
             // all blocks have been created, its safe to reset the origin from Turbowarp
             if (runtime.origin === 'TurboWarp') runtime.origin = null;
