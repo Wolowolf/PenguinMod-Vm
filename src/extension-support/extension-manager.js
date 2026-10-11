@@ -23,15 +23,12 @@ async function sha256(source) {
 const defaultBuiltinExtensions = {
     // This is an example that isn't loaded with the other core blocks,
     // but serves as a reference for loading core blocks as extensions.
-    coreExample: () => require('../blocks/scratch3_core_example'),
     // These are the non-core built-in extensions.
     pen: () => require('../extensions/scratch3_pen'),
     music: () => require('../extensions/scratch3_music'),
     videoSensing: () => require('../extensions/scratch3_video_sensing'),
 
     // garbomuffin: *silence*
-    // twFiles: replaces jgFiles as it works better on other devices
-    twFiles: () => require('../extensions/tw_files'),
 
     // pm: category expansions & seperations go here
     // pmMotionExpansion: extra motion blocks that were in the category & new ones that werent
@@ -47,8 +44,6 @@ const defaultBuiltinExtensions = {
 
 
     // jg: jeremyes esxsitenisonsnsn
-    // jgWebsiteRequests: fetch GET and POST requests to apis & websites
-    jgWebsiteRequests: () => require("../extensions/jg_websiteRequests"),
     // jgJSONParsed: handle JSON objects BETTER
     // jgJSONParsed: () => require("../extensions/jg_jsonParsed"),
     // jgPrism: blocks for specific use cases or major convenience
@@ -62,8 +57,6 @@ const defaultBuiltinExtensions = {
     // jgCostumeDrawing: draw on costumes
     // hiding so fir doesnt touch
     // jgCostumeDrawing: () => require("../extensions/jg_costumeDrawing"),
-    // jgJavascript: this is like the 3rd time we have implemented JS blocks man
-    jgJavascript: () => require("../extensions/jg_javascript"),
 
     // jgAdvancedText: event extension requested by silvxrcat
     // hiding so fir doesnt touch
@@ -73,17 +66,11 @@ const defaultBuiltinExtensions = {
     // jw: hello it is i jwklong
     // jwProto: placeholders, labels, defenitons, we got em
     jwProto: () => require("../extensions/jw_proto"),
-    // jwPostLit: postlit real????
-    jwPostLit: () => require("../extensions/jw_postlit"),
-    // jwReflex: vector positioning (UNRELEASED, DO NOT ADD TO GUI)
-    jwReflex: () => require("../extensions/jw_reflex"),
     // Blockly 2: a faithful recreation of the original blockly blocks
-    blockly2math: () => require("../extensions/blockly-2/math.js"),
     // omega num port for penguinmod
     // good color utilties
     jwColor: () => require("../extensions/jwColor"),
     // date type
-    jwDate: () => require("../extensions/jwDate"),
     // integers
 
     // jw: They'll think its made by jwklong >:)
@@ -94,8 +81,6 @@ const defaultBuiltinExtensions = {
     // theshovel: ...
     // shovellzcompresss: ...
     shovellzcompresss: () => require("../extensions/theshovel_lzString"),
-    // profanityAPI: ...
-    profanityAPI: () => require("../extensions/theshovel_profanity"),
 
     // gsa: fill out your introduction stupet!!!
     // no >:(
@@ -113,12 +98,8 @@ const defaultBuiltinExtensions = {
     // TW extensions
 
     // lms: ...
-    // lmsutilsblocks: ...
-    lmsutilsblocks: () => require('../extensions/lmsutilsblocks'),
 
     // xeltalliv: ...
-    // xeltallivclipblend: ...
-    xeltallivclipblend: () => require('../extensions/xeltalliv_clippingblending'),
 
     // DT: ...
 
