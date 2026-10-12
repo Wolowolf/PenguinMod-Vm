@@ -237,6 +237,12 @@ class ExtensionManager {
         });
 
         this.extUrlCodes = {};
+
+        // Desktop fork: the extensions of the app's galleries behave like built-ins. The app lists
+        // them (extension ID => gallery address) and a project saves only the ID, like a built-in.
+        // Anything else is refused unless a packaged project switches this on (it holds baked code).
+        this.unrestrictedExtensionURLs = false;
+        this.galleryTableReady = this._loadGalleryTable();
         // extensions that the user has stated (when they where loaded) that they do not wnat updated
         this.keepOlder = [];
         // map of all new shas so we know when a new code update has happened and so ask the user about it
@@ -307,10 +313,51 @@ class ExtensionManager {
         this.builtinExtensions[extensionId] = () => extensionClass;
     }
 
+    /**
+     * Read the app's list of gallery extensions (ID => address) into the default extension URLs.
+     * Only the desktop app's editor has it; anywhere else this does nothing.
+     * @returns {Promise} always resolves
+     */
+    _loadGalleryTable() {
+        try {
+            if (typeof location === 'undefined' || location.host !== 'studio.penguinmod.com') {
+                return Promise.resolve();
+            }
+            const defaults = require('./tw-default-extension-urls');
+            return fetch('https://studio.penguinmod.com/__extension-ids__.json')
+                .then(res => res.json())
+                .then(table => {
+                    for (const id of Object.keys(table)) {
+                        if (!Object.prototype.hasOwnProperty.call(defaults, id) &&
+                            this._isGalleryURL(table[id])) {
+                            defaults[id] = table[id];
+                        }
+                    }
+                })
+                .catch(() => {});
+        } catch (e) {
+            return Promise.resolve();
+        }
+    }
+
     // Desktop fork: only the extensions that ship inside the app may be loaded. Their addresses
     // are the three offline galleries, which the app serves from its own folders. Any other
     // address (web, data:, blob:, file:) is refused, so no extension can be added by the user.
+    // A packaged project (which holds its extensions as data: addresses) turns the check off.
     _isValidExtensionURL(extensionURL) {
+        if (this.unrestrictedExtensionURLs) {
+            try {
+                const protocol = new URL(extensionURL).protocol;
+                return protocol === 'https:' || protocol === 'http:' ||
+                    protocol === 'data:' || protocol === 'file:';
+            } catch (e) {
+                return false;
+            }
+        }
+        return this._isGalleryURL(extensionURL);
+    }
+
+    _isGalleryURL(extensionURL) {
         try {
             const url = String(extensionURL).replace('penguinmod.site', 'penguinmod.com');
             const parsedURL = new URL(url);

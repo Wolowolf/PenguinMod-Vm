@@ -443,7 +443,10 @@ const getExtensionURLsToSave = (extensionIDs, runtime) => {
     const toSave = {};
     for (const extension of extensionIDs) {
         const url = extensionURLs[extension];
-        if (typeof url === 'string') {
+        // Desktop fork: an extension of the app's galleries is saved by ID only, like a built-in
+        // (its address is known from the app's list, see ExtensionManager#_loadGalleryTable).
+        const defaultURL = require('../extension-support/tw-default-extension-urls')[extension];
+        if (typeof url === 'string' && url !== defaultURL) {
             toSave[extension] = url;
         }
     }

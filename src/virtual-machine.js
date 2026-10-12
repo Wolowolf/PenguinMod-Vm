@@ -804,6 +804,8 @@ class VirtualMachine extends EventEmitter {
      */
     async _loadExtensions (extensionIDs, extensionURLs = new Map()) {
         const defaultExtensionURLs = require('./extension-support/tw-default-extension-urls');
+        // The desktop app's list of gallery extensions must have arrived before IDs are looked up.
+        await this.extensionManager.galleryTableReady;
         const extensionPromises = [];
         for (const extensionID of extensionIDs) {
             let url = extensionURLs.get(extensionID);
