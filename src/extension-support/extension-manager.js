@@ -307,14 +307,22 @@ class ExtensionManager {
         this.builtinExtensions[extensionId] = () => extensionClass;
     }
 
+    // Desktop fork: only the extensions that ship inside the app may be loaded. Their addresses
+    // are the three offline galleries, which the app serves from its own folders. Any other
+    // address (web, data:, blob:, file:) is refused, so no extension can be added by the user.
     _isValidExtensionURL(extensionURL) {
         try {
-            const parsedURL = new URL(extensionURL);
+            const url = String(extensionURL).replace('penguinmod.site', 'penguinmod.com');
+            const parsedURL = new URL(url);
+            if (parsedURL.protocol !== 'https:') return false;
             return (
-                parsedURL.protocol === 'https:' ||
-                parsedURL.protocol === 'http:' ||
-                parsedURL.protocol === 'data:' ||
-                parsedURL.protocol === 'file:'
+                parsedURL.host === 'extensions.turbowarp.org' ||
+                parsedURL.host === 'extensions.penguinmod.com' ||
+                parsedURL.host === 'sharkpools-extensions.vercel.app' ||
+                (parsedURL.host === 'sharkpool-sp.github.io' &&
+                    parsedURL.pathname.startsWith('/SharkPools-Extensions/')) ||
+                (parsedURL.host === 'raw.githubusercontent.com' &&
+                    parsedURL.pathname.startsWith('/SharkPool-SP/SharkPools-Extensions/'))
             );
         } catch (e) {
             return false;
