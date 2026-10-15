@@ -1,5 +1,4 @@
 const Cast = require('../util/cast');
-const SandboxRunner = require('../util/sandboxed-javascript-runner.js');
 
 class Scratch3EventBlocks {
     constructor (runtime) {
@@ -79,7 +78,6 @@ class Scratch3EventBlocks {
     getPrimitives () {
         return {
             event_whenanything: this.whenanything,
-            event_whenjavascript: this.whenjavascript,
             event_whentouchingobject: this.touchingObject,
             event_broadcast: this.broadcast,
             event_broadcastandwait: this.broadcastAndWait,
@@ -89,15 +87,6 @@ class Scratch3EventBlocks {
 
     whenanything (args) {
         return Cast.toBoolean(args.ANYTHING);
-    }
-
-    whenjavascript (args) {
-        return new Promise((resolve) => {
-            const js = Cast.toString(args.JS);
-            SandboxRunner.execute(js).then(result => {
-                resolve(result.value === true);
-            })
-        })
     }
 
     getHats () {
@@ -121,10 +110,6 @@ class Scratch3EventBlocks {
                 restartExistingThreads: false
             },
             event_whenanything: {
-                restartExistingThreads: false,
-                edgeActivated: true
-            },
-            event_whenjavascript: {
                 restartExistingThreads: false,
                 edgeActivated: true
             },

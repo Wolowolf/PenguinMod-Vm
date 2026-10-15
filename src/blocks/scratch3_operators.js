@@ -1,6 +1,5 @@
 const Cast = require('../util/cast.js');
 const MathUtil = require('../util/math-util.js');
-const SandboxRunner = require('../util/sandboxed-javascript-runner.js');
 const { validateRegex } = require('../util/json-block-utilities');
 
 class Scratch3OperatorsBlocks {
@@ -71,28 +70,8 @@ class Scratch3OperatorsBlocks {
             operator_code_to_character: this.codeToChar,
             operator_textStartsOrEndsWith: this.textStartsOrEndsWith,
             operator_countAppearTimes: this.countAppearTimes,
-            operator_textIncludesLetterFrom: this.textIncludesLetterFrom,
-            operator_javascript_output: this.javascriptOutput,
-            operator_javascript_boolean: this.javascriptBoolean
+            operator_textIncludesLetterFrom: this.textIncludesLetterFrom
         };
-    }
-    
-    
-    javascriptOutput (args) {
-        return new Promise((resolve, reject) => {
-            const js = Cast.toString(args.JS);
-            SandboxRunner.execute(js).then(result => {
-                resolve(result.value)
-            })
-        })
-    }
-    javascriptBoolean(args) {
-        return new Promise((resolve, reject) => {
-            const js = Cast.toString(args.JS);
-            SandboxRunner.execute(js).then(result => {
-                resolve(result.value === true)
-            })
-        })
     }
 
     charToCode (args) {

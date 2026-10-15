@@ -1,5 +1,4 @@
 const Cast = require('../util/cast');
-const SandboxRunner = require('../util/sandboxed-javascript-runner.js');
 
 class Scratch3ControlBlocks {
     constructor (runtime) {
@@ -56,8 +55,7 @@ class Scratch3ControlBlocks {
             control_backToGreenFlag: this.backToGreenFlag,
             control_exitLoop: this.exitLoop,
             control_continueLoop: this.continueLoop,
-            control_if_return_else_return: this.if_return_else_return,
-            control_javascript_command: this.runJavascript
+            control_if_return_else_return: this.if_return_else_return
         };
     }
 
@@ -101,15 +99,6 @@ class Scratch3ControlBlocks {
                 restartExistingThreads: false
             }
         };
-    }
-
-    runJavascript(args) {
-        return new Promise((resolve) => {
-            const js = Cast.toString(args.JS);
-            SandboxRunner.execute(js).then(result => {
-                resolve(result.value);
-            });
-        });
     }
 
     repeat (args, util) {
