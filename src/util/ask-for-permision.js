@@ -1,8 +1,5 @@
 const uid = require('./uid');
 const alwaysUnsafe = [
-    "jgPrism_evaluate",
-    "jgPrism_evaluate2",
-    "jgPrism_evaluate3",
     "videoSensing_videoToggle",
     "jgPrism_screenshotStage"
 ];

@@ -1,7 +1,6 @@
 const formatMessage = require('format-message');
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
-const SandboxRunner = require('../../util/sandboxed-javascript-runner');
 const beatgammit = {
     deflate: require('./beatgammit-deflate'),
     inflate: require('./beatgammit-inflate')
@@ -457,77 +456,6 @@ class JgPrismBlocks {
                             defaultValue: '000072000101000108000108000111000033'
                         }
                     }
-                },
-                // "---",
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "Deprecated blocks"
-                // },
-                // "---",
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "Don't use any of the blocks below."
-                // },
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "They will be removed soon."
-                // },
-                // "---",
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "(Deprecated) JavaScript"
-                // },
-                {
-                    opcode: 'evaluate',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.evaluate',
-                        default: 'eval [JAVASCRIPT]',
-                        description: 'Block that runs JavaScript code.'
-                    }),
-                    blockType: BlockType.COMMAND,
-                    blockIconURI: warningIcon,
-                    hideFromPalette: true,
-                    arguments: {
-                        JAVASCRIPT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "console.log('Hello!')"
-                        }
-                    }
-                },
-                {
-                    opcode: 'evaluate2',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.evaluate2',
-                        default: 'eval [JAVASCRIPT]',
-                        description: 'Block that runs JavaScript code and returns the result of it.'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    blockIconURI: warningIcon,
-                    hideFromPalette: true,
-                    arguments: {
-                        JAVASCRIPT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "Math.random()"
-                        }
-                    }
-                },
-                {
-                    opcode: 'evaluate3',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.evaluate3',
-                        default: 'eval [JAVASCRIPT]',
-                        description: 'Block that runs JavaScript code.'
-                    }),
-                    blockType: BlockType.HAT,
-                    blockIconURI: warningIcon,
-                    hideFromPalette: true,
-                    arguments: {
-                        JAVASCRIPT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "Math.round(Math.random()) == 1"
-                        }
-                    }
                 }
             ]
         };
@@ -568,41 +496,6 @@ class JgPrismBlocks {
     }
     getAudioVolume() {
         return this.audioPlayer.volume * 100;
-    }
-    // eslint-disable-next-line no-unused-vars
-    evaluate(args, util, realBlockInfo) {
-        return new Promise((resolve, reject) => {
-            SandboxRunner.execute(String(args.JAVASCRIPT)).then(result => {
-                if (!result.success) {
-                    alert(result.value);
-                    console.error(result.value);
-                    return;
-                }
-                resolve(result.value)
-            })
-        })
-    }
-    // eslint-disable-next-line no-unused-vars
-    evaluate2(args, util, realBlockInfo) {
-        return new Promise((resolve, reject) => {
-            SandboxRunner.execute(String(args.JAVASCRIPT)).then(result => {
-                if (!result.success) {
-                    console.error(result.value);
-                }
-                resolve(result.value)
-            })
-        })
-    }
-    // eslint-disable-next-line no-unused-vars
-    evaluate3(args, util, realBlockInfo) {
-        return new Promise((resolve, reject) => {
-            SandboxRunner.execute(String(args.JAVASCRIPT)).then(result => {
-                if (!result.success) {
-                    console.error(result.value);
-                }
-                resolve(result.value === true)
-            })
-        })
     }
     screenshotStage() {
         // should we look for an external canvas

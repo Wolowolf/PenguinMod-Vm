@@ -48,8 +48,6 @@ const defaultBuiltinExtensions = {
     // jgJSONParsed: () => require("../extensions/jg_jsonParsed"),
     // jgPrism: blocks for specific use cases or major convenience
     jgPrism: () => require("../extensions/jg_prism"),
-    // jgIframe: my last call for help (for legal reasons this is a joke)
-    jgIframe: () => require("../extensions/jg_iframe"),
     // jgTween: epic animation
     jgTween: () => require("../extensions/jg_tween"),
     // jgTailgating: follow sprites like in an RPG
@@ -91,7 +89,6 @@ const defaultBuiltinExtensions = {
     // sharkpool: insert sharkpools epic introduction here
     // sharkpoolPrinting: ...
     sharkpoolPrinting: () => require("../extensions/sharkpool_printing"),
-    SPjavascriptV2: () => require("../extensions/sp_javascriptV2"),
 
     // silvxrcat: ...
 
