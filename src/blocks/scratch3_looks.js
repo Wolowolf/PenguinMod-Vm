@@ -356,7 +356,6 @@ class Scratch3LooksBlocks {
             looks_switchbackdroptoandwait: this.switchBackdropAndWait,
             looks_nextcostume: this.nextCostume,
             looks_nextbackdrop: this.nextBackdrop,
-            looks_previouscostume: this.previousCostume,
             looks_changeeffectby: this.changeEffect,
             looks_seteffectto: this.setEffect,
             looks_cleargraphiceffects: this.clearEffects,
@@ -377,7 +376,6 @@ class Scratch3LooksBlocks {
             looks_stretchGetY: this.getStretchY,
             looks_sayWidth: this.getBubbleWidth,
             looks_sayHeight: this.getBubbleHeight,
-            looks_changeVisibilityOfSprite: this.showOrHideSprite,
             looks_changeVisibilityOfSpriteShow: this.showSprite,
             looks_changeVisibilityOfSpriteHide: this.hideSprite,
             looks_stoptalking: this.stopTalking,
@@ -821,12 +819,6 @@ class Scratch3LooksBlocks {
     nextCostume (args, util) {
         this._setCostume(
             util.target, util.target.currentCostume + 1, true
-        );
-    }
-
-    previousCostume (args, util) {
-        this._setCostume(
-            util.target, util.target.currentCostume - 1, true
         );
     }
 

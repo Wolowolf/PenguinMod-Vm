@@ -1,93 +1,7 @@
 const BlockType = require("../../extension-support/block-type");
 const ArgumentType = require("../../extension-support/argument-type");
-const createTranslate = require("../../extension-support/tw-l10n");
 const Cast = require("../../util/cast");
 const MathJS = require("./mathjs.js");
-
-const translate = createTranslate(vm);
-
-const joinWords = [
-  "apple", "banana", "pear",
-  "orange", "mango", "strawberry",
-  "pineapple", "grape", "kiwi"
-];
-
-function generateJoinTranslations(amount, word, type) {
-  switch (type) {
-    case 1:
-      const obj = {};
-      for (let i = 0; i < amount; i++) {
-        let text = `${word} `;
-        for (let j = 0; j < amount; j++) {
-          text += `[STRING${j + 1}]`;
-        }
-        obj[`join${i + 1}`] = text;
-      }
-      return obj;
-  }
-}
-
-function generateJoin(amount) {
-  const argumentTextArray = [];
-  const argumentss = {};
-  for (let i = 0; i < amount; i++) {
-    argumentTextArray.push(`[STRING${i + 1}]`);
-    argumentss[`STRING${i + 1}`] = {
-      type: ArgumentType.STRING,
-      defaultValue: joinWords[i] + ((i === (amount - 1)) ? "" : " ")
-    };
-  }
-
-  const opcode = `join${amount}`;
-  return {
-    opcode: opcode,
-    text: translate({
-      id: opcode,
-      default: `join ${argumentTextArray.join(" ")}`
-    }),
-    blockType: BlockType.REPORTER,
-    hideFromPalette: true,
-    disableMonitor: true,
-    arguments: argumentss
-  };
-}
-function initMegaJoins(amount) {
-  const joins = [];
-  for (let i = 3; i < amount; i++) joins.push(generateJoin(i + 1));
-
-  return joins.map((e, index) => {
-    const switches = [];
-    for (let i = 3; i < amount; i++) {
-      if (i == index + 3) {
-        switches.push({ isNoop: true });
-        continue;
-      }
-      switches.push(`join${i + 1}`);
-    }
-    e["switchText"] = `join x${index + 4}`;
-    e["switches"] = switches;
-    return e;
-  });
-}
-
-function generateJoinList(shown) {
-  if (!shown) return "";
-
-  let xml = "";
-  for (let i = 2; i < 9; i++) {
-    if (i === 2) xml += `<block type="operator_join">`;
-    else if (i === 3) xml += `<block type="operator_join3">`;
-    else xml += `<block type="pmOperatorsExpansion_join${i}">`;
-    for (let j = 1; j <= i; j++) {
-      xml += `<value name="STRING${j}">`;
-      xml += `<shadow type="text"><field name="TEXT">${(joinWords[j - 1] ?? "...") + " "}</field></shadow>`;
-      xml += `</value>`;
-    }
-    xml += `</block>`;
-  }
-
-  return xml;
-}
 
 /**
  * Operators Expansion Class
@@ -100,17 +14,8 @@ class pmOperatorsExpansion {
      * @type {runtime}
      */
     this.runtime = runtime;
-    translate.setup({
-      "zh-cn": {
-        ...generateJoinTranslations(9, "连接字符串", 1)
-      },
-      "zh-tw": {
-        ...generateJoinTranslations(9, "字串組合", 1)
-      }
-    });
     this.runtime.registerCompiledExtensionBlocks("pmOperatorsExpansion", this.getCompileInfo());
 
-    this.showJoins = false;
     this.replacers = Object.create(null);
   }
 
@@ -829,17 +734,6 @@ class pmOperatorsExpansion {
           ],
           switchText: "pitch to speed"
         },
-        "---",
-        {
-          func: "toggleJoinVisibility",
-          blockType: BlockType.BUTTON,
-          text: this.showJoins ? "Hide Old Join Blocks" : "Show Old Join Blocks"
-        },
-        ...initMegaJoins(9),
-        {
-          blockType: BlockType.XML,
-          xml: generateJoinList(this.showJoins)
-        },
       ],
       menus: {
         part: {
@@ -851,14 +745,6 @@ class pmOperatorsExpansion {
         }
       }
     };
-  }
-
-  /**
-   * Toggles the visibility of the deprecated join blocks
-   */
-  toggleJoinVisibility() {
-    this.showJoins = !this.showJoins;
-    this.runtime.extensionManager.refreshBlocks("pmOperatorsExpansion");
   }
 
   /**
@@ -1150,59 +1036,6 @@ class pmOperatorsExpansion {
     const split = text.split("");
     const shuffled = split.sort(() => Math.random() - 0.5);
     return shuffled.join("");
-  }
-
-  // join
-  join4(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4);
-  }
-  join5(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4) +
-      Cast.toString(args.STRING5);
-  }
-  join6(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4) +
-      Cast.toString(args.STRING5) +
-      Cast.toString(args.STRING6);
-  }
-  join7(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4) +
-      Cast.toString(args.STRING5) +
-      Cast.toString(args.STRING6) +
-      Cast.toString(args.STRING7);
-  }
-  join8(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4) +
-      Cast.toString(args.STRING5) +
-      Cast.toString(args.STRING6) +
-      Cast.toString(args.STRING7) +
-      Cast.toString(args.STRING8);
-  }
-  join9(args) {
-    return Cast.toString(args.STRING1) +
-      Cast.toString(args.STRING2) +
-      Cast.toString(args.STRING3) +
-      Cast.toString(args.STRING4) +
-      Cast.toString(args.STRING5) +
-      Cast.toString(args.STRING6) +
-      Cast.toString(args.STRING7) +
-      Cast.toString(args.STRING8) +
-      Cast.toString(args.STRING9);
   }
 
   setReplacer(args) {
