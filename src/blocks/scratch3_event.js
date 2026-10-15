@@ -78,7 +78,6 @@ class Scratch3EventBlocks {
     getPrimitives () {
         return {
             event_whenanything: this.whenanything,
-            event_whentouchingobject: this.touchingObject,
             event_broadcast: this.broadcast,
             event_broadcastandwait: this.broadcastAndWait,
             event_whengreaterthan: this.hatGreaterThanPredicate
@@ -116,10 +115,6 @@ class Scratch3EventBlocks {
             event_whenthisspriteclicked: {
                 restartExistingThreads: true
             },
-            event_whentouchingobject: {
-                restartExistingThreads: false,
-                edgeActivated: true
-            },
             event_whenstageclicked: {
                 restartExistingThreads: true
             },
@@ -134,10 +129,6 @@ class Scratch3EventBlocks {
                 restartExistingThreads: true
             }
         };
-    }
-
-    touchingObject (args, util) {
-        return util.target.isTouchingObject(args.TOUCHINGOBJECTMENU);
     }
 
     hatGreaterThanPredicate (args, util) {

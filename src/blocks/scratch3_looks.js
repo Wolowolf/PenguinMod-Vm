@@ -351,22 +351,18 @@ class Scratch3LooksBlocks {
             looks_hide: this.hide,
             looks_getSpriteVisible: this.getSpriteVisible,
             looks_getOtherSpriteVisible: this.getOtherSpriteVisible,
-            looks_hideallsprites: () => {}, // legacy no-op block
             looks_switchcostumeto: this.switchCostume,
             looks_switchbackdropto: this.switchBackdrop,
             looks_switchbackdroptoandwait: this.switchBackdropAndWait,
             looks_nextcostume: this.nextCostume,
             looks_nextbackdrop: this.nextBackdrop,
             looks_previouscostume: this.previousCostume,
-            looks_previousbackdrop: this.previousBackdrop,
             looks_changeeffectby: this.changeEffect,
             looks_seteffectto: this.setEffect,
             looks_cleargraphiceffects: this.clearEffects,
             looks_getEffectValue: this.getEffectValue,
             looks_changesizeby: this.changeSize,
             looks_setsizeto: this.setSize,
-            looks_changestretchby: () => {},
-            looks_setstretchto: this.stretchSet,
             looks_gotofrontback: this.goToFrontBack,
             looks_goforwardbackwardlayers: this.goForwardBackwardLayers,
             looks_goTargetLayer: this.goTargetLayer,
@@ -880,13 +876,6 @@ class Scratch3LooksBlocks {
         const stage = this.runtime.getTargetForStage();
         this._setBackdrop(
             stage, stage.currentCostume + 1, true
-        );
-    }
-
-    previousBackdrop() {
-        const stage = this.runtime.getTargetForStage();
-        this._setBackdrop(
-            stage, stage.currentCostume - 1, true
         );
     }
 

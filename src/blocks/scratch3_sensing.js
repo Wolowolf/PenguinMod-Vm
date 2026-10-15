@@ -83,7 +83,6 @@ class Scratch3SensingBlocks {
             sensing_answer: this.getAnswer,
             sensing_username: this.getUsername,
             sensing_loggedin: this.getLoggedIn,
-            sensing_userid: () => {}, // legacy no-op block
             sensing_regextest: this.regextest,
             sensing_thing_is_number: this.thing_is_number,
             sensing_thing_has_number: this.thing_has_number,

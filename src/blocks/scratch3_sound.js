@@ -159,8 +159,7 @@ class Scratch3SoundBlocks {
             sound_getLength: this.getLength,
             sound_set_stop_fadeout_to: this.setStopFadeout,
             sound_play_at_seconds: this.playAtSeconds,
-            sound_play_at_seconds_until_done: this.playAtSecondsAndWait,
-            sound_getSoundVolume: this.currentSoundVolume
+            sound_play_at_seconds_until_done: this.playAtSecondsAndWait
         };
     }
 
@@ -175,10 +174,6 @@ class Scratch3SoundBlocks {
                 getId: (targetId, fields) => getMonitorIdForBlockWithArgs(`${targetId}_soundgetEffectValue`, fields)
             },
         };
-    }
-
-    currentSoundVolume (args, util) {
-        
     }
 
     playAtSeconds (args, util) {

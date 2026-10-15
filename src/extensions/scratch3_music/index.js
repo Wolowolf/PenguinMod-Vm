@@ -786,27 +786,6 @@ class Scratch3MusicBlocks {
                     }
                 },
                 {
-                    opcode: 'midiPlayDrumForBeats',
-                    blockType: BlockType.COMMAND,
-                    text: formatMessage({
-                        id: 'music.midiPlayDrumForBeats',
-                        default: 'play drum [DRUM] for [BEATS] beats',
-                        description: 'play drum sample for a number of beats according to a mapping of MIDI codes'
-                    }),
-                    arguments: {
-                        DRUM: {
-                            type: ArgumentType.NUMBER,
-                            menu: 'DRUM',
-                            defaultValue: 1
-                        },
-                        BEATS: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0.25
-                        }
-                    },
-                    hideFromPalette: true
-                },
-                {
                     opcode: 'restForBeats',
                     blockType: BlockType.COMMAND,
                     text: formatMessage({
@@ -855,22 +834,6 @@ class Scratch3MusicBlocks {
                             defaultValue: 1
                         }
                     }
-                },
-                {
-                    opcode: 'midiSetInstrument',
-                    blockType: BlockType.COMMAND,
-                    text: formatMessage({
-                        id: 'music.midiSetInstrument',
-                        default: 'set instrument to [INSTRUMENT]',
-                        description: 'set the instrument for notes played according to a mapping of MIDI codes'
-                    }),
-                    arguments: {
-                        INSTRUMENT: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 1
-                        }
-                    },
-                    hideFromPalette: true
                 },
                 {
                     opcode: 'setTempo',
@@ -936,25 +899,6 @@ class Scratch3MusicBlocks {
         this._playDrumForBeats(args.DRUM, args.BEATS, util);
     }
 
-    /**
-     * Play a drum sound for some number of beats according to the range of "MIDI" drum codes supported.
-     * This block is implemented for compatibility with old Scratch projects that use the
-     * 'drum:duration:elapsed:from:' block.
-     * @param {object} args - the block arguments.
-     * @param {object} util - utility object provided by the runtime.
-     */
-    midiPlayDrumForBeats (args, util) {
-        let drumNum = Cast.toNumber(args.DRUM);
-        drumNum = Math.round(drumNum);
-        const midiDescription = this.MIDI_DRUMS[drumNum - 35];
-        if (midiDescription) {
-            drumNum = midiDescription[0];
-        } else {
-            drumNum = 2; // Default instrument used in Scratch 2.0
-        }
-        drumNum += 1; // drumNum input to _playDrumForBeats is one-indexed
-        this._playDrumForBeats(drumNum, args.BEATS, util);
-    }
 
     /**
      * Internal code to play a drum sound for some number of beats.
@@ -1255,16 +1199,6 @@ class Scratch3MusicBlocks {
         this._setInstrument(args.INSTRUMENT, util, false);
     }
 
-    /**
-     * Select an instrument for playing notes according to a mapping of MIDI codes to Scratch instrument numbers.
-     * This block is implemented for compatibility with old Scratch projects that use the 'midiInstrument:' block.
-     * @param {object} args - the block arguments.
-     * @param {object} util - utility object provided by the runtime.
-     * @property {int} INSTRUMENT - the MIDI number of the instrument to select.
-     */
-    midiSetInstrument (args, util) {
-        this._setInstrument(args.INSTRUMENT, util, true);
-    }
 
     /**
      * Internal code to select an instrument for playing notes. If mapMidi is true, set the instrument according to

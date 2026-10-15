@@ -58,8 +58,7 @@ const defaultBlockPackages = {
     scratch3_sound: require('../blocks/scratch3_sound'),
     scratch3_sensing: require('../blocks/scratch3_sensing'),
     scratch3_data: require('../blocks/scratch3_data'),
-    scratch3_procedures: require('../blocks/scratch3_procedures'),
-    pm_liveTests: require('../blocks/pm_live tests')
+    scratch3_procedures: require('../blocks/scratch3_procedures')
 };
 
 // PMDESKTOP_STAGE_PATCH: options that are always on (section 21)

@@ -917,7 +917,7 @@ class pmEventsExpansion {
     _eventNames() {
         const events = Object.assign({}, CORE_EVENTS);
         for (const opcode of Object.keys(this.runtime._hats)) {
-            if (events[opcode] || opcode === 'event_whentouchingobject') continue;
+            if (events[opcode]) continue;
             for (const extension of this.runtime._blockInfo) {
                 const block = extension.blocks.find(info => info && info.json && info.json.type === opcode);
                 if (block) {

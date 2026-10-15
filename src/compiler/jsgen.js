@@ -1036,9 +1036,6 @@ class JSGenerator {
         case 'op.log2':
             // Needs to be marked as NaN because Math.log2(-1) == NaN
             return new TypedInput(`Math.log2(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
-        case 'op.advlog':
-            // Needs to be marked as NaN because Math.log(-1) == NaN
-            return new TypedInput(`(Math.log(${this.descendInput(node.right).asNumber()}) / (Math.log(${this.descendInput(node.left).asNumber()}))`, TYPE_NUMBER_NAN);
         case 'op.mod':
             this.descendedIntoModulo = true;
             // Needs to be marked as NaN because mod(0, 0) (and others) == NaN
@@ -1282,8 +1279,6 @@ class JSGenerator {
             console.warn('unexpected noop');
             return new TypedInput('""', TYPE_UNKNOWN);
 
-        case 'control.dualBlock':
-            return new TypedInput('"dual block works!"', TYPE_STRING);
         case 'control.fromToIndex':
             return new TypedInput('(typeof _pmControlFromToIndex !== "undefined" ? _pmControlFromToIndex : 0)', TYPE_NUMBER)
 
@@ -1437,18 +1432,6 @@ class JSGenerator {
             this.isWarp = true;
             this.descendStack(node.code, new Frame(false, 'control.allAtOnce'));
             this.isWarp = ooldWarp;
-            break;
-        }
-        case 'control.newScript': {
-            const currentBlockId = this.localVariables.next();
-            const branchBlock = this.localVariables.next();
-            // get block id so we can get branch
-            this.source += `var ${currentBlockId} = thread.peekStack();\n`;
-            this.source += `var ${branchBlock} = thread.target.blocks.getBranch(${currentBlockId}, 0);\n`;
-            // push new thread if we found a branch
-            this.source += `if (${branchBlock}) {`;
-            this.source += `runtime._pushThread(${branchBlock}, target, {});\n`;
-            this.source += `}`;
             break;
         }
         case 'control.exitCase':
@@ -1971,18 +1954,6 @@ class JSGenerator {
         case 'pen.changeSize':
             this.source += `${PEN_EXT}._changePenSizeBy(${this.descendInput(node.size).asNumber()}, target);\n`;
             break;
-        case 'pen.legacyChangeHue':
-            this.source += `${PEN_EXT}._changePenHueBy(${this.descendInput(node.hue).asNumber()}, target);\n`;
-            break;
-        case 'pen.legacyChangeShade':
-            this.source += `${PEN_EXT}._changePenShadeBy(${this.descendInput(node.shade).asNumber()}, target);\n`;
-            break;
-        case 'pen.legacySetHue':
-            this.source += `${PEN_EXT}._setPenHueToNumber(${this.descendInput(node.hue).asNumber()}, target);\n`;
-            break;
-        case 'pen.legacySetShade':
-            this.source += `${PEN_EXT}._setPenShadeToNumber(${this.descendInput(node.shade).asNumber()}, target);\n`;
-            break;
         case 'pen.setColor':
             this.source += `${PEN_EXT}._setPenColorToColor(${this.descendInput(node.color).asColor()}, target);\n`;
             break;
@@ -2139,10 +2110,6 @@ class JSGenerator {
             }
             break;
         }
-
-        case 'control.dualBlock':
-            this.source += `console.log("dual block works");\n`
-            break
 
         default:
             log.warn(`JS: Unknown stacked block: ${node.kind}`, node);

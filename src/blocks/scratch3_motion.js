@@ -30,16 +30,12 @@ class Scratch3MotionBlocks {
     getPrimitives () {
         return {
             motion_movesteps: this.moveSteps,
-            motion_movebacksteps: this.moveStepsBack,
-            motion_moveupdownsteps: this.moveStepsUpDown,
             motion_gotoxy: this.goToXY,
             motion_goto: this.goTo,
             motion_turnright: this.turnRight,
             motion_turnleft: this.turnLeft,
             motion_turnrightaroundxy: this.turnRightAround,
             motion_turnleftaroundxy: this.turnLeftAround,
-            motion_turnaround: this.turnAround,
-            motion_pointinrandomdirection: this.pointInDirectionRandom,
             motion_pointtowardsxy: this.pointTowardsXY,
             motion_pointindirection: this.pointInDirection,
             motion_pointtowards: this.pointTowards,
@@ -59,11 +55,6 @@ class Scratch3MotionBlocks {
             motion_direction: this.getDirection,
             motion_move_sprite_to_scene_side: this.moveToStageSide,
             // Legacy no-op blocks:
-            motion_scroll_right: () => {},
-            motion_scroll_up: () => {},
-            motion_align_scene: () => {},
-            motion_xscroll: () => {},
-            motion_yscroll: () => {}
         };
     }
 
@@ -156,21 +147,6 @@ class Scratch3MotionBlocks {
         const steps = Cast.toNumber(args.STEPS);
         this._moveSteps(steps, util.target);
     }
-    moveStepsBack (args, util) {
-        const steps = Cast.toNumber(args.STEPS);
-        this._moveSteps(0 - steps, util.target);
-    }
-    moveStepsUpDown (args, util) {
-        const direction = Cast.toString(args.DIRECTION);
-        const steps = Cast.toNumber(args.STEPS);
-        this.turnLeft({ DEGREES: 90 }, util);
-        if (direction === 'up') {
-            this._moveSteps(steps, util.target);
-        } else if (direction === 'down') {
-            this._moveSteps(0 - steps, util.target);
-        }
-        this.turnRight({ DEGREES: 90 }, util);
-    }
     _moveSteps (steps, target) { // used by compiler
         const radians = MathUtil.degToRad(90 - target.direction);
         const dx = steps * Math.cos(radians);
@@ -252,14 +228,6 @@ class Scratch3MotionBlocks {
     pointInDirection (args, util) {
         const direction = Cast.toNumber(args.DIRECTION);
         util.target.setDirection(direction);
-    }
-
-    turnAround (_, util) {
-        this.turnRight({ DEGREES: 180 }, util);
-    }
-
-    pointInDirectionRandom (_, util) {
-        this.pointTowards({ TOWARDS: '_random_' }, util);
     }
 
     pointTowardsXY (args, util) {

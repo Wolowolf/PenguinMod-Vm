@@ -206,45 +206,6 @@ const specMap = {
         argMap: [
         ]
     },
-    'scrollRight': {
-        opcode: 'motion_scroll_right',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'DISTANCE'
-            }
-        ]
-    },
-    'scrollUp': {
-        opcode: 'motion_scroll_up',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'DISTANCE'
-            }
-        ]
-    },
-    'scrollAlign': {
-        opcode: 'motion_align_scene',
-        argMap: [
-            {
-                type: 'field',
-                fieldName: 'ALIGNMENT'
-            }
-        ]
-    },
-    'xScroll': {
-        opcode: 'motion_xscroll',
-        argMap: [
-        ]
-    },
-    'yScroll': {
-        opcode: 'motion_yscroll',
-        argMap: [
-        ]
-    },
     'say:duration:elapsed:from:': {
         opcode: 'looks_sayforsecs',
         argMap: [
@@ -302,11 +263,6 @@ const specMap = {
     },
     'hide': {
         opcode: 'looks_hide',
-        argMap: [
-        ]
-    },
-    'hideAll': {
-        opcode: 'looks_hideallsprites',
         argMap: [
         ]
     },
@@ -385,26 +341,6 @@ const specMap = {
                 type: 'input',
                 inputOp: 'math_number',
                 inputName: 'SIZE'
-            }
-        ]
-    },
-    'changeStretchBy:': {
-        opcode: 'looks_changestretchby',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'CHANGE'
-            }
-        ]
-    },
-    'setStretchTo:': {
-        opcode: 'looks_setstretchto',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'STRETCH'
             }
         ]
     },
@@ -503,21 +439,6 @@ const specMap = {
             }
         ]
     },
-    'drum:duration:elapsed:from:': {
-        opcode: 'music_midiPlayDrumForBeats',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'DRUM'
-            },
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'BEATS'
-            }
-        ]
-    },
     'rest:elapsed:from:': {
         opcode: 'music_restForBeats',
         argMap: [
@@ -549,16 +470,6 @@ const specMap = {
             {
                 type: 'input',
                 inputOp: 'music_menu_INSTRUMENT',
-                inputName: 'INSTRUMENT'
-            }
-        ]
-    },
-    'midiInstrument:': {
-        opcode: 'music_midiSetInstrument',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
                 inputName: 'INSTRUMENT'
             }
         ]
@@ -640,46 +551,6 @@ const specMap = {
                 type: 'input',
                 inputOp: 'colour_picker',
                 inputName: 'COLOR'
-            }
-        ]
-    },
-    'changePenHueBy:': {
-        opcode: 'pen_changePenHueBy',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'HUE'
-            }
-        ]
-    },
-    'setPenHueTo:': {
-        opcode: 'pen_setPenHueToNumber',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'HUE'
-            }
-        ]
-    },
-    'changePenShadeBy:': {
-        opcode: 'pen_changePenShadeBy',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'SHADE'
-            }
-        ]
-    },
-    'setPenShadeTo:': {
-        opcode: 'pen_setPenShadeToNumber',
-        argMap: [
-            {
-                type: 'input',
-                inputOp: 'math_number',
-                inputName: 'SHADE'
             }
         ]
     },
@@ -1161,11 +1032,6 @@ const specMap = {
     },
     'getUserName': {
         opcode: 'sensing_username',
-        argMap: [
-        ]
-    },
-    'getUserId': {
-        opcode: 'sensing_userid',
         argMap: [
         ]
     },

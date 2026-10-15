@@ -54,14 +54,6 @@ class sharkpoolPrinting {
             name: "Printing",
             blocks: [
                 {
-                    opcode: "isPrintingSupported",
-                    blockType: BlockType.BOOLEAN,
-                    text: "is printing supported?",
-                    // actually seems like browsers havent deprecated this even though it causes crashes in certain browsers
-                    hideFromPalette: true,
-                    disableMonitor: true,
-                },
-                {
                     opcode: "printElements",
                     blockType: BlockType.COMMAND,
                     text: "print elements and wait",
@@ -318,9 +310,6 @@ class sharkpoolPrinting {
     }
 
     // Main
-    isPrintingSupported() {
-        return 'print' in window;
-    }
     async printElements() {
         await this.beginPrint();
     }

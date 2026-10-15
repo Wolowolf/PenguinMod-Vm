@@ -227,7 +227,6 @@ class ScriptTreeGenerator {
                 kind: 'constant',
                 value: block.fields.TEXT.value
             };
-        case 'operator_checkboxBoolean': //im lazy!
         case 'checkbox':
             return {
                 kind: 'constant',
@@ -595,12 +594,6 @@ class ScriptTreeGenerator {
             };
             }
         }
-        case 'operator_advlog':
-            return {
-                kind: 'op.advlog',
-                left: this.descendInputOfBlock(block, 'NUM1'),
-                right: this.descendInputOfBlock(block, 'NUM2')
-            };
         case 'operator_mod':
             return {
                 kind: 'op.mod',
@@ -983,11 +976,6 @@ class ScriptTreeGenerator {
             };
         }
 
-        case 'control_dualblock':
-            return {
-                kind: 'control.dualBlock'
-            };
-
         default: {
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {
@@ -1316,11 +1304,6 @@ class ScriptTreeGenerator {
                 sprite: this.descendInputOfBlock(block, 'RUN_AS_OPTION'),
                 substack: this.descendSubstack(block, 'SUBSTACK')
             };
-        case 'control_new_script':
-            return {
-                kind: 'control.newScript',
-                substack: this.descendSubstack(block, 'SUBSTACK')
-            };
         case 'control_from_to':
             this.analyzeLoop();
             return {
@@ -1638,16 +1621,6 @@ class ScriptTreeGenerator {
                 param: this.descendInputOfBlock(block, 'COLOR_PARAM'),
                 value: this.descendInputOfBlock(block, 'VALUE')
             };
-        case 'pen_changePenHueBy':
-            return {
-                kind: 'pen.legacyChangeHue',
-                hue: this.descendInputOfBlock(block, 'HUE')
-            };
-        case 'pen_changePenShadeBy':
-            return {
-                kind: 'pen.legacyChangeShade',
-                shade: this.descendInputOfBlock(block, 'SHADE')
-            };
         case 'pen_penDown':
             return {
                 kind: 'pen.down'
@@ -1666,16 +1639,6 @@ class ScriptTreeGenerator {
             return {
                 kind: 'pen.setColor',
                 color: this.descendInputOfBlock(block, 'COLOR')
-            };
-        case 'pen_setPenHueToNumber':
-            return {
-                kind: 'pen.legacySetHue',
-                hue: this.descendInputOfBlock(block, 'HUE')
-            };
-        case 'pen_setPenShadeToNumber':
-            return {
-                kind: 'pen.legacySetShade',
-                shade: this.descendInputOfBlock(block, 'SHADE')
             };
         case 'pen_setPenSizeTo':
             return {
@@ -1981,10 +1944,6 @@ class ScriptTreeGenerator {
             control.if.return.else.return
             */
 
-        case 'control_dualblock':
-            return {
-                kind: 'control.dualBlock'
-            };
         default: {
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {

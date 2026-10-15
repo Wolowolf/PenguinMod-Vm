@@ -119,12 +119,10 @@ const uniteReplacments = {
     'jwUnite_regextest': 'sensing_regextest',
     'jwUnite_regexmatch': 'operator_regexmatch',
     'jwUnite_replaceAll': 'operator_replaceAll',
-    'jwUnite_getLettersFromIndexToIndexInText': 'operator_getLettersFromIndexToIndexInText',
     'jwUnite_readLineInMultilineText': 'operator_readLineInMultilineText',
     'jwUnite_newLine': 'operator_newLine',
     'jwUnite_stringify': 'operator_stringify',
     'jwUnite_lerpFunc': 'operator_lerpFunc',
-    'jwUnite_advMath': 'operator_advMath',
     'jwUnite_constrainnumber': 'operator_constrainnumber'
 };
 

@@ -45,11 +45,9 @@ class Scratch3OperatorsBlocks {
             operator_mod: this.mod,
             operator_round: this.round,
             operator_mathop: this.mathop,
-            operator_advlog: this.advlog,
             operator_regexmatch: this.regexmatch,
             operator_replaceAll: this.replaceAll,
             operator_replaceFirst: this.replaceFirst,
-            operator_getLettersFromIndexToIndexInText: this.getLettersFromIndexToIndexInText,
             operator_getLettersFromIndexToIndexInTextFixed: this.getLettersFromIndexToIndexInTextFixed,
             operator_readLineInMultilineText: this.readLineInMultilineText,
             operator_newLine: this.newLine,
@@ -57,7 +55,6 @@ class Scratch3OperatorsBlocks {
             operator_stringify: this.stringify,
             operator_boolify: this.boolify,
             operator_lerpFunc: this.lerpFunc,
-            operator_advMath: this.advMath,
             operator_advMathExpanded: this.advMathExpanded,
             operator_constrainnumber: this.constrainnumber,
             operator_trueBoolean: this.true,
@@ -161,17 +158,6 @@ class Scratch3OperatorsBlocks {
         const amount = Cast.toNumber(args.AMOUNT);
         return ((two - one) * amount) + one;
     }
-    advMath (args) {
-        const one = isNaN(Cast.toNumber(args.ONE)) ? 0 : Cast.toNumber(args.ONE);
-        const two = isNaN(Cast.toNumber(args.TWO)) ? 0 : Cast.toNumber(args.TWO);
-        const operator = Cast.toString(args.OPTION);
-        switch (operator) {
-        case "^": return one ** two;
-        case "root": return one ** 1 / two;
-        case "log": return Math.log(two) / Math.log(one);
-        default: return 0;
-        }
-    }
     advMathExpanded (args) {
         const one = Cast.toNumber(args.ONE);
         const two = Cast.toNumber(args.TWO);
@@ -206,14 +192,6 @@ class Scratch3OperatorsBlocks {
         const substring = string.substring(index1, index2);
         return substring;
     }
-    getLettersFromIndexToIndexInText (args) {
-        const index1 = (Cast.toNumber(args.INDEX1) ? Cast.toNumber(args.INDEX1) : 1) - 1;
-        const index2 = (Cast.toNumber(args.INDEX2) ? Cast.toNumber(args.INDEX2) : 1) - 1;
-        const string = Cast.toString(args.TEXT);
-        const substring = string.substring(index1, index2);
-        return substring;
-    }
-
     replaceAll (args) {
         return Cast.toString(args.text).replaceAll(args.term, args.res);
     }
@@ -383,9 +361,6 @@ class Scratch3OperatorsBlocks {
         return 0;
     }
     
-    advlog (args) {
-        return (Math.log(Cast.toNumber(args.NUM2)) / Math.log(Cast.toNumber(args.NUM1)));
-    }
 }
 
 module.exports = Scratch3OperatorsBlocks;
