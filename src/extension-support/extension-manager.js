@@ -759,16 +759,29 @@ class ExtensionManager {
      * @returns {Array} menu items ready for scratch-blocks.
      * @private
      */
-    _getExtensionMenuItems(extensionObject, menuItemFunctionName) {
+    _getExtensionMenuItems(extensionObject, menuItemFunctionName, field) {
         // Fetch the items appropriate for the target currently being edited. This assumes that menus only
         // collect items when opened by the user while editing a particular target.
         const editingTarget = this.runtime.getEditingTarget() || this.runtime.getTargetForStage();
         const editingTargetID = editingTarget ? editingTarget.id : null;
         const extensionMessageContext = this.runtime.makeMessageContextForTarget(editingTarget);
 
+        // PenguinMod Desktop: the values of the other menus of the block this menu sits in ({ARG: value}),
+        // when scratch-blocks says which field asks (so one menu can depend on another)
+        const blockArgs = {};
+        const menuBlock = field && field.sourceBlock_;
+        const parent = menuBlock && menuBlock.getParent && menuBlock.getParent();
+        if (parent && parent.inputList) {
+            for (const input of parent.inputList) {
+                const shadow = input.connection && input.connection.targetBlock();
+                const shadowField = shadow && shadow.isShadow() && shadow.inputList[0] && shadow.inputList[0].fieldRow[0];
+                if (shadowField && shadowField.getValue) blockArgs[input.name] = shadowField.getValue();
+            }
+        }
+
         // TODO: Fix this to use dispatch.call when extensions are running in workers.
         const menuFunc = extensionObject[menuItemFunctionName];
-        const menuItems = menuFunc.call(extensionObject, editingTargetID).map(
+        const menuItems = menuFunc.call(extensionObject, editingTargetID, blockArgs).map(
             item => {
                 item = maybeFormatMessage(item, extensionMessageContext);
                 switch (typeof item) {
@@ -777,7 +790,7 @@ class ExtensionManager {
                     return [
                         maybeFormatMessage(item.text, extensionMessageContext),
                         item.value
-                    ];
+                    ].concat(item.disabled ? ['disabled'] : []);
                 case 'string':
                     return [item, item];
                 default:
