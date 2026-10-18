@@ -197,6 +197,13 @@ class ExtensionManager {
         this.workerURLs = [];
 
         /**
+         * Set by the editor: (extension id, extension URL or undefined) => name to show instead of the
+         * extension's own name, or a falsy value to keep it.
+         * @type {?function}
+         */
+        this.categoryNameOf = null;
+
+        /**
          * Map of loaded extension URLs/IDs to service names.
          * @type {Map.<string, string>}
          * @private
@@ -694,6 +701,13 @@ class ExtensionManager {
             throw new Error('Invalid extension id');
         }
         extensionInfo.name = extensionInfo.name || extensionInfo.id;
+        // a name given by the editor for this extension (its URL or built-in id) replaces its own
+        if (this.categoryNameOf) {
+            // Service names for extension workers are in the format "extension.WORKER_ID.EXTENSION_ID"
+            const extensionURL = this.workerURLs[+serviceName.split('.')[1]];
+            const name = this.categoryNameOf(extensionInfo.id, extensionURL);
+            if (name) extensionInfo.name = name;
+        }
         extensionInfo.blocks = extensionInfo.blocks || [];
         extensionInfo.targetTypes = extensionInfo.targetTypes || [];
         extensionInfo.menus = extensionInfo.menus || {};
