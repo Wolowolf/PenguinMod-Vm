@@ -419,42 +419,6 @@ const getExtensionIDs = runtime => runtime._blockInfo
     .filter(ext => runtime.extensionManager.isExtensionLoaded(ext));
 
 /**
- * @param {Set<string>|string[]} extensionIDs Project extension IDs
- * @param {Runtime} runtime The runtime to check in
- * @returns {Record<string, string>|null} extension ID -> URL map, or null if no custom extensions.
- */
-const getExtensionURLsToSave = (extensionIDs, runtime) => {
-    // Extension manager only exists when runtime is wrapped by VirtualMachine
-    if (!runtime.extensionManager) {
-        return null;
-    }
-
-    // We'll save the extensions in the format:
-    // {
-    //   "extensionid": "https://...",
-    //   "otherid": "https://..."
-    // }
-    // Which lets the VM know which URLs correspond to which IDs, which is useful when the project
-    // is being loaded. For example, if the extension is eventually converted to a builtin extension
-    // or if it is already loaded, then it doesn't need to fetch the script again.
-    const extensionURLs = runtime.extensionManager.getExtensionURLs();
-    const toSave = {};
-    for (const extension of extensionIDs) {
-        const url = extensionURLs[extension];
-        // Desktop fork: an extension of the app's galleries is saved by ID only, like a built-in
-        // (its address is known from the app's list, see ExtensionManager#_loadGalleryTable).
-        const defaultURL = require('../extension-support/tw-default-extension-urls')[extension];
-        if (typeof url === 'string' && url !== defaultURL) {
-            toSave[extension] = url;
-        }
-    }
-    if (Object.keys(toSave).length === 0) {
-        return null;
-    }
-    return toSave;
-};
-
-/**
  * Serialize the given blocks object (representing all the blocks for the target
  * currently being serialized.)
  * @param {object} blocks The blocks to be serialized
@@ -500,28 +464,20 @@ const serializeBlocks = function (blocks) {
 
 /**
  * @param {unknown} blocks Output of serializeStandaloneBlocks
- * @returns {{blocks: Block[], extensionURLs: Map<string, string>}} The deserialized blocks. includes the extension urls included with those blocks
+ * @returns {{blocks: Block[]}} The deserialized blocks
  */
 const deserializeStandaloneBlocks = blocks => {
     // deep clone to ensure it's safe to modify later
     blocks = JSON.parse(JSON.stringify(blocks));
 
+    // Desktop fork: blocks copied with extension addresses ({blocks, extensionURLs}); the
+    // addresses are ignored, extensions load by ID only.
     if (blocks.extensionURLs) {
-        const extensionURLs = new Map();
-        for (const [id, url] of Object.entries(blocks.extensionURLs)) {
-            extensionURLs.set(id, url);
-        }
-        return {
-            blocks: blocks.blocks,
-            extensionURLs
-        };
+        return {blocks: blocks.blocks};
     }
 
     // Vanilla Scratch format is just a list of block objects
-    return {
-        blocks,
-        extensionURLs: new Map()
-    };
+    return {blocks};
 };
 
 /**
@@ -529,18 +485,9 @@ const deserializeStandaloneBlocks = blocks => {
  * @param {Runtime} runtime Runtime
  * @returns {object} Something that can be understood by deserializeStandaloneBlocks
  */
+// eslint-disable-next-line no-unused-vars
 const serializeStandaloneBlocks = (blocks, runtime) => {
-    const extensionIDs = new Set(getExtensionIDs(runtime));
-    const extensionURLs = getExtensionURLsToSave(extensionIDs, runtime);
-    if (extensionURLs) {
-        return {
-            blocks,
-            // same format as project.json
-            extensionURLs: extensionURLs
-        };
-    }
-    // Vanilla Scratch always just uses the block array as-is. To reduce compatibility concerns
-    // we too will use that when possible.
+    // Desktop fork: extensions are saved by ID only, so the block array is used as-is.
     return blocks;
 };
 
@@ -840,11 +787,7 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
 
     if (targetId) {
         const target = serializedTargets[0];
-        const extensionURLs = getExtensionURLsToSave(extensions, runtime);
         target.extensions = extensions;
-        if (extensionURLs) {
-            target.extensionURLs = extensionURLs;
-        }
 
         // add extension datas
         target.extensionData = {};
@@ -884,10 +827,6 @@ const serialize = function (runtime, targetId, {allowOptimization = true} = {}) 
 
     // Assemble extension list
     obj.extensions = extensions;
-    const extensionURLs = getExtensionURLsToSave(extensions, runtime);
-    if (extensionURLs) {
-        obj.extensionURLs = extensionURLs;
-    }
 
     if (fonts) {
         obj.customFonts = fonts;
@@ -1783,10 +1722,6 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
         runtime.origin = null;
     }
 
-    // Extract custom extension IDs, if they exist.
-    if (json.extensionURLs) {
-        extensions.extensionURLs = new Map(Object.entries(json.extensionURLs));
-    }
     if (json.extensionData || json.extensionStorage) {
         extensions.extensionData = Object.assign(json.extensionStorage ?? {}, json.extensionData);
         // We're prioritizing the keys in extensionData over the ones in extensionStorage

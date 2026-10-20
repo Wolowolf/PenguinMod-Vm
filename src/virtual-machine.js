@@ -800,18 +800,16 @@ class VirtualMachine extends EventEmitter {
 
     /**
      * @param {string[]} extensionIDs The IDs of the extensions
-     * @param {Map<string, string>} extensionURLs A map of extension ID to URL
      */
-    async _loadExtensions (extensionIDs, extensionURLs = new Map()) {
-        const defaultExtensionURLs = require('./extension-support/tw-default-extension-urls');
-        // The desktop app's list of gallery extensions must have arrived before IDs are looked up.
-        await this.extensionManager.galleryTableReady;
+    async _loadExtensions (extensionIDs) {
+        // Desktop fork: a project names its extensions by ID only; addresses stored in a project
+        // are ignored. A gallery extension loads from the app's list of shipped extensions; an ID
+        // that is neither shipped nor built in stops the project from loading.
+        const shippedExtensions = require('./extension-support/shipped-extensions.json');
         const extensionPromises = [];
         for (const extensionID of extensionIDs) {
-            let url = extensionURLs.get(extensionID);
-            if (!url && Object.prototype.hasOwnProperty.call(defaultExtensionURLs, extensionID)) {
-                url = defaultExtensionURLs[extensionID];
-            }
+            const url = Object.prototype.hasOwnProperty.call(shippedExtensions, extensionID) ?
+                shippedExtensions[extensionID] : null;
             if (this.extensionManager.isExtensionLoaded(extensionID)) {
                 // Already loaded
             } else if (url) {
@@ -843,7 +841,7 @@ class VirtualMachine extends EventEmitter {
 
         targets = targets.filter(target => !!target);
 
-        return this._loadExtensions(extensions.extensionIDs, extensions.extensionURLs).then(() => {
+        return this._loadExtensions(extensions.extensionIDs).then(() => {
             const deprecated_extensionStorage = {};
             for (const extension of extensions.extensionIDs) {
                 if (!extensions.extensionData[extension]) continue;
@@ -1784,7 +1782,7 @@ class VirtualMachine extends EventEmitter {
     shareBlocksToTarget (blocks, targetId, optFromTargetId) {
         const sb3 = require('./serialization/sb3');
 
-        const {blocks: copiedBlocks, extensionURLs} = sb3.deserializeStandaloneBlocks(blocks);
+        const {blocks: copiedBlocks} = sb3.deserializeStandaloneBlocks(blocks);
         newBlockIds(copiedBlocks);
         const target = this.runtime.getTargetById(targetId);
 
@@ -1802,7 +1800,7 @@ class VirtualMachine extends EventEmitter {
             .filter(id => !this.extensionManager.isExtensionLoaded(id)) // and remove loaded extensions
         );
 
-        return this._loadExtensions(extensionIDs, extensionURLs).then(() => {
+        return this._loadExtensions(extensionIDs).then(() => {
             copiedBlocks.forEach(block => {
                 target.blocks.createBlock(block);
             });

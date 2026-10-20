@@ -8,6 +8,18 @@ const Cast = require('../util/cast');
 
 const AddonSwitches = require('./extension-addon-switchers');
 
+// Desktop fork: the gallery extensions that ship with the app (ID => address); nothing else loads.
+const shippedExtensions = require('./shipped-extensions.json');
+const normalizeExtensionURL = url => {
+    try {
+        return new URL(String(url).replace('penguinmod.site', 'penguinmod.com')).href;
+    } catch (e) {
+        return null;
+    }
+};
+const shippedExtensionURLs = new Set(Object.values(shippedExtensions).map(normalizeExtensionURL));
+const isShippedExtensionURL = url => shippedExtensionURLs.has(normalizeExtensionURL(url));
+
 // thhank yoh random stack droverflwo person
 async function sha256(source) {
     const sourceBytes = new TextEncoder().encode(source);
@@ -242,11 +254,11 @@ class ExtensionManager {
 
         this.extUrlCodes = {};
 
-        // Desktop fork: the extensions of the app's galleries behave like built-ins. The app lists
-        // them (extension ID => gallery address) and a project saves only the ID, like a built-in.
-        // Anything else is refused unless a packaged project switches this on (it holds baked code).
+        // Desktop fork: only the extensions that ship with the app can load: the built-ins and the
+        // gallery extensions in shipped-extensions.json (ID => address of the app's offline gallery
+        // copy). A project saves only their IDs, like built-ins. A packaged project, which holds
+        // baked copies the packager made from that list, switches the check off.
         this.unrestrictedExtensionURLs = false;
-        this.galleryTableReady = this._loadGalleryTable();
         // extensions that the user has stated (when they where loaded) that they do not wnat updated
         this.keepOlder = [];
         // map of all new shas so we know when a new code update has happened and so ask the user about it
@@ -317,37 +329,9 @@ class ExtensionManager {
         this.builtinExtensions[extensionId] = () => extensionClass;
     }
 
-    /**
-     * Read the app's list of gallery extensions (ID => address) into the default extension URLs.
-     * Only the desktop app's editor has it; anywhere else this does nothing.
-     * @returns {Promise} always resolves
-     */
-    _loadGalleryTable() {
-        try {
-            if (typeof location === 'undefined' || location.host !== 'studio.penguinmod.com') {
-                return Promise.resolve();
-            }
-            const defaults = require('./tw-default-extension-urls');
-            return fetch('https://studio.penguinmod.com/__extension-ids__.json')
-                .then(res => res.json())
-                .then(table => {
-                    for (const id of Object.keys(table)) {
-                        if (!Object.prototype.hasOwnProperty.call(defaults, id) &&
-                            this._isGalleryURL(table[id])) {
-                            defaults[id] = table[id];
-                        }
-                    }
-                })
-                .catch(() => {});
-        } catch (e) {
-            return Promise.resolve();
-        }
-    }
-
-    // Desktop fork: only the extensions that ship inside the app may be loaded. Their addresses
-    // are the three offline galleries, which the app serves from its own folders. Any other
-    // address (web, data:, blob:, file:) is refused, so no extension can be added by the user.
-    // A packaged project (which holds its extensions as data: addresses) turns the check off.
+    // Desktop fork: a gallery address is accepted only when it is the address of a shipped
+    // extension (shipped-extensions.json); other gallery files, web addresses, data:, blob: and
+    // file: are refused.
     _isValidExtensionURL(extensionURL) {
         if (this.unrestrictedExtensionURLs) {
             try {
@@ -358,26 +342,7 @@ class ExtensionManager {
                 return false;
             }
         }
-        return this._isGalleryURL(extensionURL);
-    }
-
-    _isGalleryURL(extensionURL) {
-        try {
-            const url = String(extensionURL).replace('penguinmod.site', 'penguinmod.com');
-            const parsedURL = new URL(url);
-            if (parsedURL.protocol !== 'https:') return false;
-            return (
-                parsedURL.host === 'extensions.turbowarp.org' ||
-                parsedURL.host === 'extensions.penguinmod.com' ||
-                parsedURL.host === 'sharkpools-extensions.vercel.app' ||
-                (parsedURL.host === 'sharkpool-sp.github.io' &&
-                    parsedURL.pathname.startsWith('/SharkPools-Extensions/')) ||
-                (parsedURL.host === 'raw.githubusercontent.com' &&
-                    parsedURL.pathname.startsWith('/SharkPool-SP/SharkPools-Extensions/'))
-            );
-        } catch (e) {
-            return false;
-        }
+        return isShippedExtensionURL(extensionURL);
     }
 
     /**
@@ -410,7 +375,6 @@ class ExtensionManager {
 
         this.loadingAsyncExtensions++;
 
-        const sandboxMode = await this.securityManager.getSandboxMode(normalURL);
         const rewritten = await this.securityManager.rewriteExtensionURL(normalURL);
         const blob = (await fetch(rewritten).then(req => req.blob()))
         const blobUrl = URL.createObjectURL(blob)
@@ -429,43 +393,26 @@ class ExtensionManager {
         this.extensionHashes[extensionURL] = newHash
         if (oldHash && oldHash !== newHash && this.securityManager.shouldUseLocal(extensionURL)) return Promise.reject('useLocal')
 
-        if (sandboxMode === 'unsandboxed') {
-            const { load } = require('./tw-unsandboxed-extension-runner');
-            const extensionObjects = await load(blobUrl, this.vm)
-                .catch(error => this._failedLoadingExtensionScript(error));
-            const fakeWorkerId = this.nextExtensionWorker++;
-            const returnedIDs = [];
-            this.workerURLs[fakeWorkerId] = normalURL;
+        // Desktop fork: shipped extensions always run unsandboxed (no worker or iframe sandbox).
+        const { load } = require('./tw-unsandboxed-extension-runner');
+        const extensionObjects = await load(blobUrl, this.vm)
+            .catch(error => this._failedLoadingExtensionScript(error));
+        const fakeWorkerId = this.nextExtensionWorker++;
+        const returnedIDs = [];
+        this.workerURLs[fakeWorkerId] = normalURL;
 
-            for (const extensionObject of extensionObjects) {
-                const extensionInfo = extensionObject.getInfo();
-                const serviceName = `unsandboxed.${fakeWorkerId}.${extensionInfo.id}`;
-                dispatch.setServiceSync(serviceName, extensionObject);
-                dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
-                this._loadedExtensions.set(extensionInfo.id, serviceName);
-                returnedIDs.push(extensionInfo.id);
-                this.runtime.compilerRegisterExtension(extensionInfo.id, extensionObject);
-            }
-
-            this._finishedLoadingExtensionScript();
-            return returnedIDs;
+        for (const extensionObject of extensionObjects) {
+            const extensionInfo = extensionObject.getInfo();
+            const serviceName = `unsandboxed.${fakeWorkerId}.${extensionInfo.id}`;
+            dispatch.setServiceSync(serviceName, extensionObject);
+            dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
+            this._loadedExtensions.set(extensionInfo.id, serviceName);
+            returnedIDs.push(extensionInfo.id);
+            this.runtime.compilerRegisterExtension(extensionInfo.id, extensionObject);
         }
 
-        /* eslint-disable max-len */
-        let ExtensionWorker;
-        if (sandboxMode === 'worker') {
-            ExtensionWorker = require('worker-loader?name=js/extension-worker/extension-worker.[hash].js!./extension-worker');
-        } else if (sandboxMode === 'iframe') {
-            ExtensionWorker = (await import(/* webpackChunkName: "iframe-extension-worker" */ './tw-iframe-extension-worker')).default;
-        } else {
-            throw new Error(`Invalid sandbox mode: ${sandboxMode}`);
-        }
-        /* eslint-enable max-len */
-
-        return new Promise((resolve, reject) => {
-            this.pendingExtensions.push({ extensionURL: rewritten, resolve, reject });
-            dispatch.addWorker(new ExtensionWorker());
-        }).catch(error => this._failedLoadingExtensionScript(error));
+        this._finishedLoadingExtensionScript();
+        return returnedIDs;
     }
 
     /**
