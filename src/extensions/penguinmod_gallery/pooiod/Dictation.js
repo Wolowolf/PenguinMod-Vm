@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's pooiod/Dictation.js, moved into
 // the VM as a built-in extension. Section 111 rewrote it for offline speech recognition (same id and blocks);
-// section 113 added other languages (Whisper) and the set language block.
+// section 113 added other languages (Whisper) and the set language block, section 114 live text and the "When I hear" hat.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -62,12 +62,23 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         const MAX_SPEECH = 20 * RATE / FRAME; // after 20 s of speech,
         const NO_SPEECH = 8 * RATE / FRAME; // or after 8 s without speech (text "")
         const MIN_SPEECH = 8; // speech frames needed (0.26 s); shorter sounds are ignored
+        // Live text: the speech so far is recognized again after this many new frames (0.5 s with
+        // Moonshine, 1 s with Whisper, which is slower), when no recognition is running
+        const PARTIAL_FRAMES = { en: 16 };
+        const PARTIAL_FRAMES_WHISPER = 32;
         let base = "";
         let ort = null;
         let vad = null;
         let moonshine = null;
         let whisper = null;
         let job = null;
+        // onnxruntime runs one model at a time: voice detection and recognition take turns
+        let gate = Promise.resolve();
+        const exclusive = (fn) => {
+            const result = gate.then(fn);
+            gate = result.catch(() => {});
+            return result;
+        };
 
         const create = (url) => ort.InferenceSession.create(url, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
         const fetchJson = async (url) => {
@@ -310,7 +321,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             job = null;
             reply(done.id, { type: "heard" }); // the microphone can stop
             if (!audio) return reply(done.id, { type: "done", text: "" });
-            transcribe(audio, done.language).then((result) => reply(done.id, { type: "done", text: result }),
+            exclusive(() => transcribe(audio, done.language)).then((result) => reply(done.id, { type: "done", text: result }),
                 (error) => reply(done.id, { type: "error", error: String((error && error.message) || error) }));
         }
 
@@ -327,7 +338,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     input.set(current.context);
                     input.set(frame, 64);
                     current.context = frame.slice(FRAME - 64);
-                    const out = await vad.run({ input: new ort.Tensor("float32", input, [1, 64 + FRAME]), state: current.state, sr: current.sr });
+                    const out = await exclusive(() => vad.run({ input: new ort.Tensor("float32", input, [1, 64 + FRAME]), state: current.state, sr: current.sr }));
                     current.state = out.stateN;
                     if (job !== current) break;
                     step(current, frame, out.output.data[0]);
@@ -353,6 +364,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 if (current.preRoll.length > PRE_ROLL) current.preRoll.shift();
                 if (probability >= SPEECH) {
                     current.speech = current.preRoll.slice();
+                    current.partialAt = current.speech.length;
                     current.preRoll = [];
                     current.voiced = 1;
                     current.quiet = 0;
@@ -364,6 +376,17 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             current.speech.push(frame);
             if (probability >= SPEECH) current.voiced++;
             current.quiet = probability < QUIET ? current.quiet + 1 : 0;
+            const every = PARTIAL_FRAMES[current.language] || PARTIAL_FRAMES_WHISPER;
+            // only while the player talks: one in the quiet at the end would delay the final text
+            if (current.quiet === 0 && current.voiced >= MIN_SPEECH && !current.partialBusy && current.speech.length - current.partialAt >= every) {
+                current.partialBusy = true;
+                current.partialAt = current.speech.length;
+                const audio = new Float32Array(current.speech.length * FRAME);
+                current.speech.forEach((f, i) => audio.set(f, i * FRAME));
+                exclusive(() => (job === current ? transcribe(audio, current.language) : null)).then((text) => {
+                    if (job === current && text) reply(current.id, { type: "partial", text });
+                }, () => {}).then(() => { current.partialBusy = false; });
+            }
             if (current.quiet >= END_QUIET || current.speech.length >= MAX_SPEECH) {
                 if (current.voiced < MIN_SPEECH) { // a click or a cough: keep listening
                     current.speech = null;
@@ -382,7 +405,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 base = message.data.base;
             } else if (message.type === "start") {
                 job = { id: message.id, language: message.language, ready: false, busy: false, queued: new Float32Array(0), read: 0, context: new Float32Array(64),
-                    state: null, sr: null, frames: 0, preRoll: [], speech: null, voiced: 0, quiet: 0 };
+                    state: null, sr: null, frames: 0, preRoll: [], speech: null, voiced: 0, quiet: 0, partialAt: 0, partialBusy: false };
                 const current = job;
                 (current.language === "en" ? loadMoonshine() : loadWhisper()).catch(() => {}); // reported when transcribing
                 loadVad().then(() => {
@@ -468,11 +491,20 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     let language = "english";
     runtime.on("PROJECT_LOADED", () => { language = "english"; });
     let listening = null;
+    // What the current (or last) listening heard so far, and the "When I hear" hats that fired for it
+    let heard = "";
+    let fired = new Set();
+    const hear = (text) => {
+        heard = text;
+        runtime.startHats(`${ID}_whenIHear`);
+    };
     let allowed = typeof scaffolding !== "undefined"; // a packaged game does not ask
     const listen = () => {
         if (listening) return listening.promise;
         const job = { id: nextId++, language, stream: null, context: null, stopped: false };
         listening = job;
+        heard = "";
+        fired = new Set();
         const closeMic = () => {
             if (job.stream) job.stream.getTracks().forEach((track) => track.stop());
             if (job.context) job.context.close().catch(() => {});
@@ -496,7 +528,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 if (!allowed || !(await ensurePacks(packsFor(job.language))) || job.stopped) return end("");
                 handlers.set(job.id, (message) => {
                     if (message.type === "heard") closeMic();
-                    else if (message.type === "done") end(message.text);
+                    else if (message.type === "partial") hear(message.text);
+                    else if (message.type === "done") {
+                        hear(message.text);
+                        end(message.text);
+                    }
                     else if (message.type === "error") {
                         console.warn("Dictation:", message.error);
                         end("");
@@ -564,6 +600,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     runtime.on("PROJECT_LOADED", scheduleCredits);
     scheduleCredits();
 
+    // "When I hear": letters and digits only, lower case; whole words, or anywhere in the text for
+    // phrases in scripts written without spaces (Chinese, Japanese, Thai)
+    const normalize = (text) => Scratch.Cast.toString(text).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+    const NO_SPACES = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}]/u;
+    const contains = (text, phrase) => (NO_SPACES.test(phrase) ? text.replace(/ /g, "").includes(phrase.replace(/ /g, ""))
+        : ` ${text} `.includes(` ${phrase} `));
+
     class pooiod7Dictation {
         constructor() {
             this.recognizedSpeech = "";
@@ -598,6 +641,20 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         disableMonitor: true,
                     },
                     {
+                        opcode: "speechSoFar",
+                        blockType: Scratch.BlockType.REPORTER,
+                        text: "Speech so far",
+                    },
+                    {
+                        opcode: "whenIHear",
+                        blockType: Scratch.BlockType.HAT,
+                        text: "When I hear [PHRASE]",
+                        isEdgeActivated: false,
+                        arguments: {
+                            PHRASE: { type: Scratch.ArgumentType.STRING, defaultValue: "hello" },
+                        },
+                    },
+                    {
                         opcode: "setLanguage",
                         blockType: Scratch.BlockType.COMMAND,
                         text: "set dictation language to [LANGUAGE]",
@@ -626,6 +683,21 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
         GetSpeech() {
             return this.recognize();
+        }
+
+        // The live text while listening (updated while the player talks), then the recognized speech
+        speechSoFar() {
+            return heard;
+        }
+
+        // Runs once per listening and script when the text heard so far contains the phrase
+        whenIHear(args, util) {
+            const phrase = normalize(args.PHRASE);
+            if (!phrase || !contains(normalize(heard), phrase)) return false;
+            const key = `${util.target.id}|${util.thread ? util.thread.topBlock : ""}|${phrase}`;
+            if (fired.has(key)) return false;
+            fired.add(key);
+            return true;
         }
 
         // A language name from the menu, or its Whisper code (e.g. "de"); anything else is ignored

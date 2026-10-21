@@ -2420,12 +2420,14 @@
   "pooiod7Dictation": {
     "source": "src/extensions/penguinmod_gallery/pooiod/Dictation.js",
     "replaces": [],
-    "note": "offline speech recognition since sections 111 and 113 (Silero VAD, Moonshine for English, Whisper for other languages) in its own worker from the microphone; asks with window.confirm in the editor; language is a setting of the extension",
+    "note": "offline speech recognition since sections 111 and 113 (Silero VAD, Moonshine for English, Whisper for other languages) in its own worker from the microphone; asks with window.confirm in the editor; language is a setting of the extension; live text and the When I hear hat since section 114",
     "blocks": {
       "canUse": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false},
       "WaitAndrecognizeSpeech": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":null,"compiled":false},
       "getRecognizedSpeech": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":false},
       "GetSpeech": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":"string","compiled":false},
+      "speechSoFar": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":false},
+      "whenIHear": {"type":"hat","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"predicate hat started by the extension when text is heard"},
       "setLanguage": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false}
     }
   },
