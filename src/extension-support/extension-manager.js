@@ -19,6 +19,11 @@ const normalizeExtensionURL = url => {
 };
 const shippedExtensionURLs = new Set(Object.values(shippedExtensions).map(normalizeExtensionURL));
 const isShippedExtensionURL = url => shippedExtensionURLs.has(normalizeExtensionURL(url));
+// Desktop fork: gallery extensions moved into the VM (ID => their old gallery address). Their gallery
+// tiles still ask for that address, which loads the built-in extension instead.
+const movedGalleryExtensions = require('./moved-gallery-extensions.json');
+const movedGalleryIDs = new Map(Object.entries(movedGalleryExtensions)
+    .map(([id, url]) => [normalizeExtensionURL(url), id]));
 
 // thhank yoh random stack droverflwo person
 async function sha256(source) {
@@ -119,6 +124,36 @@ const defaultBuiltinExtensions = {
     // iygPerlin:
     iygPerlin: () => require('../extensions/iyg_perlin_noise'),
     // fr: waw 3d physics!!
+
+    // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's extensions, moved into the VM
+    // (their gallery addresses: moved-gallery-extensions.json)
+    P7BoxPhys: () => require('../extensions/penguinmod_gallery/pooiod/Box2D'),
+    SPgrids: () => require('../extensions/penguinmod_gallery/SharkPool/Tile-Grids'),
+    SPsoundWaves: () => require('../extensions/penguinmod_gallery/SharkPool/Sound-Waves'),
+    beatSync: () => require('../extensions/penguinmod_gallery/Gen1x/beat_sync'),
+    discordauth: () => require('../extensions/penguinmod_gallery/NotHouse/DiscordAuth'),
+    divVecQuat: () => require('../extensions/penguinmod_gallery/Div/divVecQuat'),
+    dogeiscutResolution: () => require('../extensions/penguinmod_gallery/DogeisCut/Resolution'),
+    e2ee: () => require('../extensions/penguinmod_gallery/MikeDev101/e2ee'),
+    embintranslation: () => require('../extensions/penguinmod_gallery/Embin/embintranslation'),
+    g1nxIrisText: () => require('../extensions/penguinmod_gallery/Gen1x/iris-text'),
+    g1nxLighting: () => require('../extensions/penguinmod_gallery/Gen1x/lighting'),
+    gaimeriCryptoExtension: () => require('../extensions/penguinmod_gallery/gaimerI17/crypto'),
+    gaimeriDeviceMotionExtension: () => require('../extensions/penguinmod_gallery/gaimerI17/DeviceMotion'),
+    googleAuth: () => require('../extensions/penguinmod_gallery/Ikelene/googleAuthExtension'),
+    midi: () => require('../extensions/penguinmod_gallery/electricfuzzball_pm/MIDI'),
+    mubiloppenguinhook: () => require('../extensions/penguinmod_gallery/MubiLop/penguinhook'),
+    numberUtilities: () => require('../extensions/penguinmod_gallery/MubiLop/numutils'),
+    obviousAlexCMath3d: () => require('../extensions/penguinmod_gallery/ObviousAlexC/3DMath'),
+    p7videosharing: () => require('../extensions/penguinmod_gallery/pooiod/VideoSharing'),
+    pmTextToSpeech: () => require('../extensions/penguinmod_gallery/PuzzlingGGG/ttsrV2'),
+    pooiod7Dictation: () => require('../extensions/penguinmod_gallery/pooiod/Dictation'),
+    qxsckbignumber: () => require('../extensions/penguinmod_gallery/qxsck/big-decimal'),
+    randomutils: () => require('../extensions/penguinmod_gallery/Gen1x/random_utils'),
+    spritesheeter: () => require('../extensions/penguinmod_gallery/MubiLop/spritesheeter'),
+    steve0greatnesstimers: () => require('../extensions/penguinmod_gallery/steve0greatness/timers'),
+    toastnotifs: () => require('../extensions/penguinmod_gallery/MubiLop/toastnotifs'),
+    webrtc: () => require('../extensions/penguinmod_gallery/MikeDev101/webrtc'),
 };
 const CORE_EXTENSIONS = [
     'argument',
@@ -352,6 +387,8 @@ class ExtensionManager {
      * @returns {Promise} resolved once the extension is loaded and initialized or rejected on failure
      */
     async loadExtensionURL(extensionURL, oldHash = '') {
+        const movedID = movedGalleryIDs.get(normalizeExtensionURL(extensionURL));
+        if (movedID) extensionURL = movedID;
         if (this.isBuiltinExtension(extensionURL)) {
             this.loadExtensionIdSync(extensionURL);
             return [extensionURL];
@@ -928,6 +965,9 @@ class ExtensionManager {
             const extensionURL = this.workerURLs[workerId];
             if (typeof extensionURL === 'string') {
                 extensionURLs[extensionId] = extensionURL;
+            } else if (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, extensionId)) {
+                // Desktop fork: lets the extension library mark a moved extension's gallery tile as used.
+                extensionURLs[extensionId] = movedGalleryExtensions[extensionId];
             }
         }
         return extensionURLs;

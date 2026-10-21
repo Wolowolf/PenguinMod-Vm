@@ -212,7 +212,7 @@
     }
   },
   "P7BoxPhys": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/pooiod/Box2D.js",
+    "source": "src/extensions/penguinmod_gallery/pooiod/Box2D.js",
     "replaces": [],
     "note": "the physics world, bodies and joints live inside the extension; inputs are not cast",
     "blocks": {
@@ -420,7 +420,7 @@
     }
   },
   "SPgrids": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/SharkPool/Tile-Grids.js",
+    "source": "src/extensions/penguinmod_gallery/SharkPool/Tile-Grids.js",
     "replaces": [],
     "blocks": {
       "createGrid": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -639,7 +639,7 @@
     }
   },
   "SPsoundWaves": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/SharkPool/Sound-Waves.js",
+    "source": "src/extensions/penguinmod_gallery/SharkPool/Sound-Waves.js",
     "replaces": [],
     "note": "oscillators on the engine's audio context and input node; own key listeners for the key-to-note blocks",
     "blocks": {
@@ -889,7 +889,7 @@
     }
   },
   "beatSync": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Gen1x/beat_sync.js",
+    "source": "src/extensions/penguinmod_gallery/Gen1x/beat_sync.js",
     "replaces": [],
     "note": "its beat clock follows the engine's AudioContext time (own context if there is none)",
     "blocks": {
@@ -1070,7 +1070,7 @@
     }
   },
   "discordauth": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/NotHouse/DiscordAuth.js",
+    "source": "src/extensions/penguinmod_gallery/NotHouse/DiscordAuth.js",
     "replaces": [],
     "note": "needs Discord's servers (login, user info, revoke)",
     "blocks": {
@@ -1087,7 +1087,7 @@
     }
   },
   "divVecQuat": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Div/divVecQuat.js",
+    "source": "src/extensions/penguinmod_gallery/Div/divVecQuat.js",
     "replaces": [],
     "note": "own value types (Vector3D, Quaternion) with registered serializers; compiler code for every block",
     "blocks": {
@@ -1131,7 +1131,7 @@
     }
   },
   "dogeiscutResolution": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/DogeisCut/Resolution.js",
+    "source": "src/extensions/penguinmod_gallery/DogeisCut/Resolution.js",
     "replaces": [],
     "note": "own window resize listener",
     "blocks": {
@@ -1157,7 +1157,7 @@
     }
   },
   "e2ee": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MikeDev101/e2ee.js",
+    "source": "src/extensions/penguinmod_gallery/MikeDev101/e2ee.js",
     "replaces": [],
     "note": "Web Crypto (crypto.subtle), no server",
     "blocks": {
@@ -1173,7 +1173,7 @@
     }
   },
   "embintranslation": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Embin/embintranslation.js",
+    "source": "src/extensions/penguinmod_gallery/Embin/embintranslation.js",
     "replaces": [],
     "blocks": {
       "get_user_language": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false},
@@ -1291,7 +1291,7 @@
     }
   },
   "g1nxIrisText": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Gen1x/iris-text.js",
+    "source": "src/extensions/penguinmod_gallery/Gen1x/iris-text.js",
     "replaces": [],
     "note": "makes its own renderer skins (renderer._allSkins, _nextSkinId, BitmapSkin) and sets useNearest on them; own requestAnimationFrame loops for painting and character animations; compiler code for 3 loops and 3 reporters",
     "blocks": {
@@ -1403,7 +1403,7 @@
     }
   },
   "g1nxLighting": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Gen1x/lighting.js",
+    "source": "src/extensions/penguinmod_gallery/Gen1x/lighting.js",
     "replaces": [],
     "note": "draws its own overlay canvas on the page after every frame (WebGL2, optionally in a Worker), reading sprites with renderer.extractDrawableScreenSpace and the camera with runtime.getCamera; render settings saved in runtime.extensionStorage",
     "blocks": {
@@ -1450,7 +1450,7 @@
     }
   },
   "gaimeriCryptoExtension": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/gaimerI17/crypto.js",
+    "source": "src/extensions/penguinmod_gallery/gaimerI17/crypto.js",
     "replaces": [],
     "note": "Web Crypto (crypto.subtle), no server",
     "blocks": {
@@ -1471,7 +1471,7 @@
     }
   },
   "gaimeriDeviceMotionExtension": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/gaimerI17/DeviceMotion.js",
+    "source": "src/extensions/penguinmod_gallery/gaimerI17/DeviceMotion.js",
     "replaces": [],
     "note": "own window event listeners (devicemotion, deviceorientation)",
     "blocks": {
@@ -1494,7 +1494,7 @@
     }
   },
   "googleAuth": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Ikelene/googleAuthExtension.js",
+    "source": "src/extensions/penguinmod_gallery/Ikelene/googleAuthExtension.js",
     "replaces": [],
     "note": "needs Google's servers (login, user info, revoke)",
     "blocks": {
@@ -1866,7 +1866,7 @@
     }
   },
   "midi": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/electricfuzzball_pm/MIDI.js",
+    "source": "src/extensions/penguinmod_gallery/electricfuzzball_pm/MIDI.js",
     "replaces": [],
     "note": "Web MIDI (navigator.requestMIDIAccess) with its own message handlers; optional page visualizer",
     "blocks": {
@@ -1921,7 +1921,7 @@
     }
   },
   "mubiloppenguinhook": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MubiLop/penguinhook.js",
+    "source": "src/extensions/penguinmod_gallery/MubiLop/penguinhook.js",
     "replaces": [],
     "note": "POSTs to Discord webhook addresses (online)",
     "blocks": {
@@ -1976,7 +1976,7 @@
     }
   },
   "numberUtilities": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MubiLop/numutils.js",
+    "source": "src/extensions/penguinmod_gallery/MubiLop/numutils.js",
     "replaces": [],
     "blocks": {
       "toLocaleString": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"the \"system\" locale comes from the page"},
@@ -1993,7 +1993,7 @@
     }
   },
   "obviousAlexCMath3d": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/ObviousAlexC/3DMath.js",
+    "source": "src/extensions/penguinmod_gallery/ObviousAlexC/3DMath.js",
     "replaces": ["added runtime.visualReport"],
     "note": "wraps runtime.visualReport to show array answers; draws through Pen Plus V7's module when it is loaded; camera, fov and 3D sprite positions are module state",
     "blocks": {
@@ -2098,7 +2098,7 @@
     }
   },
   "p7videosharing": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/pooiod/VideoSharing.js",
+    "source": "src/extensions/penguinmod_gallery/pooiod/VideoSharing.js",
     "replaces": [],
     "note": "getDisplayMedia / getUserMedia into a page video element; asks with its own page dialog; \"show image\" makes renderer skins directly (global renderer)",
     "blocks": {
@@ -2394,7 +2394,7 @@
     }
   },
   "pmTextToSpeech": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/PuzzlingGGG/ttsrV2.js",
+    "source": "src/extensions/penguinmod_gallery/PuzzlingGGG/ttsrV2.js",
     "replaces": [],
     "note": "speech made in a Worker from the app's offline models (fetch to /__speech__/, the app itself); settings in the sprite's custom state",
     "blocks": {
@@ -2418,7 +2418,7 @@
     }
   },
   "pooiod7Dictation": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/pooiod/Dictation.js",
+    "source": "src/extensions/penguinmod_gallery/pooiod/Dictation.js",
     "replaces": [],
     "note": "uses webkitSpeechRecognition (in Chrome an online Google service; not available in Electron) and asks with window.confirm",
     "blocks": {
@@ -2429,7 +2429,7 @@
     }
   },
   "qxsckbignumber": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/qxsck/big-decimal.js",
+    "source": "src/extensions/penguinmod_gallery/qxsck/big-decimal.js",
     "replaces": [],
     "note": "inputs are not cast",
     "blocks": {
@@ -2475,7 +2475,7 @@
     }
   },
   "randomutils": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/Gen1x/random_utils.js",
+    "source": "src/extensions/penguinmod_gallery/Gen1x/random_utils.js",
     "replaces": [],
     "blocks": {
       "seedednumber": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"number","compiled":false,"note":"from the module seed (not advanced); inputs not cast"},
@@ -2606,7 +2606,7 @@
     }
   },
   "spritesheeter": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MubiLop/spritesheeter.js",
+    "source": "src/extensions/penguinmod_gallery/MubiLop/spritesheeter.js",
     "replaces": [],
     "blocks": {
       "getSpritesheetNames": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":false},
@@ -2649,7 +2649,7 @@
     }
   },
   "steve0greatnesstimers": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/steve0greatness/timers.js",
+    "source": "src/extensions/penguinmod_gallery/steve0greatness/timers.js",
     "replaces": [],
     "note": "timers are variables of its own type (registered serializer)",
     "blocks": {
@@ -2718,7 +2718,7 @@
     }
   },
   "toastnotifs": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MubiLop/toastnotifs.js",
+    "source": "src/extensions/penguinmod_gallery/MubiLop/toastnotifs.js",
     "replaces": [],
     "blocks": {
       "showToastNew": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false,"note":"adds elements to the page; removes them with timers"},
@@ -2847,7 +2847,7 @@
     }
   },
   "webrtc": {
-    "source": "PenguinMod-ExtensionsGallery/static/extensions/MikeDev101/webrtc.js",
+    "source": "src/extensions/penguinmod_gallery/MikeDev101/webrtc.js",
     "replaces": [],
     "note": "RTCPeerConnection data channels; connecting needs STUN/TURN servers and the peers online",
     "blocks": {

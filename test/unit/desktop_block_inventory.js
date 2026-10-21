@@ -3,7 +3,8 @@
 // - Every block marked "pure" gives the same answer for the same inputs (many tricky inputs, in two different orders),
 //   touches neither `util` nor the runtime while it runs (both throw), and answers the recorded type.
 // Built-in extensions come from src/extensions; gallery extensions ("source" in the inventory) from the desktop local
-// test's galleries folder (or DESKTOP_GALLERIES), and are skipped when it is not there.
+// test's galleries folder (or DESKTOP_GALLERIES), and are skipped when it is not there; gallery extensions moved into
+// the VM (step 3, "source" in src/) from their file in the VM, run the way the gallery runs them.
 // Blocks marked "compiled" only have a stub for the interpreter; their compiler code is checked in step 4.
 // Run: node test/unit/desktop_block_inventory.js
 const test = require('tap').test;
@@ -162,12 +163,21 @@ let loadError = null;
 process.on('unhandledRejection', reason => {
     loadError = loadError || reason;
 });
+// A gallery extension moved into the VM ("source" starting with src/) wraps the gallery's code in
+// `module.exports = require(<helper>)(function (Scratch) {…});`: that function is run the way the gallery runs its file.
+const readGalleryCode = source => {
+    if (!source.startsWith('src/')) return fs.readFileSync(path.join(GALLERIES, source), 'utf8');
+    const text = fs.readFileSync(path.join(__dirname, '../..', source), 'utf8');
+    const start = /^module\.exports = require\([^)]*\)\(function \(Scratch\) \{$/m;
+    if (!start.test(text) || !/\}\);\s*$/.test(text)) throw new Error(`${source} is not a moved gallery extension`);
+    return text.replace(start, '(function (Scratch) {').replace(/\}\);\s*$/, '})(Scratch);\n');
+};
 const galleryFiles = new Map();
 const loadGalleryFile = source => {
     if (!galleryFiles.has(source)) {
         galleryFiles.set(source, (async () => {
             const registered = [];
-            const code = fs.readFileSync(path.join(GALLERIES, source), 'utf8');
+            const code = readGalleryCode(source);
             const scratch = makeScratch(registered);
             // eslint-disable-next-line no-new-func
             new Function('Scratch', '__scope', `with (__scope) {\n${code}\n}`)(scratch, makeScope(scratch));
@@ -334,7 +344,7 @@ const only = process.env.DESKTOP_ONLY ? new RegExp(process.env.DESKTOP_ONLY) : n
 for (const [id, entry] of Object.entries(inventory)) {
     if (only && !only.test(id)) continue;
     if (entry.source) {
-        if (!galleriesThere) continue;
+        if (!galleriesThere && !entry.source.startsWith('src/')) continue;
         test(id, async t => {
             let extension;
             let info;

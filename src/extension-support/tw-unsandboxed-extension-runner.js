@@ -17,17 +17,13 @@ const parseURL = url => {
 };
 
 /**
- * Sets up the global.Scratch API for an unsandboxed extension.
+ * Creates the Scratch API object of an unsandboxed extension, without making it global.
+ * Desktop fork: also used for the gallery extensions moved into the VM (desktop-gallery-extension.js).
  * @param {VirtualMachine} vm The VM that these apis should refer to
- * @returns {Promise<object[]>} Resolves with a list of extension objects when Scratch.extensions.register is called.
+ * @param {function(object)} register Called with each extension object passed to Scratch.extensions.register
+ * @returns {object} The Scratch object
  */
-const setupUnsandboxedExtensionAPI = vm => new Promise(resolve => {
-    const extensionObjects = [];
-    const register = extensionObject => {
-        extensionObjects.push(extensionObject);
-        resolve(extensionObjects);
-    };
-
+const createUnsandboxedExtensionAPI = (vm, register) => {
     // Create a new copy of global.Scratch for each extension
     const Scratch = Object.assign({}, global.Scratch || {}, ScratchCommon);
     Scratch.extensions = {
@@ -147,10 +143,24 @@ const setupUnsandboxedExtensionAPI = vm => new Promise(resolve => {
 
     Scratch.translate = createTranslate(vm);
 
+    vm.emit('CREATE_UNSANDBOXED_EXTENSION_API', Scratch);
+    return Scratch;
+};
+
+/**
+ * Sets up the global.Scratch API for an unsandboxed extension.
+ * @param {VirtualMachine} vm The VM that these apis should refer to
+ * @returns {Promise<object[]>} Resolves with a list of extension objects when Scratch.extensions.register is called.
+ */
+const setupUnsandboxedExtensionAPI = vm => new Promise(resolve => {
+    const extensionObjects = [];
+    const Scratch = createUnsandboxedExtensionAPI(vm, extensionObject => {
+        extensionObjects.push(extensionObject);
+        resolve(extensionObjects);
+    });
+
     global.Scratch = Scratch;
     global.ScratchExtensions = createScratchX(Scratch);
-
-    vm.emit('CREATE_UNSANDBOXED_EXTENSION_API', Scratch);
 });
 
 /**
@@ -190,6 +200,7 @@ const limiter = new AsyncLimiter(loadUnsandboxedExtension, 1);
 const load = (extensionURL, vm) => limiter.do(extensionURL, vm);
 
 module.exports = {
+    createUnsandboxedExtensionAPI,
     setupUnsandboxedExtensionAPI,
     load
 };
