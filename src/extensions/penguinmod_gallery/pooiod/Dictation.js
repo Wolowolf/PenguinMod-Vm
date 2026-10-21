@@ -1,18 +1,22 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's pooiod/Dictation.js, moved into
-// the VM as a built-in extension. Section 111 rewrote it for offline speech recognition (same id and blocks).
+// the VM as a built-in extension. Section 111 rewrote it for offline speech recognition (same id and blocks);
+// section 113 added other languages (Whisper) and the set language block.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Dictation
 // id: pooiod7Dictation
-// description: Offline speech to text (English) with Moonshine; blocks from Dictation v1.3 by pooiod7.
+// description: Offline speech to text in 40 languages with Moonshine (English) and Whisper; blocks from Dictation v1.3 by pooiod7.
 // license: MIT
 //
 // Speech is recognized on this computer with Moonshine Base (English) by Useful Sensors, Inc. (dba
 // Moonshine AI, https://github.com/moonshine-ai/moonshine, MIT) in its ONNX export by onnx-community
-// (https://huggingface.co/onnx-community/moonshine-base-ONNX); Silero VAD (https://github.com/snakers4/silero-vad,
-// MIT) hears when speech starts and ends. Both run in onnxruntime-web (MIT) in a worker. The microphone is
+// (https://huggingface.co/onnx-community/moonshine-base-ONNX), other languages with Whisper small by OpenAI
+// (https://github.com/openai/whisper, MIT) in its ONNX export by onnx-community
+// (https://huggingface.co/onnx-community/whisper-small; log-mel features computed here as Whisper's feature
+// extractor does); Silero VAD (https://github.com/snakers4/silero-vad,
+// MIT) hears when speech starts and ends. All run in onnxruntime-web (MIT) in a worker. The microphone is
 // on only while a block listens. The files come from the app (https://studio.penguinmod.com/__speech__/),
 // which downloads them once; nothing is sent anywhere.
 (function (Scratch) {
@@ -23,7 +27,17 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     const runtime = vm.runtime;
     const ID = "pooiod7Dictation";
     const BASE = globalThis.pmSpeechBase || "https://studio.penguinmod.com/__speech__/";
-    const PACKS = ["onnxruntime", "silero-vad", "moonshine-english"];
+    // English: Moonshine; the others: Whisper (its language codes). Menu order: from the most to the
+    // least spoken (all speakers).
+    const LANGUAGES = {
+        english: "en", chinese: "zh", hindi: "hi", spanish: "es", french: "fr", arabic: "ar", bengali: "bn",
+        portuguese: "pt", russian: "ru", urdu: "ur", indonesian: "id", german: "de", japanese: "ja", turkish: "tr",
+        vietnamese: "vi", korean: "ko", tamil: "ta", persian: "fa", italian: "it", thai: "th", malay: "ms",
+        polish: "pl", ukrainian: "uk", dutch: "nl", romanian: "ro", greek: "el", hungarian: "hu", czech: "cs",
+        swedish: "sv", hebrew: "he", bulgarian: "bg", catalan: "ca", danish: "da", finnish: "fi", slovak: "sk",
+        croatian: "hr", lithuanian: "lt", slovenian: "sl", latvian: "lv", estonian: "et",
+    };
+    const packsFor = (language) => ["onnxruntime", "silero-vad", language === "english" ? "moonshine-english" : "whisper-small"];
     const MIT = { license: "MIT", needsCredit: true };
     const CREDITS = [
         Object.assign({ title: "Moonshine (speech recognition)", by: "Moonshine AI", url: "https://github.com/moonshine-ai/moonshine",
@@ -31,10 +45,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         Object.assign({ title: "Silero VAD", by: "Silero Team", url: "https://github.com/snakers4/silero-vad",
             licenseUrl: "https://github.com/snakers4/silero-vad/blob/master/LICENSE" }, MIT),
     ];
+    const WHISPER_CREDIT = Object.assign({ title: "Whisper (speech recognition)", by: "OpenAI", url: "https://github.com/openai/whisper",
+        licenseUrl: "https://github.com/openai/whisper/blob/main/LICENSE" }, MIT);
 
     // ------------------------------------------------------------------------------------------
     // The worker: hears speech in the microphone frames (Silero VAD) and turns it into text
-    // (Moonshine), one listening at a time
+    // (Moonshine for English, Whisper for the others), one listening at a time
     // ------------------------------------------------------------------------------------------
     function workerMain() {
         const RATE = 16000;
@@ -49,32 +65,202 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         let base = "";
         let ort = null;
         let vad = null;
-        let asr = null;
+        let moonshine = null;
+        let whisper = null;
         let job = null;
 
         const create = (url) => ort.InferenceSession.create(url, { executionProviders: ["wasm"], graphOptimizationLevel: "all" });
-        async function load() {
+        const fetchJson = async (url) => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(url.split("/").pop() + ": " + res.status);
+            return res.json();
+        };
+        async function loadVad() {
             if (!ort) {
                 ort = await import(/* webpackIgnore: true */ base + "onnxruntime/ort.wasm.bundle.min.mjs");
                 ort.env.wasm.wasmPaths = { wasm: base + "onnxruntime/ort-wasm-simd-threaded.wasm" };
                 ort.env.wasm.numThreads = typeof SharedArrayBuffer !== "undefined" ? Math.min(navigator.hardwareConcurrency || 4, 4) : 1;
             }
             if (!vad) vad = await create(base + "silero-vad/silero_vad.onnx");
-            if (!asr) {
-                const dir = base + "moonshine-english/";
-                const res = await fetch(dir + "tokenizer.json");
-                if (!res.ok) throw new Error("tokenizer.json: " + res.status);
-                const tokenizer = await res.json();
-                const vocab = [];
-                for (const piece of Object.keys(tokenizer.model.vocab)) vocab[tokenizer.model.vocab[piece]] = piece;
-                for (const added of tokenizer.added_tokens) vocab[added.id] = added.content;
-                asr = { encoder: await create(dir + "encoder_model_quantized.onnx"), decoder: await create(dir + "decoder_model_merged_quantized.onnx"), vocab };
+        }
+        // Each engine is loaded once, when a listening first needs it (kept as a promise)
+        function loadMoonshine() {
+            if (!moonshine) {
+                moonshine = (async () => {
+                    await loadVad();
+                    const dir = base + "moonshine-english/";
+                    const tokenizer = await fetchJson(dir + "tokenizer.json");
+                    const vocab = [];
+                    for (const piece of Object.keys(tokenizer.model.vocab)) vocab[tokenizer.model.vocab[piece]] = piece;
+                    for (const added of tokenizer.added_tokens) vocab[added.id] = added.content;
+                    return { encoder: await create(dir + "encoder_model_quantized.onnx"), decoder: await create(dir + "decoder_model_merged_quantized.onnx"), vocab };
+                })();
+                moonshine.catch(() => { moonshine = null; });
             }
+            return moonshine;
+        }
+        function loadWhisper() {
+            if (!whisper) {
+                whisper = (async () => {
+                    await loadVad();
+                    const dir = base + "whisper-small/";
+                    const config = await fetchJson(dir + "config.json");
+                    const generation = await fetchJson(dir + "generation_config.json");
+                    const tokenizer = await fetchJson(dir + "tokenizer.json");
+                    const vocab = [];
+                    for (const piece of Object.keys(tokenizer.model.vocab)) vocab[tokenizer.model.vocab[piece]] = piece;
+                    // GPT-2's byte-level alphabet: each byte is stored as one printable character
+                    const byteOf = {};
+                    const bytes = [];
+                    for (let b = 33; b <= 126; b++) bytes.push(b);
+                    for (let b = 161; b <= 172; b++) bytes.push(b);
+                    for (let b = 174; b <= 255; b++) bytes.push(b);
+                    const chars = bytes.slice();
+                    let extra = 0;
+                    for (let b = 0; b < 256; b++) if (bytes.indexOf(b) < 0) { bytes.push(b); chars.push(256 + extra++); }
+                    bytes.forEach((b, i) => { byteOf[String.fromCharCode(chars[i])] = b; });
+                    return {
+                        encoder: await create(dir + "encoder_model_quantized.onnx"),
+                        decoder: await create(dir + "decoder_model_merged_quantized.onnx"),
+                        config, generation, vocab, byteOf, suppress: new Set(generation.suppress_tokens),
+                        mel: makeMel(config.num_mel_bins),
+                    };
+                })();
+                whisper.catch(() => { whisper = null; });
+            }
+            return whisper;
+        }
+
+        // Whisper's log-mel features (its feature extractor: 30 s, n_fft 400, hop 160, Slaney mel filters
+        // up to 8 kHz, log10, at most 8 below the maximum, (x + 4) / 4); frames of padding stay at log10(1e-10)
+        function makeMel(bins) {
+            const N = 400, FREQS = 201;
+            const hzToMel = (f) => (f < 1000 ? 3 * f / 200 : 15 + Math.log(f / 1000) * 27 / Math.log(6.4));
+            const melToHz = (m) => (m < 15 ? 200 * m / 3 : 1000 * Math.exp((m - 15) * Math.log(6.4) / 27));
+            const top = hzToMel(8000);
+            const points = [];
+            for (let i = 0; i < bins + 2; i++) points.push(melToHz(top * i / (bins + 1)));
+            const filters = new Float32Array(bins * FREQS);
+            for (let m = 0; m < bins; m++) {
+                const norm = 2 / (points[m + 2] - points[m]);
+                for (let k = 0; k < FREQS; k++) {
+                    const hz = k * 8000 / (FREQS - 1);
+                    const down = (hz - points[m]) / (points[m + 1] - points[m]);
+                    const up = (points[m + 2] - hz) / (points[m + 2] - points[m + 1]);
+                    filters[m * FREQS + k] = Math.max(0, Math.min(down, up)) * norm;
+                }
+            }
+            const hann = new Float32Array(N);
+            for (let n = 0; n < N; n++) hann[n] = 0.5 - 0.5 * Math.cos(2 * Math.PI * n / N);
+            const cos = new Float32Array(FREQS * N);
+            const sin = new Float32Array(FREQS * N);
+            for (let k = 0; k < FREQS; k++) {
+                for (let n = 0; n < N; n++) {
+                    cos[k * N + n] = Math.cos(2 * Math.PI * k * n / N);
+                    sin[k * N + n] = Math.sin(2 * Math.PI * k * n / N);
+                }
+            }
+            return { bins, filters, hann, cos, sin };
+        }
+        function logMel(audio, mel) {
+            const N = 400, HOP = 160, FRAMES = 3000, FREQS = 201, TOTAL = 480000;
+            const length = Math.min(audio.length, TOTAL);
+            const out = new Float32Array(mel.bins * FRAMES).fill(-10);
+            const frame = new Float32Array(N);
+            const power = new Float32Array(FREQS);
+            const used = Math.min(FRAMES, Math.ceil((length + N / 2) / HOP) + 1);
+            let max = used < FRAMES ? -10 : -Infinity;
+            for (let t = 0; t < used; t++) {
+                for (let n = 0; n < N; n++) {
+                    let j = t * HOP + n - N / 2; // centred frames, reflected at the edges
+                    if (j < 0) j = -j;
+                    if (j >= TOTAL) j = 2 * (TOTAL - 1) - j;
+                    frame[n] = (j < length ? audio[j] : 0) * mel.hann[n];
+                }
+                for (let k = 0; k < FREQS; k++) {
+                    let re = 0, im = 0;
+                    const o = k * N;
+                    for (let n = 0; n < N; n++) {
+                        re += frame[n] * mel.cos[o + n];
+                        im -= frame[n] * mel.sin[o + n];
+                    }
+                    power[k] = re * re + im * im;
+                }
+                for (let m = 0; m < mel.bins; m++) {
+                    let sum = 0;
+                    const o = m * FREQS;
+                    for (let k = 0; k < FREQS; k++) sum += mel.filters[o + k] * power[k];
+                    const value = Math.log10(Math.max(sum, 1e-10));
+                    out[m * FRAMES + t] = value;
+                    if (value > max) max = value;
+                }
+            }
+            for (let i = 0; i < out.length; i++) out[i] = (Math.max(out[i], max - 8) + 4) / 4;
+            return out;
+        }
+
+        // Greedy decoding with the merged decoder's cache; prompt = the first input_ids
+        async function decode(decoder, hidden, layers, heads, headSize, prompt, maxTokens, pick) {
+            const empty = new ort.Tensor("float32", new Float32Array(0), [1, heads, 0, headSize]);
+            let past = {};
+            for (let l = 0; l < layers; l++) {
+                for (const part of ["decoder", "encoder"]) for (const kv of ["key", "value"]) past[`past_key_values.${l}.${part}.${kv}`] = empty;
+            }
+            const ids = [];
+            let input = prompt;
+            for (let step = 0; step < maxTokens; step++) {
+                const out = await decoder.run(Object.assign({
+                    input_ids: new ort.Tensor("int64", BigInt64Array.from(input.map((id) => BigInt(id))), [1, input.length]),
+                    encoder_hidden_states: hidden,
+                    use_cache_branch: new ort.Tensor("bool", [step > 0], [1]),
+                }, past));
+                const size = out.logits.dims[2];
+                const best = pick(out.logits.data, (input.length - 1) * size, size, step);
+                if (best < 0) break; // end of text
+                ids.push(best);
+                input = [best];
+                const next = {};
+                for (let l = 0; l < layers; l++) {
+                    for (const kv of ["key", "value"]) {
+                        next[`past_key_values.${l}.decoder.${kv}`] = out[`present.${l}.decoder.${kv}`];
+                        // the encoder part is computed in the first step only
+                        next[`past_key_values.${l}.encoder.${kv}`] = step === 0 ? out[`present.${l}.encoder.${kv}`] : past[`past_key_values.${l}.encoder.${kv}`];
+                    }
+                }
+                past = next;
+            }
+            return ids;
+        }
+
+        // Whisper: the language and "transcribe" are forced; special and suppressed tokens are never picked
+        async function transcribeWhisper(audio, language) {
+            const w = await loadWhisper();
+            const { config, generation } = w;
+            const languageId = generation.lang_to_id[`<|${language}|>`];
+            if (languageId === undefined) throw new Error("Whisper has no language " + language);
+            const features = logMel(audio, w.mel);
+            const hidden = (await w.encoder.run({ input_features: new ort.Tensor("float32", features, [1, w.mel.bins, 3000]) })).last_hidden_state;
+            const heads = config.decoder_attention_heads;
+            const end = generation.eos_token_id;
+            const ids = await decode(w.decoder, hidden, config.decoder_layers, heads, config.d_model / heads,
+                [generation.decoder_start_token_id, languageId, generation.task_to_id.transcribe, generation.no_timestamps_token_id],
+                Math.min(440, Math.ceil(audio.length / RATE * 7) + 10), (logits, offset, size, step) => {
+                    let best = -1;
+                    for (let i = 0; i < size; i++) {
+                        if (i > end || w.suppress.has(i) || (step === 0 && generation.begin_suppress_tokens.indexOf(i) >= 0)) continue;
+                        if (best < 0 || logits[offset + i] > logits[offset + best]) best = i;
+                    }
+                    return best === end ? -1 : best;
+                });
+            const bytes = [];
+            for (const id of ids) for (const ch of w.vocab[id] || "") if (w.byteOf[ch] !== undefined) bytes.push(w.byteOf[ch]);
+            return new TextDecoder().decode(new Uint8Array(bytes)).trim();
         }
 
         // Moonshine: encoder once, then the decoder one token at a time (greedy, with its cache)
-        async function transcribe(audio) {
-            const { encoder, decoder, vocab } = asr;
+        async function transcribe(audio, language) {
+            if (language !== "en") return transcribeWhisper(audio, language);
+            const { encoder, decoder, vocab } = await loadMoonshine();
             const hidden = (await encoder.run({ input_values: new ort.Tensor("float32", audio, [1, audio.length]) })).last_hidden_state;
             const layers = 8;
             const empty = new ort.Tensor("float32", new Float32Array(0), [1, 8, 0, 52]);
@@ -124,7 +310,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             job = null;
             reply(done.id, { type: "heard" }); // the microphone can stop
             if (!audio) return reply(done.id, { type: "done", text: "" });
-            transcribe(audio).then((result) => reply(done.id, { type: "done", text: result }),
+            transcribe(audio, done.language).then((result) => reply(done.id, { type: "done", text: result }),
                 (error) => reply(done.id, { type: "error", error: String((error && error.message) || error) }));
         }
 
@@ -195,10 +381,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             if (message.type === "init") {
                 base = message.data.base;
             } else if (message.type === "start") {
-                job = { id: message.id, ready: false, busy: false, queued: new Float32Array(0), read: 0, context: new Float32Array(64),
+                job = { id: message.id, language: message.language, ready: false, busy: false, queued: new Float32Array(0), read: 0, context: new Float32Array(64),
                     state: null, sr: null, frames: 0, preRoll: [], speech: null, voiced: 0, quiet: 0 };
                 const current = job;
-                load().then(() => {
+                (current.language === "en" ? loadMoonshine() : loadWhisper()).catch(() => {}); // reported when transcribing
+                loadVad().then(() => {
                     if (job !== current) return;
                     current.state = new ort.Tensor("float32", new Float32Array(2 * 128), [2, 1, 128]);
                     current.sr = new ort.Tensor("int64", BigInt64Array.from([BigInt(RATE)]), []);
@@ -260,28 +447,31 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     // The packs dictation needs; the app offers to download missing ones. A packaged game sets
     // pmSpeechBase: it has no installer, the packager put the files next to it.
-    let packRequest = null;
-    const ensurePacks = () => {
+    const packRequests = new Map();
+    const ensurePacks = (packs) => {
         if (globalThis.pmSpeechBase) return Promise.resolve(true);
-        if (!packRequest) {
-            packRequest = fetch(`${BASE}install?packs=${PACKS.join(",")}`).then(async (res) => {
+        const key = packs.join(",");
+        if (!packRequests.has(key)) {
+            packRequests.set(key, fetch(`${BASE}install?packs=${key}`).then(async (res) => {
                 if (res.status === 404) return true;
                 const result = await res.json();
-                if (!result.ok) packRequest = null; // asked again next time
+                if (!result.ok) packRequests.delete(key); // asked again next time
                 return !!result.ok;
-            }).catch(() => { packRequest = null; return false; });
+            }).catch(() => { packRequests.delete(key); return false; }));
         }
-        return packRequest;
+        return packRequests.get(key);
     };
 
     // ------------------------------------------------------------------------------------------
-    // Listening: one at a time; blocks that ask while it listens get the same text
+    // Listening: one at a time, in the language set last; blocks that ask while it listens get the same text
     // ------------------------------------------------------------------------------------------
+    let language = "english";
+    runtime.on("PROJECT_LOADED", () => { language = "english"; });
     let listening = null;
     let allowed = typeof scaffolding !== "undefined"; // a packaged game does not ask
     const listen = () => {
         if (listening) return listening.promise;
-        const job = { id: nextId++, stream: null, context: null, stopped: false };
+        const job = { id: nextId++, language, stream: null, context: null, stopped: false };
         listening = job;
         const closeMic = () => {
             if (job.stream) job.stream.getTracks().forEach((track) => track.stop());
@@ -303,7 +493,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             };
             (async () => {
                 if (!allowed) allowed = window.confirm("This project wants to use your microphone to turn speech into text.\nThe speech is recognized on this computer and not sent anywhere. Allow?");
-                if (!allowed || !(await ensurePacks()) || job.stopped) return end("");
+                if (!allowed || !(await ensurePacks(packsFor(job.language))) || job.stopped) return end("");
                 handlers.set(job.id, (message) => {
                     if (message.type === "heard") closeMic();
                     else if (message.type === "done") end(message.text);
@@ -312,7 +502,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         end("");
                     }
                 });
-                getWorker().postMessage({ type: "start", id: job.id });
+                getWorker().postMessage({ type: "start", id: job.id, language: LANGUAGES[job.language] });
                 job.stream = await navigator.mediaDevices.getUserMedia({
                     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
                 });
@@ -333,11 +523,28 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     };
     runtime.on("PROJECT_STOP_ALL", () => { if (listening) listening.stop(); });
 
-    // Credits for the credit sprite while a project uses these blocks
-    const usesBlocks = () => runtime.targets.some((target) => target.isOriginal &&
-        Object.values(target.blocks._blocks).some((block) => block.opcode && block.opcode.startsWith(`${ID}_`)));
+    // Credits for the credit sprite while a project uses these blocks; Whisper's when a set language
+    // block picks another language than english or a reporter does
+    const usedCredits = () => {
+        let used = false;
+        let whisperUsed = false;
+        for (const target of runtime.targets) {
+            if (!target.isOriginal) continue;
+            const blocks = target.blocks._blocks;
+            for (const block of Object.values(blocks)) {
+                if (!block.opcode || !block.opcode.startsWith(`${ID}_`)) continue;
+                used = true;
+                if (block.opcode !== `${ID}_setLanguage`) continue;
+                const input = block.inputs.LANGUAGE;
+                const menu = input && input.block === input.shadow && blocks[input.block];
+                const field = menu && menu.fields && menu.fields.languages;
+                if (!field || field.value !== "english") whisperUsed = true;
+            }
+        }
+        return used ? CREDITS.concat(whisperUsed ? [WHISPER_CREDIT] : []) : [];
+    };
     runtime.pmCreditProviders = (runtime.pmCreditProviders || []).filter((p) => p.id !== ID);
-    const provider = () => (usesBlocks() ? CREDITS : []);
+    const provider = () => usedCredits();
     provider.id = ID;
     runtime.pmCreditProviders.push(provider);
     let lastUsed = null;
@@ -346,7 +553,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         if (creditTimer) return;
         creditTimer = setTimeout(() => {
             creditTimer = null;
-            const used = usesBlocks();
+            const used = JSON.stringify(usedCredits());
             if (used !== lastUsed) {
                 lastUsed = used;
                 runtime.emit("PM_CREDITS_CHANGED");
@@ -390,7 +597,18 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         text: "Wait for recognized speech",
                         disableMonitor: true,
                     },
+                    {
+                        opcode: "setLanguage",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "set dictation language to [LANGUAGE]",
+                        arguments: {
+                            LANGUAGE: { type: Scratch.ArgumentType.STRING, menu: "languages", defaultValue: "english" },
+                        },
+                    },
                 ],
+                menus: {
+                    languages: { acceptReporters: true, items: Object.keys(LANGUAGES) },
+                },
             };
         }
 
@@ -408,6 +626,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
         GetSpeech() {
             return this.recognize();
+        }
+
+        // A language name from the menu, or its Whisper code (e.g. "de"); anything else is ignored
+        setLanguage(args) {
+            const value = Scratch.Cast.toString(args.LANGUAGE).toLowerCase().trim();
+            const name = LANGUAGES[value] ? value : Object.keys(LANGUAGES).find((n) => LANGUAGES[n] === value);
+            if (name) language = name;
         }
 
         recognize() {
