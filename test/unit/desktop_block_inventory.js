@@ -164,13 +164,16 @@ process.on('unhandledRejection', reason => {
     loadError = loadError || reason;
 });
 // A gallery extension moved into the VM ("source" starting with src/) wraps the gallery's code in
-// `module.exports = require(<helper>)(function (Scratch) {…});`: that function is run the way the gallery runs its file.
+// `module.exports = require(<helper>)(function (Scratch, <hidden names>) {…});`: that function is run the way the gallery
+// runs its file (with globalThis.Scratch set, as the helper does).
 const readGalleryCode = source => {
     if (!source.startsWith('src/')) return fs.readFileSync(path.join(GALLERIES, source), 'utf8');
     const text = fs.readFileSync(path.join(__dirname, '../..', source), 'utf8');
-    const start = /^module\.exports = require\([^)]*\)\(function \(Scratch\) \{$/m;
+    const start = /^module\.exports = require\([^)]*\)\((function \(Scratch[\w, ]*\) \{)\r?$/m;
     if (!start.test(text) || !/\}\);\s*$/.test(text)) throw new Error(`${source} is not a moved gallery extension`);
-    return text.replace(start, '(function (Scratch) {').replace(/\}\);\s*$/, '})(Scratch);\n');
+    // Bundled libraries are not loaded: their import() gives a stand-in.
+    return text.replace(start, '($1').replace(/\}\);\s*$/, '})(Scratch);\n')
+        .replace(/\bimport\(\/\* webpackIgnore: true \*\/ /g, '__bundledLibraryImport(');
 };
 const galleryFiles = new Map();
 const loadGalleryFile = source => {

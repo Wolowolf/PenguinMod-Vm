@@ -125,8 +125,9 @@ const defaultBuiltinExtensions = {
     iygPerlin: () => require('../extensions/iyg_perlin_noise'),
     // fr: waw 3d physics!!
 
-    // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's extensions, moved into the VM
+    // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the extensions of the three galleries, moved into the VM
     // (their gallery addresses: moved-gallery-extensions.json)
+    // PenguinMod gallery
     P7BoxPhys: () => require('../extensions/penguinmod_gallery/pooiod/Box2D'),
     SPgrids: () => require('../extensions/penguinmod_gallery/SharkPool/Tile-Grids'),
     SPsoundWaves: () => require('../extensions/penguinmod_gallery/SharkPool/Sound-Waves'),
@@ -154,6 +155,88 @@ const defaultBuiltinExtensions = {
     steve0greatnesstimers: () => require('../extensions/penguinmod_gallery/steve0greatness/timers'),
     toastnotifs: () => require('../extensions/penguinmod_gallery/MubiLop/toastnotifs'),
     webrtc: () => require('../extensions/penguinmod_gallery/MikeDev101/webrtc'),
+    // TurboWarp gallery
+    Bitwise: () => require('../extensions/turbowarp_gallery/bitwise'),
+    Encoding: () => require('../extensions/turbowarp_gallery/encoding'),
+    MouseCursor: () => require('../extensions/turbowarp_gallery/cursor'),
+    SPASfontManager: () => require('../extensions/turbowarp_gallery/SharkPool/Font-Manager'),
+    ShovelUtils: () => require('../extensions/turbowarp_gallery/TheShovel/ShovelUtils'),
+    battery: () => require('../extensions/turbowarp_gallery/battery'),
+    claytonhtmlencode: () => require('../extensions/turbowarp_gallery/Clay/htmlEncode'),
+    clipboard: () => require('../extensions/turbowarp_gallery/clipboard'),
+    cloudlink: () => require('../extensions/turbowarp_gallery/cloudlink'),
+    cst1229zip: () => require('../extensions/turbowarp_gallery/CST1229/zip'),
+    cubesterKeySimulation: () => require('../extensions/turbowarp_gallery/CubesterYT/KeySimulation'),
+    cubesterWindowControls: () => require('../extensions/turbowarp_gallery/CubesterYT/WindowControls'),
+    dninwakelock: () => require('../extensions/turbowarp_gallery/DNin/wake-lock'),
+    dtbyxeroname: () => require('../extensions/turbowarp_gallery/XeroName/Deltatime'),
+    faceSensing: () => require('../extensions/turbowarp_gallery/lab/face-sensing'),
+    griffpatch: () => require('../extensions/turbowarp_gallery/box2d'),
+    gsaWebsocket: () => require('../extensions/turbowarp_gallery/godslayerakp/ws'),
+    itch: () => require('../extensions/turbowarp_gallery/itchio'),
+    lmsData: () => require('../extensions/turbowarp_gallery/Lily/ListTools'),
+    lmsLooksPlus: () => require('../extensions/turbowarp_gallery/Lily/LooksPlus'),
+    lmsSoundExpanded: () => require('../extensions/turbowarp_gallery/Lily/SoundExpanded'),
+    lmsVideo: () => require('../extensions/turbowarp_gallery/Lily/Video'),
+    lmsclonesplus: () => require('../extensions/turbowarp_gallery/Lily/ClonesPlus'),
+    lmsutilsblocks: () => require('../extensions/turbowarp_gallery/Lily/lmsutils'),
+    localstorage: () => require('../extensions/turbowarp_gallery/local-storage'),
+    mdwaltersnotifications: () => require('../extensions/turbowarp_gallery/mdwalters/notifications'),
+    medericodertextcase: () => require('../extensions/turbowarp_gallery/Medericoder/textcase'),
+    mobilekeyboard0419: () => require('../extensions/turbowarp_gallery/veggiecan/mobilekeyboard'),
+    navigatorinfo: () => require('../extensions/turbowarp_gallery/navigator'),
+    nonameawagraph: () => require('../extensions/turbowarp_gallery/NOname-awa/graphics2d'),
+    obviousalexsensing: () => require('../extensions/turbowarp_gallery/obviousAlexC/SensingPlus'),
+    penP: () => require('../extensions/turbowarp_gallery/obviousAlexC/penPlus'),
+    pointerlock: () => require('../extensions/turbowarp_gallery/pointerlock'),
+    qxsckvarandlist: () => require('../extensions/turbowarp_gallery/qxsck/var-and-list'),
+    runtimeoptions: () => require('../extensions/turbowarp_gallery/runtime-options'),
+    shovelColorPicker: () => require('../extensions/turbowarp_gallery/TheShovel/ColorPicker'),
+    skyhigh173BigInt: () => require('../extensions/turbowarp_gallery/Skyhigh173/bigint'),
+    steamworks: () => require('../extensions/turbowarp_gallery/steamworks'),
+    stretch: () => require('../extensions/turbowarp_gallery/stretch'),
+    strings: () => require('../extensions/turbowarp_gallery/text'),
+    theshovelcanvaseffects: () => require('../extensions/turbowarp_gallery/TheShovel/CanvasEffects'),
+    truefantombase: () => require('../extensions/turbowarp_gallery/true-fantom/base'),
+    truefantommath: () => require('../extensions/turbowarp_gallery/true-fantom/math'),
+    truefantomnetwork: () => require('../extensions/turbowarp_gallery/true-fantom/network'),
+    utilities: () => require('../extensions/turbowarp_gallery/utilities'),
+    videoSprites: () => require('../extensions/turbowarp_gallery/lab/video-sprites'),
+    xeltallivSimple3D: () => require('../extensions/turbowarp_gallery/Xeltalliv/simple3D'),
+    xeltallivclipblend: () => require('../extensions/turbowarp_gallery/Xeltalliv/clippingblending'),
+    // SharkPool gallery
+    CameraSensingPlusSP: () => require('../extensions/sharkpool_gallery/Camera-Sensing-Plus'),
+    DICandSPmonitorsPlus: () => require('../extensions/sharkpool_gallery/Variables-Expanded'),
+    Gamepad: () => require('../extensions/sharkpool_gallery/Gamepad-Expanded'),
+    HyperSense2SP: () => require('../extensions/sharkpool_gallery/Hyper-Sense-V2'),
+    LZcollisionsSP: () => require('../extensions/sharkpool_gallery/Lazy-Collisions'),
+    ObscurasMIDITools: () => require('../extensions/sharkpool_gallery/MIDI-Tools'),
+    SPadvControl: () => require('../extensions/sharkpool_gallery/Extra-Controls'),
+    SPanimations: () => require('../extensions/sharkpool_gallery/Animations'),
+    SPcolorMaster: () => require('../extensions/sharkpool_gallery/Color-Master'),
+    SPgeolocation: () => require('../extensions/sharkpool_gallery/Geolocation'),
+    SPgifManager: () => require('../extensions/sharkpool_gallery/GIF-Manager'),
+    SPlayering: () => require('../extensions/sharkpool_gallery/Layer-Control'),
+    SPmbpCST: () => require('../extensions/sharkpool_gallery/My-Blocks-Plus'),
+    SPmessagePlus: () => require('../extensions/sharkpool_gallery/Messages-Plus'),
+    SPpartEngine: () => require('../extensions/sharkpool_gallery/Particle-Engine'),
+    SPpenPapers: () => require('../extensions/sharkpool_gallery/Pen-Papers'),
+    SPpopups: () => require('../extensions/sharkpool_gallery/Popup-Phoenix'),
+    SPqrCodes: () => require('../extensions/sharkpool_gallery/QR-Codes'),
+    SPrecording2: () => require('../extensions/sharkpool_gallery/Recording-V2'),
+    SPrigidBody: () => require('../extensions/sharkpool_gallery/Rigidbodies'),
+    SPscenes: () => require('../extensions/sharkpool_gallery/Scenes'),
+    SPspriteEffectsV2: () => require('../extensions/sharkpool_gallery/Sprite-Effects-V2'),
+    SPspriteParent: () => require('../extensions/sharkpool_gallery/Sprite-Parenting'),
+    SPsvgSheets: () => require('../extensions/sharkpool_gallery/SVG-Spritesheets'),
+    SPtempVars: () => require('../extensions/sharkpool_gallery/Temporary-Variables'),
+    SPtimeCalc: () => require('../extensions/sharkpool_gallery/Time-Calculation'),
+    SPtuneShark3: () => require('../extensions/sharkpool_gallery/Tune-Shark-V3'),
+    SPturboSkins: () => require('../extensions/sharkpool_gallery/Turbo-Skins'),
+    SharkPoolSharktilities: () => require('../extensions/sharkpool_gallery/Sharktilities'),
+    enderKeysPlusV2: () => require('../extensions/sharkpool_gallery/KeysPlusV2'),
+    filesExpanded: () => require('../extensions/sharkpool_gallery/Files-Expanded'),
+    speechSP: () => require('../extensions/sharkpool_gallery/Speech-Bubbles'),
 };
 const CORE_EXTENSIONS = [
     'argument',
@@ -278,6 +361,8 @@ class ExtensionManager {
         this.asyncExtensionsLoadedCallbacks = [];
 
         this.builtinExtensions = Object.assign({}, defaultBuiltinExtensions);
+        // Desktop fork: moved gallery extensions still waiting to register (ID => promise)
+        this._movedGalleryLoads = new Map();
 
         dispatch.setService('extensions', createExtensionService(this)).catch(e => {
             log.error(`ExtensionManager was unable to register extension service: ${JSON.stringify(e)}`);
@@ -350,14 +435,43 @@ class ExtensionManager {
             return;
         }
 
+        if (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, extensionId)) {
+            // Desktop fork: added now, or when it registers (see _loadMovedGalleryExtension).
+            this._loadMovedGalleryExtension(extensionId).catch(e => log.error(`Failed to load ${extensionId}`, e));
+            return;
+        }
+
         const extension = this.builtinExtensions[extensionId]();
         const extensionInstance = new extension(this.runtime);
+        this._addBuiltinExtensionInstance(extensionId, extensionInstance);
+    }
+
+    _addBuiltinExtensionInstance(extensionId, extensionInstance) {
         const serviceName = this._registerInternalExtension(extensionInstance);
         // devs are stupid so uh
         // get the ACTUAL id of the ext so that saving/loading doesnt error
         const realId = extensionInstance.getInfo().id;
         this._loadedExtensions.set(extensionId, serviceName);
         this.runtime.compilerRegisterExtension(realId, extensionInstance);
+    }
+
+    // Desktop fork: a gallery extension moved into the VM (desktop-gallery-extension.js). Most
+    // register while their code runs and are added at once, like loadExtensionIdSync; some register
+    // only after loading their bundled libraries (TurboWarp's Box2D): the promise waits for them.
+    _loadMovedGalleryExtension(extensionId) {
+        if (this.isExtensionLoaded(extensionId)) return Promise.resolve();
+        if (!this._movedGalleryLoads.has(extensionId)) {
+            const started = this.builtinExtensions[extensionId]().start(this.runtime);
+            if (started.extensionObject) {
+                this._addBuiltinExtensionInstance(extensionId, started.extensionObject);
+                return Promise.resolve();
+            }
+            this._movedGalleryLoads.set(extensionId, started.registered.then(extensionObject => {
+                this._movedGalleryLoads.delete(extensionId);
+                this._addBuiltinExtensionInstance(extensionId, extensionObject);
+            }));
+        }
+        return this._movedGalleryLoads.get(extensionId);
     }
 
     addBuiltinExtension (extensionId, extensionClass) {
@@ -389,6 +503,10 @@ class ExtensionManager {
     async loadExtensionURL(extensionURL, oldHash = '') {
         const movedID = movedGalleryIDs.get(normalizeExtensionURL(extensionURL));
         if (movedID) extensionURL = movedID;
+        if (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, extensionURL)) {
+            await this._loadMovedGalleryExtension(extensionURL);
+            return [extensionURL];
+        }
         if (this.isBuiltinExtension(extensionURL)) {
             this.loadExtensionIdSync(extensionURL);
             return [extensionURL];

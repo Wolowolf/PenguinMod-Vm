@@ -1,6 +1,6 @@
 {
   "Bitwise": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/bitwise.js",
+    "source": "src/extensions/turbowarp_gallery/bitwise.js",
     "replaces": [],
     "note": "inputs not cast",
     "blocks": {
@@ -19,7 +19,7 @@
     }
   },
   "CameraSensingPlusSP": {
-    "source": "SharkPools-Extensions/extension-code/Camera-Sensing-Plus.js",
+    "source": "src/extensions/sharkpool_gallery/Camera-Sensing-Plus.js",
     "replaces": [],
     "note": "swaps sprites' drawable skins to the video skin directly (drawable._skin); loads the built-in Video Sensing",
     "blocks": {
@@ -38,7 +38,7 @@
     }
   },
   "DICandSPmonitorsPlus": {
-    "source": "SharkPools-Extensions/extension-code/Variables-Expanded.js",
+    "source": "src/extensions/sharkpool_gallery/Variables-Expanded.js",
     "replaces": [],
     "note": "edits monitor elements in the page directly; own button state from page events",
     "blocks": {
@@ -69,7 +69,7 @@
     }
   },
   "Encoding": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/encoding.js",
+    "source": "src/extensions/turbowarp_gallery/encoding.js",
     "replaces": [],
     "blocks": {
       "encode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -82,7 +82,7 @@
     }
   },
   "Gamepad": {
-    "source": "SharkPools-Extensions/extension-code/Gamepad-Expanded.js",
+    "source": "src/extensions/sharkpool_gallery/Gamepad-Expanded.js",
     "replaces": [],
     "blocks": {
       "gamepadConnected": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false},
@@ -100,7 +100,7 @@
     }
   },
   "HyperSense2SP": {
-    "source": "SharkPools-Extensions/extension-code/Hyper-Sense-V2.js",
+    "source": "src/extensions/sharkpool_gallery/Hyper-Sense-V2.js",
     "replaces": [],
     "note": "own window listeners (wheel, mouse, keys, can block default key behaviour); edits the ask box in the page",
     "blocks": {
@@ -147,7 +147,7 @@
     }
   },
   "LZcollisionsSP": {
-    "source": "SharkPools-Extensions/extension-code/Lazy-Collisions.js",
+    "source": "src/extensions/sharkpool_gallery/Lazy-Collisions.js",
     "replaces": ["replaces Runtime.prototype.getSpriteTargetByName on the first \"ID of clone\" (accepts clone IDs)"],
     "blocks": {
       "isOnSprite": {"type":"Boolean","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
@@ -158,7 +158,7 @@
     }
   },
   "MouseCursor": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/cursor.js",
+    "source": "src/extensions/turbowarp_gallery/cursor.js",
     "replaces": [],
     "note": "sets the stage canvas's CSS cursor",
     "blocks": {
@@ -169,7 +169,7 @@
     }
   },
   "ObscurasMIDITools": {
-    "source": "SharkPools-Extensions/extension-code/MIDI-Tools.js",
+    "source": "src/extensions/sharkpool_gallery/MIDI-Tools.js",
     "replaces": [],
     "note": "plays no sound: setTimeout timers mark notes as playing and start its hats",
     "blocks": {
@@ -261,7 +261,7 @@
     }
   },
   "SPASfontManager": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/SharkPool/Font-Manager.js",
+    "source": "src/extensions/turbowarp_gallery/SharkPool/Font-Manager.js",
     "replaces": [],
     "blocks": {
       "fontNames": {"type":"reporter","pure":false,"reads":["project"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -276,7 +276,7 @@
     }
   },
   "SPadvControl": {
-    "source": "SharkPools-Extensions/extension-code/Extra-Controls.js",
+    "source": "src/extensions/sharkpool_gallery/Extra-Controls.js",
     "replaces": ["replaced Blocks.prototype.getBranch","replaced Blocks.prototype.getNextBlock","replaced JSGenerator.prototype.descendStackedBlock","replaced ScriptTreeGenerator.prototype.descendStackedBlock","replaced runtime._restartThread","replaced runtime.visualReport","replaced window.Error and console.error (records error times for try/catch)","replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
     "note": "some blocks run branches in Thread objects it makes itself (interpreter only); key listeners in the page post bound keys",
     "blocks": {
@@ -323,7 +323,7 @@
     }
   },
   "SPanimations": {
-    "source": "SharkPools-Extensions/extension-code/Animations.js",
+    "source": "src/extensions/sharkpool_gallery/Animations.js",
     "replaces": [],
     "note": "plays animations on its own frame listener (changes costume, position, direction, size, stretch)",
     "blocks": {
@@ -356,7 +356,7 @@
     }
   },
   "SPcolorMaster": {
-    "source": "SharkPools-Extensions/extension-code/Color-Master.js",
+    "source": "src/extensions/sharkpool_gallery/Color-Master.js",
     "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
     "blocks": {
       "hexString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
@@ -379,7 +379,7 @@
     }
   },
   "SPgeolocation": {
-    "source": "SharkPools-Extensions/extension-code/Geolocation.js",
+    "source": "src/extensions/sharkpool_gallery/Geolocation.js",
     "replaces": [],
     "note": "navigator.geolocation answers \"not available\" in Electron; IP blocks use api.ipify.org, free.freeipapi.com and api.first.org (through a proxy)",
     "blocks": {
@@ -401,7 +401,7 @@
     }
   },
   "SPgifManager": {
-    "source": "SharkPools-Extensions/extension-code/GIF-Manager.js",
+    "source": "src/extensions/sharkpool_gallery/GIF-Manager.js",
     "replaces": [],
     "blocks": {
       "createGif": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -435,7 +435,7 @@
     }
   },
   "SPlayering": {
-    "source": "SharkPools-Extensions/extension-code/Layer-Control.js",
+    "source": "src/extensions/sharkpool_gallery/Layer-Control.js",
     "replaces": [],
     "note": "reorders renderer._drawList directly (incl. pen, video and custom layers)",
     "blocks": {
@@ -448,7 +448,7 @@
     }
   },
   "SPmbpCST": {
-    "source": "SharkPools-Extensions/extension-code/My-Blocks-Plus.js",
+    "source": "src/extensions/sharkpool_gallery/My-Blocks-Plus.js",
     "replaces": ["replaced Blocks.prototype.getBlock","replaced Blocks.prototype.getBranch","replaced Blocks.prototype.getInputs","replaced Blocks.prototype.getProcedureDefinition","replaced Blocks.prototype.populateProcedureCache","replaced JSGenerator.prototype.descendInput","replaced JSGenerator.prototype.descendStackedBlock","added JSGenerator.prototype.isLastBlockInLoop","replaced ScriptTreeGenerator.prototype.descendInput","replaced ScriptTreeGenerator.prototype.descendStackedBlock","replaced Runtime.prototype.getOpcodeFunction","replaced Sequencer.prototype.stepToProcedure","replaced VirtualMachine.prototype.toJSON","replaced vm.duplicateSprite, exportSprite, exportStandaloneBlocks, shareBlocksToTarget","replaced ScratchBlocks Gesture, Toolbox, Xml, procedures and BlockSvg methods (editor)"],
     "blocks": {
       "setParam": {"type":"command","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -458,7 +458,7 @@
     }
   },
   "SPmessagePlus": {
-    "source": "SharkPools-Extensions/extension-code/Messages-Plus.js",
+    "source": "src/extensions/sharkpool_gallery/Messages-Plus.js",
     "replaces": ["added runtime.startHats (wraps it)","added runtime._restartThread (wraps it)"],
     "note": "its startHats wrapper makes section 63 check hats every frame (EXTENSION-ROADMAP step 5)",
     "blocks": {
@@ -482,7 +482,7 @@
     }
   },
   "SPpartEngine": {
-    "source": "SharkPools-Extensions/extension-code/Particle-Engine.js",
+    "source": "src/extensions/sharkpool_gallery/Particle-Engine.js",
     "replaces": ["replaced Drawable.prototype.getUniforms","replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
     "note": "own drawables and textures (renderer directly); particles move on animation frames or BEFORE_EXECUTE",
     "blocks": {
@@ -512,7 +512,7 @@
     }
   },
   "SPpenPapers": {
-    "source": "SharkPools-Extensions/extension-code/Pen-Papers.js",
+    "source": "src/extensions/sharkpool_gallery/Pen-Papers.js",
     "replaces": [],
     "note": "switchPaper sets the pen extension's _penSkinId, so all later pen drawing goes to that layer",
     "blocks": {
@@ -530,7 +530,7 @@
     }
   },
   "SPpopups": {
-    "source": "SharkPools-Extensions/extension-code/Popup-Phoenix.js",
+    "source": "src/extensions/sharkpool_gallery/Popup-Phoenix.js",
     "replaces": [],
     "note": "builds popups as page elements (on the stage or as a window); listens to KEY_PRESSED while open",
     "blocks": {
@@ -582,7 +582,7 @@
     }
   },
   "SPqrCodes": {
-    "source": "SharkPools-Extensions/extension-code/QR-Codes.js",
+    "source": "src/extensions/sharkpool_gallery/QR-Codes.js",
     "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
     "blocks": {
       "createQR": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":"string","compiled":false,"note":"uses the colours set by setColors"},
@@ -591,7 +591,7 @@
     }
   },
   "SPrecording2": {
-    "source": "SharkPools-Extensions/extension-code/Recording-V2.js",
+    "source": "src/extensions/sharkpool_gallery/Recording-V2.js",
     "replaces": [],
     "note": "MediaRecorder on the microphone; asks Scratch.canRecordAudio",
     "blocks": {
@@ -606,7 +606,7 @@
     }
   },
   "SPrigidBody": {
-    "source": "SharkPools-Extensions/extension-code/Rigidbodies.js",
+    "source": "src/extensions/sharkpool_gallery/Rigidbodies.js",
     "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
     "note": "bodies are registered in the extension (allRigidbodies) or built from JSON",
     "blocks": {
@@ -624,7 +624,7 @@
     }
   },
   "SPscenes": {
-    "source": "SharkPools-Extensions/extension-code/Scenes.js",
+    "source": "src/extensions/sharkpool_gallery/Scenes.js",
     "replaces": [],
     "note": "a switch restores position, costume, effects, variables, extensionStorage and clones of every sprite, and the pen image",
     "blocks": {
@@ -659,7 +659,7 @@
     }
   },
   "SPspriteEffectsV2": {
-    "source": "SharkPools-Extensions/extension-code/Sprite-Effects-V2.js",
+    "source": "src/extensions/sharkpool_gallery/Sprite-Effects-V2.js",
     "replaces": [],
     "blocks": {
       "addCanvasFilter": {"type":"command","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false,"note":"SVG filter on the stage canvas"},
@@ -696,7 +696,7 @@
     }
   },
   "SPspriteParent": {
-    "source": "SharkPools-Extensions/extension-code/Sprite-Parenting.js",
+    "source": "src/extensions/sharkpool_gallery/Sprite-Parenting.js",
     "replaces": [],
     "blocks": {
       "makeLink": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -715,7 +715,7 @@
     }
   },
   "SPsvgSheets": {
-    "source": "SharkPools-Extensions/extension-code/SVG-Spritesheets.js",
+    "source": "src/extensions/sharkpool_gallery/SVG-Spritesheets.js",
     "replaces": [],
     "blocks": {
       "compressSVG": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -730,7 +730,7 @@
     }
   },
   "SPtempVars": {
-    "source": "SharkPools-Extensions/extension-code/Temporary-Variables.js",
+    "source": "src/extensions/sharkpool_gallery/Temporary-Variables.js",
     "replaces": ["replaced JSGenerator.prototype.descendInput","replaced JSGenerator.prototype.descendStackedBlock","replaced ScriptTreeGenerator.prototype.descendInput","replaced ScriptTreeGenerator.prototype.descendStackedBlock"],
     "note": "compiler patches for its blocks",
     "blocks": {
@@ -747,7 +747,7 @@
     }
   },
   "SPtimeCalc": {
-    "source": "SharkPools-Extensions/extension-code/Time-Calculation.js",
+    "source": "src/extensions/sharkpool_gallery/Time-Calculation.js",
     "replaces": [],
     "blocks": {
       "calculatetimedurationfromdate": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
@@ -762,7 +762,7 @@
     }
   },
   "SPtuneShark3": {
-    "source": "SharkPools-Extensions/extension-code/Tune-Shark-V3.js",
+    "source": "src/extensions/sharkpool_gallery/Tune-Shark-V3.js",
     "replaces": [],
     "note": "own sound bank with Pizzicato; starts its own sound hats (runtime._pushThread)",
     "blocks": {
@@ -807,7 +807,7 @@
     }
   },
   "SPturboSkins": {
-    "source": "SharkPools-Extensions/extension-code/Turbo-Skins.js",
+    "source": "src/extensions/sharkpool_gallery/Turbo-Skins.js",
     "replaces": [],
     "note": "creates renderer skins and sets drawables' skin IDs directly; any costume change restores the normal skin",
     "blocks": {
@@ -827,7 +827,7 @@
     }
   },
   "SharkPoolSharktilities": {
-    "source": "SharkPools-Extensions/extension-code/Sharktilities.js",
+    "source": "src/extensions/sharkpool_gallery/Sharktilities.js",
     "replaces": ["replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
     "blocks": {
       "penLayer": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false},
@@ -855,7 +855,7 @@
     }
   },
   "ShovelUtils": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/TheShovel/ShovelUtils.js",
+    "source": "src/extensions/turbowarp_gallery/TheShovel/ShovelUtils.js",
     "replaces": ["replaced runtime._step (wraps it to count frames per second)"],
     "blocks": {
       "importImage": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait"},
@@ -874,7 +874,7 @@
     }
   },
   "battery": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/battery.js",
+    "source": "src/extensions/turbowarp_gallery/battery.js",
     "replaces": [],
     "note": "battery events start its hats",
     "blocks": {
@@ -920,14 +920,14 @@
     }
   },
   "claytonhtmlencode": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Clay/htmlEncode.js",
+    "source": "src/extensions/turbowarp_gallery/Clay/htmlEncode.js",
     "replaces": [],
     "blocks": {
       "encode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
   },
   "clipboard": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/clipboard.js",
+    "source": "src/extensions/turbowarp_gallery/clipboard.js",
     "replaces": [],
     "note": "own copy / paste listeners on the page",
     "blocks": {
@@ -940,7 +940,7 @@
     }
   },
   "cloudlink": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/cloudlink.js",
+    "source": "src/extensions/turbowarp_gallery/cloudlink.js",
     "replaces": [],
     "note": "WebSocket client (needs a CloudLink server); messages start its hats",
     "blocks": {
@@ -996,7 +996,7 @@
     }
   },
   "cst1229zip": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/CST1229/zip.js",
+    "source": "src/extensions/turbowarp_gallery/CST1229/zip.js",
     "replaces": [],
     "blocks": {
       "createEmptyAs": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -1028,7 +1028,7 @@
     }
   },
   "cubesterKeySimulation": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/CubesterYT/KeySimulation.js",
+    "source": "src/extensions/turbowarp_gallery/CubesterYT/KeySimulation.js",
     "replaces": [],
     "blocks": {
       "pressKey": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"releases with a timer; waits when asked to"},
@@ -1037,7 +1037,7 @@
     }
   },
   "cubesterWindowControls": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/CubesterYT/WindowControls.js",
+    "source": "src/extensions/turbowarp_gallery/CubesterYT/WindowControls.js",
     "replaces": [],
     "blocks": {
       "moveTo": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"moves or resizes the window, then requests a redraw"},
@@ -1123,7 +1123,7 @@
     }
   },
   "dninwakelock": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/DNin/wake-lock.js",
+    "source": "src/extensions/turbowarp_gallery/DNin/wake-lock.js",
     "replaces": [],
     "blocks": {
       "setWakeLock": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":null,"compiled":false},
@@ -1148,7 +1148,7 @@
     }
   },
   "dtbyxeroname": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/XeroName/Deltatime.js",
+    "source": "src/extensions/turbowarp_gallery/XeroName/Deltatime.js",
     "replaces": [],
     "note": "measures the time between frames itself (performance.now on BEFORE_EXECUTE)",
     "blocks": {
@@ -1192,7 +1192,7 @@
     }
   },
   "enderKeysPlusV2": {
-    "source": "SharkPools-Extensions/extension-code/KeysPlusV2.js",
+    "source": "src/extensions/sharkpool_gallery/KeysPlusV2.js",
     "replaces": [],
     "note": "own window listeners for keys, mouse buttons and wheel",
     "blocks": {
@@ -1243,7 +1243,7 @@
     }
   },
   "faceSensing": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/lab/face-sensing.js",
+    "source": "src/extensions/turbowarp_gallery/lab/face-sensing.js",
     "replaces": [],
     "note": "detects faces in the video frames on its own loop; TensorFlow / MediaPipe files from the build's cached-extension-dependencies (offline)",
     "blocks": {
@@ -1259,7 +1259,7 @@
     }
   },
   "filesExpanded": {
-    "source": "SharkPools-Extensions/extension-code/Files-Expanded.js",
+    "source": "src/extensions/sharkpool_gallery/Files-Expanded.js",
     "replaces": [],
     "note": "file picker overlay on the stage, File System Access API, downloads",
     "blocks": {
@@ -1510,7 +1510,7 @@
     }
   },
   "griffpatch": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/box2d.js",
+    "source": "src/extensions/turbowarp_gallery/box2d.js",
     "replaces": [],
     "note": "moves sprites without setXY (writes x/y, updateDrawableProperties, emits target events itself); RUNTIME PROJECT_START listener resets the world",
     "blocks": {
@@ -1551,7 +1551,7 @@
     }
   },
   "gsaWebsocket": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/godslayerakp/ws.js",
+    "source": "src/extensions/turbowarp_gallery/godslayerakp/ws.js",
     "replaces": [],
     "note": "one WebSocket per sprite; messages start its hats (BEFORE_EXECUTE listener while connected)",
     "blocks": {
@@ -1573,7 +1573,7 @@
     }
   },
   "itch": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/itchio.js",
+    "source": "src/extensions/turbowarp_gallery/itchio.js",
     "replaces": [],
     "note": "fetches itch.io's API (online)",
     "blocks": {
@@ -1671,7 +1671,7 @@
     }
   },
   "lmsData": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/ListTools.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/ListTools.js",
     "replaces": [],
     "note": "replaces list.value directly (turns section 62's list table off for that list)",
     "blocks": {
@@ -1693,7 +1693,7 @@
     }
   },
   "lmsLooksPlus": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/LooksPlus.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/LooksPlus.js",
     "replaces": [],
     "blocks": {
       "showSprite": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -1713,7 +1713,7 @@
     }
   },
   "lmsSoundExpanded": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/SoundExpanded.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/SoundExpanded.js",
     "replaces": [],
     "note": "sets the engine's master volume (audioEngine.inputNode.gain) directly",
     "blocks": {
@@ -1739,7 +1739,7 @@
     }
   },
   "lmsVideo": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/Video.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/Video.js",
     "replaces": [],
     "note": "own VideoSkin class; makes skins directly (renderer._allSkins, _nextSkinId); follows the engine's volume; redraws playing videos every frame",
     "blocks": {
@@ -1762,7 +1762,7 @@
     }
   },
   "lmsclonesplus": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/ClonesPlus.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/ClonesPlus.js",
     "replaces": [],
     "note": "writes clone variables through variable.value (no setter)",
     "blocks": {
@@ -1789,7 +1789,7 @@
     }
   },
   "lmsutilsblocks": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Lily/lmsutils.js",
+    "source": "src/extensions/turbowarp_gallery/Lily/lmsutils.js",
     "replaces": [],
     "blocks": {
       "whenBooleanHat": {"type":"hat","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"checked every frame"},
@@ -1830,7 +1830,7 @@
     }
   },
   "localstorage": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/local-storage.js",
+    "source": "src/extensions/turbowarp_gallery/local-storage.js",
     "replaces": [],
     "note": "browser localStorage; own \"storage\" event listener; namespace in runtime.extensionStorage",
     "blocks": {
@@ -1843,7 +1843,7 @@
     }
   },
   "mdwaltersnotifications": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/mdwalters/notifications.js",
+    "source": "src/extensions/turbowarp_gallery/mdwalters/notifications.js",
     "replaces": [],
     "blocks": {
       "requestPermission": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false},
@@ -1853,7 +1853,7 @@
     }
   },
   "medericodertextcase": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Medericoder/textcase.js",
+    "source": "src/extensions/turbowarp_gallery/Medericoder/textcase.js",
     "replaces": [],
     "note": "inputs not cast",
     "blocks": {
@@ -1902,7 +1902,7 @@
     }
   },
   "mobilekeyboard0419": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/veggiecan/mobilekeyboard.js",
+    "source": "src/extensions/turbowarp_gallery/veggiecan/mobilekeyboard.js",
     "replaces": [],
     "note": "creates a page <input> to open the on-screen keyboard",
     "blocks": {
@@ -1948,7 +1948,7 @@
     }
   },
   "navigatorinfo": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/navigator.js",
+    "source": "src/extensions/turbowarp_gallery/navigator.js",
     "replaces": [],
     "blocks": {
       "getOS": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false},
@@ -1960,7 +1960,7 @@
     }
   },
   "nonameawagraph": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/NOname-awa/graphics2d.js",
+    "source": "src/extensions/turbowarp_gallery/NOname-awa/graphics2d.js",
     "replaces": [],
     "note": "inputs not cast",
     "blocks": {
@@ -2063,7 +2063,7 @@
     }
   },
   "obviousalexsensing": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/obviousAlexC/SensingPlus.js",
+    "source": "src/extensions/turbowarp_gallery/obviousAlexC/SensingPlus.js",
     "replaces": [],
     "note": "own touch listeners on the stage; speech blocks use webkitSpeechRecognition (online in Chrome, missing in Electron)",
     "blocks": {
@@ -2145,7 +2145,7 @@
     }
   },
   "penP": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/obviousAlexC/penPlus.js",
+    "source": "src/extensions/turbowarp_gallery/obviousAlexC/penPlus.js",
     "replaces": ["replaced renderer.createPenSkin","added renderer.penClear"],
     "note": "own WebGL programs, framebuffers (render textures), textures and shaders entered through renderer.enterDrawRegion; loads the built-in pen",
     "blocks": {
@@ -2409,7 +2409,7 @@
     }
   },
   "pointerlock": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/pointerlock.js",
+    "source": "src/extensions/turbowarp_gallery/pointerlock.js",
     "replaces": ["added runtime._step (wraps it)","added ioDevices.mouse.postData","added ioDevices.mouse.getScratchX","added ioDevices.mouse.getScratchY"],
     "note": "own page listeners (pointerlockchange, mousemove)",
     "blocks": {
@@ -2453,7 +2453,7 @@
     }
   },
   "qxsckvarandlist": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/qxsck/var-and-list.js",
+    "source": "src/extensions/turbowarp_gallery/qxsck/var-and-list.js",
     "replaces": [],
     "note": "writes variable.value and list.value directly",
     "blocks": {
@@ -2492,7 +2492,7 @@
     }
   },
   "runtimeoptions": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/runtime-options.js",
+    "source": "src/extensions/turbowarp_gallery/runtime-options.js",
     "replaces": ["added ioDevices.userData.postData (wraps it for its \"username changed\" event)"],
     "note": "listens to runtime option, framerate, stage size, turbo and interpolation events for its \"when changed\" hat",
     "blocks": {
@@ -2534,7 +2534,7 @@
     }
   },
   "shovelColorPicker": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/TheShovel/ColorPicker.js",
+    "source": "src/extensions/turbowarp_gallery/TheShovel/ColorPicker.js",
     "replaces": [],
     "blocks": {
       "showPicker": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false},
@@ -2553,7 +2553,7 @@
     }
   },
   "skyhigh173BigInt": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Skyhigh173/bigint.js",
+    "source": "src/extensions/turbowarp_gallery/Skyhigh173/bigint.js",
     "replaces": [],
     "blocks": {
       "from": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answers a JavaScript BigInt"},
@@ -2580,7 +2580,7 @@
     }
   },
   "speechSP": {
-    "source": "SharkPools-Extensions/extension-code/Speech-Bubbles.js",
+    "source": "src/extensions/sharkpool_gallery/Speech-Bubbles.js",
     "replaces": [],
     "note": "bubbles are page elements in renderer overlays; styles are kept in the extension (allBubbles)",
     "blocks": {
@@ -2636,7 +2636,7 @@
     }
   },
   "steamworks": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/steamworks.js",
+    "source": "src/extensions/turbowarp_gallery/steamworks.js",
     "replaces": [],
     "note": "needs the Steamworks object of a packaged Steam app; otherwise answers \"unavailable\"",
     "blocks": {
@@ -2666,7 +2666,7 @@
     }
   },
   "stretch": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/stretch.js",
+    "source": "src/extensions/turbowarp_gallery/stretch.js",
     "replaces": ["wraps every sprite's _getRenderedDirectionAndScale (per sprite, on creation and project load)"],
     "blocks": {
       "setStretch": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -2680,7 +2680,7 @@
     }
   },
   "strings": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/text.js",
+    "source": "src/extensions/turbowarp_gallery/text.js",
     "replaces": [],
     "blocks": {
       "letters_of": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -2705,7 +2705,7 @@
     }
   },
   "theshovelcanvaseffects": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/TheShovel/CanvasEffects.js",
+    "source": "src/extensions/turbowarp_gallery/TheShovel/CanvasEffects.js",
     "replaces": [],
     "blocks": {
       "seteffect": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false,"note":"CSS filter and transform of the stage canvas"},
@@ -2730,7 +2730,7 @@
     }
   },
   "truefantombase": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/true-fantom/base.js",
+    "source": "src/extensions/turbowarp_gallery/true-fantom/base.js",
     "replaces": [],
     "blocks": {
       "is_base_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
@@ -2738,7 +2738,7 @@
     }
   },
   "truefantommath": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/true-fantom/math.js",
+    "source": "src/extensions/turbowarp_gallery/true-fantom/math.js",
     "replaces": [],
     "blocks": {
       "exponent_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
@@ -2776,7 +2776,7 @@
     }
   },
   "truefantomnetwork": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/true-fantom/network.js",
+    "source": "src/extensions/turbowarp_gallery/true-fantom/network.js",
     "replaces": [],
     "blocks": {
       "browser_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false},
@@ -2804,7 +2804,7 @@
     }
   },
   "utilities": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/utilities.js",
+    "source": "src/extensions/turbowarp_gallery/utilities.js",
     "replaces": [],
     "blocks": {
       "isExactly": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"compares raw inputs: text \"1\" and number 1 differ"},
@@ -2835,7 +2835,7 @@
     }
   },
   "videoSprites": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/lab/video-sprites.js",
+    "source": "src/extensions/turbowarp_gallery/lab/video-sprites.js",
     "replaces": ["replaced RenderedTarget.prototype.makeClone"],
     "note": "own renderer skins (renderer._allSkins, _nextSkinId); AFTER_EXECUTE listener updates them every frame",
     "blocks": {
@@ -2876,7 +2876,7 @@
     }
   },
   "xeltallivSimple3D": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Xeltalliv/simple3D.js",
+    "source": "src/extensions/turbowarp_gallery/Xeltalliv/simple3D.js",
     "replaces": ["wraps renderer.draw","sets setHighQuality on its own drawable"],
     "note": "own WebGL2 context, canvas skin and drawable (renderer._allSkins, _allDrawables directly); block functions are inline \"def\" functions in its definitions list",
     "blocks": {
@@ -2976,7 +2976,7 @@
     }
   },
   "xeltallivclipblend": {
-    "source": "TurboWarp-ExtensionsGallery/extensions/Xeltalliv/clippingblending.js",
+    "source": "src/extensions/turbowarp_gallery/Xeltalliv/clippingblending.js",
     "replaces": ["replaced renderer._drawThese","added Drawable.prototype.getUniforms, updateClipBox, updateBlendMode","added renderer.updateDrawableClipBox, updateDrawableBlendMode","replaced renderer.createPenSkin","replaced the pen's _onTargetMoved and its pen skin's _flushLines"],
     "blocks": {
       "setClipbox": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite","events"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"also marks its pen state dirty (module flag)"},

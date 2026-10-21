@@ -820,8 +820,9 @@ class VirtualMachine extends EventEmitter {
                     throw new Error(`Permission to load extension denied: ${extensionID}`);
                 }
             } else if (this.extensionManager.isBuiltinExtension(extensionID)) {
-                // Builtin extension
-                this.extensionManager.loadExtensionIdSync(extensionID);
+                // Builtin extension (Desktop fork: through loadExtensionURL, which waits for a moved
+                // gallery extension that registers later; other built-ins still load at once)
+                extensionPromises.push(this.extensionManager.loadExtensionURL(extensionID));
             } else {
                 throw new Error(`Unknown extension: ${extensionID}`);
             }

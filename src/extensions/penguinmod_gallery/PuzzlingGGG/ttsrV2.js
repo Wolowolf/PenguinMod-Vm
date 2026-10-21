@@ -1,8 +1,9 @@
 /* eslint-disable */
-// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's PuzzlingGGG/ttsrV2.js, moved into the VM as a
-// built-in extension. The code is the gallery file unchanged except for `/* webpackIgnore: true */` in its import(), so the build leaves that import to the browser; it only runs inside a function that gives it
-// the gallery's Scratch object (extension-support/desktop-gallery-extension.js).
-module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch) {
+// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's PuzzlingGGG/ttsrV2.js, moved into
+// the VM as a built-in extension. The code is the gallery file unchanged except for `/* webpackIgnore: true */` in the import() of its speech engine, so the build leaves it to the browser.
+// It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
+// and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Text To Speech
 // id: pmTextToSpeech
 // description: Offline text to speech with Pocket TTS and Supertonic 3 voices, voice cloning, speed and pitch; makes speech sounds too, also with Loudkit.

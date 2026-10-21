@@ -1,8 +1,9 @@
 /* eslint-disable */
-// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Ikelene/googleAuthExtension.js, moved into the VM as a
-// built-in extension. The code is the gallery file unchanged; it only runs inside a function that gives it
-// the gallery's Scratch object (extension-support/desktop-gallery-extension.js).
-module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch) {
+// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Ikelene/googleAuthExtension.js, moved into
+// the VM as a built-in extension. The code is the gallery file unchanged.
+// It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
+// and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Google Auth: lets players log in with their Google account, using the game maker's own Google
 // login setup (Google Cloud "OAuth client"). Nothing goes through anyone else's server: the game
 // talks to Google directly and keeps the player's details only in memory while it runs.

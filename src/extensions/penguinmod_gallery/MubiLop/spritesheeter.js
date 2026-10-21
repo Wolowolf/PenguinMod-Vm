@@ -1,8 +1,9 @@
 /* eslint-disable */
-// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's MubiLop/spritesheeter.js, moved into the VM as a
-// built-in extension. The code is the gallery file unchanged; it only runs inside a function that gives it
-// the gallery's Scratch object (extension-support/desktop-gallery-extension.js).
-module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch) {
+// Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's MubiLop/spritesheeter.js, moved into
+// the VM as a built-in extension. The code is the gallery file unchanged.
+// It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
+// and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // CODE GENERATED USING mCompiler (v1.0) | Made by MubiLop | https://github.com/cicerorph/mCompiler
 // Hash: 6b8205cd | Generated: 3/25/2025, 10:02:58 PM UTC
 // Name: Spritesheeter
