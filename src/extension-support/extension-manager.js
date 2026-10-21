@@ -8,8 +8,6 @@ const Cast = require('../util/cast');
 
 const AddonSwitches = require('./extension-addon-switchers');
 
-// Desktop fork: the gallery extensions that ship with the app (ID => address); nothing else loads.
-const shippedExtensions = require('./shipped-extensions.json');
 const normalizeExtensionURL = url => {
     try {
         return new URL(String(url).replace('penguinmod.site', 'penguinmod.com')).href;
@@ -17,21 +15,14 @@ const normalizeExtensionURL = url => {
         return null;
     }
 };
-const shippedExtensionURLs = new Set(Object.values(shippedExtensions).map(normalizeExtensionURL));
-const isShippedExtensionURL = url => shippedExtensionURLs.has(normalizeExtensionURL(url));
-// Desktop fork: gallery extensions moved into the VM (ID => their old gallery address). Their gallery
-// tiles still ask for that address, which loads the built-in extension instead.
+// Desktop fork: only built-in extensions load; nothing loads from an address. The gallery extensions
+// were moved into the VM (ID => their old gallery address); their gallery tiles still ask for that
+// address, which loads the built-in extension instead.
 const movedGalleryExtensions = require('./moved-gallery-extensions.json');
 const movedGalleryIDs = new Map(Object.entries(movedGalleryExtensions)
     .map(([id, url]) => [normalizeExtensionURL(url), id]));
-
-// thhank yoh random stack droverflwo person
-async function sha256(source) {
-    const sourceBytes = new TextEncoder().encode(source);
-    const digest = await crypto.subtle.digest("SHA-256", sourceBytes);
-    const resultBytes = [...new Uint8Array(digest)];
-    return resultBytes.map(x => x.toString(16).padStart(2, '0')).join("");
-}
+const movedGalleryAddressOf = id => (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, id) ?
+    movedGalleryExtensions[id] : undefined);
 
 // These extensions are currently built into the VM repository but should not be loaded at startup.
 // TODO: move these out into a separate repository?
@@ -126,117 +117,118 @@ const defaultBuiltinExtensions = {
     // fr: waw 3d physics!!
 
     // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the extensions of the three galleries, moved into the VM
-    // (their gallery addresses: moved-gallery-extensions.json)
+    // (their gallery addresses: moved-gallery-extensions.json), each in its own chunk of the build, fetched
+    // only when the extension is loaded (see _loadMovedGalleryExtension)
     // PenguinMod gallery
-    P7BoxPhys: () => require('../extensions/penguinmod_gallery/pooiod/Box2D'),
-    SPgrids: () => require('../extensions/penguinmod_gallery/SharkPool/Tile-Grids'),
-    SPsoundWaves: () => require('../extensions/penguinmod_gallery/SharkPool/Sound-Waves'),
-    beatSync: () => require('../extensions/penguinmod_gallery/Gen1x/beat_sync'),
-    discordauth: () => require('../extensions/penguinmod_gallery/NotHouse/DiscordAuth'),
-    divVecQuat: () => require('../extensions/penguinmod_gallery/Div/divVecQuat'),
-    dogeiscutResolution: () => require('../extensions/penguinmod_gallery/DogeisCut/Resolution'),
-    e2ee: () => require('../extensions/penguinmod_gallery/MikeDev101/e2ee'),
-    embintranslation: () => require('../extensions/penguinmod_gallery/Embin/embintranslation'),
-    g1nxIrisText: () => require('../extensions/penguinmod_gallery/Gen1x/iris-text'),
-    g1nxLighting: () => require('../extensions/penguinmod_gallery/Gen1x/lighting'),
-    gaimeriCryptoExtension: () => require('../extensions/penguinmod_gallery/gaimerI17/crypto'),
-    gaimeriDeviceMotionExtension: () => require('../extensions/penguinmod_gallery/gaimerI17/DeviceMotion'),
-    googleAuth: () => require('../extensions/penguinmod_gallery/Ikelene/googleAuthExtension'),
-    midi: () => require('../extensions/penguinmod_gallery/electricfuzzball_pm/MIDI'),
-    mubiloppenguinhook: () => require('../extensions/penguinmod_gallery/MubiLop/penguinhook'),
-    numberUtilities: () => require('../extensions/penguinmod_gallery/MubiLop/numutils'),
-    obviousAlexCMath3d: () => require('../extensions/penguinmod_gallery/ObviousAlexC/3DMath'),
-    p7videosharing: () => require('../extensions/penguinmod_gallery/pooiod/VideoSharing'),
-    pmTextToSpeech: () => require('../extensions/penguinmod_gallery/PuzzlingGGG/ttsrV2'),
-    pooiod7Dictation: () => require('../extensions/penguinmod_gallery/pooiod/Dictation'),
-    qxsckbignumber: () => require('../extensions/penguinmod_gallery/qxsck/big-decimal'),
-    randomutils: () => require('../extensions/penguinmod_gallery/Gen1x/random_utils'),
-    spritesheeter: () => require('../extensions/penguinmod_gallery/MubiLop/spritesheeter'),
-    steve0greatnesstimers: () => require('../extensions/penguinmod_gallery/steve0greatness/timers'),
-    toastnotifs: () => require('../extensions/penguinmod_gallery/MubiLop/toastnotifs'),
-    webrtc: () => require('../extensions/penguinmod_gallery/MikeDev101/webrtc'),
+    P7BoxPhys: () => import(/* webpackChunkName: "ext-P7BoxPhys" */ '../extensions/penguinmod_gallery/pooiod/Box2D'),
+    SPgrids: () => import(/* webpackChunkName: "ext-SPgrids" */ '../extensions/penguinmod_gallery/SharkPool/Tile-Grids'),
+    SPsoundWaves: () => import(/* webpackChunkName: "ext-SPsoundWaves" */ '../extensions/penguinmod_gallery/SharkPool/Sound-Waves'),
+    beatSync: () => import(/* webpackChunkName: "ext-beatSync" */ '../extensions/penguinmod_gallery/Gen1x/beat_sync'),
+    discordauth: () => import(/* webpackChunkName: "ext-discordauth" */ '../extensions/penguinmod_gallery/NotHouse/DiscordAuth'),
+    divVecQuat: () => import(/* webpackChunkName: "ext-divVecQuat" */ '../extensions/penguinmod_gallery/Div/divVecQuat'),
+    dogeiscutResolution: () => import(/* webpackChunkName: "ext-dogeiscutResolution" */ '../extensions/penguinmod_gallery/DogeisCut/Resolution'),
+    e2ee: () => import(/* webpackChunkName: "ext-e2ee" */ '../extensions/penguinmod_gallery/MikeDev101/e2ee'),
+    embintranslation: () => import(/* webpackChunkName: "ext-embintranslation" */ '../extensions/penguinmod_gallery/Embin/embintranslation'),
+    g1nxIrisText: () => import(/* webpackChunkName: "ext-g1nxIrisText" */ '../extensions/penguinmod_gallery/Gen1x/iris-text'),
+    g1nxLighting: () => import(/* webpackChunkName: "ext-g1nxLighting" */ '../extensions/penguinmod_gallery/Gen1x/lighting'),
+    gaimeriCryptoExtension: () => import(/* webpackChunkName: "ext-gaimeriCryptoExtension" */ '../extensions/penguinmod_gallery/gaimerI17/crypto'),
+    gaimeriDeviceMotionExtension: () => import(/* webpackChunkName: "ext-gaimeriDeviceMotionExtension" */ '../extensions/penguinmod_gallery/gaimerI17/DeviceMotion'),
+    googleAuth: () => import(/* webpackChunkName: "ext-googleAuth" */ '../extensions/penguinmod_gallery/Ikelene/googleAuthExtension'),
+    midi: () => import(/* webpackChunkName: "ext-midi" */ '../extensions/penguinmod_gallery/electricfuzzball_pm/MIDI'),
+    mubiloppenguinhook: () => import(/* webpackChunkName: "ext-mubiloppenguinhook" */ '../extensions/penguinmod_gallery/MubiLop/penguinhook'),
+    numberUtilities: () => import(/* webpackChunkName: "ext-numberUtilities" */ '../extensions/penguinmod_gallery/MubiLop/numutils'),
+    obviousAlexCMath3d: () => import(/* webpackChunkName: "ext-obviousAlexCMath3d" */ '../extensions/penguinmod_gallery/ObviousAlexC/3DMath'),
+    p7videosharing: () => import(/* webpackChunkName: "ext-p7videosharing" */ '../extensions/penguinmod_gallery/pooiod/VideoSharing'),
+    pmTextToSpeech: () => import(/* webpackChunkName: "ext-pmTextToSpeech" */ '../extensions/penguinmod_gallery/PuzzlingGGG/ttsrV2'),
+    pooiod7Dictation: () => import(/* webpackChunkName: "ext-pooiod7Dictation" */ '../extensions/penguinmod_gallery/pooiod/Dictation'),
+    qxsckbignumber: () => import(/* webpackChunkName: "ext-qxsckbignumber" */ '../extensions/penguinmod_gallery/qxsck/big-decimal'),
+    randomutils: () => import(/* webpackChunkName: "ext-randomutils" */ '../extensions/penguinmod_gallery/Gen1x/random_utils'),
+    spritesheeter: () => import(/* webpackChunkName: "ext-spritesheeter" */ '../extensions/penguinmod_gallery/MubiLop/spritesheeter'),
+    steve0greatnesstimers: () => import(/* webpackChunkName: "ext-steve0greatnesstimers" */ '../extensions/penguinmod_gallery/steve0greatness/timers'),
+    toastnotifs: () => import(/* webpackChunkName: "ext-toastnotifs" */ '../extensions/penguinmod_gallery/MubiLop/toastnotifs'),
+    webrtc: () => import(/* webpackChunkName: "ext-webrtc" */ '../extensions/penguinmod_gallery/MikeDev101/webrtc'),
     // TurboWarp gallery
-    Bitwise: () => require('../extensions/turbowarp_gallery/bitwise'),
-    Encoding: () => require('../extensions/turbowarp_gallery/encoding'),
-    MouseCursor: () => require('../extensions/turbowarp_gallery/cursor'),
-    SPASfontManager: () => require('../extensions/turbowarp_gallery/SharkPool/Font-Manager'),
-    ShovelUtils: () => require('../extensions/turbowarp_gallery/TheShovel/ShovelUtils'),
-    battery: () => require('../extensions/turbowarp_gallery/battery'),
-    claytonhtmlencode: () => require('../extensions/turbowarp_gallery/Clay/htmlEncode'),
-    clipboard: () => require('../extensions/turbowarp_gallery/clipboard'),
-    cloudlink: () => require('../extensions/turbowarp_gallery/cloudlink'),
-    cst1229zip: () => require('../extensions/turbowarp_gallery/CST1229/zip'),
-    cubesterKeySimulation: () => require('../extensions/turbowarp_gallery/CubesterYT/KeySimulation'),
-    cubesterWindowControls: () => require('../extensions/turbowarp_gallery/CubesterYT/WindowControls'),
-    dninwakelock: () => require('../extensions/turbowarp_gallery/DNin/wake-lock'),
-    dtbyxeroname: () => require('../extensions/turbowarp_gallery/XeroName/Deltatime'),
-    faceSensing: () => require('../extensions/turbowarp_gallery/lab/face-sensing'),
-    griffpatch: () => require('../extensions/turbowarp_gallery/box2d'),
-    gsaWebsocket: () => require('../extensions/turbowarp_gallery/godslayerakp/ws'),
-    itch: () => require('../extensions/turbowarp_gallery/itchio'),
-    lmsData: () => require('../extensions/turbowarp_gallery/Lily/ListTools'),
-    lmsLooksPlus: () => require('../extensions/turbowarp_gallery/Lily/LooksPlus'),
-    lmsSoundExpanded: () => require('../extensions/turbowarp_gallery/Lily/SoundExpanded'),
-    lmsVideo: () => require('../extensions/turbowarp_gallery/Lily/Video'),
-    lmsclonesplus: () => require('../extensions/turbowarp_gallery/Lily/ClonesPlus'),
-    lmsutilsblocks: () => require('../extensions/turbowarp_gallery/Lily/lmsutils'),
-    localstorage: () => require('../extensions/turbowarp_gallery/local-storage'),
-    mdwaltersnotifications: () => require('../extensions/turbowarp_gallery/mdwalters/notifications'),
-    medericodertextcase: () => require('../extensions/turbowarp_gallery/Medericoder/textcase'),
-    mobilekeyboard0419: () => require('../extensions/turbowarp_gallery/veggiecan/mobilekeyboard'),
-    navigatorinfo: () => require('../extensions/turbowarp_gallery/navigator'),
-    nonameawagraph: () => require('../extensions/turbowarp_gallery/NOname-awa/graphics2d'),
-    obviousalexsensing: () => require('../extensions/turbowarp_gallery/obviousAlexC/SensingPlus'),
-    penP: () => require('../extensions/turbowarp_gallery/obviousAlexC/penPlus'),
-    pointerlock: () => require('../extensions/turbowarp_gallery/pointerlock'),
-    qxsckvarandlist: () => require('../extensions/turbowarp_gallery/qxsck/var-and-list'),
-    runtimeoptions: () => require('../extensions/turbowarp_gallery/runtime-options'),
-    shovelColorPicker: () => require('../extensions/turbowarp_gallery/TheShovel/ColorPicker'),
-    skyhigh173BigInt: () => require('../extensions/turbowarp_gallery/Skyhigh173/bigint'),
-    steamworks: () => require('../extensions/turbowarp_gallery/steamworks'),
-    stretch: () => require('../extensions/turbowarp_gallery/stretch'),
-    strings: () => require('../extensions/turbowarp_gallery/text'),
-    theshovelcanvaseffects: () => require('../extensions/turbowarp_gallery/TheShovel/CanvasEffects'),
-    truefantombase: () => require('../extensions/turbowarp_gallery/true-fantom/base'),
-    truefantommath: () => require('../extensions/turbowarp_gallery/true-fantom/math'),
-    truefantomnetwork: () => require('../extensions/turbowarp_gallery/true-fantom/network'),
-    utilities: () => require('../extensions/turbowarp_gallery/utilities'),
-    videoSprites: () => require('../extensions/turbowarp_gallery/lab/video-sprites'),
-    xeltallivSimple3D: () => require('../extensions/turbowarp_gallery/Xeltalliv/simple3D'),
-    xeltallivclipblend: () => require('../extensions/turbowarp_gallery/Xeltalliv/clippingblending'),
+    Bitwise: () => import(/* webpackChunkName: "ext-Bitwise" */ '../extensions/turbowarp_gallery/bitwise'),
+    Encoding: () => import(/* webpackChunkName: "ext-Encoding" */ '../extensions/turbowarp_gallery/encoding'),
+    MouseCursor: () => import(/* webpackChunkName: "ext-MouseCursor" */ '../extensions/turbowarp_gallery/cursor'),
+    SPASfontManager: () => import(/* webpackChunkName: "ext-SPASfontManager" */ '../extensions/turbowarp_gallery/SharkPool/Font-Manager'),
+    ShovelUtils: () => import(/* webpackChunkName: "ext-ShovelUtils" */ '../extensions/turbowarp_gallery/TheShovel/ShovelUtils'),
+    battery: () => import(/* webpackChunkName: "ext-battery" */ '../extensions/turbowarp_gallery/battery'),
+    claytonhtmlencode: () => import(/* webpackChunkName: "ext-claytonhtmlencode" */ '../extensions/turbowarp_gallery/Clay/htmlEncode'),
+    clipboard: () => import(/* webpackChunkName: "ext-clipboard" */ '../extensions/turbowarp_gallery/clipboard'),
+    cloudlink: () => import(/* webpackChunkName: "ext-cloudlink" */ '../extensions/turbowarp_gallery/cloudlink'),
+    cst1229zip: () => import(/* webpackChunkName: "ext-cst1229zip" */ '../extensions/turbowarp_gallery/CST1229/zip'),
+    cubesterKeySimulation: () => import(/* webpackChunkName: "ext-cubesterKeySimulation" */ '../extensions/turbowarp_gallery/CubesterYT/KeySimulation'),
+    cubesterWindowControls: () => import(/* webpackChunkName: "ext-cubesterWindowControls" */ '../extensions/turbowarp_gallery/CubesterYT/WindowControls'),
+    dninwakelock: () => import(/* webpackChunkName: "ext-dninwakelock" */ '../extensions/turbowarp_gallery/DNin/wake-lock'),
+    dtbyxeroname: () => import(/* webpackChunkName: "ext-dtbyxeroname" */ '../extensions/turbowarp_gallery/XeroName/Deltatime'),
+    faceSensing: () => import(/* webpackChunkName: "ext-faceSensing" */ '../extensions/turbowarp_gallery/lab/face-sensing'),
+    griffpatch: () => import(/* webpackChunkName: "ext-griffpatch" */ '../extensions/turbowarp_gallery/box2d'),
+    gsaWebsocket: () => import(/* webpackChunkName: "ext-gsaWebsocket" */ '../extensions/turbowarp_gallery/godslayerakp/ws'),
+    itch: () => import(/* webpackChunkName: "ext-itch" */ '../extensions/turbowarp_gallery/itchio'),
+    lmsData: () => import(/* webpackChunkName: "ext-lmsData" */ '../extensions/turbowarp_gallery/Lily/ListTools'),
+    lmsLooksPlus: () => import(/* webpackChunkName: "ext-lmsLooksPlus" */ '../extensions/turbowarp_gallery/Lily/LooksPlus'),
+    lmsSoundExpanded: () => import(/* webpackChunkName: "ext-lmsSoundExpanded" */ '../extensions/turbowarp_gallery/Lily/SoundExpanded'),
+    lmsVideo: () => import(/* webpackChunkName: "ext-lmsVideo" */ '../extensions/turbowarp_gallery/Lily/Video'),
+    lmsclonesplus: () => import(/* webpackChunkName: "ext-lmsclonesplus" */ '../extensions/turbowarp_gallery/Lily/ClonesPlus'),
+    lmsutilsblocks: () => import(/* webpackChunkName: "ext-lmsutilsblocks" */ '../extensions/turbowarp_gallery/Lily/lmsutils'),
+    localstorage: () => import(/* webpackChunkName: "ext-localstorage" */ '../extensions/turbowarp_gallery/local-storage'),
+    mdwaltersnotifications: () => import(/* webpackChunkName: "ext-mdwaltersnotifications" */ '../extensions/turbowarp_gallery/mdwalters/notifications'),
+    medericodertextcase: () => import(/* webpackChunkName: "ext-medericodertextcase" */ '../extensions/turbowarp_gallery/Medericoder/textcase'),
+    mobilekeyboard0419: () => import(/* webpackChunkName: "ext-mobilekeyboard0419" */ '../extensions/turbowarp_gallery/veggiecan/mobilekeyboard'),
+    navigatorinfo: () => import(/* webpackChunkName: "ext-navigatorinfo" */ '../extensions/turbowarp_gallery/navigator'),
+    nonameawagraph: () => import(/* webpackChunkName: "ext-nonameawagraph" */ '../extensions/turbowarp_gallery/NOname-awa/graphics2d'),
+    obviousalexsensing: () => import(/* webpackChunkName: "ext-obviousalexsensing" */ '../extensions/turbowarp_gallery/obviousAlexC/SensingPlus'),
+    penP: () => import(/* webpackChunkName: "ext-penP" */ '../extensions/turbowarp_gallery/obviousAlexC/penPlus'),
+    pointerlock: () => import(/* webpackChunkName: "ext-pointerlock" */ '../extensions/turbowarp_gallery/pointerlock'),
+    qxsckvarandlist: () => import(/* webpackChunkName: "ext-qxsckvarandlist" */ '../extensions/turbowarp_gallery/qxsck/var-and-list'),
+    runtimeoptions: () => import(/* webpackChunkName: "ext-runtimeoptions" */ '../extensions/turbowarp_gallery/runtime-options'),
+    shovelColorPicker: () => import(/* webpackChunkName: "ext-shovelColorPicker" */ '../extensions/turbowarp_gallery/TheShovel/ColorPicker'),
+    skyhigh173BigInt: () => import(/* webpackChunkName: "ext-skyhigh173BigInt" */ '../extensions/turbowarp_gallery/Skyhigh173/bigint'),
+    steamworks: () => import(/* webpackChunkName: "ext-steamworks" */ '../extensions/turbowarp_gallery/steamworks'),
+    stretch: () => import(/* webpackChunkName: "ext-stretch" */ '../extensions/turbowarp_gallery/stretch'),
+    strings: () => import(/* webpackChunkName: "ext-strings" */ '../extensions/turbowarp_gallery/text'),
+    theshovelcanvaseffects: () => import(/* webpackChunkName: "ext-theshovelcanvaseffects" */ '../extensions/turbowarp_gallery/TheShovel/CanvasEffects'),
+    truefantombase: () => import(/* webpackChunkName: "ext-truefantombase" */ '../extensions/turbowarp_gallery/true-fantom/base'),
+    truefantommath: () => import(/* webpackChunkName: "ext-truefantommath" */ '../extensions/turbowarp_gallery/true-fantom/math'),
+    truefantomnetwork: () => import(/* webpackChunkName: "ext-truefantomnetwork" */ '../extensions/turbowarp_gallery/true-fantom/network'),
+    utilities: () => import(/* webpackChunkName: "ext-utilities" */ '../extensions/turbowarp_gallery/utilities'),
+    videoSprites: () => import(/* webpackChunkName: "ext-videoSprites" */ '../extensions/turbowarp_gallery/lab/video-sprites'),
+    xeltallivSimple3D: () => import(/* webpackChunkName: "ext-xeltallivSimple3D" */ '../extensions/turbowarp_gallery/Xeltalliv/simple3D'),
+    xeltallivclipblend: () => import(/* webpackChunkName: "ext-xeltallivclipblend" */ '../extensions/turbowarp_gallery/Xeltalliv/clippingblending'),
     // SharkPool gallery
-    CameraSensingPlusSP: () => require('../extensions/sharkpool_gallery/Camera-Sensing-Plus'),
-    DICandSPmonitorsPlus: () => require('../extensions/sharkpool_gallery/Variables-Expanded'),
-    Gamepad: () => require('../extensions/sharkpool_gallery/Gamepad-Expanded'),
-    HyperSense2SP: () => require('../extensions/sharkpool_gallery/Hyper-Sense-V2'),
-    LZcollisionsSP: () => require('../extensions/sharkpool_gallery/Lazy-Collisions'),
-    ObscurasMIDITools: () => require('../extensions/sharkpool_gallery/MIDI-Tools'),
-    SPadvControl: () => require('../extensions/sharkpool_gallery/Extra-Controls'),
-    SPanimations: () => require('../extensions/sharkpool_gallery/Animations'),
-    SPcolorMaster: () => require('../extensions/sharkpool_gallery/Color-Master'),
-    SPgeolocation: () => require('../extensions/sharkpool_gallery/Geolocation'),
-    SPgifManager: () => require('../extensions/sharkpool_gallery/GIF-Manager'),
-    SPlayering: () => require('../extensions/sharkpool_gallery/Layer-Control'),
-    SPmbpCST: () => require('../extensions/sharkpool_gallery/My-Blocks-Plus'),
-    SPmessagePlus: () => require('../extensions/sharkpool_gallery/Messages-Plus'),
-    SPpartEngine: () => require('../extensions/sharkpool_gallery/Particle-Engine'),
-    SPpenPapers: () => require('../extensions/sharkpool_gallery/Pen-Papers'),
-    SPpopups: () => require('../extensions/sharkpool_gallery/Popup-Phoenix'),
-    SPqrCodes: () => require('../extensions/sharkpool_gallery/QR-Codes'),
-    SPrecording2: () => require('../extensions/sharkpool_gallery/Recording-V2'),
-    SPrigidBody: () => require('../extensions/sharkpool_gallery/Rigidbodies'),
-    SPscenes: () => require('../extensions/sharkpool_gallery/Scenes'),
-    SPspriteEffectsV2: () => require('../extensions/sharkpool_gallery/Sprite-Effects-V2'),
-    SPspriteParent: () => require('../extensions/sharkpool_gallery/Sprite-Parenting'),
-    SPsvgSheets: () => require('../extensions/sharkpool_gallery/SVG-Spritesheets'),
-    SPtempVars: () => require('../extensions/sharkpool_gallery/Temporary-Variables'),
-    SPtimeCalc: () => require('../extensions/sharkpool_gallery/Time-Calculation'),
-    SPtuneShark3: () => require('../extensions/sharkpool_gallery/Tune-Shark-V3'),
-    SPturboSkins: () => require('../extensions/sharkpool_gallery/Turbo-Skins'),
-    SharkPoolSharktilities: () => require('../extensions/sharkpool_gallery/Sharktilities'),
-    enderKeysPlusV2: () => require('../extensions/sharkpool_gallery/KeysPlusV2'),
-    filesExpanded: () => require('../extensions/sharkpool_gallery/Files-Expanded'),
-    speechSP: () => require('../extensions/sharkpool_gallery/Speech-Bubbles'),
+    CameraSensingPlusSP: () => import(/* webpackChunkName: "ext-CameraSensingPlusSP" */ '../extensions/sharkpool_gallery/Camera-Sensing-Plus'),
+    DICandSPmonitorsPlus: () => import(/* webpackChunkName: "ext-DICandSPmonitorsPlus" */ '../extensions/sharkpool_gallery/Variables-Expanded'),
+    Gamepad: () => import(/* webpackChunkName: "ext-Gamepad" */ '../extensions/sharkpool_gallery/Gamepad-Expanded'),
+    HyperSense2SP: () => import(/* webpackChunkName: "ext-HyperSense2SP" */ '../extensions/sharkpool_gallery/Hyper-Sense-V2'),
+    LZcollisionsSP: () => import(/* webpackChunkName: "ext-LZcollisionsSP" */ '../extensions/sharkpool_gallery/Lazy-Collisions'),
+    ObscurasMIDITools: () => import(/* webpackChunkName: "ext-ObscurasMIDITools" */ '../extensions/sharkpool_gallery/MIDI-Tools'),
+    SPadvControl: () => import(/* webpackChunkName: "ext-SPadvControl" */ '../extensions/sharkpool_gallery/Extra-Controls'),
+    SPanimations: () => import(/* webpackChunkName: "ext-SPanimations" */ '../extensions/sharkpool_gallery/Animations'),
+    SPcolorMaster: () => import(/* webpackChunkName: "ext-SPcolorMaster" */ '../extensions/sharkpool_gallery/Color-Master'),
+    SPgeolocation: () => import(/* webpackChunkName: "ext-SPgeolocation" */ '../extensions/sharkpool_gallery/Geolocation'),
+    SPgifManager: () => import(/* webpackChunkName: "ext-SPgifManager" */ '../extensions/sharkpool_gallery/GIF-Manager'),
+    SPlayering: () => import(/* webpackChunkName: "ext-SPlayering" */ '../extensions/sharkpool_gallery/Layer-Control'),
+    SPmbpCST: () => import(/* webpackChunkName: "ext-SPmbpCST" */ '../extensions/sharkpool_gallery/My-Blocks-Plus'),
+    SPmessagePlus: () => import(/* webpackChunkName: "ext-SPmessagePlus" */ '../extensions/sharkpool_gallery/Messages-Plus'),
+    SPpartEngine: () => import(/* webpackChunkName: "ext-SPpartEngine" */ '../extensions/sharkpool_gallery/Particle-Engine'),
+    SPpenPapers: () => import(/* webpackChunkName: "ext-SPpenPapers" */ '../extensions/sharkpool_gallery/Pen-Papers'),
+    SPpopups: () => import(/* webpackChunkName: "ext-SPpopups" */ '../extensions/sharkpool_gallery/Popup-Phoenix'),
+    SPqrCodes: () => import(/* webpackChunkName: "ext-SPqrCodes" */ '../extensions/sharkpool_gallery/QR-Codes'),
+    SPrecording2: () => import(/* webpackChunkName: "ext-SPrecording2" */ '../extensions/sharkpool_gallery/Recording-V2'),
+    SPrigidBody: () => import(/* webpackChunkName: "ext-SPrigidBody" */ '../extensions/sharkpool_gallery/Rigidbodies'),
+    SPscenes: () => import(/* webpackChunkName: "ext-SPscenes" */ '../extensions/sharkpool_gallery/Scenes'),
+    SPspriteEffectsV2: () => import(/* webpackChunkName: "ext-SPspriteEffectsV2" */ '../extensions/sharkpool_gallery/Sprite-Effects-V2'),
+    SPspriteParent: () => import(/* webpackChunkName: "ext-SPspriteParent" */ '../extensions/sharkpool_gallery/Sprite-Parenting'),
+    SPsvgSheets: () => import(/* webpackChunkName: "ext-SPsvgSheets" */ '../extensions/sharkpool_gallery/SVG-Spritesheets'),
+    SPtempVars: () => import(/* webpackChunkName: "ext-SPtempVars" */ '../extensions/sharkpool_gallery/Temporary-Variables'),
+    SPtimeCalc: () => import(/* webpackChunkName: "ext-SPtimeCalc" */ '../extensions/sharkpool_gallery/Time-Calculation'),
+    SPtuneShark3: () => import(/* webpackChunkName: "ext-SPtuneShark3" */ '../extensions/sharkpool_gallery/Tune-Shark-V3'),
+    SPturboSkins: () => import(/* webpackChunkName: "ext-SPturboSkins" */ '../extensions/sharkpool_gallery/Turbo-Skins'),
+    SharkPoolSharktilities: () => import(/* webpackChunkName: "ext-SharkPoolSharktilities" */ '../extensions/sharkpool_gallery/Sharktilities'),
+    enderKeysPlusV2: () => import(/* webpackChunkName: "ext-enderKeysPlusV2" */ '../extensions/sharkpool_gallery/KeysPlusV2'),
+    filesExpanded: () => import(/* webpackChunkName: "ext-filesExpanded" */ '../extensions/sharkpool_gallery/Files-Expanded'),
+    speechSP: () => import(/* webpackChunkName: "ext-speechSP" */ '../extensions/sharkpool_gallery/Speech-Bubbles'),
 };
 const CORE_EXTENSIONS = [
     'argument',
@@ -254,8 +246,6 @@ const CORE_EXTENSIONS = [
 ];
 
 const coreExtensionList = Object.getOwnPropertyNames(defaultBuiltinExtensions);
-
-const preload = [];
 
 /**
  * @typedef {object} ArgumentInfo - Information about an extension block argument
@@ -282,52 +272,22 @@ const preload = [];
  * @property {Array.<object>} menus - the menus provided by this category
  */
 
-/**
- * @typedef {object} PendingExtensionWorker - Information about an extension worker still initializing
- * @property {string} extensionURL - the URL of the extension to be loaded by this worker
- * @property {Function} resolve - function to call on successful worker startup
- * @property {Function} reject - function to call on failed worker startup
- */
-
 const createExtensionService = extensionManager => {
     const service = {};
     service.registerExtensionServiceSync = extensionManager.registerExtensionServiceSync.bind(extensionManager);
-    service.allocateWorker = extensionManager.allocateWorker.bind(extensionManager);
-    service.onWorkerInit = extensionManager.onWorkerInit.bind(extensionManager);
-    service.registerExtensionService = extensionManager.registerExtensionService.bind(extensionManager);
     return service;
 };
 
 class ExtensionManager {
     constructor(vm) {
         /**
-         * The ID number to provide to the next extension worker.
+         * The number in the service name of the next extension.
          * @type {int}
          */
         this.nextExtensionWorker = 0;
 
         /**
-         * FIFO queue of extensions which have been requested but not yet loaded in a worker,
-         * along with promise resolution functions to call once the worker is ready or failed.
-         *
-         * @type {Array.<PendingExtensionWorker>}
-         */
-        this.pendingExtensions = [];
-
-        /**
-         * Map of worker ID to workers which have been allocated but have not yet finished initialization.
-         * @type {Array.<PendingExtensionWorker>}
-         */
-        this.pendingWorkers = [];
-
-        /**
-         * Map of worker ID to the URL where it was loaded from.
-         * @type {Array<string>}
-         */
-        this.workerURLs = [];
-
-        /**
-         * Set by the editor: (extension id, extension URL or undefined) => name to show instead of the
+         * Set by the editor: (extension id, gallery address or undefined) => name to show instead of the
          * extension's own name, or a falsy value to keep it.
          * @type {?function}
          */
@@ -357,9 +317,6 @@ class ExtensionManager {
          */
         this.runtime = vm.runtime;
 
-        this.loadingAsyncExtensions = 0;
-        this.asyncExtensionsLoadedCallbacks = [];
-
         this.builtinExtensions = Object.assign({}, defaultBuiltinExtensions);
         // Desktop fork: moved gallery extensions still waiting to register (ID => promise)
         this._movedGalleryLoads = new Map();
@@ -368,21 +325,6 @@ class ExtensionManager {
             log.error(`ExtensionManager was unable to register extension service: ${JSON.stringify(e)}`);
         });
 
-        preload.forEach(value => {
-            this.loadExtensionURL(value);
-        });
-
-        this.extUrlCodes = {};
-
-        // Desktop fork: only the extensions that ship with the app can load: the built-ins and the
-        // gallery extensions in shipped-extensions.json (ID => address of the app's offline gallery
-        // copy). A project saves only their IDs, like built-ins. A packaged project, which holds
-        // baked copies the packager made from that list, switches the check off.
-        this.unrestrictedExtensionURLs = false;
-        // extensions that the user has stated (when they where loaded) that they do not wnat updated
-        this.keepOlder = [];
-        // map of all new shas so we know when a new code update has happened and so ask the user about it
-        this.extensionHashes = {};
     }
 
     getCoreExtensionList() {
@@ -455,21 +397,25 @@ class ExtensionManager {
         this.runtime.compilerRegisterExtension(realId, extensionInstance);
     }
 
-    // Desktop fork: a gallery extension moved into the VM (desktop-gallery-extension.js). Most
-    // register while their code runs and are added at once, like loadExtensionIdSync; some register
-    // only after loading their bundled libraries (TurboWarp's Box2D): the promise waits for them.
+    // Desktop fork: a gallery extension moved into the VM (desktop-gallery-extension.js). Its code is
+    // in its own chunk of the build ("ext-<ID>"), fetched the first time it is loaded (a packaged game
+    // holds the chunks of its project's extensions); it is added once it registers, which most do
+    // while their code runs and some only after loading their bundled libraries (TurboWarp's Box2D).
     _loadMovedGalleryExtension(extensionId) {
         if (this.isExtensionLoaded(extensionId)) return Promise.resolve();
         if (!this._movedGalleryLoads.has(extensionId)) {
-            const started = this.builtinExtensions[extensionId]().start(this.runtime);
-            if (started.extensionObject) {
-                this._addBuiltinExtensionInstance(extensionId, started.extensionObject);
-                return Promise.resolve();
-            }
-            this._movedGalleryLoads.set(extensionId, started.registered.then(extensionObject => {
-                this._movedGalleryLoads.delete(extensionId);
-                this._addBuiltinExtensionInstance(extensionId, extensionObject);
-            }));
+            const loading = this.builtinExtensions[extensionId]()
+                .then(module => (module.default || module).start(this.runtime).registered)
+                .then(extensionObject => {
+                    this._movedGalleryLoads.delete(extensionId);
+                    if (!this.isExtensionLoaded(extensionId)) {
+                        this._addBuiltinExtensionInstance(extensionId, extensionObject);
+                    }
+                }, error => {
+                    this._movedGalleryLoads.delete(extensionId);
+                    throw error;
+                });
+            this._movedGalleryLoads.set(extensionId, loading);
         }
         return this._movedGalleryLoads.get(extensionId);
     }
@@ -478,29 +424,13 @@ class ExtensionManager {
         this.builtinExtensions[extensionId] = () => extensionClass;
     }
 
-    // Desktop fork: a gallery address is accepted only when it is the address of a shipped
-    // extension (shipped-extensions.json); other gallery files, web addresses, data:, blob: and
-    // file: are refused.
-    _isValidExtensionURL(extensionURL) {
-        if (this.unrestrictedExtensionURLs) {
-            try {
-                const protocol = new URL(extensionURL).protocol;
-                return protocol === 'https:' || protocol === 'http:' ||
-                    protocol === 'data:' || protocol === 'file:';
-            } catch (e) {
-                return false;
-            }
-        }
-        return isShippedExtensionURL(extensionURL);
-    }
-
     /**
-     * Load an extension by URL or internal extension ID
-     * @param {string} extensionURL - the URL for the extension to load OR the ID of an internal extension
-     * @param {string|null} oldHash - included when loading, contains the known hash that is from the loaded file so it can be compared with the one gotten over the url
+     * Load an extension by internal extension ID, or by the old gallery address of a gallery
+     * extension moved into the VM (Desktop fork: nothing else loads from an address).
+     * @param {string} extensionURL - the ID of an internal extension, or a moved extension's gallery address
      * @returns {Promise} resolved once the extension is loaded and initialized or rejected on failure
      */
-    async loadExtensionURL(extensionURL, oldHash = '') {
+    async loadExtensionURL(extensionURL) {
         const movedID = movedGalleryIDs.get(normalizeExtensionURL(extensionURL));
         if (movedID) extensionURL = movedID;
         if (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, extensionURL)) {
@@ -511,79 +441,7 @@ class ExtensionManager {
             this.loadExtensionIdSync(extensionURL);
             return [extensionURL];
         }
-
-        if (this.isExtensionURLLoaded(extensionURL)) {
-            // Extension is already loaded.
-            return [];
-        }
-
-        if (!this._isValidExtensionURL(extensionURL)) {
-            throw new Error(`Invalid extension URL: ${extensionURL}`);
-        }
-
-        if (extensionURL.includes("penguinmod.site")) {
-            alert("Extensions using penguinmod.site are deprecated, please swap them over to use penguinmod.com instead.")
-        }
-        const normalURL = extensionURL.replace("penguinmod.site", "penguinmod.com");
-
-        this.runtime.setExternalCommunicationMethod('customExtensions', true);
-
-        this.loadingAsyncExtensions++;
-
-        const rewritten = await this.securityManager.rewriteExtensionURL(normalURL);
-        const blob = (await fetch(rewritten).then(req => req.blob()))
-        const blobUrl = URL.createObjectURL(blob)
-        const newHash = await new Promise(resolve => {
-            const reader = new FileReader()
-            reader.onload = async ({ target: { result } }) => {
-                console.log(result)
-                this.extUrlCodes[extensionURL] = result
-                resolve(await sha256(result))
-            }
-            reader.onerror = err => {
-                console.error('couldnt read the contents of url', url, err)
-            }
-            reader.readAsText(blob)
-        })
-        this.extensionHashes[extensionURL] = newHash
-        if (oldHash && oldHash !== newHash && this.securityManager.shouldUseLocal(extensionURL)) return Promise.reject('useLocal')
-
-        // Desktop fork: shipped extensions always run unsandboxed (no worker or iframe sandbox).
-        const { load } = require('./tw-unsandboxed-extension-runner');
-        const extensionObjects = await load(blobUrl, this.vm)
-            .catch(error => this._failedLoadingExtensionScript(error));
-        const fakeWorkerId = this.nextExtensionWorker++;
-        const returnedIDs = [];
-        this.workerURLs[fakeWorkerId] = normalURL;
-
-        for (const extensionObject of extensionObjects) {
-            const extensionInfo = extensionObject.getInfo();
-            const serviceName = `unsandboxed.${fakeWorkerId}.${extensionInfo.id}`;
-            dispatch.setServiceSync(serviceName, extensionObject);
-            dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
-            this._loadedExtensions.set(extensionInfo.id, serviceName);
-            returnedIDs.push(extensionInfo.id);
-            this.runtime.compilerRegisterExtension(extensionInfo.id, extensionObject);
-        }
-
-        this._finishedLoadingExtensionScript();
-        return returnedIDs;
-    }
-
-    /**
-     * Wait until all async extensions have loaded
-     * @returns {Promise} resolved when all async extensions have loaded
-     */
-    allAsyncExtensionsLoaded() {
-        if (this.loadingAsyncExtensions === 0) {
-            return;
-        }
-        return new Promise((resolve, reject) => {
-            this.asyncExtensionsLoadedCallbacks.push({
-                resolve,
-                reject
-            });
-        });
+        throw new Error(`Unknown extension: ${extensionURL}`);
     }
 
     /**
@@ -651,8 +509,6 @@ class ExtensionManager {
         delete this.runtime[`ext_${id}`];
 
         this._loadedExtensions.delete(id);
-        const workerId = +serviceName.split('.')[1];
-        delete this.workerURLs[workerId];
     }
     removeExtension(id) {
         const serviceName = this._loadedExtensions.get(id);
@@ -663,8 +519,6 @@ class ExtensionManager {
         delete this.runtime[`ext_${id}`];
 
         this._loadedExtensions.delete(id);
-        const workerId = +serviceName.split('.')[1];
-        delete this.workerURLs[workerId];
         dispatch.call('runtime', '_removeExtensionPrimitive', id);
         this.refreshBlocks();
     }
@@ -700,14 +554,6 @@ class ExtensionManager {
             this.removeExtension(toRemove);
     }
 
-    allocateWorker() {
-        const id = this.nextExtensionWorker++;
-        const workerInfo = this.pendingExtensions.shift();
-        this.pendingWorkers[id] = workerInfo;
-        this.workerURLs[id] = workerInfo.extensionURL;
-        return [id, workerInfo.extensionURL];
-    }
-
     /**
      * Synchronously collect extension metadata from the specified service and begin the extension registration process.
      * @param {string} serviceName - the name of the service hosting the extension.
@@ -715,51 +561,6 @@ class ExtensionManager {
     registerExtensionServiceSync(serviceName) {
         const info = dispatch.callSync(serviceName, 'getInfo');
         this._registerExtensionInfo(serviceName, info);
-    }
-
-    /**
-     * Collect extension metadata from the specified service and begin the extension registration process.
-     * @param {string} serviceName - the name of the service hosting the extension.
-     */
-    registerExtensionService(serviceName) {
-        dispatch.call(serviceName, 'getInfo').then(info => {
-            this._loadedExtensions.set(info.id, serviceName);
-            this._registerExtensionInfo(serviceName, info);
-            this._finishedLoadingExtensionScript();
-        });
-    }
-
-    _finishedLoadingExtensionScript() {
-        this.loadingAsyncExtensions--;
-        if (this.loadingAsyncExtensions === 0) {
-            this.asyncExtensionsLoadedCallbacks.forEach(i => i.resolve());
-            this.asyncExtensionsLoadedCallbacks = [];
-        }
-    }
-
-    _failedLoadingExtensionScript(error) {
-        // Don't set the current extension counter to 0, otherwise it will go negative if another
-        // extension finishes or fails to load.
-        this.loadingAsyncExtensions--;
-        this.asyncExtensionsLoadedCallbacks.forEach(i => i.reject(error));
-        this.asyncExtensionsLoadedCallbacks = [];
-        // Re-throw error so the promise still rejects.
-        throw error;
-    }
-
-    /**
-     * Called by an extension worker to indicate that the worker has finished initialization.
-     * @param {int} id - the worker ID.
-     * @param {*?} e - the error encountered during initialization, if any.
-     */
-    onWorkerInit(id, e) {
-        const workerInfo = this.pendingWorkers[id];
-        delete this.pendingWorkers[id];
-        if (e) {
-            workerInfo.reject(e);
-        } else {
-            workerInfo.resolve();
-        }
     }
 
     /**
@@ -803,11 +604,9 @@ class ExtensionManager {
             throw new Error('Invalid extension id');
         }
         extensionInfo.name = extensionInfo.name || extensionInfo.id;
-        // a name given by the editor for this extension (its URL or built-in id) replaces its own
+        // a name given by the editor for this extension (its gallery address or built-in id) replaces its own
         if (this.categoryNameOf) {
-            // Service names for extension workers are in the format "extension.WORKER_ID.EXTENSION_ID"
-            const extensionURL = this.workerURLs[+serviceName.split('.')[1]];
-            const name = this.categoryNameOf(extensionInfo.id, extensionURL);
+            const name = this.categoryNameOf(extensionInfo.id, movedGalleryAddressOf(extensionInfo.id));
             if (name) extensionInfo.name = name;
         }
         extensionInfo.blocks = extensionInfo.blocks || [];
@@ -1067,32 +866,24 @@ class ExtensionManager {
         return blockInfo;
     }
 
+    // Desktop fork: no extension loads from an address; these give the old gallery address of the
+    // loaded gallery extensions (moved into the VM), e.g. for the extension library's "used" marks.
     extensionUrlFromId(extId) {
-        for (const [extensionId, serviceName] of this._loadedExtensions.entries()) {
-            if (extensionId !== extId) continue;
-            // Service names for extension workers are in the format "extension.WORKER_ID.EXTENSION_ID"
-            const workerId = +serviceName.split('.')[1];
-            return this.workerURLs[workerId];
-        }
+        if (!this.isExtensionLoaded(extId)) return undefined;
+        return movedGalleryAddressOf(extId);
     }
     getExtensionURLs() {
         const extensionURLs = {};
-        for (const [extensionId, serviceName] of this._loadedExtensions.entries()) {
-            // Service names for extension workers are in the format "extension.WORKER_ID.EXTENSION_ID"
-            const workerId = +serviceName.split('.')[1];
-            const extensionURL = this.workerURLs[workerId];
-            if (typeof extensionURL === 'string') {
-                extensionURLs[extensionId] = extensionURL;
-            } else if (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, extensionId)) {
-                // Desktop fork: lets the extension library mark a moved extension's gallery tile as used.
-                extensionURLs[extensionId] = movedGalleryExtensions[extensionId];
-            }
+        for (const extensionId of this._loadedExtensions.keys()) {
+            const extensionURL = movedGalleryAddressOf(extensionId);
+            if (extensionURL) extensionURLs[extensionId] = extensionURL;
         }
         return extensionURLs;
     }
 
     isExtensionURLLoaded (url) {
-        return this.workerURLs.includes(url);
+        const movedID = movedGalleryIDs.get(normalizeExtensionURL(url));
+        return !!movedID && this.isExtensionLoaded(movedID);
     }
 }
 

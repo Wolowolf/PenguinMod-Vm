@@ -7,15 +7,6 @@
  * with a vanilla scratch-vm. You may override properties of an instance of this class
  * to customize the security policies as you see fit, for example:
  * ```js
- * vm.securityManager.getSandboxMode = (url) => {
- *   if (url.startsWith("https://example.com/")) {
- *     return "unsandboxed";
- *   }
- *   return "iframe";
- * };
- * vm.securityManager.canAutomaticallyLoadExtension = (url) => {
- *   return confirm("Automatically load extension: " + url);
- * };
  * vm.securityManager.canFetch = (url) => {
  *   return url.startsWith('https://turbowarp.org/');
  * };
@@ -28,36 +19,8 @@
  * ```
  */
 class SecurityManager {
-    /**
-     * Determine the typeof sandbox to use for a certain custom extension.
-     * @param {string} extensionURL The URL of the custom extension.
-     * @returns {'worker'|'iframe'|'unsandboxed'|Promise<'worker'|'iframe'|'unsandboxed'>} -
-     */
-    getSandboxMode (extensionURL) {
-        // Default to worker for Scratch compatibility
-        return Promise.resolve('worker');
-    }
-
-    /**
-     * Determine whether a custom extension that was stored inside a project may be
-     * loaded. You could, for example, ask the user to confirm loading an extension
-     * before resolving.
-     * @param {string} extensionURL The URL of the custom extension.
-     * @returns {Promise<boolean>|boolean} -
-     */
-    canLoadExtensionFromProject (extensionURL) {
-        // Default to false for security
-        return Promise.resolve(false);
-    }
-    
-    /**
-     * Allows last-minute changing the real URL of the extension that gets loaded.
-     * @param {*} extensionURL The URL requested to be loaded.
-     * @returns {Promise<string>|string} The URL to actually load.
-     */
-    rewriteExtensionURL (extensionURL) {
-        return Promise.resolve(extensionURL);
-    }
+    // Desktop fork: getSandboxMode, canLoadExtensionFromProject and rewriteExtensionURL are gone: no
+    // extension loads from an address (only built-ins, incl. the gallery extensions moved into the VM).
 
     /**
      * Determine whether an extension is allowed to fetch a remote resource URL.
@@ -177,10 +140,6 @@ class SecurityManager {
      */
     canDownload (resourceURL, name) {
         return Promise.resolve(true);
-    }
-
-    shouldUseLocal(refrenceName) {
-        return Promise.resolve(!confirm(`it seems that the extension ${refrenceName} has been updated, use the up-to-date code?`))
     }
 }
 

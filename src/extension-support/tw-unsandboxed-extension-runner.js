@@ -1,6 +1,4 @@
 const ScratchCommon = require('./tw-extension-api-common');
-const createScratchX = require('./tw-scratchx-compatibility-layer');
-const AsyncLimiter = require('../util/async-limiter');
 const createTranslate = require('./tw-l10n');
 
 /**
@@ -17,8 +15,9 @@ const parseURL = url => {
 };
 
 /**
- * Creates the Scratch API object of an unsandboxed extension, without making it global.
- * Desktop fork: also used for the gallery extensions moved into the VM (desktop-gallery-extension.js).
+ * Creates the Scratch API object of an unsandboxed extension.
+ * Desktop fork: only the gallery extensions moved into the VM get one (desktop-gallery-extension.js);
+ * nothing loads an extension script from an address any more.
  * @param {VirtualMachine} vm The VM that these apis should refer to
  * @param {function(object)} register Called with each extension object passed to Scratch.extensions.register
  * @returns {object} The Scratch object
@@ -147,60 +146,6 @@ const createUnsandboxedExtensionAPI = (vm, register) => {
     return Scratch;
 };
 
-/**
- * Sets up the global.Scratch API for an unsandboxed extension.
- * @param {VirtualMachine} vm The VM that these apis should refer to
- * @returns {Promise<object[]>} Resolves with a list of extension objects when Scratch.extensions.register is called.
- */
-const setupUnsandboxedExtensionAPI = vm => new Promise(resolve => {
-    const extensionObjects = [];
-    const Scratch = createUnsandboxedExtensionAPI(vm, extensionObject => {
-        extensionObjects.push(extensionObject);
-        resolve(extensionObjects);
-    });
-
-    global.Scratch = Scratch;
-    global.ScratchExtensions = createScratchX(Scratch);
-});
-
-/**
- * Disable the existing global.Scratch unsandboxed extension APIs.
- * This helps debug poorly designed extensions.
- */
-const teardownUnsandboxedExtensionAPI = () => {
-    // We can assume global.Scratch already exists.
-    global.Scratch.extensions.register = () => {
-        throw new Error('Too late to register new extensions.');
-    };
-};
-
-/**
- * Load an unsandboxed extension from an arbitrary URL. This is dangerous.
- * @param {string} extensionURL
- * @param {Virtualmachine} vm
- * @returns {Promise<object[]>} Resolves with a list of extension objects if the extension was loaded successfully.
- */
-const loadUnsandboxedExtension = (extensionURL, vm) => new Promise((resolve, reject) => {
-    setupUnsandboxedExtensionAPI(vm).then(resolve);
-
-    const script = document.createElement('script');
-    script.onerror = () => {
-        reject(new Error(`Error in unsandboxed script ${extensionURL}. Check the console for more information.`));
-    };
-    script.src = extensionURL;
-    document.body.appendChild(script);
-}).then(objects => {
-    teardownUnsandboxedExtensionAPI();
-    return objects;
-});
-
-// Because loading unsandboxed extensions requires messing with global state (global.Scratch),
-// only let one extension load at a time.
-const limiter = new AsyncLimiter(loadUnsandboxedExtension, 1);
-const load = (extensionURL, vm) => limiter.do(extensionURL, vm);
-
 module.exports = {
-    createUnsandboxedExtensionAPI,
-    setupUnsandboxedExtensionAPI,
-    load
+    createUnsandboxedExtensionAPI
 };

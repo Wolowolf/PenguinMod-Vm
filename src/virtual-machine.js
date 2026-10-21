@@ -803,25 +803,15 @@ class VirtualMachine extends EventEmitter {
      */
     async _loadExtensions (extensionIDs) {
         // Desktop fork: a project names its extensions by ID only; addresses stored in a project
-        // are ignored. A gallery extension loads from the app's list of shipped extensions; an ID
-        // that is neither shipped nor built in stops the project from loading.
-        const shippedExtensions = require('./extension-support/shipped-extensions.json');
+        // are ignored. Only built-in extensions exist (the gallery extensions were moved into the
+        // VM); an ID that is not built in stops the project from loading.
         const extensionPromises = [];
         for (const extensionID of extensionIDs) {
-            const url = Object.prototype.hasOwnProperty.call(shippedExtensions, extensionID) ?
-                shippedExtensions[extensionID] : null;
             if (this.extensionManager.isExtensionLoaded(extensionID)) {
                 // Already loaded
-            } else if (url) {
-                // extension url
-                if (await this.securityManager.canLoadExtensionFromProject(url)) {
-                    extensionPromises.push(this.extensionManager.loadExtensionURL(url));
-                } else {
-                    throw new Error(`Permission to load extension denied: ${extensionID}`);
-                }
             } else if (this.extensionManager.isBuiltinExtension(extensionID)) {
                 // Builtin extension (Desktop fork: through loadExtensionURL, which waits for a moved
-                // gallery extension that registers later; other built-ins still load at once)
+                // gallery extension's chunk and registration; other built-ins still load at once)
                 extensionPromises.push(this.extensionManager.loadExtensionURL(extensionID));
             } else {
                 throw new Error(`Unknown extension: ${extensionID}`);
@@ -838,7 +828,6 @@ class VirtualMachine extends EventEmitter {
      * @returns {Promise} resolved once targets have been installed
      */
     async installTargets (targets, extensions, wholeProject) {
-        await this.extensionManager.allAsyncExtensionsLoaded();
 
         targets = targets.filter(target => !!target);
 
