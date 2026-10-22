@@ -3812,7 +3812,8 @@ class Runtime extends EventEmitter {
                 if (variable.type === Variable.LIST_TYPE) {
                     for (const idx in items) {
                         const item = items[idx];
-                        if (item.customType) {
+                        // Desktop fork: a list item may be null (hand-made project files)
+                        if (item && item.customType) {
                             const {deserialize} = this.serializers[item.typeId];
                             items[idx] = deserialize(item.serialized, target, variable);
                             listLookup.changed(variable);

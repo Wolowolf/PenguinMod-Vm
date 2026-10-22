@@ -201,12 +201,9 @@ const STRINGS = ['', ' ', '0', '1', '-1', '12', ' 12 ', '3.5', '1e3', '0x1A', '0
     '#ff0000', '#FFF', '[1,2,3]', '[]', '{"a":1}', 'SGVsbG8=', '<b>&</b>', 'https://example.com/a/b?x=1&y=2#h', 'x'.repeat(300), '١٢'];
 const BOOLEANS = [true, false, 'true', 'false', '', 0, 1];
 
-// Inputs on which a block is known never to finish (recorded in its inventory note): left out here.
-const LIMITS = {
-    'pmOperatorsExpansion.isPrime': {NUM: v => Math.abs(Cast.toNumber(v)) < 1e7},
-    'iygPerlin.GetNoiseV2': {OCTAVE: v => !(Number(v) > 16)},
-    'qxsckbignumber.round': {NUM2: v => !(Number(v) < -1e6)}
-};
+// Inputs on which a block is known never to finish (recorded in its inventory note): left out here
+// (none since section 111 fixed the prime check, Perlin noise and Big Decimal round).
+const LIMITS = {};
 
 const describe = v => {
     if (typeof v === 'number') return Object.is(v, -0) ? 'number -0' : `number ${v}`;

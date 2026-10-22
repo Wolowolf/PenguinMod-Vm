@@ -298,7 +298,10 @@ class PenguinModCamera {
             { text: 'all sprites', value: '__ALL__' }
         ], targets);
     }
+    // Desktop fork: the number inputs are cast to numbers (typed text was stored, and "change x by"
+    // joined text instead of adding)
     moveSteps({ STEPS }, util) {
+        STEPS = Cast.toNumber(STEPS);
         const { pos: [x, y], dir } = this.getCamera(util.target);
         const radians = MathUtil.degToRad(dir);
         const dx = STEPS * Math.cos(radians);
@@ -306,10 +309,12 @@ class PenguinModCamera {
         this.updateCamera(util.target, { pos: [x + dx, y + dy] });
     }
     turnRight({ DEGREES }, util) {
+        DEGREES = Cast.toNumber(DEGREES);
         const { dir } = this.getCamera(util.target);
         this.updateCamera(util.target, { dir: dir - DEGREES });
     }
     turnLeft({ DEGREES }, util) {
+        DEGREES = Cast.toNumber(DEGREES);
         const { dir } = this.getCamera(util.target);
         this.updateCamera(util.target, { dir: dir + DEGREES });
     }
@@ -403,39 +408,39 @@ class PenguinModCamera {
     }
 
     gotoXY({ X, Y }, util) {
-        this.updateCamera(util.target, { pos: [X, Y] });
+        this.updateCamera(util.target, { pos: [Cast.toNumber(X), Cast.toNumber(Y)] });
     }
     setSize({ ZOOM }, util) {
-        this.updateCamera(util.target, { scale: ZOOM / 100 });
+        this.updateCamera(util.target, { scale: Cast.toNumber(ZOOM) / 100 });
     }
     changeSize({ ZOOM }, util) {
         const { scale } = this.getCamera(util.target);
-        this.updateCamera(util.target, { scale: (ZOOM / 100) + scale });
+        this.updateCamera(util.target, { scale: (Cast.toNumber(ZOOM) / 100) + scale });
     }
 
     pointTowards({ DIRECTION }, util) {
-        this.updateCamera(util.target, { dir: DIRECTION -90 });
+        this.updateCamera(util.target, { dir: Cast.toNumber(DIRECTION) -90 });
     }
     pointTowardsPoint({ X, Y }, util) {
         const { pos: [x, y] } = this.getCamera(util.target);
-        this.updateCamera(util.target, { dir: MathUtil.radToDeg(Math.atan2(X-x, Y-y)) });
+        this.updateCamera(util.target, { dir: MathUtil.radToDeg(Math.atan2(Cast.toNumber(X)-x, Cast.toNumber(Y)-y)) });
     }
 
     changeXpos({ X }, util) {
         const { pos: [x, y] } = this.getCamera(util.target);
-        this.updateCamera(util.target, { pos: [X+x, y] });
+        this.updateCamera(util.target, { pos: [Cast.toNumber(X)+x, y] });
     }
     setXpos({ X }, util) {
         const { pos: [_, y] } = this.getCamera(util.target);
-        this.updateCamera(util.target, { pos: [X, y] });
+        this.updateCamera(util.target, { pos: [Cast.toNumber(X), y] });
     }
     changeYpos({ Y }, util) {
         const { pos: [x, y] } = this.getCamera(util.target);
-        this.updateCamera(util.target, { pos: [x, Y+y] });
+        this.updateCamera(util.target, { pos: [x, Cast.toNumber(Y)+y] });
     }
     setYpos({ Y }, util) {
         const { pos: [x, _] } = this.getCamera(util.target);
-        this.updateCamera(util.target, { pos: [x, Y] });
+        this.updateCamera(util.target, { pos: [x, Cast.toNumber(Y)] });
     }
 
     xPosition(_, util) {

@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Time-Calculation.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (add / subtract: any time zone).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -247,16 +247,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const startDate = new Date(args.START_TIME ? args.START_TIME : null);
       const endDate = new Date(args.END_TIME ? args.END_TIME : null);
       if (isNaN(startDate) || isNaN(endDate)) return "Invalid Time Input";
-      let timeDifference = "";
-      if (args.MATH === "add") timeDifference = startDate.getTime() + endDate.getTime();
-      else timeDifference = startDate.getTime() - endDate.getTime();
-      const resultDate = new Date(timeDifference);
+      // Desktop fork: the second time is a duration written as a time after 1970-01-01 00:00 local time.
+      // It was taken as milliseconds since 1970 in UTC and corrected by a fixed 8 hours (right only at UTC-8,
+      // and without carrying into the date).
+      const duration = endDate.getTime() - new Date(1970, 0, 1).getTime();
+      const resultDate = new Date(args.MATH === "add" ? startDate.getTime() + duration : startDate.getTime() - duration);
 
       const year = resultDate.getFullYear();
       const month = String(resultDate.getMonth() + 1).padStart(2, "0");
       const day = String(resultDate.getDate()).padStart(2, "0");
-      const changer = args.MATH === "add" ? 8 : -8;
-      const hours = String(resultDate.getHours() - changer).padStart(2, "0");
+      const hours = String(resultDate.getHours()).padStart(2, "0");
       const minutes = String(resultDate.getMinutes()).padStart(2, "0");
       const seconds = String(resultDate.getSeconds()).padStart(2, "0");
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;

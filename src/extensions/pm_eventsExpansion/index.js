@@ -1136,11 +1136,36 @@ class pmEventsExpansion {
         const broadcastVar = util.runtime.getTargetForStage().lookupBroadcastMsg("", broadcast);
         return Cast.toBoolean(broadcastVar && broadcastVar.isSent);
     }
-    broadcastFunction() {
-        return; // compiler block
+    // Desktop fork: the interpreter's versions of these compiler blocks (jsgen.js
+    // 'pmEventsExpansion.broadcastFunction' / 'broadcastFunctionArgs'), which returned nothing: start the
+    // broadcast's scripts with the data, wait until they have finished and one frame more, then answer
+    // the first value one of them returned, or ''.
+    broadcastFunction(args, util) {
+        return this._broadcastAndWaitForValue(args.BROADCAST, '', util);
     }
-    broadcastFunctionArgs() {
-        return; // compiler block
+    broadcastFunctionArgs(args, util) {
+        return this._broadcastAndWaitForValue(args.BROADCAST, Cast.toString(args.ARGS), util);
+    }
+    _broadcastAndWaitForValue(broadcast, data, util) {
+        const msgName = Cast.toString(broadcast);
+        const broadcastVar = this.runtime.getTargetForStage().lookupBroadcastMsg('', msgName);
+        if (broadcastVar) broadcastVar.isSent = true;
+        const threads = util.startHats('event_whenbroadcastreceived', {BROADCAST_OPTION: msgName});
+        for (const thread of threads) thread.__evex_recievedDataa = data;
+        const isRunning = thread => this.runtime.threads.includes(thread) && thread.status !== Thread.STATUS_DONE;
+        return new Promise(resolve => {
+            let finished = false;
+            const afterFrame = () => {
+                if (!finished) {
+                    finished = !threads.some(isRunning);
+                    return;
+                }
+                this.runtime.off('AFTER_EXECUTE', afterFrame);
+                const answering = threads.find(thread => typeof thread.__evex_returnDataa !== 'undefined');
+                resolve(answering ? answering.__evex_returnDataa : '');
+            };
+            this.runtime.on('AFTER_EXECUTE', afterFrame);
+        });
     }
 }
 

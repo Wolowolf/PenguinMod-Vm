@@ -917,8 +917,10 @@ class pmOperatorsExpansion {
   }
   checkPrime(number) {
     number = Math.trunc(number);
-    if (number <= 1) return false;
-    for (let i = 2; i < number; i++) {
+    // Desktop fork: Infinity is not prime (the loop never ended), and divisors are only tried up to
+    // the square root (same answers; big primes took seconds)
+    if (number <= 1 || !Number.isFinite(number)) return false;
+    for (let i = 2; i * i <= number; i++) {
       if (number % i === 0) {
         return false;
       }
@@ -1071,17 +1073,21 @@ class pmOperatorsExpansion {
   }
 
   // These blocks are compiled
-  orIfFalsey(args) { return "" }
-  ifIsTruthy(args) { return "" }
-  shiftLeft(args) { return "" }
-  shiftRight(args) { return "" }
-  binnaryAnd(args) { return false }
-  binnaryOr(args) { return false }
-  binnaryXor(args) { return false }
-  binnaryNot(args) { return false }
-  speedToPitch(args) { return 0 }
-  pitchToSpeed(args) { return 1 }
-  atan2(args) { return 0 }
+  // Desktop fork: the interpreter's versions, the same as the compiler code above (they were stubs,
+  // so these blocks only worked in compiled scripts)
+  orIfFalsey(args) { return args.ONE || args.TWO }
+  ifIsTruthy(args) { return Cast.toBoolean(args.ONE) && args.TWO }
+  shiftLeft(args) { return Cast.toNumber(args.num1) << Cast.toNumber(args.num2) }
+  shiftRight(args) { return Cast.toNumber(args.num1) >> Cast.toNumber(args.num2) }
+  binnaryAnd(args) { return Cast.toNumber(args.num1) & Cast.toNumber(args.num2) }
+  binnaryOr(args) { return Cast.toNumber(args.num1) | Cast.toNumber(args.num2) }
+  binnaryXor(args) { return Cast.toNumber(args.num1) ^ Cast.toNumber(args.num2) }
+  binnaryNot(args) { return ~Cast.toNumber(args.num1) }
+  speedToPitch(args) { return (1200 * Math.log2(Cast.toNumber(args.SPEED))) / 10 }
+  pitchToSpeed(args) { return Math.pow(2, (Cast.toNumber(args.PITCH) * 10) / 1200) }
+  atan2(args) {
+    return Math.atan2((Cast.toNumber(args.Y) * 180) / Math.PI, (Cast.toNumber(args.X) * 180) / Math.PI);
+  }
 }
 
 module.exports = pmOperatorsExpansion;

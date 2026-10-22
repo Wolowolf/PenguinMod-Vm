@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Geolocation.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (distance: the angle is turned into degrees).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -305,8 +305,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       let dist =
         Math.sin(radlat1) * Math.sin(radlat2) +
         Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-      dist = Math.acos(dist);
-      dist *= TO_RAD;
+      // Desktop fork: the angle (radians) is turned into degrees for the 60 nautical miles per degree below;
+      // it was multiplied by TO_RAD, giving about 0.0003 of the real distance. Clamped: rounding can go past 1.
+      dist = Math.acos(Math.min(1, Math.max(-1, dist)));
+      dist *= 180 / Math.PI;
       dist = dist * 60 * 1.1515;
 
       if (args.UNIT === "kilometers") dist *= MILE_TO_KM;

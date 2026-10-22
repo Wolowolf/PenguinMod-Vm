@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's qxsck/big-decimal.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (round: no endless loop).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -158,7 +158,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         if (round >= a.len) {
           return this.formatNum(a.num, a.len);
         }
-        for (let i = 0; i < a.len - round - 1; i++) a.num = a.num / 10n;
+        // Desktop fork: one division by a power of ten instead of one per place (the same result; a large
+        // negative number of places looped for ages). Dividing by more places than the number has digits gives 0.
+        const drop = a.len - round - 1;
+        if (drop >= (a.num < 0n ? -a.num : a.num).toString().length) a.num = 0n;
+        else if (drop > 0) a.num = a.num / 10n ** BigInt(drop);
         let lastNum = a.num % 10n, flag2;
         a.num = a.num / 10n;
         if (flag) {
@@ -169,7 +173,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           flag2 = lastNum % 10n <= -5n;
           a.num = a.num - BigInt(flag2);
         }
-        for (let i = 0; i < a.len - round; i++) a.num = a.num * 10n;
+        if (a.num !== 0n) for (let i = 0; i < a.len - round; i++) a.num = a.num * 10n;
         return this.formatNum(a.num, a.len);
       };
       this.randomFunc = function (num, num2) {

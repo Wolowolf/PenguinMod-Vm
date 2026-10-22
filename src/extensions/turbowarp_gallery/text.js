@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's text.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (count regex: an invalid pattern counts 0).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -669,6 +669,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         return matchCache.arr[item - 1] || "";
       } catch (e) {
         console.error(e);
+        // Desktop fork: forget the last match (count regex answered its count for an invalid pattern)
+        matchCache = null;
         return "";
       }
     }
@@ -710,7 +712,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       // (ITEM is casted into 0,
       // but we don't care about the return value)
       this.matchRegex(args, util);
-      return matchCache.arr.length || 0;
+      return (matchCache && matchCache.arr.length) || 0;
     }
 
     testRegex(args, util) {

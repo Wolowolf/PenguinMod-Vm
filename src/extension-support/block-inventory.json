@@ -388,7 +388,7 @@
       "getIP": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":"string","compiled":false,"note":"online service; cached 30 s"},
       "getIPInfo": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":"any","compiled":false,"note":"online service; cached"},
       "getCountryName": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"online service"},
-      "calculateDistance": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"known bug: about 0.0003 of the real distance (dist *= TO_RAD)"},
+      "calculateDistance": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "whenLocationChanged": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "startWatching": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":null,"compiled":false},
       "stopWatching": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false},
@@ -754,7 +754,7 @@
       "calculatetimedurationfromstamp": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"uses the computer's time zone"},
       "calculatetimedurationfromtime": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "calculatetimedifference": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"uses today's date"},
-      "evaluateTime": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"uses the computer's time zone; known bug: shifts the result by a fixed 8 hours"},
+      "evaluateTime": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"uses the computer's time zone"},
       "converttotime": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "daysinmonth": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "countdownReport": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
@@ -1596,8 +1596,8 @@
   "iygPerlin": {
     "replaces": [],
     "blocks": {
-      "GetNoiseV2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"keeps a cache of the noise table per seed; inputs are not cast, so text and numbers give different answers; never returns for the text \"Infinity\" as octave"},
-      "GetRandomNoiseV2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"inputs are not cast"},
+      "GetNoiseV2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"keeps a cache of the noise table per seed; octaves above 1100 count as 1100 (same answer)"},
+      "GetRandomNoiseV2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "GeneratePerlinNoiseV2": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"only fills the cache"}
     }
   },
@@ -2255,9 +2255,9 @@
       "setXpos": {"type":"command","pure":false,"reads":["camera","sprite"],"writes":["camera"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"sprite = which camera it uses"},
       "changeYpos": {"type":"command","pure":false,"reads":["camera","sprite"],"writes":["camera"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"sprite = which camera it uses"},
       "setYpos": {"type":"command","pure":false,"reads":["camera","sprite"],"writes":["camera"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"sprite = which camera it uses"},
-      "xPosition": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"inputs are not cast, so the stored values can be text"},
-      "yPosition": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"inputs are not cast, so the stored values can be text"},
-      "direction": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"inputs are not cast, so the stored values can be text"},
+      "xPosition": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
+      "yPosition": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
+      "direction": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "getSize": {"type":"reporter","pure":false,"reads":["camera","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "getCurrentCamera": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false}
     }
@@ -2284,10 +2284,10 @@
       "isBroadcastReceived": {"type":"Boolean","pure":false,"reads":["variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "recievedDataReporter": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "broadcastToSprite": {"type":"command","pure":false,"reads":["sprites","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "broadcastFunction": {"type":"reporter","pure":false,"reads":["script","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiled by the compiler itself (irgen/jsgen)"},
+      "broadcastFunction": {"type":"reporter","pure":false,"reads":["script","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiled by the compiler itself (irgen/jsgen); the interpreter function does the same (section 111)"},
       "returnFromBroadcastFunc": {"type":"command","pure":false,"reads":[],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "broadcastThreadCount": {"type":"reporter","pure":false,"reads":["variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "broadcastFunctionArgs": {"type":"reporter","pure":false,"reads":["script","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiled by the compiler itself (irgen/jsgen)"},
+      "broadcastFunctionArgs": {"type":"reporter","pure":false,"reads":["script","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiled by the compiler itself (irgen/jsgen); the interpreter function does the same (section 111)"},
       "whenTrueFalse": {"type":"hat","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "whileTrueFalse": {"type":"hat","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "whenValueChanged": {"type":"hat","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"last values kept on the sprite"},
@@ -2330,17 +2330,17 @@
   "pmOperatorsExpansion": {
     "replaces": [],
     "blocks": {
-      "shiftLeft": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "shiftRight": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "binnaryAnd": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "binnaryOr": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "binnaryXor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "binnaryNot": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "orIfFalsey": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "ifIsTruthy": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
+      "shiftLeft": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "shiftRight": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "binnaryAnd": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "binnaryOr": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "binnaryXor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "binnaryNot": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "orIfFalsey": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "ifIsTruthy": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
       "isNumberMultipleOf": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "isInteger": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "isPrime": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"never returns for Infinity; slow for big primes (checks every divisor)"},
+      "isPrime": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"tries divisors up to the square root (about 0.3 s for a prime near 2^53)"},
       "isEven": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "betweenNumbers": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "evaluateMath": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"math.js: equations may call random()"},
@@ -2350,7 +2350,7 @@
       "euler": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "infinity": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "truncateNumber": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "atan2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
+      "atan2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
       "reverseChars": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "shuffleChars": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "textAfter": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -2359,8 +2359,8 @@
       "setReplacer": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
       "resetReplacers": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
       "applyReplacers": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":false},
-      "speedToPitch": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"},
-      "pitchToSpeed": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code only (the interpreter function is a stub)"}
+      "speedToPitch": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "pitchToSpeed": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"}
     }
   },
   "pmSensingExpansion": {
@@ -2452,7 +2452,7 @@
       "neq": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "unaryOper": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"any","compiled":false,"note":"sqrt uses the precision setting"},
       "binaryOper": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "round": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"never finishes when the places input is a large negative number (loops that many times)"},
+      "round": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "random": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":true,"page":false,"answer":"any","compiled":false}
     }
   },
@@ -2699,7 +2699,7 @@
       "matchRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "matchRegexJSON": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "testRegex": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "countRegex": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"number","compiled":false,"note":"shares the match cache: with an invalid pattern or flags it answers the count of the previous match"},
+      "countRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"uses the match cache, which only remembers the last answer (an invalid pattern clears it since section 111)"},
       "identical": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"compares raw inputs: text \"1\" and number 1 differ"},
       "isCase": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "toCase": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"pure except the \"random case\" option"},

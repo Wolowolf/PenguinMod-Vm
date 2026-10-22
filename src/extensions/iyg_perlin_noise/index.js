@@ -1,6 +1,7 @@
 const formatMessage = require('format-message');
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const Cast = require('../../util/cast');
 const MersenneTwister = require('mersenne-twister');
 const { createNoise3D } = require('simplex-noise');
 /**
@@ -222,21 +223,26 @@ class iygPerlin {
 
     // ----- V2 -----
     GetNoiseV2(args, util) {
-        let seed = args.SEED;
-        let perlin_octaves = ((args.OCTAVE === Infinity) ? 4 : args.OCTAVE);
-        let x = args.X + .5;
-        let y = args.Y + .5;
-        let z = args.Z + .5;
+        // Desktop fork: the inputs are numbers (typed text like "10" became "100.5" for x, y and z).
+        // After about 1075 octaves each further one adds exactly 0 (its amplitude is 0), so 1100 octaves
+        // give the same answer as any larger number; a huge octave (e.g. "Infinity" as text) never ended.
+        let seed = Cast.toNumber(args.SEED);
+        const octave = Cast.toNumber(args.OCTAVE);
+        let perlin_octaves = ((octave === Infinity) ? 4 : Math.min(octave, 1100));
+        let x = Cast.toNumber(args.X) + .5;
+        let y = Cast.toNumber(args.Y) + .5;
+        let z = Cast.toNumber(args.Z) + .5;
 
         return this.generatePerlin(seed, perlin_octaves, this.goodSeedRandom.bind(this), x, y, z);
     }
 
     // ----- V2 -----
     GetRandomNoiseV2(args, util) {
-        let seed = args.SEED;
-        let x = args.X;
-        let y = args.Y;
-        let z = args.Z;
+        // Desktop fork: the inputs are numbers (text was joined instead of added)
+        let seed = Cast.toNumber(args.SEED);
+        let x = Cast.toNumber(args.X);
+        let y = Cast.toNumber(args.Y);
+        let z = Cast.toNumber(args.Z);
         let pre_seed = this.seed;
         this.seed = seed + (x * 743) + (y * 942 ) + (z * 645);
         let result = this.goodSeedRandom.bind(this)();

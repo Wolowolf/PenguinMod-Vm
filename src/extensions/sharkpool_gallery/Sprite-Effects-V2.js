@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Sprite-Effects-V2.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (no error when the stage canvas is not in the page).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -75,8 +75,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   const getCanvas = () => {
     if (compatMode) {
-      if (isPackagedEnv) return render.canvas.parentNode;
-      else return render.canvas.parentNode.parentNode.parentNode;
+      // Desktop fork: the canvas itself while it is not in the page (the stop-all handler threw)
+      if (isPackagedEnv) return render.canvas.parentNode || render.canvas;
+      else return render.canvas.parentNode?.parentNode?.parentNode || render.canvas;
     } else {
       return render.canvas;
     }
