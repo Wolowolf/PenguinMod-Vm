@@ -1,13 +1,18 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's pooiod/Dictation.js, moved into
 // the VM as a built-in extension. Section 111 rewrote it for offline speech recognition (same id and blocks);
-// section 113 added other languages (Whisper) and the set language block, section 114 live text and the "When I hear" hat.
+// section 113 added other languages (Whisper) and the set language block, section 114 live text and the "When I hear" hat,
+// section 115 the set accuracy block (Parakeet).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Dictation
 // id: pooiod7Dictation
-// description: Offline speech to text in 40 languages with Moonshine (English) and Whisper; blocks from Dictation v1.3 by pooiod7.
+// description: Offline speech to text in 40 languages with Moonshine (English) and Whisper, or Parakeet for high accuracy in 24 European languages; blocks from Dictation v1.3 by pooiod7.
+//
+// High accuracy: Parakeet TDT 0.6B v3 by NVIDIA (https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3, CC BY 4.0) in its
+// ONNX export and int8 quantization by istupakov (https://huggingface.co/istupakov/parakeet-tdt-0.6b-v3-onnx, CC BY 4.0;
+// greedy TDT decoding as in istupakov's onnx-asr, MIT, rewritten here).
 // license: MIT
 //
 // Speech is recognized on this computer with Moonshine Base (English) by Useful Sensors, Inc. (dba
@@ -37,13 +42,25 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         swedish: "sv", hebrew: "he", bulgarian: "bg", catalan: "ca", danish: "da", finnish: "fi", slovak: "sk",
         croatian: "hr", lithuanian: "lt", slovenian: "sl", latvian: "lv", estonian: "et",
     };
-    const packsFor = (language) => ["onnxruntime", "silero-vad", language === "english" ? "moonshine-english" : "whisper-small"];
+    // High accuracy: Parakeet for the languages it knows (all of these speak in the same model; the
+    // language is not forced); the others keep Moonshine or Whisper
+    const PARAKEET_LANGUAGES = ["en", "es", "fr", "de", "bg", "hr", "cs", "da", "nl", "et", "fi", "el", "hu", "it", "lv", "lt",
+        "pl", "pt", "ro", "sk", "sl", "sv", "ru", "uk"];
+    const engineFor = (language, accuracy) => (accuracy === "high" && PARAKEET_LANGUAGES.indexOf(LANGUAGES[language]) >= 0 ? "parakeet"
+        : language === "english" ? "moonshine" : "whisper");
+    const ENGINE_PACKS = { moonshine: "moonshine-english", whisper: "whisper-small", parakeet: "parakeet-v3" };
+    const packsFor = (engine) => ["onnxruntime", "silero-vad", ENGINE_PACKS[engine]];
     const MIT = { license: "MIT", needsCredit: true };
     const CREDITS = [
         Object.assign({ title: "Moonshine (speech recognition)", by: "Moonshine AI", url: "https://github.com/moonshine-ai/moonshine",
             licenseUrl: "https://github.com/moonshine-ai/moonshine/blob/main/LICENSE" }, MIT),
         Object.assign({ title: "Silero VAD", by: "Silero Team", url: "https://github.com/snakers4/silero-vad",
             licenseUrl: "https://github.com/snakers4/silero-vad/blob/master/LICENSE" }, MIT),
+    ];
+    const CC_BY = { license: "CC BY 4.0", licenseUrl: "https://creativecommons.org/licenses/by/4.0/", needsCredit: true };
+    const PARAKEET_CREDITS = [
+        Object.assign({ title: "Parakeet TDT 0.6B v3 (speech recognition)", by: "NVIDIA", url: "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" }, CC_BY),
+        Object.assign({ title: "Parakeet TDT 0.6B v3 ONNX", by: "istupakov", url: "https://huggingface.co/istupakov/parakeet-tdt-0.6b-v3-onnx" }, CC_BY),
     ];
     const WHISPER_CREDIT = Object.assign({ title: "Whisper (speech recognition)", by: "OpenAI", url: "https://github.com/openai/whisper",
         licenseUrl: "https://github.com/openai/whisper/blob/main/LICENSE" }, MIT);
@@ -63,14 +80,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         const NO_SPEECH = 8 * RATE / FRAME; // or after 8 s without speech (text "")
         const MIN_SPEECH = 8; // speech frames needed (0.26 s); shorter sounds are ignored
         // Live text: the speech so far is recognized again after this many new frames (0.5 s with
-        // Moonshine, 1 s with Whisper, which is slower), when no recognition is running
-        const PARTIAL_FRAMES = { en: 16 };
-        const PARTIAL_FRAMES_WHISPER = 32;
+        // Moonshine, 1 s with Whisper and Parakeet, which are slower), when no recognition is running
+        const PARTIAL_FRAMES = { moonshine: 16, whisper: 32, parakeet: 32 };
         let base = "";
         let ort = null;
         let vad = null;
         let moonshine = null;
         let whisper = null;
+        let parakeet = null;
         let job = null;
         // onnxruntime runs one model at a time: voice detection and recognition take turns
         let gate = Promise.resolve();
@@ -268,9 +285,86 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             return new TextDecoder().decode(new Uint8Array(bytes)).trim();
         }
 
+        function loadParakeet() {
+            if (!parakeet) {
+                parakeet = (async () => {
+                    await loadVad();
+                    const dir = base + "parakeet-v3/";
+                    const res = await fetch(dir + "vocab.txt");
+                    if (!res.ok) throw new Error("vocab.txt: " + res.status);
+                    const vocab = []; // lines "<piece> <id>"
+                    for (const line of (await res.text()).split("\n")) {
+                        const space = line.lastIndexOf(" ");
+                        if (space > 0) vocab[Number(line.slice(space + 1))] = line.slice(0, space);
+                    }
+                    return {
+                        features: await create(dir + "nemo128.onnx"),
+                        encoder: await create(dir + "encoder-model.int8.onnx"),
+                        decoder: await create(dir + "decoder_joint-model.int8.onnx"),
+                        vocab, blank: vocab.indexOf("<blk>"),
+                    };
+                })();
+                parakeet.catch(() => { parakeet = null; });
+            }
+            return parakeet;
+        }
+
+        // Parakeet (TDT): its own features and the encoder once, then the decoder-joint for one encoder
+        // frame at a time: the best token (or blank) and how many frames to move on (0-4); after a
+        // token its state moves on; at most 10 tokens per frame
+        async function transcribeParakeet(audio) {
+            const p = await loadParakeet();
+            const features = await p.features.run({
+                waveforms: new ort.Tensor("float32", audio, [1, audio.length]),
+                waveforms_lens: new ort.Tensor("int64", BigInt64Array.from([BigInt(audio.length)]), [1]),
+            });
+            const encoded = await p.encoder.run({ audio_signal: features.features, length: features.features_lens });
+            const size = encoded.outputs.dims[1];
+            const stride = encoded.outputs.dims[2];
+            const frames = Number(encoded.encoded_lengths.data[0]);
+            const data = encoded.outputs.data;
+            const vocabSize = p.vocab.length;
+            const frame = new Float32Array(size);
+            let states1 = new ort.Tensor("float32", new Float32Array(2 * 640), [2, 1, 640]);
+            let states2 = new ort.Tensor("float32", new Float32Array(2 * 640), [2, 1, 640]);
+            const tokens = [];
+            let t = 0;
+            let emitted = 0;
+            while (t < frames) {
+                for (let d = 0; d < size; d++) frame[d] = data[d * stride + t];
+                const out = await p.decoder.run({
+                    encoder_outputs: new ort.Tensor("float32", frame, [1, size, 1]),
+                    targets: new ort.Tensor("int32", Int32Array.from([tokens.length ? tokens[tokens.length - 1] : p.blank]), [1, 1]),
+                    target_length: new ort.Tensor("int32", Int32Array.from([1]), [1]),
+                    input_states_1: states1,
+                    input_states_2: states2,
+                });
+                const logits = out.outputs.data;
+                let token = 0;
+                for (let i = 1; i < vocabSize; i++) if (logits[i] > logits[token]) token = i;
+                let skip = 0;
+                for (let i = 1; i < logits.length - vocabSize; i++) if (logits[vocabSize + i] > logits[vocabSize + skip]) skip = i;
+                if (token !== p.blank) {
+                    states1 = out.output_states_1;
+                    states2 = out.output_states_2;
+                    tokens.push(token);
+                    emitted++;
+                }
+                if (skip > 0) {
+                    t += skip;
+                    emitted = 0;
+                } else if (token === p.blank || emitted >= 10) {
+                    t++;
+                    emitted = 0;
+                }
+            }
+            return tokens.map((id) => p.vocab[id] || "").join("").replace(/▁/g, " ").trim();
+        }
+
         // Moonshine: encoder once, then the decoder one token at a time (greedy, with its cache)
-        async function transcribe(audio, language) {
-            if (language !== "en") return transcribeWhisper(audio, language);
+        async function transcribe(audio, job) {
+            if (job.engine === "whisper") return transcribeWhisper(audio, job.language);
+            if (job.engine === "parakeet") return transcribeParakeet(audio);
             const { encoder, decoder, vocab } = await loadMoonshine();
             const hidden = (await encoder.run({ input_values: new ort.Tensor("float32", audio, [1, audio.length]) })).last_hidden_state;
             const layers = 8;
@@ -321,7 +415,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             job = null;
             reply(done.id, { type: "heard" }); // the microphone can stop
             if (!audio) return reply(done.id, { type: "done", text: "" });
-            exclusive(() => transcribe(audio, done.language)).then((result) => reply(done.id, { type: "done", text: result }),
+            exclusive(() => transcribe(audio, done)).then((result) => reply(done.id, { type: "done", text: result }),
                 (error) => reply(done.id, { type: "error", error: String((error && error.message) || error) }));
         }
 
@@ -376,14 +470,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             current.speech.push(frame);
             if (probability >= SPEECH) current.voiced++;
             current.quiet = probability < QUIET ? current.quiet + 1 : 0;
-            const every = PARTIAL_FRAMES[current.language] || PARTIAL_FRAMES_WHISPER;
+            const every = PARTIAL_FRAMES[current.engine];
             // only while the player talks: one in the quiet at the end would delay the final text
             if (current.quiet === 0 && current.voiced >= MIN_SPEECH && !current.partialBusy && current.speech.length - current.partialAt >= every) {
                 current.partialBusy = true;
                 current.partialAt = current.speech.length;
                 const audio = new Float32Array(current.speech.length * FRAME);
                 current.speech.forEach((f, i) => audio.set(f, i * FRAME));
-                exclusive(() => (job === current ? transcribe(audio, current.language) : null)).then((text) => {
+                exclusive(() => (job === current ? transcribe(audio, current) : null)).then((text) => {
                     if (job === current && text) reply(current.id, { type: "partial", text });
                 }, () => {}).then(() => { current.partialBusy = false; });
             }
@@ -404,10 +498,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             if (message.type === "init") {
                 base = message.data.base;
             } else if (message.type === "start") {
-                job = { id: message.id, language: message.language, ready: false, busy: false, queued: new Float32Array(0), read: 0, context: new Float32Array(64),
+                job = { id: message.id, language: message.language, engine: message.engine, ready: false, busy: false, queued: new Float32Array(0), read: 0, context: new Float32Array(64),
                     state: null, sr: null, frames: 0, preRoll: [], speech: null, voiced: 0, quiet: 0, partialAt: 0, partialBusy: false };
                 const current = job;
-                (current.language === "en" ? loadMoonshine() : loadWhisper()).catch(() => {}); // reported when transcribing
+                ({ moonshine: loadMoonshine, whisper: loadWhisper, parakeet: loadParakeet })[current.engine]().catch(() => {}); // reported when transcribing
                 loadVad().then(() => {
                     if (job !== current) return;
                     current.state = new ort.Tensor("float32", new Float32Array(2 * 128), [2, 1, 128]);
@@ -489,7 +583,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     // Listening: one at a time, in the language set last; blocks that ask while it listens get the same text
     // ------------------------------------------------------------------------------------------
     let language = "english";
-    runtime.on("PROJECT_LOADED", () => { language = "english"; });
+    let accuracy = "normal";
+    runtime.on("PROJECT_LOADED", () => {
+        language = "english";
+        accuracy = "normal";
+    });
     let listening = null;
     // What the current (or last) listening heard so far, and the "When I hear" hats that fired for it
     let heard = "";
@@ -501,7 +599,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     let allowed = typeof scaffolding !== "undefined"; // a packaged game does not ask
     const listen = () => {
         if (listening) return listening.promise;
-        const job = { id: nextId++, language, stream: null, context: null, stopped: false };
+        const job = { id: nextId++, language, engine: engineFor(language, accuracy), stream: null, context: null, stopped: false };
         listening = job;
         heard = "";
         fired = new Set();
@@ -525,7 +623,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             };
             (async () => {
                 if (!allowed) allowed = window.confirm("This project wants to use your microphone to turn speech into text.\nThe speech is recognized on this computer and not sent anywhere. Allow?");
-                if (!allowed || !(await ensurePacks(packsFor(job.language))) || job.stopped) return end("");
+                if (!allowed || !(await ensurePacks(packsFor(job.engine))) || job.stopped) return end("");
                 handlers.set(job.id, (message) => {
                     if (message.type === "heard") closeMic();
                     else if (message.type === "partial") hear(message.text);
@@ -538,7 +636,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         end("");
                     }
                 });
-                getWorker().postMessage({ type: "start", id: job.id, language: LANGUAGES[job.language] });
+                getWorker().postMessage({ type: "start", id: job.id, language: LANGUAGES[job.language], engine: job.engine });
                 job.stream = await navigator.mediaDevices.getUserMedia({
                     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
                 });
@@ -560,24 +658,29 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     runtime.on("PROJECT_STOP_ALL", () => { if (listening) listening.stop(); });
 
     // Credits for the credit sprite while a project uses these blocks; Whisper's when a set language
-    // block picks another language than english or a reporter does
+    // block picks another language than english or a reporter does, Parakeet's when a set accuracy
+    // block picks high or a reporter does
     const usedCredits = () => {
         let used = false;
         let whisperUsed = false;
+        let parakeetUsed = false;
         for (const target of runtime.targets) {
             if (!target.isOriginal) continue;
             const blocks = target.blocks._blocks;
+            const menuValue = (block, inputName, fieldName) => {
+                const input = block.inputs[inputName];
+                const menu = input && input.block === input.shadow && blocks[input.block];
+                const field = menu && menu.fields && menu.fields[fieldName];
+                return field ? field.value : null; // null: a reporter
+            };
             for (const block of Object.values(blocks)) {
                 if (!block.opcode || !block.opcode.startsWith(`${ID}_`)) continue;
                 used = true;
-                if (block.opcode !== `${ID}_setLanguage`) continue;
-                const input = block.inputs.LANGUAGE;
-                const menu = input && input.block === input.shadow && blocks[input.block];
-                const field = menu && menu.fields && menu.fields.languages;
-                if (!field || field.value !== "english") whisperUsed = true;
+                if (block.opcode === `${ID}_setLanguage` && menuValue(block, "LANGUAGE", "languages") !== "english") whisperUsed = true;
+                if (block.opcode === `${ID}_setAccuracy` && menuValue(block, "ACCURACY", "accuracies") !== "normal") parakeetUsed = true;
             }
         }
-        return used ? CREDITS.concat(whisperUsed ? [WHISPER_CREDIT] : []) : [];
+        return used ? CREDITS.concat(whisperUsed ? [WHISPER_CREDIT] : [], parakeetUsed ? PARAKEET_CREDITS : []) : [];
     };
     runtime.pmCreditProviders = (runtime.pmCreditProviders || []).filter((p) => p.id !== ID);
     const provider = () => usedCredits();
@@ -662,9 +765,18 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                             LANGUAGE: { type: Scratch.ArgumentType.STRING, menu: "languages", defaultValue: "english" },
                         },
                     },
+                    {
+                        opcode: "setAccuracy",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "set dictation accuracy to [ACCURACY]",
+                        arguments: {
+                            ACCURACY: { type: Scratch.ArgumentType.STRING, menu: "accuracies", defaultValue: "high" },
+                        },
+                    },
                 ],
                 menus: {
                     languages: { acceptReporters: true, items: Object.keys(LANGUAGES) },
+                    accuracies: { acceptReporters: true, items: ["normal", "high"] },
                 },
             };
         }
@@ -705,6 +817,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             const value = Scratch.Cast.toString(args.LANGUAGE).toLowerCase().trim();
             const name = LANGUAGES[value] ? value : Object.keys(LANGUAGES).find((n) => LANGUAGES[n] === value);
             if (name) language = name;
+        }
+
+        // "high": Parakeet for the 24 European languages it knows (a larger download); "normal": Moonshine
+        // and Whisper; anything else is ignored
+        setAccuracy(args) {
+            const value = Scratch.Cast.toString(args.ACCURACY).toLowerCase().trim();
+            if (value === "normal" || value === "high") accuracy = value;
         }
 
         recognize() {
