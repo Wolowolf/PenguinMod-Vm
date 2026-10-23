@@ -452,8 +452,8 @@
   },
   "SPmbpCST": {
     "source": "src/extensions/sharkpool_gallery/My-Blocks-Plus.js",
-    "replaces": ["replaced ScratchBlocks Gesture, Toolbox, Xml, procedures and BlockSvg methods (editor)"],
-    "hooks": ["runtime.registerCompiledExtensionBlocks (setParam, evalParam, getParam)","runtime.pmProcedureCallIrHooks and pmProcedureCallJsHooks (custom branch inputs)","runtime.pmForeignBlockHooks and pmForeignProcedureHooks (global custom blocks)","runtime.pmBlockInputsHooks","runtime.pmResetCacheHooks","vm.pmSpriteDuplicatedHooks","vm.pmExportBlocksHooks","vm.pmShareBlocksHooks","vm.pmAddSpriteHooks","vm SERIALIZE event"],
+    "replaces": [],
+    "hooks": ["runtime.registerCompiledExtensionBlocks (setParam, evalParam, getParam)","runtime.pmProcedureCallIrHooks and pmProcedureCallJsHooks (custom branch inputs)","runtime.pmForeignBlockHooks and pmForeignProcedureHooks (global custom blocks)","runtime.pmBlockInputsHooks","runtime.pmResetCacheHooks","vm.pmSpriteDuplicatedHooks","vm.pmExportBlocksHooks","vm.pmShareBlocksHooks","vm.pmAddSpriteHooks","vm SERIALIZE event","ScratchBlocks Xml.pmBlockDom, Toolbox.pmScrollHooks, Gesture.pmDuplicateHooks and pmStartDragHooks, Procedures.pmDialogHooks, pmEditHooks and pmFlyoutHooks (editor)","ScratchBlocks per-block-type methods and Extensions.register (procedures_call, prototype, declaration, argument reporters)"],
     "blocks": {
       "setParam": {"type":"command","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "evalParam": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true,"note":"runs the input again in a Thread it makes itself"},

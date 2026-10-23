@@ -3,7 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)"
 // (docs/EXTENSION-ROADMAP.md step 5c): engine hooks instead of replacing the compiler classes, Blocks.prototype methods,
 // getOpcodeFunction, stepToProcedure and the VM's toJSON, duplicateSprite, exportSprite, _addSprite3,
-// exportStandaloneBlocks and shareBlocksToTarget. Its block-editor patches are unchanged (step 5d).
+// exportStandaloneBlocks and shareBlocksToTarget; and where marked "Desktop fork (section 124)" (step 5d2): the block
+// library's hook lists instead of replacing its Xml, Toolbox, Gesture, Procedures and ProcedureUtils functions.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -829,27 +830,21 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       "procedures_definition_return", "procedures_set"
     ];
 
-    let domToBlockXml = null;
-    const oldDTBH = SB.Xml.domToBlockHeadless_;
-    SB.Xml.domToBlockHeadless_ = function(...args) {
-      domToBlockXml = args[0];
-      const returnValue = oldDTBH.apply(this, args);
-      domToBlockXml = null;
-      return returnValue;
-    }
-
-    const oldScrollToCategory = SB.Toolbox.prototype.scrollToCategoryById;
-    SB.Toolbox.prototype.scrollToCategoryById = function(id) {
+    // Desktop fork (section 124): the block library keeps the XML of the block being created in Xml.pmBlockDom
+    // (this used to wrap Xml.domToBlockHeadless_), and calls Toolbox.pmScrollHooks with the category to scroll to.
+    SB.Toolbox.pmScrollHooks.push((id) => {
       if (id === "myBlocks" && shouldScrollToMBP) {
         shouldScrollToMBP = false;
-        id = "SPmbpCST";
+        return "SPmbpCST";
       }
-      return oldScrollToCategory.call(this, id);
-    }
+      return id;
+    });
 
+    // Desktop fork (section 124): the ProcedureUtils functions themselves are not replaced any more, only the
+    // block types' own methods are set (the block types took their methods from ProcedureUtils when defined).
     const utils = SB.ScratchBlocks.ProcedureUtils;
     const ogUpdateDisplay = utils.updateDisplay_;
-    utils.updateDisplay_ = function() {
+    const mbpUpdateDisplay = function() {
       if (extensionRemovable) return ogUpdateDisplay.call(this);
       const store = this.SPmbpCST_store || storeGet(this.procCode_);
       if (store.color && !this.isInsertionMarker()) {
@@ -974,7 +969,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
       if (!this.isInsertionMarker()) {
         // ScratchBlocks ways of getting the next block won't work while the blocks are being created
-        const actualNextBlock = this.getNextBlock() || vm?.editingTarget?.blocks?.getBlock(this.id)?.next || (domToBlockXml && domToBlockXml.querySelector("next"));
+        const actualNextBlock = this.getNextBlock() || vm?.editingTarget?.blocks?.getBlock(this.id)?.next || (SB.Xml.pmBlockDom && SB.Xml.pmBlockDom.querySelector("next"));
         const isReturner = isPM ? this.output_ : this.return_;
         if (!store.isTerminal !== undefined && !isReturner && !actualNextBlock) {
           this.setNextStatement(
@@ -992,11 +987,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
     for (const opcode of ["procedures_call", "procedures_prototype", "procedures_declaration"]) {
-      SB.Blocks[opcode].updateDisplay_ = utils.updateDisplay_;
+      SB.Blocks[opcode].updateDisplay_ = mbpUpdateDisplay;
     }
 
     const ogAttachShadow = utils.attachShadow_;
-    utils.attachShadow_ = function(input, argumentType) {
+    const mbpAttachShadow = function(input, argumentType) {
       if (extensionRemovable) return ogAttachShadow.call(this, input, argumentType);
       const store = this.SPmbpCST_store || storeGet(this.getProcCode());
       if (!store || !store.inputs || !store.inputs[input.name]) return ogAttachShadow.call(this, input, argumentType);
@@ -1022,10 +1017,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (SB.Events.isEnabled()) SB.Events.fire(new SB.Events.BlockCreate(newBlock));
       newBlock?.outputConnection?.connect(input.connection);
     };
-    SB.Blocks["procedures_call"].attachShadow_ = utils.attachShadow_;
+    SB.Blocks["procedures_call"].attachShadow_ = mbpAttachShadow;
 
-    const ogPopArg = utils.populateArgumentOnCaller_;
-    utils.populateArgumentOnCaller_ = function(type, index, connectionMap, id, input) {
+    const mbpPopulateArgument = function(type, index, connectionMap, id, input) {
       // https://github.com/TurboWarp/scratch-blocks/blob/develop/blocks_vertical/procedures.js#L445
       var oldBlock = null, oldShadow = null;
       if (connectionMap && (id in connectionMap)) {
@@ -1056,7 +1050,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         this.attachShadow_(input, type);
       }
     };
-    SB.Blocks["procedures_call"].populateArgument_ = utils.populateArgumentOnCaller_;
+    SB.Blocks["procedures_call"].populateArgument_ = mbpPopulateArgument;
 
     function updateArgumentReporterColor(block, defineBlock = null) {
       // Just stopped dragging (and dropping), update color according to the top define block
@@ -1126,65 +1120,41 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     };
     SB.Blocks["procedures_call"].unplug = procCallUnplug;
 
+    // Desktop fork (section 124): Gesture.pmDuplicateHooks and pmStartDragHooks instead of replacing
+    // Gesture.prototype.duplicateOnDrag_ and startDraggingBlock_.
     // Copy the define block's argument color when dragging an argument reporter
-    const oldDuplicateOnDrag_ = SB.Gesture.prototype.duplicateOnDrag_;
-    SB.Gesture.prototype.duplicateOnDrag_ = function() {
-      const source = this.targetBlock_;
-      oldDuplicateOnDrag_.call(this);
-      const duplicated = this.targetBlock_;
-      if (source && duplicated && source.type.startsWith("argument_reporter_"))
+    SB.Gesture.pmDuplicateHooks.push((source, duplicated) => {
+      if (source.type.startsWith("argument_reporter_"))
         duplicated.setColour(source.colour_, source.colourSecondary_, source.colourTertiary_);
-    };
+    });
 
     // Disable branch argument reporter dragging
-    const oldstartDragging_ = SB.Gesture.prototype.startDraggingBlock_;
-    SB.Gesture.prototype.startDraggingBlock_ = function() {
-      const source = this.targetBlock_;
-      if (source[targetProcData] === "branchDrag") {
-        this.isDraggingBlock_ = false;
-        this.dispose();
-        return;
-      }
-      oldstartDragging_.call(this);
-    };
+    SB.Gesture.pmStartDragHooks.push((source) => source[targetProcData] !== "branchDrag");
 
+    // Desktop fork (section 124): Procedures.pmDialogHooks (after the create or edit dialog opened, with the main
+    // workspace from before), pmEditHooks (before editing; true = handled) and pmFlyoutHooks (each time the My Blocks
+    // list is made) instead of replacing createProcedureDefCallback_, editProcedureCallback_ and flyoutCategory.
     // Patch Procedure Edit and Create to also open our Modal
     const procs = SB.Procedures;
-    const ogCreateCall = procs.createProcedureDefCallback_;
     if (runtime.SPmbpCSTOldStorage === undefined) {
-      procs.createProcedureDefCallback_ = function(workspace) {
-        const sharedWork = SB.mainWorkspace;
-        ogCreateCall.call(this, workspace);
-        openBlockMaker(sharedWork, false);
-      };
-      const ogEditCall = procs.editProcedureCallback_;
-      procs.editProcedureCallback_ = function(block) {
-        if (block.type === "procedures_call") {
-          const isGlobal = globalBlocksCache[block.procCode_];
-          if (isGlobal && isGlobal.id !== vm.editingTarget.id) {
-            vm.once("workspaceUpdate", () => {
-              const blockId = vm.editingTarget.blocks.getProcedureDefinition(block.procCode_);
-              block = SB.mainWorkspace.getBlockById(blockId);
-              return procs.editProcedureCallback_.call(this, block);
-            });
-            vm.setEditingTarget(isGlobal.id);
-            return; 
-          }
-        }
-        const sharedWork = SB.mainWorkspace;
-        const val = ogEditCall.call(this, block);
-        openBlockMaker(sharedWork, true);
-        return val;
-      }
+      procs.pmDialogHooks.push((sharedWork, isEditing) => openBlockMaker(sharedWork, isEditing));
+      procs.pmEditHooks.push((block) => {
+        if (block.type !== "procedures_call") return false;
+        const isGlobal = globalBlocksCache[block.procCode_];
+        if (!isGlobal || isGlobal.id === vm.editingTarget.id) return false;
+        vm.once("workspaceUpdate", () => {
+          const blockId = vm.editingTarget.blocks.getProcedureDefinition(block.procCode_);
+          procs.editProcedureCallback_(SB.mainWorkspace.getBlockById(blockId));
+        });
+        vm.setEditingTarget(isGlobal.id);
+        return true;
+      });
     }
     // Patch Procedure Flyout to also interact with the extension
-    const ogFlyoutCall = procs.flyoutCategory;
-    procs.flyoutCategory = function(workspace) {
-      const val = ogFlyoutCall.call(this, workspace);
+    procs.pmFlyoutHooks.push((val, workspace) => {
       if (val.length !== oldListLength) listNeedsRefresh = true;
       compileProcedures(val, workspace, procs);
-      return val;
-    }
+    });
   })
 
   // Other patches
