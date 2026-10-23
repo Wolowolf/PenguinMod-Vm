@@ -148,7 +148,8 @@
   },
   "LZcollisionsSP": {
     "source": "src/extensions/sharkpool_gallery/Lazy-Collisions.js",
-    "replaces": ["replaces Runtime.prototype.getSpriteTargetByName on the first \"ID of clone\" (accepts clone IDs)"],
+    "replaces": [],
+    "hooks": ["runtime.pmSpriteLookupById (set on the first \"ID of clone\": getSpriteTargetByName accepts clone IDs)"],
     "blocks": {
       "isOnSprite": {"type":"Boolean","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "isOnSpriteSide": {"type":"Boolean","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
@@ -459,7 +460,8 @@
   },
   "SPmessagePlus": {
     "source": "src/extensions/sharkpool_gallery/Messages-Plus.js",
-    "replaces": ["added runtime.startHats (wraps it)","added runtime._restartThread (wraps it)"],
+    "replaces": [],
+    "hooks": ["runtime HATS_STARTED event (adds its threads to a broadcast's)","runtime.pmRestartThreadHooks"],
     "note": "its startHats wrapper makes section 63 check hats every frame (EXTENSION-ROADMAP step 5)",
     "blocks": {
       "whenAnyBroadcast": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
@@ -856,7 +858,8 @@
   },
   "ShovelUtils": {
     "source": "src/extensions/turbowarp_gallery/TheShovel/ShovelUtils.js",
-    "replaces": ["replaced runtime._step (wraps it to count frames per second)"],
+    "replaces": [],
+    "hooks": ["runtime RUNTIME_STEP_END event (counts frames per second)"],
     "blocks": {
       "importImage": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait"},
       "getlist": {"type":"reporter","pure":false,"reads":["variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -1994,7 +1997,8 @@
   },
   "obviousAlexCMath3d": {
     "source": "src/extensions/penguinmod_gallery/ObviousAlexC/3DMath.js",
-    "replaces": ["added runtime.visualReport"],
+    "replaces": [],
+    "hooks": ["runtime.pmVisualReportHooks (objects and arrays shown as JSON)"],
     "note": "wraps runtime.visualReport to show array answers; draws through Pen Plus V7's module when it is loaded; camera, fov and 3D sprite positions are module state",
     "blocks": {
       "newV3": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)"},
@@ -2274,7 +2278,8 @@
     }
   },
   "pmEventsExpansion": {
-    "replaces": ["added vm.startDrag","added vm.stopDrag","added vm.saveProjectSb3","added vm.saveProjectSb3Stream","replaced RenderedTarget.prototype.setCostume"],
+    "replaces": [],
+    "hooks": ["runtime.pmTargetDragHooks","runtime.pmCostumeChangedHooks","vm.pmBeforeSaveHooks","vm.pmAfterSaveHooks"],
     "blocks": {
       "everyOtherFrame": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "neverr": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
@@ -2410,7 +2415,8 @@
   },
   "pointerlock": {
     "source": "src/extensions/turbowarp_gallery/pointerlock.js",
-    "replaces": ["added runtime._step (wraps it)","added ioDevices.mouse.postData","added ioDevices.mouse.getScratchX","added ioDevices.mouse.getScratchY"],
+    "replaces": [],
+    "hooks": ["ioDevices.mouse.pointerLocked","runtime RUNTIME_STEP_END event (centres the mouse)"],
     "note": "own page listeners (pointerlockchange, mousemove)",
     "blocks": {
       "setLocked": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false},
@@ -2497,7 +2503,8 @@
   },
   "runtimeoptions": {
     "source": "src/extensions/turbowarp_gallery/runtime-options.js",
-    "replaces": ["added ioDevices.userData.postData (wraps it for its \"username changed\" event)"],
+    "replaces": [],
+    "hooks": ["runtime.pmUsernameChangedHooks"],
     "note": "listens to runtime option, framerate, stage size, turbo and interpolation events for its \"when changed\" hat",
     "blocks": {
       "getEnabled": {"type":"Boolean","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},

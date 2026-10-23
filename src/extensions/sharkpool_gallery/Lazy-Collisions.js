@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Lazy-Collisions.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's pmSpriteLookupById switch instead of replacing Runtime.prototype.getSpriteTargetByName (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -23,12 +23,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   let patched = false;
   const patchGetTarget = () => {
-    const ogFunc = runtime.getSpriteTargetByName;
-    runtime.constructor.prototype.getSpriteTargetByName = function (spriteName) {
-      const value = ogFunc.call(this, spriteName);
-      if (value) return value;
-      return runtime.getTargetById(spriteName);
-    }
+    // Desktop fork (section 119): getSpriteTargetByName falls back to target IDs
+    runtime.pmSpriteLookupById = true;
     patched = true;
   };
 

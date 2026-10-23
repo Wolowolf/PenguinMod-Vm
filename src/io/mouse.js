@@ -27,6 +27,14 @@ class Mouse {
         this.runtime = runtime;
         this.cameraBound = null;
 
+        /**
+         * PMDESKTOP_HOOKS (section 119): pointer lock (tw pointerlock). While true, only data posted with
+         * `pointerLock: true` reaches the mouse, and getScratchX / getScratchY give the position unrounded
+         * and without the camera.
+         * @type {boolean}
+         */
+        this.pointerLocked = false;
+
         // after processing all blocks, we can check if this step is after the one we clicked on
         this.runtime.on("RUNTIME_STEP_END", () => {
             if (this.runtime.frameLoop._stepCounter > this._clickOnStep) {
@@ -91,6 +99,7 @@ class Mouse {
      * @param  {object} data Data from DOM event.
      */
     postData (data) {
+        if (this.pointerLocked && !data.pointerLock) return;
         if (typeof data.x === 'number') {
             this._clientX = data.x;
             this._scratchX = MathUtil.clamp(
@@ -168,6 +177,7 @@ class Mouse {
      * @return {number} Clamped and integer rounded X position of the mouse cursor.
      */
     getScratchX () {
+        if (this.pointerLocked) return this._scratchX;
         const mouseX = this.cameraBound
             ? translateScreenPos(this.runtime, this.cameraBound, this._scratchX, this._scratchY)[0]
             // ? (this._scratchX * cameraState.scale) - cameraState.pos[0]
@@ -183,6 +193,7 @@ class Mouse {
      * @return {number} Clamped and integer rounded Y position of the mouse cursor.
      */
     getScratchY () {
+        if (this.pointerLocked) return this._scratchY;
         const mouseY = this.cameraBound
             ? translateScreenPos(this.runtime, this.cameraBound, this._scratchX, this._scratchY)[1]
             // ? (this._scratchY * cameraState.scale) - cameraState.pos[1]

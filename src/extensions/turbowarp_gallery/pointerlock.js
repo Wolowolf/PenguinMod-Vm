@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's pointerlock.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the mouse's pointerLocked hook instead of replacing its postData / getScratchX / getScratchY, and RUNTIME_STEP_END instead of wrapping runtime._step (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -43,33 +43,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         button: e.button,
         isDown,
       };
-      originalPostIOData(data);
+      // Desktop fork (section 119): posted past the mouse's pointerLocked filter
+      data.pointerLock = true;
+      mouseDevice.postData(data);
     }
   };
 
   const mouseDevice = vm.runtime.ioDevices.mouse;
-  const originalPostIOData = mouseDevice.postData.bind(mouseDevice);
-  mouseDevice.postData = (data) => {
-    if (!isPointerLockEnabled) {
-      return originalPostIOData(data);
-    }
-  };
-
-  // We want to disable rounding when pointerlock is active so that high framerates don't dramatically
-  // limit the project's input precision.
-  const originalGetScratchX = mouseDevice.getScratchX.bind(mouseDevice);
-  const originalGetScratchY = mouseDevice.getScratchY.bind(mouseDevice);
-  mouseDevice.getScratchX = () => {
-    if (isPointerLockEnabled) {
-      return mouse._scratchX;
-    }
-    return originalGetScratchX();
-  };
-  mouseDevice.getScratchY = () => {
-    if (isPointerLockEnabled) {
-      return mouse._scratchY;
-    }
-    return originalGetScratchY();
+  // Desktop fork (section 119): while mouseDevice.pointerLocked is on, the mouse ignores other posted data and
+  // does not round its position (so that high framerates don't dramatically limit the project's input precision).
+  const setPointerLockEnabled = (enabled) => {
+    isPointerLockEnabled = enabled;
+    mouseDevice.pointerLocked = enabled;
   };
 
   document.addEventListener(
@@ -115,9 +100,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     console.error("Pointer lock error", e);
   });
 
-  const oldStep = vm.runtime._step;
-  vm.runtime._step = function (...args) {
-    const ret = oldStep.call(this, ...args);
+  // Desktop fork (section 119): after each frame
+  vm.runtime.on("RUNTIME_STEP_END", () => {
     if (isPointerLockEnabled) {
       const { width, height } = rect;
       mouse._clientX = width / 2;
@@ -125,11 +109,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       mouse._scratchX = 0;
       mouse._scratchY = 0;
     }
-    return ret;
-  };
+  });
 
   vm.runtime.on("PROJECT_LOADED", () => {
-    isPointerLockEnabled = false;
+    setPointerLockEnabled(false);
     if (isLocked) {
       document.exitPointerLock();
     }
@@ -178,7 +161,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     setLocked(args) {
-      isPointerLockEnabled = Scratch.Cast.toBoolean(args.enabled) === true;
+      setPointerLockEnabled(Scratch.Cast.toBoolean(args.enabled) === true);
       if (!isPointerLockEnabled && isLocked) {
         document.exitPointerLock();
       }

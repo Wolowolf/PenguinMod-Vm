@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's ObviousAlexC/3DMath.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's pmVisualReportHooks instead of replacing runtime.visualReport (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -41,21 +41,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     };
   };
   // Modify Visual Report to stringify JSON
-  const ogVisReport = runtime.visualReport;
-  if (Scratch.extensions.isPenguinMod) {
-    runtime.visualReport = function (blockId, value) {
-      if (value.constructor?.name === "Object" || value.constructor?.name === "Array") {
-        // PM custom return constructors have a different name
-        value = JSON.stringify(value, circularReplacer());
-      }
-      return ogVisReport.call(this, blockId, value);
+  // Desktop fork (section 119): a hook instead of replacing runtime.visualReport (and no error for null / undefined)
+  runtime.pmVisualReportHooks.push((value) => {
+    if (value && (value.constructor?.name === "Object" || value.constructor?.name === "Array")) {
+      // PM custom return constructors have a different name
+      value = JSON.stringify(value, circularReplacer());
     }
-  } else {
-    runtime.visualReport = function (target, blockId, value) {
-      if (typeof value === "object") value = JSON.stringify(value, circularReplacer());
-      return ogVisReport.call(this, target, blockId, value);
-    }
-  }
+    return value;
+  });
 
   //I'm going to write a whole library for pen+ interaction in the future.
   let penPLoaded = false;

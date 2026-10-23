@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Messages-Plus.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's HATS_STARTED event and pmRestartThreadHooks instead of wrapping runtime.startHats and runtime._restartThread (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -40,14 +40,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const multiResponseMsgs = new Set();
   const receivedMsgs = new Map();
 
-  const ogStartHats = runtime.startHats;
-  runtime.startHats = function (opcode, fields, target) {
-    let threads = ogStartHats.call(this, opcode, fields, target);
+  // Desktop fork (section 119): HATS_STARTED gives the started threads; new ones are added to that list
+  runtime.on("HATS_STARTED", (opcode, fields, target, threads) => {
     if (opcode === "event_whenbroadcastreceived") {
-      threads = [
-        ...threads,
-        ...runtime.startHats("SPmessagePlus_whenAnyBroadcast"),
-      ];
+      threads.push(...(runtime.startHats("SPmessagePlus_whenAnyBroadcast") || []));
 
       runtime.allScriptsByOpcodeDo(
         "SPmessagePlus_whenReceived",
@@ -68,12 +64,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       // <is () received?> blocks get stored in this temporary cache.
       receivedMsgs.set(name, new WeakMap());
     }
+  });
 
-    return threads;
-  };
-
-  const ogRestartThread = runtime._restartThread;
-  runtime._restartThread = function (thread) {
+  // Desktop fork (section 119): a thread to use instead of restarting one, or nothing for a normal restart
+  runtime.pmRestartThreadHooks.push((thread) => {
     const name = thread[kMessageName];
     if (name) {
       if (overlappedMsgs.has(name)) {
@@ -82,9 +76,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         return thread;
       }
     }
-
-    return ogRestartThread.call(this, thread);
-  };
+  });
 
   runtime.on("PROJECT_STOP_ALL", () => receivedMsgs.clear());
   runtime.on("PROJECT_START", () => receivedMsgs.clear());

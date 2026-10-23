@@ -2,7 +2,6 @@ const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
 const Cast = require('../../util/cast');
 const Thread = require('../../engine/thread');
-const RenderedTarget = require('../../sprites/rendered-target');
 
 // Blocks that come from the former "More Events" (LilyMakesThings) and "Events+" (SharkPool) extensions,
 // merged into this one. Hats that have to be asked again every frame (they are not edge activated):
@@ -226,37 +225,18 @@ class pmEventsExpansion {
 
         // sprites dragged and dropped by the player
         const vm = runtime.vm;
-        if (vm && !vm.pmEventsExpansionDragHooked) {
-            vm.pmEventsExpansionDragHooked = true;
-            for (const [method, type] of [['startDrag', 'drag'], ['stopDrag', 'drop']]) {
-                const original = vm[method];
-                vm[method] = function (targetId) {
-                    const result = original.apply(this, arguments);
-                    const target = this.runtime.getTargetById(targetId);
-                    if (target && target.sprite && !target.isStage) {
-                        this.runtime.startHats('pmEventsExpansion_whenSpriteDragDrop', {SPRITE: target.sprite.name, TYPE: type});
-                    }
-                    return result;
-                };
+        // (section 119: through the engine's hooks, docs/EXTENSION-ROADMAP.md step 5)
+        runtime.pmTargetDragHooks.push((target, type) => {
+            if (target.sprite && !target.isStage) {
+                runtime.startHats('pmEventsExpansion_whenSpriteDragDrop', {SPRITE: target.sprite.name, TYPE: type});
             }
-        }
+        });
 
-        // costume switches (only a real change counts)
-        if (!RenderedTarget.prototype.pmEventsExpansionCostumeHooked) {
-            RenderedTarget.prototype.pmEventsExpansionCostumeHooked = true;
-            const originalSetCostume = RenderedTarget.prototype.setCostume;
-            RenderedTarget.prototype.setCostume = function () {
-                const before = this.currentCostume;
-                const result = originalSetCostume.apply(this, arguments);
-                const events = this.runtime && this.runtime.pmEventsExpansion;
-                if (events && this.currentCostume !== before) events._costumeChanged(this);
-                return result;
-            };
-        }
+        // costume switches (setCostume calls the hook only for a real change)
+        runtime.pmCostumeChangedHooks.push(target => this._costumeChanged(target));
 
         // before / after the project is saved
-        if (vm && !vm.pmEventsExpansionSaveHooked) {
-            vm.pmEventsExpansionSaveHooked = true;
+        if (vm) {
             const beforeSave = () => new Promise(resolve => {
                 const threads = runtime.startHats('pmEventsExpansion_beforeSave') || [];
                 if (threads.length === 0) {
@@ -279,46 +259,8 @@ class pmEventsExpansion {
                     runtime.startHats('pmEventsExpansion_afterSave');
                 });
             };
-            const originalSave = vm.saveProjectSb3;
-            vm.saveProjectSb3 = async function (...args) {
-                await beforeSave();
-                const result = await originalSave.apply(this, args);
-                afterSave();
-                return result;
-            };
-            const originalSaveStream = vm.saveProjectSb3Stream;
-            vm.saveProjectSb3Stream = function (...args) {
-                // a stream object has to be returned at once, so calls are queued until the real one exists
-                let realStream = null;
-                const queuedCalls = [];
-                const whenStreamReady = (methodName, callArgs) => {
-                    if (realStream) return realStream[methodName].apply(realStream, callArgs);
-                    return new Promise(resolve => {
-                        queuedCalls.push({resolve, methodName, args: callArgs});
-                    });
-                };
-                const streamWrapper = {
-                    on: (...callArgs) => void whenStreamReady('on', callArgs),
-                    pause: (...callArgs) => void whenStreamReady('pause', callArgs),
-                    resume: (...callArgs) => void whenStreamReady('resume', callArgs),
-                    accumulate: (...callArgs) => whenStreamReady('accumulate', callArgs)
-                };
-                beforeSave().then(() => {
-                    realStream = originalSaveStream.apply(this, args);
-                    realStream.on('end', () => {
-                        try {
-                            afterSave();
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    });
-                    for (const queued of queuedCalls) {
-                        queued.resolve(realStream[queued.methodName].apply(realStream, queued.args));
-                    }
-                    queuedCalls.length = 0;
-                });
-                return streamWrapper;
-            };
+            vm.pmBeforeSaveHooks.push(beforeSave);
+            vm.pmAfterSaveHooks.push(afterSave);
         }
     }
 

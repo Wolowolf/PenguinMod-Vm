@@ -1,7 +1,8 @@
 class UserData {
-    constructor () {
+    constructor (runtime) {
         this._username = '';
         this._loggedIn = false;
+        this.runtime = runtime;
     }
 
     /**
@@ -10,10 +11,15 @@ class UserData {
      * @property {!string} username The new username.
      */
     postData (data) {
+        const usernameChanged = data.username !== this._username;
         this._username = data.username;
         this._loggedIn = false;
         if (data.loggedIn === true) {
             this._loggedIn = true;
+        }
+        // PMDESKTOP_HOOKS (section 119): tw runtime-options' "username changed"
+        if (usernameChanged && this.runtime) {
+            for (const hook of this.runtime.pmUsernameChangedHooks) hook();
         }
     }
 

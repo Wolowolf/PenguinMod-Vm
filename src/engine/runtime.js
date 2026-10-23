@@ -341,6 +341,22 @@ class Runtime extends EventEmitter {
         this._skippedEdgeHatChecks = 0;
 
         /**
+         * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions
+         * (docs/EXTENSION-ROADMAP.md step 5). Broadcasts and other started hats: the HATS_STARTED event.
+         * pmRestartThreadHooks: (thread) => a thread to use instead of restarting it, or nothing.
+         * pmCostumeChangedHooks: (target) after its costume really changed. pmTargetDragHooks: (target, 'drag' | 'drop').
+         * pmVisualReportHooks: (value) => the value shown in the editor's value bubble.
+         * pmUsernameChangedHooks: () after the username changed (io/userData.js).
+         * pmSpriteLookupById: getSpriteTargetByName also accepts target IDs.
+         */
+        this.pmRestartThreadHooks = [];
+        this.pmCostumeChangedHooks = [];
+        this.pmTargetDragHooks = [];
+        this.pmVisualReportHooks = [];
+        this.pmUsernameChangedHooks = [];
+        this.pmSpriteLookupById = false;
+
+        /**
          * All threads that finished running and were removed from this.threads
          * by behaviour in Sequencer.stepThreads.
          * @type {Array<Thread>}
@@ -430,7 +446,7 @@ class Runtime extends EventEmitter {
             keyboard: new Keyboard(this),
             mouse: new Mouse(this),
             mouseWheel: new MouseWheel(this),
-            userData: new UserData(),
+            userData: new UserData(this),
             video: new Video(this),
             touch: new Touch(this)
         };
@@ -2563,6 +2579,11 @@ class Runtime extends EventEmitter {
      * @return {Thread} The restarted thread.
      */
     _restartThread (thread) {
+        // PMDESKTOP_HOOKS (section 119)
+        for (let i = 0; i < this.pmRestartThreadHooks.length; i++) {
+            const replacement = this.pmRestartThreadHooks[i](thread);
+            if (replacement) return replacement;
+        }
         const newThread = new Thread(thread.topBlock);
         newThread.target = thread.target;
         newThread.stackClick = thread.stackClick;
@@ -3651,6 +3672,8 @@ class Runtime extends EventEmitter {
      * @param {string} value Value to show associated with the block.
      */
     visualReport (blockId, value) {
+        // PMDESKTOP_HOOKS (section 119)
+        for (let i = 0; i < this.pmVisualReportHooks.length; i++) value = this.pmVisualReportHooks[i](value);
         this.emit(Runtime.VISUAL_REPORT, {id: blockId, value});
     }
 
@@ -3768,6 +3791,8 @@ class Runtime extends EventEmitter {
                 return target;
             }
         }
+        // PMDESKTOP_HOOKS (section 119): sp Lazy-Collisions' clone IDs
+        if (this.pmSpriteLookupById) return this.getTargetById(spriteName);
     }
 
     /**

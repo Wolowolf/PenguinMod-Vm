@@ -96,6 +96,10 @@ class VirtualMachine extends EventEmitter {
          */
         this._dragTarget = null;
 
+        // PMDESKTOP_HOOKS (section 119): see _pmHasSaveHooks
+        this.pmBeforeSaveHooks = [];
+        this.pmAfterSaveHooks = [];
+
         // Runtime emits are passed along as VM emits.
         this.runtime.on(Runtime.SCRIPT_GLOW_ON, glowData => {
             this.emit(Runtime.SCRIPT_GLOW_ON, glowData);
@@ -608,11 +612,41 @@ class VirtualMachine extends EventEmitter {
      * @returns {Promise<unknown>} Compressed sb3 file in a type determined by the type argument.
      */
     saveProjectSb3 (type) {
-        return this._saveProjectZip().generateAsync({
+        const save = () => this._saveProjectZip().generateAsync({
             type: type || 'blob',
             mimeType: 'application/x.scratch.sb3',
             compression: 'DEFLATE'
         });
+        if (!this._pmHasSaveHooks()) return save();
+        return this._pmBeforeSave()
+            .then(save)
+            .then(result => {
+                this._pmAfterSave();
+                return result;
+            });
+    }
+
+    /**
+     * PMDESKTOP_HOOKS (section 119): pmBeforeSaveHooks run before the project is saved (the save waits for
+     * the promises they return), pmAfterSaveHooks after it is saved. Used by vm pmEventsExpansion.
+     * @returns {boolean} Whether any hook is registered.
+     */
+    _pmHasSaveHooks () {
+        return this.pmBeforeSaveHooks.length > 0 || this.pmAfterSaveHooks.length > 0;
+    }
+
+    _pmBeforeSave () {
+        return Promise.all(this.pmBeforeSaveHooks.map(hook => hook()));
+    }
+
+    _pmAfterSave () {
+        for (const hook of this.pmAfterSaveHooks) {
+            try {
+                hook();
+            } catch (e) {
+                log.error(e);
+            }
+        }
     }
 
     /**
@@ -621,11 +655,37 @@ class VirtualMachine extends EventEmitter {
      * See: https://stuk.github.io/jszip/documentation/api_streamhelper.html
      */
     saveProjectSb3Stream (type) {
-        return this._saveProjectZip().generateInternalStream({
+        const makeStream = () => this._saveProjectZip().generateInternalStream({
             type: type || 'arraybuffer',
             mimeType: 'application/x.scratch.sb3',
             compression: 'DEFLATE'
         });
+        if (!this._pmHasSaveHooks()) return makeStream();
+        // PMDESKTOP_HOOKS (section 119): a stream object has to be returned at once, so calls are queued
+        // until the before-save hooks are done and the real one exists
+        let realStream = null;
+        const queuedCalls = [];
+        const whenStreamReady = (methodName, callArgs) => {
+            if (realStream) return realStream[methodName].apply(realStream, callArgs);
+            return new Promise(resolve => {
+                queuedCalls.push({resolve, methodName, args: callArgs});
+            });
+        };
+        const streamWrapper = {
+            on: (...callArgs) => void whenStreamReady('on', callArgs),
+            pause: (...callArgs) => void whenStreamReady('pause', callArgs),
+            resume: (...callArgs) => void whenStreamReady('resume', callArgs),
+            accumulate: (...callArgs) => whenStreamReady('accumulate', callArgs)
+        };
+        this._pmBeforeSave().then(() => {
+            realStream = makeStream();
+            realStream.on('end', () => this._pmAfterSave());
+            for (const queued of queuedCalls) {
+                queued.resolve(realStream[queued.methodName].apply(realStream, queued.args));
+            }
+            queuedCalls.length = 0;
+        });
+        return streamWrapper;
     }
 
     /**
@@ -2023,6 +2083,8 @@ class VirtualMachine extends EventEmitter {
         if (target) {
             this._dragTarget = target;
             target.startDrag();
+            // PMDESKTOP_HOOKS (section 119)
+            for (const hook of this.runtime.pmTargetDragHooks) hook(target, 'drag');
         }
     }
 
@@ -2037,6 +2099,8 @@ class VirtualMachine extends EventEmitter {
             target.stopDrag();
             this.setEditingTarget(target.sprite && target.sprite.clones[0] ?
                 target.sprite.clones[0].id : target.id);
+            // PMDESKTOP_HOOKS (section 119)
+            for (const hook of this.runtime.pmTargetDragHooks) hook(target, 'drop');
         }
     }
 

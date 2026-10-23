@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's runtime-options.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's pmUsernameChangedHooks instead of wrapping userData.postData (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -65,14 +65,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   Scratch.vm.on("FRAMERATE_CHANGED", () => emitChanged(FRAMERATE));
   Scratch.vm.on("STAGE_SIZE_CHANGED", () => emitChanged(STAGE_SIZE));
 
-  const originalPostData = Scratch.vm.runtime.ioDevices.userData.postData;
-  Scratch.vm.runtime.ioDevices.userData.postData = function (data) {
-    const newUsername = data.username !== this._username;
-    originalPostData.call(this, data);
-    if (newUsername) {
-      emitChanged(USERNAME);
-    }
-  };
+  // Desktop fork (section 119)
+  Scratch.vm.runtime.pmUsernameChangedHooks.push(() => emitChanged(USERNAME));
 
   class RuntimeOptions {
     getInfo() {

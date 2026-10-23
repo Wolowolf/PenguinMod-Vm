@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's TheShovel/ShovelUtils.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): RUNTIME_STEP_END instead of wrapping runtime._step (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -22,16 +22,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   // Based on from https://www.growingwiththeweb.com/2017/12/fast-simple-js-fps-counter.html
   const times = [];
   let fps = vm.runtime.frameLoop.framerate;
-  const oldStep = vm.runtime._step;
-  vm.runtime._step = function () {
-    oldStep.call(this);
+  // Desktop fork (section 119): after each frame
+  vm.runtime.on("RUNTIME_STEP_END", () => {
     const now = performance.now();
     while (times.length > 0 && times[0] <= now - 1000) {
       times.shift();
     }
     times.push(now);
     fps = times.length;
-  };
+  });
 
   class ShovelUtils {
     getInfo() {

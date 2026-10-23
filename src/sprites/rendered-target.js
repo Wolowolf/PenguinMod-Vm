@@ -550,6 +550,7 @@ class RenderedTarget extends Target {
             index = 0;
         }
 
+        const costumeBefore = this.currentCostume;
         this.currentCostume = MathUtil.wrapClamp(
             index, 0, this.sprite.costumes.length - 1
         );
@@ -563,6 +564,11 @@ class RenderedTarget extends Target {
             }
         }
         this.runtime.requestTargetsUpdate(this);
+        // PMDESKTOP_HOOKS (section 119): only a real change counts
+        const hooks = this.runtime.pmCostumeChangedHooks;
+        if (this.currentCostume !== costumeBefore && hooks.length > 0) {
+            for (let i = 0; i < hooks.length; i++) hooks[i](this);
+        }
     }
 
     /**
