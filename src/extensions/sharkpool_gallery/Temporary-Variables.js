@@ -2,7 +2,9 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Temporary-Variables.js, moved into
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)":
 // its compiler code is registered with runtime.registerCompiledExtensionBlocks (docs/EXTENSION-ROADMAP.md step 5c),
-// and "Desktop fork (section 122)": "change var by" adds numbers the same way compiled and interpreted.
+// and "Desktop fork (section 122)": "change var by" adds numbers the same way compiled and interpreted,
+// and "Desktop fork (section 131)": the interpreted "for each var" loop runs the same steps as the compiled one (it ran
+// its branch once even when it should not run at all).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -361,20 +363,24 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       obj2[name2] = tempVal;
     }
 
+    // Desktop fork (section 131): the same steps as the compiler code: compare the variable with END (read each time),
+    // then add INC_VALUE and run the branch as a loop, or end. Before, the comparison was passed as startBranch's
+    // "is a loop" flag, so the branch always ran once more when the loop should end: a loop that should not run at
+    // all ("from 10 to 1 by 1") ran once interpreted, never compiled, and the last turn did not wait for the next frame.
     forVar(args, util) {
       const incrValue = Cast.toNumber(args.INC_VALUE);
-      if (util.stackFrame.index === undefined) {
-        util.stackFrame.index = Cast.toNumber(args.START);
-        util.stackFrame.endIndex = Cast.toNumber(args.END);
-        this.setVar({ ...args, VALUE: util.stackFrame.index - incrValue }, util);
+      const obj = this._objFromLocation(args.TYPE, util);
+      const name = Cast.toString(args.NAME);
+      if (util.stackFrame.started === undefined) {
+        util.stackFrame.started = true;
+        obj[name] = Cast.toNumber(args.START) - incrValue;
       }
-
-      util.stackFrame.index = this.getVar(args, util) + incrValue;
-      this.setVar({ ...args, VALUE: util.stackFrame.index }, util);
-      const shouldCallback = incrValue < 0 ? 
-        util.stackFrame.endIndex < util.stackFrame.index :
-        util.stackFrame.endIndex > util.stackFrame.index;
-      util.startBranch(1, shouldCallback);
+      const endValue = Cast.toNumber(args.END);
+      const shouldCallback = incrValue < 0 ? endValue < obj[name] : endValue > obj[name];
+      if (shouldCallback) {
+        obj[name] += incrValue;
+        util.startBranch(1, true);
+      }
     }
 
     scopeVar(_, util) {

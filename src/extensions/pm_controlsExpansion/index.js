@@ -272,8 +272,11 @@ class pmControlsExpansion {
         }
     }
     
-    restartFromTheTop() {
-        return; // doesnt work in compat mode
+    // Desktop fork (section 131): interpreted, the same as the compiler code (before, it did nothing): the script
+    // starts again from its top block in the next tick and this run of it ends here
+    restartFromTheTop(_, util) {
+        util.sequencer.runtime._restartThread(util.thread);
+        util.thread.stopThisScript();
     }
 
     // CubesterYT code probably

@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Div/divVecQuat.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 131)":
+// the interpreter's "vector - vector" and "quaternion - quaternion", which only existed as compiler code.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1000,6 +1001,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         vecAdd({V1, V2}) {
             return Vector3DType.toVector3D(V1).add(Vector3DType.toVector3D(V2))
         }
+        // Desktop fork (section 131): interpreted scripts had no function for this block (only compiler code)
+        vecSub({V1, V2}) {
+            return Vector3DType.toVector3D(V1).sub(Vector3DType.toVector3D(V2))
+        }
         vecDot({V1, V2}) {
             return Vector3DType.toVector3D(V1).dot(Vector3DType.toVector3D(V2))
         }
@@ -1037,6 +1042,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
         quatAdd({Q1, Q2}) {
             return QuaternionType.toQuat(Q1).add(QuaternionType.toQuat(Q2))
+        }
+        // Desktop fork (section 131): interpreted scripts had no function for this block (only compiler code)
+        quatSub({Q1, Q2}) {
+            return QuaternionType.toQuat(Q1).sub(QuaternionType.toQuat(Q2))
         }
         quatMult({Q1, Q2}) {
             return QuaternionType.toQuat(Q1).mult(QuaternionType.toQuat(Q2))

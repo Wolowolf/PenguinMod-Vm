@@ -1112,7 +1112,9 @@ class pmEventsExpansion {
             const afterFrame = () => {
                 if (!finished) {
                     finished = !threads.some(isRunning);
-                    return;
+                    // Desktop fork (section 131): with no script receiving the broadcast, answer after this frame,
+                    // like the compiled block (which then only waits one frame)
+                    if (threads.length) return;
                 }
                 this.runtime.off('AFTER_EXECUTE', afterFrame);
                 const answering = threads.find(thread => typeof thread.__evex_returnDataa !== 'undefined');
