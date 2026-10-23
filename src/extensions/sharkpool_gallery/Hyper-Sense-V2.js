@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Hyper-Sense-V2.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its key hat is checked only when its answer can
+// change, after a key changed and every frame while a key is held (`pmEdgeHat`; section 128, roadmap step 6b;
+// marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -84,6 +86,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         keyTimers.forEach((value, key) => {
           keyTimers.set(key, value + 0.1);
         });
+        // Desktop fork (section 128): a held key's timer grows every frame, which can change the key hat's answer
+        if (keyTimers.size) runtime.pmEdgeHatsChanged("HyperSense2SP");
         runtime.startHats("HyperSense2SP_whenKey");
 
         // velocity application
@@ -96,6 +100,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       });
 
       window.addEventListener("keydown", (e) => {
+        runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
         const key = this.toProperKey(e, false);
         keyData.curKey = key;
         keyData.lastKey = key;
@@ -110,6 +115,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }
       });
       window.addEventListener("keyup", (e) => {
+        runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
         const key = this.toProperKey(e, false);
         const index = keyData.keys.indexOf(key);
 
@@ -222,6 +228,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.HAT,
             text: Scratch.translate("when [KEY] key [TYPE]"),
             isEdgeActivated: false,
+            pmEdgeHat: { signals: ["HyperSense2SP"] }, // Desktop fork (section 128)
             arguments: {
               KEY: { type: Scratch.ArgumentType.STRING, menu: "KEYS" },
               TYPE: { type: Scratch.ArgumentType.STRING, menu: "KEY_PRESS" }

@@ -4,7 +4,9 @@ const Cast = require('../../util/cast');
 const Thread = require('../../engine/thread');
 
 // Blocks that come from the former "More Events" (LilyMakesThings) and "Events+" (SharkPool) extensions,
-// merged into this one. Hats that have to be asked again every frame (they are not edge activated):
+// merged into this one. Hats that have to be asked again every frame (they are not edge activated; since section
+// 128 the engine skips "while", "when changed" and "while key" while their answer was false and nothing they
+// read changed: pmEdgeHat; "every n frames" answers differently every frame):
 const EVERY_FRAME_HATS = ['whileTrueFalse', 'whenValueChanged', 'everyDuration', 'whileKeyPressed'];
 const MAX_BEFORE_SAVE_MS = 3000;
 
@@ -564,6 +566,8 @@ class pmEventsExpansion {
                     text: 'while [CONDITION] is [STATE]',
                     blockType: BlockType.HAT,
                     isEdgeActivated: false,
+                    // Desktop fork (section 128): while false, checked only when what its condition reads changed
+                    pmEdgeHat: {},
                     arguments: {
                         CONDITION: {type: ArgumentType.BOOLEAN},
                         STATE: {type: ArgumentType.STRING, menu: 'boolean', defaultValue: 'true'}
@@ -574,6 +578,8 @@ class pmEventsExpansion {
                     text: 'when [INPUT] is changed',
                     blockType: BlockType.HAT,
                     isEdgeActivated: false,
+                    // Desktop fork (section 128): checked only when what its input reads changed
+                    pmEdgeHat: {},
                     arguments: {
                         // no type: encourages placing a block instead of typing a value
                         INPUT: {type: null}
@@ -613,6 +619,8 @@ class pmEventsExpansion {
                     text: 'while [KEY_OPTION] key pressed',
                     blockType: BlockType.HAT,
                     isEdgeActivated: false,
+                    // Desktop fork (section 128): while not pressed, checked only after a key changed
+                    pmEdgeHat: {signals: ['keyboard']},
                     arguments: {
                         KEY_OPTION: {type: ArgumentType.STRING, menu: 'keyboardButtons', defaultValue: 'space'}
                     }

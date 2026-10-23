@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Variables-Expanded.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except: its variable lookup finds only variables, not a sprite's list of the same name (section 125, step 5e; marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except: its variable lookup finds only variables, not a sprite's list of the same name (section 125, step 5e; marked "Desktop fork"); its button hat is checked only after a monitor button changed and every frame while one is down (`pmEdgeHat`; section 128, roadmap step 6b; marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -30,7 +30,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   let monitorButtons = {};
   let varUpdateListener = {};
-  runtime.on("BEFORE_EXECUTE", () => { runtime.startHats("DICandSPmonitorsPlus_whenButtonPressed") });
+  runtime.on("BEFORE_EXECUTE", () => {
+    // Desktop fork (section 128): while a button is down, the hat's answer can change with the clock
+    if (Object.keys(monitorButtons).length) runtime.pmEdgeHatsChanged("DICandSPmonitorsPlus");
+    runtime.startHats("DICandSPmonitorsPlus_whenButtonPressed");
+  });
   runtime.on("MONITORS_UPDATE", () =>{
     for (const [id, { func, inp }] of Object.entries(varUpdateListener)) {
       func(inp);
@@ -204,6 +208,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             opcode: "whenButtonPressed",
             blockType: Scratch.BlockType.HAT,
             isEdgeActivated: false,
+            pmEdgeHat: { signals: ["DICandSPmonitorsPlus"] }, // Desktop fork (section 128)
             text: "when [VARIABLE] button [TYPE]",
             arguments: {
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
@@ -405,6 +410,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         varUpdateListener[id] = { inp, func };
       };
       const buttonClick = (ID, down) => {
+        runtime.pmEdgeHatsChanged("DICandSPmonitorsPlus"); // Desktop fork (section 128)
         if (down) monitorButtons[ID] = { varName : ID, isDown : down, timeClick : Date.now() };
         else delete monitorButtons[ID];
       };

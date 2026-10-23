@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's KeysPlusV2.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its mouse, key and keybind hats are checked
+// only after its pressed keys, mouse buttons, keybinds or tags changed (`pmEdgeHat`; section 128, roadmap step 6b;
+// marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -69,6 +71,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         runtime.startHats("enderKeysPlusV2_eventKeysPressed", { trigger: _trigger });
         runtime.startHats("enderKeysPlusV2_eventKeybindTriggered", { trigger: _trigger });
     }
+    // Desktop fork (section 128): the hats' answers can have changed (pressed keys or mouse buttons, keybinds, tags)
+    const hatsChanged = () => runtime.pmEdgeHatsChanged("enderKeysPlusV2");
 
     class enderKeysPlusV2 {
         constructor() {
@@ -114,6 +118,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             });
             // Keys
             window.addEventListener("keydown", (event) => {
+                hatsChanged(); // Desktop fork (section 128)
                 const key = format(event);
                 this._lastKeyPressed = key;
                 if (!this._keysPressed[key]) {
@@ -122,12 +127,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 };
             });
             window.addEventListener("keyup", (event) => {
+                hatsChanged(); // Desktop fork (section 128)
                 const key = format(event);
                 startKeyEvents("after");
                 delete this._keysPressed[key];
                 this._filter();
             });
             window.addEventListener("blur", () => {
+                hatsChanged(); // Desktop fork (section 128)
                 if (this._settings["clearOnBlur"]) {
                     this._keysPressed = {};
                     this._mouseDown = {};
@@ -135,12 +142,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             });
             // Mouse
             window.addEventListener("mousedown", (event) => {
+                hatsChanged(); // Desktop fork (section 128)
                 if (!this._mouseDown[event.button]) {
                     this._mouseDown[event.button] = { time: Date.now() };
                     runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "when" });
                 }
             });
             window.addEventListener("mouseup", (event) => {
+                hatsChanged(); // Desktop fork (section 128)
                 runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "after" });
                 delete this._mouseDown[event.button];
             })
@@ -164,6 +173,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         blockType: Scratch.BlockType.HAT,
                         text: "[trigger] [button] mouse button is down",
                         isEdgeActivated: false,
+                        pmEdgeHat: { signals: ["enderKeysPlusV2"] }, // Desktop fork (section 128)
                         arguments: {
                             trigger: { type: Scratch.ArgumentType.STRING, menu: "eventTriggerCondition" },
                             button: { type: Scratch.ArgumentType.STRING, menu: "mouseButtons" }
@@ -226,6 +236,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         blockType: Scratch.BlockType.HAT,
                         text: "[trigger] ［[keys]］ keys is pressed [ordered]",
                         isEdgeActivated: false,
+                        pmEdgeHat: { signals: ["enderKeysPlusV2"] }, // Desktop fork (section 128)
                         arguments: {
                             trigger: { type: Scratch.ArgumentType.STRING, menu: "eventTriggerCondition" },
                             ordered: { type: Scratch.ArgumentType.STRING, menu: "orderMode" },
@@ -237,6 +248,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         blockType: Scratch.BlockType.HAT,
                         text: "[trigger] [key] key is pressed",
                         isEdgeActivated: false,
+                        pmEdgeHat: { signals: ["enderKeysPlusV2"] }, // Desktop fork (section 128)
                         arguments: {
                             trigger: { type: Scratch.ArgumentType.STRING, menu: "eventTriggerCondition" },
                             key: { type: Scratch.ArgumentType.STRING, menu: "keys" }
@@ -329,6 +341,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         blockType: Scratch.BlockType.HAT,
                         text: "[trigger] [event] is triggered",
                         isEdgeActivated: false,
+                        pmEdgeHat: { signals: ["enderKeysPlusV2"] }, // Desktop fork (section 128)
                         arguments: {
                             trigger: { type: Scratch.ArgumentType.STRING, menu: "eventTriggerCondition" },
                             event: { type: Scratch.ArgumentType.STRING, defaultValue: "event" }
@@ -755,18 +768,21 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }
 
         keybindBindMultiple(args) {
+            hatsChanged(); // Desktop fork (section 128)
             const event = Cast.toString(args.event);
             const trigger = Cast.toString(args.trigger);
             this._keybinds[event] ??= {};
             this._keybinds[event][trigger] = { "mode": args.mode, "keys": this._parse(args.keys) };
         }
         keybindBind(args) {
+            hatsChanged(); // Desktop fork (section 128)
             const event = Cast.toString(args.event);
             const trigger = Cast.toString(args.trigger);
             this._keybinds[event] ??= {};
             this._keybinds[event][trigger] = { "mode": "together & in order", "keys": [Cast.toString(args.key)] };
         };
         keybindUnbind(args) {
+            hatsChanged(); // Desktop fork (section 128)
             const event = Cast.toString(args.event);
             const trigger = Cast.toString(args.trigger);
             if (!this._keybinds[event]) return;
@@ -775,9 +791,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }; 
 
         keybindReset(args) {
+            hatsChanged(); // Desktop fork (section 128)
             delete this._keybinds[Cast.toString(args.event)];
         }
         resetAllKeybinds() {
+            hatsChanged(); // Desktop fork (section 128)
             this._keybinds = {}
         }
 
@@ -801,13 +819,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }
         // Tags
         createTag(args) {
+            hatsChanged(); // Desktop fork (section 128)
             this._tags["#" + args.tag] = this._parse(args.keys);
         }
 
         deleteTag(args) {
+            hatsChanged(); // Desktop fork (section 128)
             delete this._tags["#" + args.tag];
         }
         deleteAllTags() {
+            hatsChanged(); // Desktop fork (section 128)
             this._tags = {}
         }
 
@@ -834,6 +855,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         // Storage
         
         import(args) {
+            hatsChanged(); // Desktop fork (section 128)
             const result = this.validate(args.type, args.json);
             if (result.error) return this._importError = result.error;
             this._importError = "None";

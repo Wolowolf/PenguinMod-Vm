@@ -19,6 +19,11 @@
  *   whose IDs the arguments named in `variables` hold, and on state of their extension (or the keyboard) that
  *   gives one of the named signals with runtime.pmEdgeHatsChanged whenever it changes. They are checked again when
  *   a value read differs or a signal was given since the last check. `pmEdgeHat: {}`: inputs only.
+ * - Section 128 (roadmap step 6b): the same `pmEdgeHat` on extension hats that are not edge-activated ("level"
+ *   hats: "while ...", "when ... is changed", started by their extension every frame; their script runs every time
+ *   the answer is true). Such a hat is skipped while its last check answered false and nothing it reads changed;
+ *   the engine forgets the values read when a check answers anything else. `ignore: [argument names]`: inputs
+ *   the hat's answer does not depend on (not part of the plan).
  * Everything else (touching, loudness, mouse, keys, lists, "of" blocks, random, other extension hats and extension
  * blocks, ...) is checked every frame as before.
  */
@@ -103,12 +108,14 @@ const fixedArgument = (blocks, hat, name) => {
 const makePlan = (blocks, hatId, hatMeta) => {
     const hat = blocks.getBlock(hatId);
     if (!hat) return NOT_ELIGIBLE;
-    const plan = {timer: false, value: 0, valueVarId: null, varIds: [], fields: [], signals: null};
+    const plan = {timer: false, value: 0, valueVarId: null, varIds: [], fields: [], signals: null, level: false};
     const extensionHat = hatMeta && hatMeta.pmEdgeHat;
     if (extensionHat) {
+        plan.level = !hatMeta.edgeActivated;
+        const ignore = extensionHat.ignore || [];
         for (const name in hat.inputs) {
             const input = hat.inputs[name];
-            if (!input || !input.block) continue;
+            if (!input || !input.block || ignore.indexOf(name) !== -1) continue;
             if (!collect(blocks, input.block, plan, {left: MAX_BLOCKS})) return NOT_ELIGIBLE;
         }
         const variables = extensionHat.variables || [];
@@ -189,7 +196,8 @@ const memos = new WeakMap();
  * @returns {boolean} true if the check can be skipped.
  */
 const isUnchanged = (plan, target, hatId, runtime) => {
-    if (!target.hasEdgeActivatedValue(hatId)) return false;
+    // a level hat (section 128) has values remembered only while its last check answered false
+    if (!plan.level && !target.hasEdgeActivatedValue(hatId)) return false;
     if (plan.timer) {
         let value = plan.value;
         if (plan.valueVarId !== null) {
@@ -259,8 +267,19 @@ const remember = (plan, target, hatId, runtime) => {
     targetMemos[hatId] = memo;
 };
 
+/**
+ * Forgets the values a level hat read (section 128): its last check did not answer false, so it is checked again.
+ * @param {Target} target The sprite or clone.
+ * @param {string} hatId The hat block.
+ */
+const forget = (target, hatId) => {
+    const targetMemos = memos.get(target);
+    if (targetMemos) delete targetMemos[hatId];
+};
+
 module.exports = {
     getPlan,
     isUnchanged,
-    remember
+    remember,
+    forget
 };

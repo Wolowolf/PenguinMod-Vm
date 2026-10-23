@@ -1592,8 +1592,9 @@ class Runtime extends EventEmitter {
                         this._hats[opcode] = {
                             edgeActivated: blockInfo.isEdgeActivated,
                             restartExistingThreads: blockInfo.shouldRestartExistingThreads,
-                            // PMDESKTOP_EDGEHATS (section 127): when the hat's answer can change (edge-hats.js)
-                            pmEdgeHat: blockInfo.isEdgeActivated && blockInfo.pmEdgeHat ? blockInfo.pmEdgeHat : null
+                            // PMDESKTOP_EDGEHATS (section 127): when the hat's answer can change (edge-hats.js);
+                            // section 128: also on hats that are not edge-activated ("while ...", "when ... changed")
+                            pmEdgeHat: blockInfo.pmEdgeHat || null
                         };
                     }
                 }
@@ -2801,9 +2802,15 @@ class Runtime extends EventEmitter {
         // skipped (edge-hats.js). A skipped hat would not have started either way: its script is already
         // running, or its check would give the same answer as last time.
         // Section 127: also the extension hats that say when their answer can change (hatMeta.pmEdgeHat).
-        const skipUnchanged = hatMeta.edgeActivated && !optMatchFields && !this.paused && !this.pmEveryFrameHats &&
+        // Section 128 (roadmap step 6b): extension hats that are not edge-activated but have pmEdgeHat ("level"
+        // hats, whose script runs every time the answer is true) are skipped while their last check answered
+        // false and nothing they read changed, also when started with match fields (those are compared first).
+        const levelHats = !hatMeta.edgeActivated && !!hatMeta.pmEdgeHat;
+        const skipUnchanged = !this.paused && !this.pmEveryFrameHats && (levelHats || (
+            hatMeta.edgeActivated && !optMatchFields &&
             (requestedHatOpcode === 'event_whenanything' || requestedHatOpcode === 'event_whengreaterthan' ||
-                !!hatMeta.pmEdgeHat);
+                !!hatMeta.pmEdgeHat)));
+        const levelThreads = levelHats ? [] : null;
 
         // Consider all scripts, looking for hats with opcode `requestedHatOpcode`.
         this.allScriptsByOpcodeDo(requestedHatOpcode, (script, target) => {
@@ -2811,12 +2818,6 @@ class Runtime extends EventEmitter {
                 blockId: topBlockId,
                 fieldsOfInputs: hatFields
             } = script;
-
-            const edgePlan = skipUnchanged ? edgeHats.getPlan(script, hatMeta) : false;
-            if (edgePlan && edgeHats.isUnchanged(edgePlan, target, topBlockId, this)) {
-                this._skippedEdgeHatChecks++;
-                return;
-            }
 
             // Match any requested fields.
             // For example: ensures that broadcasts match.
@@ -2828,6 +2829,12 @@ class Runtime extends EventEmitter {
                     // Field mismatch.
                     return;
                 }
+            }
+
+            const edgePlan = skipUnchanged ? edgeHats.getPlan(script, hatMeta) : false;
+            if (edgePlan && edgeHats.isUnchanged(edgePlan, target, topBlockId, this)) {
+                this._skippedEdgeHatChecks++;
+                return;
             }
 
             if (hatMeta.restartExistingThreads) {
@@ -2854,7 +2861,9 @@ class Runtime extends EventEmitter {
             }
             // Start the thread with this top block.
             if (edgePlan) edgeHats.remember(edgePlan, target, topBlockId, this);
-            newThreads.push(this._pushThread(topBlockId, target));
+            const thread = this._pushThread(topBlockId, target);
+            newThreads.push(thread);
+            if (edgePlan && levelThreads) levelThreads.push(thread);
         }, optTarget);
         // For compatibility with Scratch 2, edge triggered hats need to be processed before
         // threads are stepped. See ScratchRuntime.as for original implementation
@@ -2874,6 +2883,13 @@ class Runtime extends EventEmitter {
                 thread.goToNextBlock();
             }
         });
+        // Section 128: a level hat whose check did not answer false at once (its script runs, or the check waits)
+        // must be checked again next time.
+        if (levelThreads) {
+            for (const thread of levelThreads) {
+                if (thread.status !== Thread.STATUS_DONE) edgeHats.forget(thread.target, thread.topBlock);
+            }
+        }
         this.emit(Runtime.HATS_STARTED, requestedHatOpcode, optMatchFields, optTarget, newThreads);
         return newThreads;
     }

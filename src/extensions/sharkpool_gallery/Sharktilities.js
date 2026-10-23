@@ -2,7 +2,8 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Sharktilities.js, moved into
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 123)"
 // (docs/EXTENSION-ROADMAP.md step 5d): "old value" is dragged as a copy through the block's canDragDuplicate
-// instead of replacing ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter.
+// instead of replacing ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter. "when [] is changed" is checked only
+// when what its input reads changed (`pmEdgeHat`; section 128, roadmap step 6b; marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -94,6 +95,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             opcode: "whenChanged", blockType: Scratch.BlockType.HAT,
             text: "when [INPUT] is changed [CHANGE]",
             isEdgeActivated: false, hideFromPalette: true,
+            pmEdgeHat: { ignore: ["CHANGE"] }, // Desktop fork (section 128): "old value" does not change the answer
             arguments: { INPUT: { type: null }, CHANGE: {} }
           },
           {
