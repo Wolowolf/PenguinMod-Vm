@@ -4117,7 +4117,7 @@ void main() {
         FONT: {
           type: ArgumentType.STRING,
           menu: "fonts",
-          defaultValue: "Sans Serif",
+          defaultValue: "Atkinson Hyperlegible Next",
         },
         SIZE: {
           type: ArgumentType.NUMBER,
@@ -5425,13 +5425,13 @@ void main() {
     }
     fontsMenu() {
       const defaultFonts = [
-        "Sans Serif",
-        "Serif",
-        "Handwriting",
-        "Marker",
-        "Curly",
-        "Pixel",
-        "Scratch",
+        "Atkinson Hyperlegible Next",
+        "Atkinson Hyperlegible Mono",
+        "Lexend",
+        "OpenDyslexic",
+        "Comic Sans MS",
+        "Arial",
+        "Verdana",
       ];
       // Based on https://github.com/TurboWarp/extensions/blob/a6f5944f52163792780ae550fbf2822ce425714d/extensions/lab/text.js#L1198-L1205
       const customFonts = runtime.fontManager

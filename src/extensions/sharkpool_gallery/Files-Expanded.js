@@ -27,8 +27,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const isPM = Scratch.extensions.isPenguinMod;
 
   const builtInFonts = [
-    "Sans Serif", "Serif", "Handwriting", "Marker",
-    "Curly", "Pixel", "Scratch", "inherit"
+    "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Mono", "Lexend", "OpenDyslexic",
+    "Comic Sans MS", "Arial", "Verdana", "inherit"
   ];
   const MODE_MODAL = "modal";
   const MODE_IMMEDIATELY_SHOW_SELECTOR = "selector";

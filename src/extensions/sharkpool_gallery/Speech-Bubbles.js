@@ -25,8 +25,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const render = vm.renderer;
 
   const fontMenu = [
-    "Scratch", "Sans Serif", "Serif",
-    "Handwriting", "Marker", "Curly", "Pixel"
+    "Atkinson Hyperlegible Next", "Atkinson Hyperlegible Mono", "Lexend", "OpenDyslexic",
+    "Comic Sans MS", "Arial", "Verdana"
   ];
 
   let allBubbles = {};

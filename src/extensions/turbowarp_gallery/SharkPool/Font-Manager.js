@@ -246,45 +246,32 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             acceptReporters: false,
             items: [
               {
-                text: "Sans Serif",
-                value: "Sans Serif",
+                text: "Atkinson Hyperlegible Next",
+                value: "Atkinson Hyperlegible Next",
               },
               {
-                text: "Serif",
-                value: "Serif",
+                text: "Atkinson Hyperlegible Mono",
+                value: "Atkinson Hyperlegible Mono",
               },
               {
-                text: "Handwriting",
-                value: "Handwriting",
+                text: "Lexend",
+                value: "Lexend",
               },
               {
-                text: "Marker",
-                value: "Marker",
+                text: "OpenDyslexic",
+                value: "OpenDyslexic",
               },
               {
-                text: "Curly",
-                value: "Curly",
+                text: "Comic Sans MS",
+                value: "Comic Sans MS",
               },
               {
-                text: "Pixel",
-                value: "Pixel",
+                text: "Arial",
+                value: "Arial",
               },
               {
-                text: "Mopeds",
-                value: "Scratch",
-              },
-              {
-                text: "中文",
-                value: '"Microsoft YaHei", "微软雅黑", STXihei, "华文细黑"',
-              },
-              {
-                text: "한국어",
-                value: "Malgun Gothic",
-              },
-              {
-                text: "日本語",
-                value:
-                  '"ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", Osaka, "メイリオ", Meiryo, "ＭＳ Ｐゴシック", "MS PGothic"',
+                text: "Verdana",
+                value: "Verdana",
               },
             ],
           },

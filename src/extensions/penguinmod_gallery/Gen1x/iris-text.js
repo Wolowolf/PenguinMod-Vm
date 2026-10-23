@@ -56,47 +56,16 @@ Enjoy!! :D
     const GRADIENT_TYPE_RADIAL = 'radial';
     const GRADIENT_TYPE_CONIC = 'conic';
 
-    /* stolen from PM's animated text extension code :3 */
-    const SANS_SERIF_ID = 'Sans Serif';
-    const SERIF_ID = 'Serif';
-    const HANDWRITING_ID = 'Handwriting';
-    const MARKER_ID = 'Marker';
-    const CURLY_ID = 'Curly';
-    const PIXEL_ID = 'Pixel';
-
-    const PLAYFUL_ID = 'Playful';
-    const BUBBLY_ID = 'Bubbly';
-    const BITSANDBYTES_ID = 'Bits and Bytes';
-    const TECHNOLOGICAL_ID = 'Technological';
-    const ARCADE_ID = 'Arcade';
-    const ARCHIVO_ID = 'Archivo';
-    const ARCHIVOBLACK_ID = 'Archivo Black';
-    const SCRATCH_ID = 'Scratch';
+    // The costume fonts (Section 117)
+    const DEFAULT_FONT_ID = 'Atkinson Hyperlegible Next';
 
     const RANDOM_ID = 'Random';
 
-    const FONT_IDS = [
-        SANS_SERIF_ID, SERIF_ID, HANDWRITING_ID, MARKER_ID, CURLY_ID, PIXEL_ID,
-        PLAYFUL_ID, BUBBLY_ID, ARCADE_ID, BITSANDBYTES_ID, TECHNOLOGICAL_ID,
-        SCRATCH_ID, ARCHIVO_ID, ARCHIVOBLACK_ID
-    ];
+    const FONT_IDS = ['Atkinson Hyperlegible Next', 'Atkinson Hyperlegible Mono', 'Lexend', 'OpenDyslexic', 'Comic Sans MS', 'Arial', 'Verdana'];
 
     // in case the rendering screws up:
     const FONT_FALLBACKS = {
-        [SANS_SERIF_ID]: 'sans-serif',
-        [SERIF_ID]: 'serif',
-        [HANDWRITING_ID]: 'cursive',
-        [MARKER_ID]: 'fantasy',
-        [CURLY_ID]: 'cursive',
-        [PIXEL_ID]: 'monospace',
-        [PLAYFUL_ID]: 'cursive',
-        [BUBBLY_ID]: 'cursive',
-        [BITSANDBYTES_ID]: 'monospace',
-        [TECHNOLOGICAL_ID]: 'sans-serif',
-        [ARCADE_ID]: 'monospace',
-        [ARCHIVO_ID]: 'sans-serif',
-        [ARCHIVOBLACK_ID]: 'sans-serif',
-        [SCRATCH_ID]: 'sans-serif'
+        'Atkinson Hyperlegible Mono': 'monospace'
     };
 
     const EMOJI_FONT_STACK = '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
@@ -120,63 +89,10 @@ Enjoy!! :D
     }
 
     function buildFontMenuItems() {
-        const builtIns = [{
-                text: 'Sans Serif',
-                value: SANS_SERIF_ID
-            },
-            {
-                text: 'Serif',
-                value: SERIF_ID
-            },
-            {
-                text: 'Handwriting',
-                value: HANDWRITING_ID
-            },
-            {
-                text: 'Marker',
-                value: MARKER_ID
-            },
-            {
-                text: 'Curly',
-                value: CURLY_ID
-            },
-            {
-                text: 'Pixel',
-                value: PIXEL_ID
-            },
-            {
-                text: 'Playful',
-                value: PLAYFUL_ID
-            },
-            {
-                text: 'Bubbly',
-                value: BUBBLY_ID
-            },
-            {
-                text: 'Arcade',
-                value: ARCADE_ID
-            },
-            {
-                text: 'Bits and Bytes',
-                value: BITSANDBYTES_ID
-            },
-            {
-                text: 'Technological',
-                value: TECHNOLOGICAL_ID
-            },
-            {
-                text: 'Scratch',
-                value: SCRATCH_ID
-            },
-            {
-                text: 'Archivo',
-                value: ARCHIVO_ID
-            },
-            {
-                text: 'Archivo Black',
-                value: ARCHIVOBLACK_ID
-            }
-        ];
+        const builtIns = FONT_IDS.map(id => ({
+            text: id,
+            value: id
+        }));
 
         const customFonts = [];
         Array.from(document.fonts).forEach(face => {
@@ -492,7 +408,7 @@ Enjoy!! :D
             underline: false,
             strike: false,
             size: 32,
-            font: HANDWRITING_ID,
+            font: DEFAULT_FONT_ID,
             blur: 0,
             customTags: [],
             gradient: null,
@@ -4534,7 +4450,7 @@ Enjoy!! :D
                             FONT: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'FONT',
-                                defaultValue: HANDWRITING_ID
+                                defaultValue: DEFAULT_FONT_ID
                             }
                         }
                     },
@@ -5365,7 +5281,7 @@ Enjoy!! :D
                             },
                             STYLE: {
                                 type: Scratch.ArgumentType.STRING,
-                                defaultValue: '{"color":"#9966ff","bold":false,"italic":false,"underline":false,"strike":false,"size":32,"font":"Handwriting","tags":[]}'
+                                defaultValue: '{"color":"#9966ff","bold":false,"italic":false,"underline":false,"strike":false,"size":32,"font":"Atkinson Hyperlegible Next","tags":[]}'
                             }
                         }
                     },
@@ -5851,7 +5767,7 @@ Enjoy!! :D
                             FONT: {
                                 type: Scratch.ArgumentType.STRING,
                                 menu: 'FONT',
-                                defaultValue: HANDWRITING_ID
+                                defaultValue: DEFAULT_FONT_ID
                             }
                         }
                     },
