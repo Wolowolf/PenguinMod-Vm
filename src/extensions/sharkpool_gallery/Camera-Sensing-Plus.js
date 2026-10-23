@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Camera-Sensing-Plus.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except "Desktop fork (section 129)": the video
+// skin is set through the renderer's updateDrawableSkinId instead of writing drawable._skin.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -216,9 +217,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         const drawable = vm.renderer._allDrawables[target.drawableID];
         if (drawable.ogSkin === undefined) drawable.ogSkin = drawable._skin._id;
 
-        if (args.ON_OFF === "on") drawable._skin = vm.renderer._allSkins[runtime.ioDevices.video._skinId];
+        // Desktop fork (section 129): the renderer's setter, so the touching cache and the transform are updated
+        if (args.ON_OFF === "on") vm.renderer.updateDrawableSkinId(target.drawableID, runtime.ioDevices.video._skinId);
         else {
-          drawable._skin = vm.renderer._allSkins[drawable.ogSkin];
+          vm.renderer.updateDrawableSkinId(target.drawableID, drawable.ogSkin);
           target.updateAllDrawableProperties();
           // to avoid stretching issues
           const oldScale = target.size;
