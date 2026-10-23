@@ -750,6 +750,8 @@ class JSGenerator {
 
         case 'compat':
             if (node.pure) return this.descendPureExtensionBlock(node);
+            // Desktop fork (section 130); visualReport changes nothing for extension blocks (the wrapper ignores it)
+            if (node.direct) return new TypedInput(`(${this.generateDirectExtensionCall(node, false)})`, TYPE_UNKNOWN);
             // Compatibility layer inputs never use flags.
             // log.log('compat')
             return new TypedInput(`(${this.generateCompatibilityLayerCall(node, false, null, visualReport)})`, TYPE_UNKNOWN);
@@ -1362,7 +1364,10 @@ class JSGenerator {
             const isLastInLoop = this.isLastBlockInLoop();
 
             const blockType = node.blockType;
-            if (blockType === BlockType.COMMAND || blockType === BlockType.HAT) {
+            if (node.direct) {
+                // Desktop fork (section 130): an extension command called directly
+                this.source += `${this.generateDirectExtensionCall(node, isLastInLoop, true)};\n`;
+            } else if (blockType === BlockType.COMMAND || blockType === BlockType.HAT) {
                 this.source += `${this.generateCompatibilityLayerCall(node, isLastInLoop)};\n`;
             } else if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
                 const branchVariable = this.localVariables.next();
@@ -2404,6 +2409,72 @@ class JSGenerator {
             return new TypedInput(`("${sanitize(value)}")`, type);
         }
         return null;
+    }
+
+    /**
+     * Desktop fork (section 130): call an extension command, reporter or Boolean that is not pure (irgen.js
+     * isDirectExtensionCall) without the compatibility layer's generator and without the extension manager's
+     * wrapper. The arguments object holds the same values in the same order as the wrapper would pass on (its
+     * conversions written into the call as in descendPureExtensionBlock, nothing folded); guardedExtensionCall in
+     * jsexecute.js resets the stack frame and the block utility exactly as the compatibility layer does, calls the
+     * block and checks whether it returned a promise or changed the script's status; only then the compiled code
+     * continues with finishExtensionCall, which finishes the way the compatibility layer would (wait, yield, call
+     * the block again).
+     * @param {*} node The "compat" node, with `direct` set.
+     * @param {boolean} setFlags Whether a wait sets hasResumedFromPromise (last block in a loop).
+     * @param {boolean} [isStatement] A command (statement) or an input (expression).
+     * @returns {string} The JS of the call.
+     */
+    generateDirectExtensionCall (node, setFlags, isStatement) {
+        const opcode = node.opcode;
+        const direct = this.target.runtime.getOpcodeFunction(opcode).pmDirect;
+        const directName = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}").pmDirect`);
+        const types = new Map(direct.argumentTypes());
+        const names = new Set();
+        let object = '{';
+        const add = (name, source) => {
+            names.add(name);
+            object += `"${sanitize(name)}":${source},`;
+        };
+        const convert = (name, source) => {
+            const expected = types.get(name);
+            return expected ? `${directName}.normalize(${source}, "${expected}")` : source;
+        };
+        const addKnown = (name, value) => {
+            const expected = types.get(name);
+            if (expected) value = direct.normalize(value, expected);
+            const source = knownValueSource(value);
+            add(name, source === null ? convert(name, JSON.stringify(value)) : source);
+        };
+        for (const inputName of Object.keys(node.inputs)) {
+            const input = this.descendInput(node.inputs[inputName]);
+            const expected = types.get(inputName);
+            if (!expected || (input instanceof TypedInput && (
+                (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
+                (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
+                (expected === 'string' && input.type === TYPE_STRING)))) {
+                add(inputName, input.asSafe());
+            } else {
+                add(inputName, convert(inputName, input.asSafe()));
+            }
+        }
+        for (const fieldName of Object.keys(node.fields)) {
+            const field = node.fields[fieldName];
+            if (typeof field === 'string') addKnown(fieldName, field);
+            else add(fieldName, convert(fieldName, JSON.stringify(field)));
+        }
+        // (the compatibility layer always passes "mutation", undefined when the block has none)
+        add('mutation', `${JSON.stringify(node.mutation)}`);
+        // arguments the block declares but has no input for: the wrapper converts undefined
+        for (const [name] of types) {
+            if (!names.has(name)) addKnown(name, undefined);
+        }
+        object += '}';
+        const call = `${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}"`;
+        if (isStatement) {
+            return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+        }
+        return `extensionAnswer = guardedExtensionCall(${call}), extensionCallUnfinished ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
     }
 
     /**

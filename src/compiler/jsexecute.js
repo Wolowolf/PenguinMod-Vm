@@ -224,6 +224,71 @@ const executeInCompatibilityLayer = function*(inputs, blockFunction, isWarp, use
 }`;
 
 /**
+ * Desktop fork (section 130): an extension command, reporter or Boolean called without the compatibility layer's
+ * generator (jsgen.js generateDirectExtensionCall). guardedExtensionCall does what executeInCompatibilityLayer does
+ * before and for its first call of the block (reset the top stack frame, point the block utility at the thread and
+ * block, call the block; here its function without the extension manager's wrapper, `pmDirect`, with arguments
+ * already converted as the wrapper would). When the block returned a promise or changed the thread's status,
+ * extensionCallUnfinished is true and the compiled code continues with finishExtensionCall, which does exactly what
+ * executeInCompatibilityLayer does after its first call (wait for the promise, yield, call the block again with the
+ * same arguments and stack frame object). The state is handed over in variables because nothing runs between the
+ * two; finishExtensionCall takes it before it yields.
+ * Uses isPromise, waitPromise and hasResumedFromPromise of executeInCompatibilityLayer (insertRuntime adds it).
+ */
+runtimeFunctions.guardedExtensionCall = `let extensionAnswer;
+let extensionCallUnfinished = false;
+let extensionCallState = null;
+const guardedExtensionCall = (inputs, direct, isWarp, blockId) => {
+    const thread = globalState.thread;
+    const blockUtility = globalState.blockUtility;
+    const stackFrame = {};
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    blockUtility.init(thread, blockId, stackFrame, null);
+    const returnValue = direct.call(inputs, blockUtility);
+    extensionCallUnfinished = thread.status !== 0 /* STATUS_RUNNING */ || isPromise(returnValue);
+    if (extensionCallUnfinished) extensionCallState = [thread, inputs, direct, blockId, stackFrame, returnValue];
+    return returnValue;
+};
+const finishExtensionCall = function*(isWarp, useFlags) {
+    const [thread, inputs, direct, blockId, stackFrame, firstValue] = extensionCallState;
+    extensionCallState = null;
+    extensionCallUnfinished = false;
+    const blockUtility = globalState.blockUtility;
+    let returnValue = firstValue;
+    if (isPromise(returnValue)) {
+        returnValue = yield* waitPromise(returnValue);
+        if (useFlags) hasResumedFromPromise = true;
+        return returnValue;
+    }
+    if (thread.status === 1 /* STATUS_PROMISE_WAIT */ || thread.status === 4 /* STATUS_DONE */) {
+        yield;
+        return '';
+    }
+    while (thread.status === 2 /* STATUS_YIELD */ || thread.status === 3 /* STATUS_YIELD_TICK */) {
+        if (thread.status === 2 /* STATUS_YIELD */) {
+            thread.status = 0; // STATUS_RUNNING
+            if (!isWarp || isStuck()) {
+                yield;
+            }
+        } else {
+            yield;
+        }
+        blockUtility.init(thread, blockId, stackFrame, null);
+        returnValue = direct.call(inputs, blockUtility);
+        if (isPromise(returnValue)) {
+            returnValue = yield* waitPromise(returnValue);
+            if (useFlags) hasResumedFromPromise = true;
+            return returnValue;
+        }
+        if (thread.status === 1 /* STATUS_PROMISE_WAIT */ || thread.status === 4 /* STATUS_DONE */) {
+            yield;
+            return '';
+        }
+    }
+    return returnValue;
+}`;
+
+/**
  * @param {boolean} isLoop True if the block is a LOOP by default (can be overridden by startBranch() call)
  * @returns {unknown} Branch info object for compatibility layer.
  */
@@ -722,7 +787,9 @@ const restoreGlobalState = () => {
 const insertRuntime = source => {
     let result = baseRuntime;
     for (const functionName of Object.keys(runtimeFunctions)) {
-        if (source.includes(functionName)) {
+        // Desktop fork (section 130): guarded extension calls use the compatibility layer's helpers
+        if (source.includes(functionName) ||
+            (functionName === 'executeInCompatibilityLayer' && source.includes('guardedExtensionCall'))) {
             result += `${runtimeFunctions[functionName]};`;
         }
     }

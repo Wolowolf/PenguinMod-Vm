@@ -2147,6 +2147,9 @@ class ScriptTreeGenerator {
         // Desktop fork (roadmap step 4): a pure extension reporter or Boolean is called directly (jsgen.js
         // descendPureExtensionBlock), so it never waits and the script does not have to be able to pause for it.
         const pure = this.getPureExtensionAnswer(block.opcode, blockInfo);
+        // Desktop fork (section 130): other extension commands, reporters and Booleans are called without the
+        // compatibility layer too (jsgen.js generateDirectExtensionCall), but they can still wait.
+        const direct = !pure && this.isDirectExtensionCall(block.opcode, blockInfo);
         if (!pure) this.script.yields = true;
 
         const inputs = {};
@@ -2184,8 +2187,29 @@ class ScriptTreeGenerator {
             fields,
             substacks,
             compilerInfo: (blockInfo && blockInfo.compilerInfo) || {},
-            pure
+            pure,
+            direct
         };
+    }
+
+    /**
+     * Desktop fork (section 130): whether an extension command, reporter or Boolean that is not pure is called
+     * directly: its function without the extension manager's wrapper, followed by a check whose slow path does
+     * exactly what the compatibility layer does when a block returns a promise or changes the script's status.
+     * Not for dynamic blocks or extensions in a worker (no `pmDirect`), nor branches and hats.
+     * `runtime.pmNoDirectExtensionCalls = true` switches this off (tests only).
+     * @param {string} opcode The block's opcode.
+     * @param {*} blockInfo The extension's block info, if any.
+     * @returns {boolean} Whether it is called directly.
+     */
+    isDirectExtensionCall (opcode, blockInfo) {
+        if (!blockInfo || this.runtime.pmNoDirectExtensionCalls) return false;
+        const blockType = blockInfo.blockType || BlockType.COMMAND;
+        if (blockType !== BlockType.COMMAND && blockType !== BlockType.REPORTER && blockType !== BlockType.BOOLEAN) {
+            return false;
+        }
+        const opcodeFunction = this.runtime.getOpcodeFunction(opcode);
+        return !!(opcodeFunction && opcodeFunction.pmDirect);
     }
 
     /**
