@@ -99,6 +99,14 @@ class VirtualMachine extends EventEmitter {
         // PMDESKTOP_HOOKS (section 119): see _pmHasSaveHooks
         this.pmBeforeSaveHooks = [];
         this.pmAfterSaveHooks = [];
+        // PMDESKTOP_HOOKS (section 121): pmExportBlocksHooks: (exported) at the end of exportStandaloneBlocks.
+        // pmShareBlocksHooks: (blocks, targetId) at the start of shareBlocksToTarget.
+        // pmAddSpriteHooks: (sprite JSON object) at the start of _addSprite3.
+        // pmSpriteDuplicatedHooks: (newTarget, original) when duplicateSprite has added the copy.
+        this.pmExportBlocksHooks = [];
+        this.pmShareBlocksHooks = [];
+        this.pmAddSpriteHooks = [];
+        this.pmSpriteDuplicatedHooks = [];
 
         // Runtime emits are passed along as VM emits.
         this.runtime.on(Runtime.SCRIPT_GLOW_ON, glowData => {
@@ -1043,6 +1051,7 @@ class VirtualMachine extends EventEmitter {
     _addSprite3 (sprite, zip) {
         // Validate & parse
         const sb3 = require('./serialization/sb3');
+        for (const hook of this.pmAddSpriteHooks) hook(sprite); // section 121
         return sb3
             .deserialize(sprite, this.runtime, zip, true)
             .then(({targets, extensions}) => this.installTargets(targets, extensions, false));
@@ -1674,6 +1683,7 @@ class VirtualMachine extends EventEmitter {
             this.runtime.addTarget(newTarget);
             newTarget.goBehindOther(target);
             this.setEditingTarget(newTarget.id);
+            for (const hook of this.pmSpriteDuplicatedHooks) hook(newTarget, target); // section 121
         });
     }
 
@@ -1817,6 +1827,7 @@ class VirtualMachine extends EventEmitter {
     exportStandaloneBlocks (blockObjects) {
         const sb3 = require('./serialization/sb3');
         const serialized = sb3.serializeStandaloneBlocks(blockObjects, this.runtime);
+        for (const hook of this.pmExportBlocksHooks) hook(serialized); // section 121
         return serialized;
     }
 
@@ -1831,6 +1842,7 @@ class VirtualMachine extends EventEmitter {
      */
     shareBlocksToTarget (blocks, targetId, optFromTargetId) {
         const sb3 = require('./serialization/sb3');
+        for (const hook of this.pmShareBlocksHooks) hook(blocks, targetId); // section 121
 
         const {blocks: copiedBlocks} = sb3.deserializeStandaloneBlocks(blocks);
         newBlockIds(copiedBlocks);

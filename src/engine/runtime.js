@@ -350,6 +350,16 @@ class Runtime extends EventEmitter {
          * pmSpriteLookupById: getSpriteTargetByName also accepts target IDs.
          * pmCloneCreatedHooks (section 120): (clone, original) at the end of makeClone, when the clone's drawable
          * exists (the targetWasCreated event comes before it).
+         * Section 121 (blocks.js, compiler): pmForeignBlockHooks: (blocks, id) => a block of another container, asked
+         * only when `blocks` has no block with that ID (getBlock, getNextBlock, getBranch).
+         * pmForeignProcedureHooks: (blocks, proccode) => the Blocks that define it, asked only when `blocks` has no
+         * definition (getProcedureDefinition, getProcedureParamNamesIdsAndDefaults; the answer is cached).
+         * pmBlockInputsHooks: (blocks, block, inputs) while a block's input list is made for the cache; may delete entries.
+         * pmResetCacheHooks: (blocks) at the start of Blocks.resetCache, before the caches are emptied.
+         * pmProcedureCallIrHooks: (generator, block) => the IR node of a stacked procedures_call, or nothing;
+         * generator.descendDefaultProcedureCall(block) gives the usual one.
+         * pmProcedureCallJsHooks: (compiler, node) => true when it wrote the JavaScript of a procedures.call node.
+         * pmVisualReportCaptureHooks: (blockId, value) => true when the hook takes the value (no value bubble).
          */
         this.pmRestartThreadHooks = [];
         this.pmCostumeChangedHooks = [];
@@ -358,6 +368,13 @@ class Runtime extends EventEmitter {
         this.pmUsernameChangedHooks = [];
         this.pmSpriteLookupById = false;
         this.pmCloneCreatedHooks = [];
+        this.pmForeignBlockHooks = [];
+        this.pmForeignProcedureHooks = [];
+        this.pmBlockInputsHooks = [];
+        this.pmResetCacheHooks = [];
+        this.pmProcedureCallIrHooks = [];
+        this.pmProcedureCallJsHooks = [];
+        this.pmVisualReportCaptureHooks = [];
 
         /**
          * All threads that finished running and were removed from this.threads
@@ -3675,7 +3692,10 @@ class Runtime extends EventEmitter {
      * @param {string} value Value to show associated with the block.
      */
     visualReport (blockId, value) {
-        // PMDESKTOP_HOOKS (section 119)
+        // PMDESKTOP_HOOKS (sections 119, 121)
+        for (let i = 0; i < this.pmVisualReportCaptureHooks.length; i++) {
+            if (this.pmVisualReportCaptureHooks[i](blockId, value)) return;
+        }
         for (let i = 0; i < this.pmVisualReportHooks.length; i++) value = this.pmVisualReportHooks[i](value);
         this.emit(Runtime.VISUAL_REPORT, {id: blockId, value});
     }

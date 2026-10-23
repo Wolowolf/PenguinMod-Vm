@@ -1993,6 +1993,9 @@ class JSGenerator {
             else this.source += `return ${this.descendInput(node.return).asUnknown()};\n`;
             break;
         case 'procedures.call': {
+            // PMDESKTOP_HOOKS (section 121): an extension may write the call itself
+            const callHooks = this.target.runtime.pmProcedureCallJsHooks;
+            if (callHooks.length && callHooks.some(hook => hook(this, node))) break;
             const procedureCode = node.code;
             const procedureVariant = node.variant;
             // Do not generate any code for empty procedures.

@@ -278,7 +278,8 @@
   },
   "SPadvControl": {
     "source": "src/extensions/sharkpool_gallery/Extra-Controls.js",
-    "replaces": ["replaced Blocks.prototype.getBranch","replaced Blocks.prototype.getNextBlock","replaced JSGenerator.prototype.descendStackedBlock","replaced ScriptTreeGenerator.prototype.descendStackedBlock","replaced runtime._restartThread","replaced runtime.visualReport","replaced window.Error and console.error (records error times for try/catch)","replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
+    "replaces": ["replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
+    "hooks": ["runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmRestartThreadHooks","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
     "note": "some blocks run branches in Thread objects it makes itself (interpreter only); key listeners in the page post bound keys",
     "blocks": {
       "runFlag": {"type":"command","pure":false,"reads":["sprites","threads"],"writes":["events","sound","sprites","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -290,8 +291,8 @@
       "spayedCondition": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "loopInd": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "loopTimer": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":["script"],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "continueLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "breakLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
+      "continueLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
+      "breakLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "newThreadAdv": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "threadArgs": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "runType": {"type":"loop","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -450,11 +451,12 @@
   },
   "SPmbpCST": {
     "source": "src/extensions/sharkpool_gallery/My-Blocks-Plus.js",
-    "replaces": ["replaced Blocks.prototype.getBlock","replaced Blocks.prototype.getBranch","replaced Blocks.prototype.getInputs","replaced Blocks.prototype.getProcedureDefinition","replaced Blocks.prototype.populateProcedureCache","replaced JSGenerator.prototype.descendInput","replaced JSGenerator.prototype.descendStackedBlock","added JSGenerator.prototype.isLastBlockInLoop","replaced ScriptTreeGenerator.prototype.descendInput","replaced ScriptTreeGenerator.prototype.descendStackedBlock","replaced Runtime.prototype.getOpcodeFunction","replaced Sequencer.prototype.stepToProcedure","replaced VirtualMachine.prototype.toJSON","replaced vm.duplicateSprite, exportSprite, exportStandaloneBlocks, shareBlocksToTarget","replaced ScratchBlocks Gesture, Toolbox, Xml, procedures and BlockSvg methods (editor)"],
+    "replaces": ["replaced ScratchBlocks Gesture, Toolbox, Xml, procedures and BlockSvg methods (editor)"],
+    "hooks": ["runtime.registerCompiledExtensionBlocks (setParam, evalParam, getParam)","runtime.pmProcedureCallIrHooks and pmProcedureCallJsHooks (custom branch inputs)","runtime.pmForeignBlockHooks and pmForeignProcedureHooks (global custom blocks)","runtime.pmBlockInputsHooks","runtime.pmResetCacheHooks","vm.pmSpriteDuplicatedHooks","vm.pmExportBlocksHooks","vm.pmShareBlocksHooks","vm.pmAddSpriteHooks","vm SERIALIZE event"],
     "blocks": {
-      "setParam": {"type":"command","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "evalParam": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"runs the input again in a Thread it makes itself"},
-      "getParam": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
+      "setParam": {"type":"command","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
+      "evalParam": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true,"note":"runs the input again in a Thread it makes itself"},
+      "getParam": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true},
       "stopCallerScript": {"type":"command","pure":false,"reads":[],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false}
     }
   },
@@ -735,19 +737,20 @@
   },
   "SPtempVars": {
     "source": "src/extensions/sharkpool_gallery/Temporary-Variables.js",
-    "replaces": ["replaced JSGenerator.prototype.descendInput","replaced JSGenerator.prototype.descendStackedBlock","replaced ScriptTreeGenerator.prototype.descendInput","replaced ScriptTreeGenerator.prototype.descendStackedBlock"],
+    "replaces": [],
+    "hooks": ["runtime.registerCompiledExtensionBlocks (all its blocks)"],
     "note": "compiler patches for its blocks",
     "blocks": {
-      "setVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"\"global\" ones live on the runtime object"},
-      "changeVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"\"global\" ones live on the runtime object"},
-      "swapVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"\"global\" ones live on the runtime object"},
-      "forVar": {"type":"loop","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"loop"},
-      "scopeVar": {"type":"conditional","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"restores the thread variables after its branch"},
-      "varExists": {"type":"Boolean","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"boolean","compiled":false},
-      "getVar": {"type":"reporter","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"any","compiled":false},
-      "allVars": {"type":"reporter","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":false},
-      "deleteAllVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"\"global\" ones live on the runtime object"},
-      "deleteVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"\"global\" ones live on the runtime object"}
+      "setVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"\"global\" ones live on the runtime object"},
+      "changeVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"\"global\" ones live on the runtime object"},
+      "swapVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"\"global\" ones live on the runtime object"},
+      "forVar": {"type":"loop","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"loop"},
+      "scopeVar": {"type":"conditional","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true,"note":"restores the thread variables after its branch"},
+      "varExists": {"type":"Boolean","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"boolean","compiled":true},
+      "getVar": {"type":"reporter","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"any","compiled":true},
+      "allVars": {"type":"reporter","pure":false,"reads":["script","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"string","compiled":true},
+      "deleteAllVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"\"global\" ones live on the runtime object"},
+      "deleteVar": {"type":"command","pure":false,"reads":["script","sprite"],"writes":["script","sprite"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":true,"note":"\"global\" ones live on the runtime object"}
     }
   },
   "SPtimeCalc": {

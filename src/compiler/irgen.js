@@ -1016,6 +1016,17 @@ class ScriptTreeGenerator {
     }
 
     /**
+     * PMDESKTOP_HOOKS (section 121): the usual IR of a stacked procedures_call, for runtime.pmProcedureCallIrHooks
+     * (skips the hooks for this block only, so calls inside its inputs still reach them).
+     * @param {*} block A procedures_call block (may be a changed copy).
+     * @returns {Node} Compiled node for this block.
+     */
+    descendDefaultProcedureCall (block) {
+        this._pmDefaultProcedureCall = block;
+        return this.descendStackedBlock(block);
+    }
+
+    /**
      * Descend into a stacked block. (eg. "move ( ) steps")
      * @param {*} block The Scratch block to parse.
      * @private
@@ -1672,6 +1683,15 @@ class ScriptTreeGenerator {
                 val: this.descendInputOfBlock(block, "VALUE")
             };
         case 'procedures_call': {
+            // PMDESKTOP_HOOKS (section 121): an extension may compile the call itself
+            const callHooks = this.runtime.pmProcedureCallIrHooks;
+            if (callHooks.length && block !== this._pmDefaultProcedureCall) {
+                for (let i = 0; i < callHooks.length; i++) {
+                    const node = callHooks[i](this, block);
+                    if (node) return node;
+                }
+            }
+            this._pmDefaultProcedureCall = null;
             // setting of yields will be handled later in the analysis phase
             // patches output previewing
             if (block.mutation.returns === 'true') {

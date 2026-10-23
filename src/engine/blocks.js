@@ -165,7 +165,39 @@ class Blocks {
      * @return {?object} Metadata about the block, if it exists.
      */
     getBlock (blockId) {
-        return this._blocks[blockId];
+        const block = this._blocks[blockId];
+        if (typeof block === 'undefined') return this._getForeignBlock(blockId);
+        return block;
+    }
+
+    /**
+     * PMDESKTOP_HOOKS (section 121): a block this container does not have, from runtime.pmForeignBlockHooks
+     * (extensions that run blocks of one sprite in another). Only asked on a miss; nothing when no hook is set.
+     * @param {?string} blockId ID of the block.
+     * @return {?object} The block, or undefined.
+     */
+    _getForeignBlock (blockId) {
+        const hooks = this.runtime && this.runtime.pmForeignBlockHooks;
+        if (!hooks || hooks.length === 0 || blockId === null || typeof blockId === 'undefined') return;
+        for (let i = 0; i < hooks.length; i++) {
+            const block = hooks[i](this, blockId);
+            if (block) return block;
+        }
+    }
+
+    /**
+     * PMDESKTOP_HOOKS (section 121): the container that defines a procedure this one does not, from
+     * runtime.pmForeignProcedureHooks (global custom blocks).
+     * @param {string} name Procedure code.
+     * @return {?Blocks} That container, or undefined.
+     */
+    _getForeignProcedureBlocks (name) {
+        const hooks = this.runtime && this.runtime.pmForeignProcedureHooks;
+        if (!hooks || hooks.length === 0) return;
+        for (let i = 0; i < hooks.length; i++) {
+            const blocks = hooks[i](this, name);
+            if (blocks && blocks !== this) return blocks;
+        }
     }
 
     /**
@@ -182,7 +214,8 @@ class Blocks {
       * @return {?string} ID of next block in the sequence
       */
     getNextBlock (id) {
-        const block = this._blocks[id];
+        let block = this._blocks[id];
+        if (typeof block === 'undefined') block = this._getForeignBlock(id); // section 121
         return (typeof block === 'undefined') ? null : block.next;
     }
 
@@ -193,7 +226,8 @@ class Blocks {
      * @return {?string} ID of block in the branch.
      */
     getBranch (id, branchNum) {
-        const block = this._blocks[id];
+        let block = this._blocks[id];
+        if (typeof block === 'undefined') block = this._getForeignBlock(id); // section 121
         if (typeof block === 'undefined') return null;
         if (!branchNum) branchNum = 1;
 
@@ -245,6 +279,9 @@ class Blocks {
                 inputs[input] = block.inputs[input];
             }
         }
+        // PMDESKTOP_HOOKS (section 121)
+        const hooks = this.runtime && this.runtime.pmBlockInputsHooks;
+        if (hooks) for (let i = 0; i < hooks.length; i++) hooks[i](this, block, inputs);
 
         this._cache.inputs[block.id] = inputs;
         return inputs;
@@ -297,6 +334,14 @@ class Blocks {
             }
         }
 
+        // PMDESKTOP_HOOKS (section 121): defined in another container (global custom blocks)
+        const foreign = this._getForeignProcedureBlocks(name);
+        if (foreign) {
+            const foreignId = foreign.getProcedureDefinition(name);
+            this._cache.procedureDefinitions[name] = foreignId;
+            return foreignId;
+        }
+
         this._cache.procedureDefinitions[name] = null;
         return null;
     }
@@ -333,6 +378,16 @@ class Blocks {
 
                 this._cache.procedureParamNames[name] = [names, ids, defaults];
                 return this._cache.procedureParamNames[name];
+            }
+        }
+
+        // PMDESKTOP_HOOKS (section 121)
+        const foreign = this._getForeignProcedureBlocks(name);
+        if (foreign) {
+            const foreignNames = foreign.getProcedureParamNamesIdsAndDefaults(name);
+            if (foreignNames) {
+                this._cache.procedureParamNames[name] = foreignNames;
+                return foreignNames;
             }
         }
 
@@ -634,6 +689,9 @@ class Blocks {
      * Reset all runtime caches.
      */
     resetCache () {
+        // PMDESKTOP_HOOKS (section 121)
+        const hooks = this.runtime && this.runtime.pmResetCacheHooks;
+        if (hooks) for (let i = 0; i < hooks.length; i++) hooks[i](this);
         this._cache.inputs = {};
         this._cache.procedureParamNames = {};
         this._cache.procedureDefinitions = {};

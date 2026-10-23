@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Extra-Controls.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)"
+// (docs/EXTENSION-ROADMAP.md step 5c): engine hooks instead of replacing window.Error, console.error,
+// _restartThread, visualReport, Blocks.prototype.getNextBlock / getBranch and the compiler classes.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -54,7 +56,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let Thread; // defined by exports
   let conditionStorage = Object.create(null), keybinds = Object.create(null);
   let hats = { ...runtime._hats }, overrideCalls = {};
-  window.SPadvControlIssueTimes = [];
 
   const regenReporters = ["SPadvControl_threadArgs"];
   if (Scratch.gui) Scratch.gui.getBlockly().then(SB => {
@@ -67,7 +68,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   const resetStorage = () => {
     conditionStorage = Object.create(null);
-    window.SPadvControlIssueTimes = [];
+    erroredScripts.clear(); // Desktop fork (section 121)
   };
   runtime.on("PROJECT_STOP_ALL", resetStorage);
   runtime.on("PROJECT_START", resetStorage);
@@ -91,27 +92,17 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
   });
 
-  // capture all types of blockable Errors
-  const ogError = Error;
-  window.Error = function(message) {
-    window.SPadvControlIssueTimes.push(Math.floor(Date.now() / 200) * 200);
-    const err = new ogError(message);
-    Object.setPrototypeOf(err, window.Error.prototype);
-    return err;
-  };
-  Object.setPrototypeOf(window.Error, ogError);
-  window.Error.prototype = Object.create(ogError.prototype);
-  window.Error.prototype.constructor = window.Error;
-
-  const ogConsoleEr = console.error;
-  console.error = (...args) => {
-    window.SPadvControlIssueTimes.push(Math.floor(Date.now() / 200) * 200);
-    return ogConsoleEr.apply(this, args);
-  }
+  // Desktop fork (section 121): errors are noted from the compiler's BLOCK_STACK_ERROR event (a compiled script
+  // that threw; its id is the script's top block) instead of replacing window.Error and console.error.
+  // tryCatch watches the IDs of the branches it runs.
+  const erroredScripts = new Set();
+  runtime.on("BLOCK_STACK_ERROR", (error) => {
+    if (error && error.id !== undefined) erroredScripts.add(error.id);
+  });
 
   // Override needed for "ifRunBlock"
-  const ogRestartThread = runtime._restartThread;
-  runtime._restartThread = function (thread) {
+  // Desktop fork (section 121): through runtime.pmRestartThreadHooks instead of replacing _restartThread
+  runtime.pmRestartThreadHooks.push((thread) => {
     const forceStop = (t, c) => {
       if (c && t.procedures !== null && Object.keys(t.procedures).length > 0) try { t.generator.return() } catch {}
       t.status = 4;
@@ -129,95 +120,49 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }
       }
     }
-    return ogRestartThread.call(this, thread);
-  };
+  });
 
   // override needed for "get from sprite" blocks
-  const ogVisReport = runtime.visualReport;
-  if (isPM) {
-    runtime.visualReport = function (blockId, value) {
-      if (overrideCalls[blockId]) {
-        overrideCalls[blockId].pushReportedValue(value);
-        delete overrideCalls[blockId];
-        return;
-      }
-      return ogVisReport.call(this, blockId, value);
-    }
-  } else {
-    runtime.visualReport = function (target, blockId, value) {
-      if (overrideCalls[blockId]) {
-        overrideCalls[blockId].pushReportedValue(value);
-        delete overrideCalls[blockId];
-        return;
-      }
-      return ogVisReport.call(this, target, blockId, value);
-    }
-  }
+  // Desktop fork (section 121): through runtime.pmVisualReportCaptureHooks instead of replacing visualReport
+  runtime.pmVisualReportCaptureHooks.push((blockId, value) => {
+    if (!overrideCalls[blockId]) return false;
+    overrideCalls[blockId].pushReportedValue(value);
+    delete overrideCalls[blockId];
+    return true;
+  });
 
   // thread patcher for special threads
-  const expRenderedTarget = new vm.exports.RenderedTarget({ blocks: null }, runtime);
-  const Blocks = expRenderedTarget.blocks.constructor;
-  const ogGetNext = Blocks.prototype.getNextBlock;
-  Blocks.prototype.getNextBlock = function(name) {
-    const thisBlock = ogGetNext.call(this, name);
-    if (thisBlock) return thisBlock;
-    for (const target of this.runtime.targets) {
-      if (!target.isOriginal || target.blocks === this) continue;
-      const targetBlock = ogGetNext.call(target.blocks, name);
+  // Desktop fork (section 121): blocks missing in a container are looked up in the other sprites through
+  // runtime.pmForeignBlockHooks instead of replacing Blocks.prototype.getNextBlock / getBranch
+  runtime.pmForeignBlockHooks.push((blocks, id) => {
+    for (const target of runtime.targets) {
+      if (!target.isOriginal || target.blocks === blocks) continue;
+      const targetBlock = target.blocks._blocks[id];
       if (targetBlock) return targetBlock;
     }
-    return undefined;
-  }
-  const ogGetBranch = Blocks.prototype.getBranch;
-  Blocks.prototype.getBranch = function(id, branchNum) {
-    const thisBlock = ogGetBranch.call(this, id, branchNum);
-    if (thisBlock) return thisBlock;
-    for (const target of this.runtime.targets) {
-      if (!target.isOriginal || target.blocks === this) continue;
-      const targetBlock = ogGetBranch.call(target.blocks, id, branchNum);
-      if (targetBlock) return targetBlock;
-    }
-    return undefined;
-  }
+  });
 
-  // Thank you to @FurryR for the help
-  function getUnsafeExports() {
-    if (vm.exports.i_will_not_ask_for_help_when_these_break) return vm.exports.i_will_not_ask_for_help_when_these_break();
-    else if (vm.exports.JSGenerator && vm.exports.IRGenerator?.exports) return {
-      ...vm.exports, ScriptTreeGenerator: vm.exports.IRGenerator.exports.ScriptTreeGenerator
-    };
-  }
-  const exports = getUnsafeExports();
-  if (exports) {
-    Thread = exports.Thread;
-    const { JSGenerator, ScriptTreeGenerator } = exports;
-    const _ogIRdescendStack = ScriptTreeGenerator.prototype.descendStackedBlock;
-    ScriptTreeGenerator.prototype.descendStackedBlock = function (block) {
-      switch (block.opcode) {
-        case "SPadvControl_breakLoop": return { kind: "SPadvControl.break", id: block.id };
-        case "SPadvControl_continueLoop": return { kind: "SPadvControl.continue", id: block.id };
-        default: return _ogIRdescendStack.call(this, block);
+  Thread = vm.exports.Thread;
+  // Desktop fork (section 121): compiled through runtime.registerCompiledExtensionBlocks instead of replacing
+  // the compiler classes' descendStackedBlock. Same generated code.
+  runtime.registerCompiledExtensionBlocks("SPadvControl", {
+    ir: {
+      breakLoop: (generator, block) => ({ kind: "stack", id: block.id }),
+      continueLoop: (generator, block) => ({ kind: "stack", id: block.id })
+    },
+    js: {
+      breakLoop: (node, compiler) => {
+        // execute in compatibility layer in case we are in a non-compiled loop block
+        if (compiler.frames.find(frame => frame.isLoop)?.isLoop) compiler.source += "break;\n";
+        else compiler.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_breakLoop"), false, false, "${node.id}", null);\n`;
+      },
+      continueLoop: (node, compiler) => {
+        // execute in compatibility layer in case we are in a non-compiled loop block
+        if (compiler.frames.find(frame => frame.isLoop)?.isLoop) compiler.source += "continue;\n";
+        else compiler.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_continueLoop"), false, false, "${node.id}", null);\n`;
       }
-    };
-    const _ogJSdescendStack = JSGenerator.prototype.descendStackedBlock;
-    JSGenerator.prototype.descendStackedBlock = function (node) {
-      switch (node.kind) {
-        case "SPadvControl.break": {
-          // execute in compatibility layer in case we are in a non-compiled loop block
-          if (this.frames.find(frame => frame.isLoop)?.isLoop) this.source += "break;\n";
-          else this.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_breakLoop"), false, false, "${node.id}", null);\n`;
-          break;
-        }
-        case "SPadvControl.continue": {
-          // execute in compatibility layer in case we are in a non-compiled loop block
-          if (this.frames.find(frame => frame.isLoop)?.isLoop) this.source += "continue;\n";
-          else this.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_continueLoop"), false, false, "${node.id}", null);\n`;
-          break;
-        }
-        default: return _ogJSdescendStack.call(this, node);
-      }
-    };
-  }
+    }
+  });
 
   class SPadvControl {
     getInfo() {
@@ -985,14 +930,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     async tryCatch(_, util) {
       const branch = this.getThisBlock(util, true, 1);
       if (branch) {
-        const issueTimes = window.SPadvControlIssueTimes;
+        // Desktop fork (section 121): an error is a BLOCK_STACK_ERROR of the branch's script (see erroredScripts)
+        erroredScripts.delete(branch);
         const thread = this.pushThread(branch, util, { stackClick: false });
         this.addMissKeys(util.thread, thread);
         await new Promise(resolve => {
           const checkThread = () => {
-            thread.pushTime = Math.floor(Date.now() / 200) * 200;
             if (!runtime.isActiveThread(thread)) resolve();
-            else if (issueTimes.indexOf(thread.pushTime) !== -1) {
+            else if (erroredScripts.has(branch)) {
               thread.stopThisScript();
               resolve();
             }
@@ -1000,7 +945,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           };
           checkThread();
         });
-        if (issueTimes.indexOf(thread.pushTime) !== -1) util.startBranch(2, false);
+        if (erroredScripts.delete(branch)) util.startBranch(2, false);
       }
     }
 

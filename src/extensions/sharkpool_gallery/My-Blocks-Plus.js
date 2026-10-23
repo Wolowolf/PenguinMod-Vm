@@ -1,6 +1,9 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's My-Blocks-Plus.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)"
+// (docs/EXTENSION-ROADMAP.md step 5c): engine hooks instead of replacing the compiler classes, Blocks.prototype methods,
+// getOpcodeFunction, stepToProcedure and the VM's toJSON, duplicateSprite, exportSprite, _addSprite3,
+// exportStandaloneBlocks and shareBlocksToTarget. Its block-editor patches are unchanged (step 5d).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -652,14 +655,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   }
 
   // Compiler Patches
-  function getExports() {
-    if (vm.exports.i_will_not_ask_for_help_when_these_break) return vm.exports.i_will_not_ask_for_help_when_these_break();
-    else if (vm.exports.JSGenerator && vm.exports.IRGenerator?.exports) return {
-      ...vm.exports, ScriptTreeGenerator: vm.exports.IRGenerator.exports.ScriptTreeGenerator
-    };
-  }
-  const exports = getExports();
-  if (exports) {
+  // Desktop fork (section 121): runtime.pmProcedureCallIrHooks / pmProcedureCallJsHooks (custom branch inputs) and
+  // runtime.registerCompiledExtensionBlocks (its own blocks) instead of replacing the compiler classes'
+  // descendStackedBlock / descendInput; isLastBlockInLoop was only replaced outside PenguinMod. Same generated code.
+  {
     const sanitize = string => {
       if (typeof string !== "string") {
         console.warn(`sanitize got unexpected type: ${typeof string}`);
@@ -668,164 +667,133 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return JSON.stringify(string).slice(1, -1);
     };
 
-    Thread = exports.Thread; execute = exports.execute;
-    const { JSGenerator, ScriptTreeGenerator } = exports;
-    const exp = JSGenerator.exports === undefined ? JSGenerator.unstable_exports : JSGenerator.exports;
-    if (!isPM) {
-      JSGenerator.prototype.isLastBlockInLoop = function() {
-        for (let i = this.frames.length - 1; i >= 0; i--) {
-          const frame = this.frames[i];
-          if (frame.mbpRunningBranch) return false;
-          if (!frame.isLastBlock) return false;
-          if (frame.isLoop) return true;
+    Thread = vm.exports.Thread; execute = vm.exports.execute;
+    const exp = vm.exports.JSGenerator.getExtensionImports();
+    runtime.pmProcedureCallIrHooks.push((generator, block) => {
+      const proc = block.mutation.proccode;
+      const store = storeGet(proc, generator.target.sprite.clones[0]);
+      if (!generator.thread[targetProcData]) generator.thread[targetProcData] = {};
+      generator.thread[targetProcData][proc] = { block, store }; // attach some data we need
+      if (!store || !store.inputs) return; // the usual call
+
+      // ignore branches temporarily
+      const argIds = JSON.parse(block.mutation.argumentids);
+      const appenders = [];
+      const tempBlock = structuredClone(block);
+      for (let i = 0; i < argIds.length; i++) {
+        const input = block.inputs[argIds[i]];
+        if (store.inputs[input?.name]?.type === "brc") {
+          appenders.push([i, input.block]);
+          delete tempBlock.inputs[input.name];
         }
-        return false;
       }
-    }
-    const _ogIRdescendStack = ScriptTreeGenerator.prototype.descendStackedBlock;
-    ScriptTreeGenerator.prototype.descendStackedBlock = function(block) {
-      switch (block.opcode) {
-        case "procedures_call": {
-          const proc = block.mutation.proccode;
-          const store = storeGet(proc, this.target.sprite.clones[0]);
-          if (!this.thread[targetProcData]) this.thread[targetProcData] = {};
-          this.thread[targetProcData][proc] = { block, store }; // attach some data we need
-          if (!store || !store.inputs) return _ogIRdescendStack.call(this, block);
 
-          // ignore branches temporarily
-          const argIds = JSON.parse(block.mutation.argumentids);
-          const appenders = [];
-          const tempBlock = structuredClone(block);
-          for (let i = 0; i < argIds.length; i++) {
-            const input = block.inputs[argIds[i]];
-            if (store.inputs[input?.name]?.type === "brc") {
-              appenders.push([i, input.block]);
-              delete tempBlock.inputs[input.name];
-            }
-          }
+      generator.thread[targetProcData][proc].appenders = appenders;
+      const node = generator.descendDefaultProcedureCall(tempBlock);
+      for (let i = 0; i < appenders.length; i++) {
+        node.arguments[appenders[i][0]] = { kind: "constant", mbpKey: true, value: generator.walkStack(appenders[i][1]) };
+      }
+      return node;
+    });
+    runtime.pmProcedureCallJsHooks.push((compiler, node) => {
+      // This also gets Global Procedures to work for some reason
+      const argIndexes = [];
+      let forceYield = false;
+      const ogSource = compiler.source;
+      for (let i = 0; i < node.arguments.length; i++) {
+        const arg = node.arguments[i];
+        if (!arg.value || !arg.mbpKey) continue;
+        compiler.source = "";
+        compiler.currentFrame.mbpRunningBranch = true;
+        compiler.descendStack(arg.value, new exp.Frame(false, "control.if", true)); // 3rd param used by PM
+        if (compiler.script.yields) {
+          arg.value = `function* () { ${compiler.source} }`;
+          forceYield = true;
+        } else arg.value = `() => { ${compiler.source} }`;
+        argIndexes.push(i);
+      }
+      compiler.source = ogSource;
+      if (!argIndexes.length) return false; // the usual call
 
-          this.thread[targetProcData][proc].appenders = appenders;
-          const node = _ogIRdescendStack.call(this, tempBlock);
-          for (let i = 0; i < appenders.length; i++) {
-            node.arguments[appenders[i][0]] = { kind: "constant", mbpKey: true, value: this.walkStack(appenders[i][1]) };
-          }
-          return node;
-        }
-        case "SPmbpCST_setParam": {
-          let paramIndex = this.script.arguments.lastIndexOf(block.fields.PARAM.value);
+      // transform the branch string to a function
+      // modified from https://github.com/TurboWarp/scratch-vm/blob/develop/src/compiler/jsgen.js
+      const procedureCode = node.code;
+      const procedureVariant = node.variant;
+      const procedureData = compiler.ir.procedures[procedureVariant];
+      if (procedureData.stack === null) return true;
+
+      const yieldForRecursion = !compiler.isWarp && procedureCode === compiler.script.procedureCode;
+      if (yieldForRecursion) compiler.yieldNotWarp();
+      if (procedureData.yields || forceYield) compiler.source += "yield* ";
+
+      compiler.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
+      const args = [];
+      for (let i = 0; i < node.arguments.length; i++) {
+        const input = node.arguments[i];
+        if (argIndexes.indexOf(i) > -1) args.push(input.value);
+        else args.push(compiler.descendInput(input).asSafe());
+      }
+      compiler.source += args.join(",") + ");\n";
+      compiler.resetVariableInputs();
+
+      if (forceYield) compiler.ir.procedures[procedureVariant].yields = true;
+      return true;
+    });
+    runtime.registerCompiledExtensionBlocks("SPmbpCST", {
+      ir: {
+        setParam: (generator, block) => {
+          let paramIndex = generator.script.arguments.lastIndexOf(block.fields.PARAM.value);
           if (paramIndex === -1) {
-            paramIndex = this.script.arguments.length;
-            this.script.arguments.push(block.fields.PARAM.value);
+            paramIndex = generator.script.arguments.length;
+            generator.script.arguments.push(block.fields.PARAM.value);
           }
           return {
-            kind: "SPmbpCST.setParam", paramIndex, val: this.descendInputOfBlock(block, "VALUE")
+            kind: "stack", paramIndex, val: generator.descendInputOfBlock(block, "VALUE")
           };
-        }
-        case "SPmbpCST_evalParam": {
-          const node = { kind: "SPmbpCST.evalParam" };
-          if (!this.thread[targetProcData]) return node;
-          const procData = this.thread[targetProcData][this.script.procedureCode];
+        },
+        evalParam: (generator, block) => {
+          const node = { kind: "stack" };
+          if (!generator.thread[targetProcData]) return node;
+          const procData = generator.thread[targetProcData][generator.script.procedureCode];
           const procedureBlock = procData?.block;
           if (procedureBlock) {
-            const paramIndex = this.script.arguments.lastIndexOf(block.fields.PARAM.value);
+            const paramIndex = generator.script.arguments.lastIndexOf(block.fields.PARAM.value);
             const argIds = JSON.parse(procedureBlock.mutation.argumentids);
             if (paramIndex > -1) {
               const arg = procedureBlock.inputs[argIds[paramIndex]];
               if (arg?.block !== undefined) {
-                const input = this.target.blocks.getBlock(arg.block);
-                node["input"] = this.descendInput(input);
+                const input = generator.target.blocks.getBlock(arg.block);
+                node["input"] = generator.descendInput(input);
                 node["index"] = paramIndex;
               }
             }
           }
           return node;
-        }
-        default: return _ogIRdescendStack.call(this, block);
-      }
-    };
-    const _ogIRdescendInp = ScriptTreeGenerator.prototype.descendInput;
-    ScriptTreeGenerator.prototype.descendInput = function(block) {
-      if (block.opcode === "SPmbpCST_getParam") return { kind: "SPmbpCST.getParam", param: this.descendInputOfBlock(block, "PARAM") };
-      else return _ogIRdescendInp.call(this, block);
-    };
-    const _ogJSdescendStack = JSGenerator.prototype.descendStackedBlock;
-    JSGenerator.prototype.descendStackedBlock = function(node) {
-      switch (node.kind) {
-        case "procedures.call": {
-          // This also gets Global Procedures to work for some reason
-          const argIndexes = [];
-          let forceYield = false;
-          const ogSource = this.source;
-          for (let i = 0; i < node.arguments.length; i++) {
-            const arg = node.arguments[i];
-            if (!arg.value || !arg.mbpKey) continue;
-            this.source = "";
-            this.currentFrame.mbpRunningBranch = true;
-            this.descendStack(arg.value, new exp.Frame(false, "control.if", true)); // 3rd param used by PM
-            if (this.script.yields) {
-              arg.value = `function* () { ${this.source} }`;
-              forceYield = true;
-            } else arg.value = `() => { ${this.source} }`;
-            argIndexes.push(i);
-          }
-          this.source = ogSource;
-
-          if (argIndexes.length) {
-            // transform the branch string to a function
-            // modified from https://github.com/TurboWarp/scratch-vm/blob/develop/src/compiler/jsgen.js
-            const procedureCode = node.code;
-            const procedureVariant = node.variant;
-            const procedureData = this.ir.procedures[procedureVariant];
-            if (procedureData.stack === null) break;
-
-            const yieldForRecursion = !this.isWarp && procedureCode === this.script.procedureCode;
-            if (yieldForRecursion) this.yieldNotWarp();
-            if (procedureData.yields || forceYield) this.source += "yield* ";
-
-            this.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
-            const args = [];
-            for (let i = 0; i < node.arguments.length; i++) {
-              const input = node.arguments[i];
-              if (argIndexes.indexOf(i) > -1) args.push(input.value);
-              else args.push(this.descendInput(input).asSafe());
-            }
-            this.source += args.join(",") + ");\n";
-            this.resetVariableInputs();
-
-            if (forceYield) this.ir.procedures[procedureVariant].yields = true;
-            break;
-          } else return _ogJSdescendStack.call(this, node);
-        }
-        case "SPmbpCST.setParam": {
-          const val = this.descendInput(node.val);
+        },
+        getParam: (generator, block) => ({ kind: "input", param: generator.descendInputOfBlock(block, "PARAM") })
+      },
+      js: {
+        setParam: (node, compiler) => {
+          const val = compiler.descendInput(node.val);
           const i = node.paramIndex;
-          if (i !== undefined && i !== -1) this.source += `p${i} = ${val.asSafe()};\n`;
-          break;
-        }
-        case "SPmbpCST.evalParam": {
-          if (node.input === undefined) break;
-          const val = this.descendInput(node.input);
-          this.source += `p${node.index} = ${val.asUnknown()};\n`;
-          break;
-        }
-        default: return _ogJSdescendStack.call(this, node);
-      }
-    };
-    const _ogJSdescendInp = JSGenerator.prototype.descendInput;
-    JSGenerator.prototype.descendInput = function(node) {
-      if (node.kind === "SPmbpCST.getParam") {
-        const val = this.descendInput(node.param).asSafe();
-        return new exp.TypedInput(`(() => {
-          let a = ${JSON.stringify(this.script.arguments)}, v = ${val};
+          if (i !== undefined && i !== -1) compiler.source += `p${i} = ${val.asSafe()};\n`;
+        },
+        evalParam: (node, compiler) => {
+          if (node.input === undefined) return;
+          const val = compiler.descendInput(node.input);
+          compiler.source += `p${node.index} = ${val.asUnknown()};\n`;
+        },
+        getParam: (node, compiler) => {
+          const val = compiler.descendInput(node.param).asSafe();
+          return new exp.TypedInput(`(() => {
+          let a = ${JSON.stringify(compiler.script.arguments)}, v = ${val};
           if (typeof v !== 'string') v = (v).toString();
           const i = a.indexOf(v);
           return i > -1 ? arguments[i].toString() : "";
         })()`, exp.TYPE_STRING);
-      } else if (node.kind === "procedures.call") {
-        // This gets Global Procedures to work for some reason
-        return _ogJSdescendInp.call(this, node);
-      } else return _ogJSdescendInp.call(this, node);
-    };
+        }
+      }
+    });
   }
 
   // ScratchBlocks and Editor Patches
@@ -1220,101 +1188,37 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   })
 
   // Other patches
+  // Desktop fork (section 121): engine hooks instead of replacing Blocks.prototype getProcedureDefinition, getBlock,
+  // getBranch, populateProcedureCache and getInputs. A block a sprite lacks is looked up in the other sprites only
+  // on a miss, so a sprite's own block with the same ID wins (the old getBlock tried the last global's sprite first).
   function patchTarget() {
-    // create a target to patch Target.Blocks
-    const target = new vm.exports.RenderedTarget({blocks: null}, runtime);
-
-    const Blocks = target.blocks.constructor;
-    const oldGetProcDef = Blocks.prototype.getProcedureDefinition;
-    Blocks.prototype.getProcedureDefinition = function(name) {
-      const definition = oldGetProcDef.call(this, name);
-      if (!definition && globalBlocksCache[name] && globalBlocksCache[name].blocks !== this) {
-        return globalBlocksCache[name].blocks.getProcedureDefinition(name);
-      }
-      return definition;
-    }
-    const oldGetBlock = Blocks.prototype.getBlock;
-    Blocks.prototype.getBlock = function(name) {
-      let thisBlock;
-
-      // globals take priority
-      if (globalTargetFocus) {
-        thisBlock = oldGetBlock.call(globalTargetFocus.blocks, name);
-        if (!thisBlock || thisBlock.next === null) globalTargetFocus = undefined;
+    runtime.pmForeignProcedureHooks.push((blocks, name) => {
+      refreshGlobalBlocksCache();
+      const target = globalBlocksCache[name];
+      if (target && target.blocks !== blocks) return target.blocks;
+    });
+    runtime.pmForeignBlockHooks.push((blocks, id) => {
+      for (const target of runtime.targets) {
+        if (!target.isOriginal || target.blocks === blocks) continue;
+        const thisBlock = target.blocks._blocks[id];
         if (thisBlock) return thisBlock;
       }
-
-      thisBlock = oldGetBlock.call(this, name);
-      if (thisBlock) return thisBlock;
-
-      let focusTarget;
-      for (const target of this.runtime.targets) {
-        if (!target.isOriginal || target.blocks === this) continue;
-        thisBlock = oldGetBlock.call(target.blocks, name);
-        if (thisBlock) {
-          focusTarget = target;
-          break;
-        }
-      }
-
-      if (thisBlock && globalTargetFocus === undefined) globalTargetFocus = focusTarget;
-      else if (!thisBlock || thisBlock.next === null) globalTargetFocus = undefined;
-      return thisBlock;
-    }
-    const oldGetBranch = Blocks.prototype.getBranch;
-    Blocks.prototype.getBranch = function(id, branchNum) {
-      const thisBlock = oldGetBranch.call(this, id, branchNum);
-      if (thisBlock) return thisBlock;
-      for (const target of this.runtime.targets) {
-        if (!target.isOriginal || target.blocks === this) continue;
-        const targetBlock = oldGetBranch.call(target.blocks, id, branchNum);
-        if (targetBlock) return targetBlock;
-      }
-      return undefined;
-    }
-    const oldPopProcCache = Blocks.prototype.populateProcedureCache;
-    Blocks.prototype.populateProcedureCache = function() {
-      oldPopProcCache.call(this);
-      refreshGlobalBlocksCache();
-      for (const proccode of Object.keys(globalBlocksCache)) {
-        const target = globalBlocksCache[proccode];
-        if (target.blocks === this) continue;
-        oldPopProcCache.call(target.blocks);
-        // add global blocks to this cache if they aren't present already
-        this._cache.procedureParamNames[proccode] = target.blocks._cache.procedureParamNames[proccode];
-        this._cache.procedureDefinitions[proccode] = target.blocks._cache.procedureDefinitions[proccode];
-      }
-    };
-    const oldGetInputs = Blocks.prototype.getInputs;
-    Blocks.prototype.getInputs = function(block) {
-      if (block.opcode !== "procedures_call") return oldGetInputs.call(this, block);
-
-      if (typeof block === "undefined") return null;
-      let inputs = this._cache.inputs[block.id];
-      if (typeof inputs !== "undefined") {
-          return inputs;
-      }
-
+    });
+    runtime.pmBlockInputsHooks.push((blocks, block, inputs) => {
+      // custom branch inputs are not inputs to run
+      if (block.opcode !== "procedures_call") return;
       let storeTarget = vm.editingTarget;
-      for (const target of this.runtime.targets) {
-        if (!target.isOriginal || target.blocks !== this) continue;
+      for (const target of runtime.targets) {
+        if (!target.isOriginal || target.blocks !== blocks) continue;
         storeTarget = target;
         break;
       }
-      
       const store = storeGet(block.mutation.proccode, storeTarget);
-      inputs = {};
-      for (const input in block.inputs) {
-          // Ignore blocks prefixed with branch prefix, and custom branch inputs.
-          if (
-            !store.inputs ||
-            input.substring(0, Blocks.BRANCH_INPUT_PREFIX.length) !== Blocks.BRANCH_INPUT_PREFIX
-            && !(store.inputs[input] && store.inputs[input].type === "brc")
-          ) inputs[input] = block.inputs[input];
+      if (!store.inputs) return;
+      for (const input in inputs) {
+        if (store.inputs[input] && store.inputs[input].type === "brc") delete inputs[input];
       }
-      this._cache.inputs[block.id] = inputs;
-      return inputs;
-    }
+    });
   }
   patchTarget();
 
@@ -1340,123 +1244,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       x: undefined, y: undefined
     }
   });
-  const oldToJSON = vm.constructor.prototype.toJSON;
-  vm.constructor.prototype.toJSON = function(...args) {
-    if (extensionRemovable) return oldToJSON.apply(this, args);
-    if (!isPM) {
-      // penguinmod automatically does this
-      suspendRemoval = false;
-      removeUnusedProcs();
-      removeUnusedImages();
-      ext?.serialize();
-    }
-
-    const jsonStr = oldToJSON.apply(this, args);
-    return jsonStr;
-  }
-
-  const oldGetOpcode = runtime.getOpcodeFunction;
-  runtime.constructor.prototype.getOpcodeFunction = function(opcode) {
-    if (opcode === "procedures_call") return patchedCallFunc;
-    return oldGetOpcode.call(this, opcode);
-  }
-
-  const patchedCallFunc = (args, util) => {
-    // Patched Block code from:
-    // https://github.com/TurboWarp/scratch-vm/blob/develop/src/blocks/scratch3_procedures.js#L28-L82
-    const thread = util.thread;
-    const stackFrame = util.stackFrame;
-    const isReporter = !!args.mutation.return;
-    if (stackFrame.executed) {
-      if (thread.isMBPPatched) {
-        // patch this function for the thread
-        thread.isMBPPatched = undefined;
-        thread.target.blocks.getNextBlock = thread[targetProcData].ogNext;
-      }
-      if (isReporter) {
-        const returnValue = stackFrame.returnValue;
-        const threadStackFrame = thread.peekStackFrame();
-        threadStackFrame.params = null;
-        delete stackFrame.returnValue;
-        delete stackFrame.executed;
-        return returnValue;
-      }
-      return;
-    }
-
-    const procedureCode = args.mutation.proccode;
-    let isGlobal = globalBlocksCache[procedureCode];
-    if (isGlobal && isGlobal.id === util.target.sprite.clones[0].id) isGlobal = undefined;
-
-    const paramNamesIdsAndDefaults = (isGlobal ? isGlobal.blocks : util).getProcedureParamNamesIdsAndDefaults(procedureCode);
-    if (paramNamesIdsAndDefaults === null) {
-      if (isReporter) return "";
-      return;
-    }
-
-    const [paramNames, paramIds, paramDefaults] = paramNamesIdsAndDefaults;
-    util.initParams();
-    for (let i = 0; i < paramIds.length; i++) {
-      if (Object.prototype.hasOwnProperty.call(args, paramIds[i])) util.pushParam(paramNames[i], args[paramIds[i]]);
-      else util.pushParam(paramNames[i], paramDefaults[i]);
-    }
-
-    const addonBlock = util.runtime.getAddonBlock(procedureCode);
-    if (addonBlock) {
-      const result = addonBlock.callback(thread.getAllparams(), util);
-      if (thread.status === 1) stackFrame.executed = true;
-      return result;
-    }
-
-    stackFrame.executed = true;
-    const frame = thread.peekStackFrame();
-    if (isReporter) {
-      frame.waitingReporter = true;
-      stackFrame.returnValue = "";
-    }
-    thread[targetProcData] = {
-      ogNext: thread.target.blocks.getNextBlock,
-      block: frame.op, frame,
-      params: paramNamesIdsAndDefaults
-    };
-    util.startProcedure({ proc: procedureCode, isGlobal });
-  };
-
-  const oldStep2Proc = runtime.sequencer.stepToProcedure;
-  runtime.sequencer.constructor.prototype.stepToProcedure = function(thread, procedureCode) {
-    if (procedureCode.isGlobal === undefined) oldStep2Proc.call(this, thread, procedureCode.proc);
-    else {
-      const ogTarget = procedureCode.isGlobal;
-      const def = ogTarget.blocks.getProcedureDefinition(procedureCode.proc);
-      if (!def) return;
-      if (thread.isMBPPatched === undefined) {
-        // patch this function for the thread
-        thread.isMBPPatched = true;
-        const ogGetNext = thread.target.blocks.getNextBlock;
-        thread.target.blocks.getNextBlock = function(id) {
-          const block = ogGetNext.call(this, id);
-          if (block) return block;
-          else return ogTarget.blocks.getNextBlock(id) ?? null;
-        }
-      }
-
-      const isRecursive = thread.isRecursiveCall(procedureCode.proc);
-      thread.pushStack(def);
-      if (thread.peekStackFrame().warpMode && thread.warpTimer.timeElapsed() > 500) thread.status = Thread.STATUS_YIELD;
-      else {
-        const defBlock = ogTarget.blocks.getBlock(def);
-        const innerBlock = ogTarget.blocks.getBlock(defBlock.inputs.custom_block.block);
-        let doWarp = false;
-        if (innerBlock && innerBlock.mutation) {
-          const warp = innerBlock.mutation.warp;
-          if (typeof warp === "boolean") doWarp = warp;
-          else if (typeof warp === "string") doWarp = JSON.parse(warp);
-        }
-        if (doWarp) thread.peekStackFrame().warpMode = true;
-        else if (isRecursive) thread.status = Thread.STATUS_YIELD;
-      }
-    }
-  }
+  // Desktop fork (section 121): VirtualMachine.prototype.toJSON (only acted outside PenguinMod),
+  // Runtime.prototype.getOpcodeFunction ("procedures_call") and Sequencer.prototype.stepToProcedure are not
+  // replaced any more: global custom blocks are found through the Blocks hooks in patchTarget(), so the engine's own
+  // procedures_call and stepToProcedure run them (evalParam reads the call from the thread's stack).
 
   // Internals
   // Remove unused procedures before saving
@@ -1486,26 +1277,25 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   }
 
   // reset the compiled code cache for global blocks that get changed
-  let cachePatched = false;
+  // Desktop fork (section 121): through runtime.pmResetCacheHooks instead of replacing Blocks.prototype.resetCache
+  let cachePatched = false, resettingAll = false;
   function patchCache() {
     cachePatched = true;
-    const ogResetCache = vm.runtime.targets[0].blocks.constructor.prototype.resetCache;
-    vm.runtime.targets[0].blocks.constructor.prototype.resetCache = function(ignoreGlobal) {
-      if (ignoreGlobal) {
-        ogResetCache.call(this);
-        return;
-      }
-
+    runtime.pmResetCacheHooks.push((blocks) => {
+      if (resettingAll) return;
       const globalProcs = Object.keys(globalBlocksCache);
-      const compiledProcs = Object.keys(this._cache.compiledProcedures)
+      const compiledProcs = Object.keys(blocks._cache.compiledProcedures)
         .map((p) => p.substring(1, p.length));
 
       if (globalProcs.some(p => compiledProcs.includes(p))) {
-        for (const target of runtime.targets) target.blocks.resetCache(true);
-      } else {
-        ogResetCache.call(this);
+        resettingAll = true;
+        try {
+          for (const target of runtime.targets) if (target.blocks !== blocks) target.blocks.resetCache();
+        } finally {
+          resettingAll = false;
+        }
       }
-    }
+    });
   }
 
   // Is-in-Editor Checker
@@ -1797,17 +1587,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
   }
 
-  const ogDupSprite = vm.duplicateSprite;
-  vm.duplicateSprite = function(targetId) {
-    return ogDupSprite.call(this, targetId).then(() => {
-      const newTarget = this.runtime.targets[this.runtime.targets.length - 1];
-      if (!storage[newTarget.id]) {
-        storage[newTarget.id] = structuredClone(storage[targetId]);
-        this.emitWorkspaceUpdate();
-      }
-      return newTarget;
-    });
-  }
+  // Desktop fork (section 121): the VM methods below are not replaced any more; the same code runs from the VM's
+  // hooks (pmSpriteDuplicatedHooks, pmExportBlocksHooks, pmShareBlocksHooks, pmAddSpriteHooks, the SERIALIZE event).
+  vm.pmSpriteDuplicatedHooks.push((newTarget, original) => {
+    if (!storage[newTarget.id]) {
+      storage[newTarget.id] = structuredClone(storage[original.id]);
+      vm.emitWorkspaceUpdate();
+    }
+  });
 
   /* Backpack Support (BLOCKS) */
   const handleCustomInputExports = (inputs) => {
@@ -1829,9 +1616,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     return output;
   };
-  const ogExportBlocks = vm.exportStandaloneBlocks;
-  vm.exportStandaloneBlocks = function(blockObjects) {
-    const exported = ogExportBlocks.call(this, blockObjects);
+  vm.pmExportBlocksHooks.push((exported) => {
     let stack;
 
     // append custom block data for importing if theres a definition
@@ -1844,8 +1629,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       block.MyBlocksPlusData = store;
       block.MyBlocksPlusExternals = handleCustomInputExports(store.inputs);
     }
-    return exported;
-  }
+  });
 
   const handleCustomInputImports = (externals) => {
     if (!runtime.extensionManager.isExtensionLoaded("SP0zMenuMaker")) return;
@@ -1858,8 +1642,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     menuMaker.refreshCategory();
   };
-  const ogShareBlocks = vm.shareBlocksToTarget;
-  vm.shareBlocksToTarget = function(blocks, targetId, optFromTargetId) {
+  vm.pmShareBlocksHooks.push((blocks, targetId) => {
     // load potential custom block data
     let realBlocks;
     if (blocks.constructor?.name === "Object") realBlocks = blocks.blocks;
@@ -1877,7 +1660,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    const shared = ogShareBlocks.call(this, blocks, targetId, optFromTargetId);
     if (hasProcBlock && Scratch.gui) Scratch.gui.getBlockly().then(SB => {
       setTimeout(() => {
         const workspace = SB.mainWorkspace;
@@ -1885,69 +1667,38 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         SB.Procedures.flyoutCategory(workspace);
       }, 10);
     });
-    return shared;
-  }
+  });
   /* Backpack/Import/Export Support (SPRITES) */
-  const ogExportSprite = vm.exportSprite;
-  vm.exportSprite = function(...args) {
-    // inject our dummy block to prevent extension deletion
-    const targetID = args[0];
-    if (storage[targetID]) {
+  vm.on("SERIALIZE", (targetID) => {
+    // inject our dummy block to prevent extension deletion (only when one sprite is saved: exportSprite)
+    if (targetID && storage[targetID]) {
       const target = runtime.getTargetById(targetID);
-      target.blocks._blocks[TEMP_BLOCK_OPCODE] = {
+      if (target) target.blocks._blocks[TEMP_BLOCK_OPCODE] = {
         opcode: TEMP_BLOCK_OPCODE, id: TEMP_BLOCK_OPCODE, fields: {},
         next: null, parent: null, shadow: true, toLevel: true,
         x: undefined, y: undefined
       };
     }
-    return ogExportSprite.call(this, ...args);
-  }
-  const ogImportSprite = vm._addSprite3;
-  vm._addSprite3 = function(...args) {
-    const importTarget = args[0];
+  });
+  vm.pmAddSpriteHooks.push((importTarget) => {
     // remove dummy block if present, this is never the stage (where its saved) so nothing bad should happen
-    delete importTarget.blocks[TEMP_BLOCK_OPCODE];
+    if (importTarget.blocks) delete importTarget.blocks[TEMP_BLOCK_OPCODE];
 
     // extract storage to copy over
-    let stored;
-    if (isPM) {
-      stored = importTarget.extensionData?.["SPmbpCST"]?.SPmbpCST;
-      if (stored) {
-        const ogStore = storage[importTarget.id];
-        runtime.once("targetWasCreated", (target) => {
-          if (Scratch.gui) Scratch.gui.getBlockly().then(SB => setTimeout(() => {
-            storage[target.id] = stored[importTarget.id];
-            storage[importTarget.id] = ogStore;
-            listNeedsRefresh = true;
-            SB.Procedures.flyoutCategory(SB.mainWorkspace);
-            queueMicrotask(() => vm.emitWorkspaceUpdate());
-          }, 100));
-        });
-      }
-    } else {
-      runtime.once("targetWasCreated", (target) => queueMicrotask(() => {
-        stored = target.extensionStorage["SPmbpCST"];
-        if (stored) {
-          storage[target.id] = stored;
+    const stored = importTarget.extensionData?.["SPmbpCST"]?.SPmbpCST;
+    if (stored) {
+      const ogStore = storage[importTarget.id];
+      runtime.once("targetWasCreated", (target) => {
+        if (Scratch.gui) Scratch.gui.getBlockly().then(SB => setTimeout(() => {
+          storage[target.id] = stored[importTarget.id];
+          storage[importTarget.id] = ogStore;
           listNeedsRefresh = true;
-          let hasGlobal = false;
-          for (const proc of Object.values(stored)) {
-            if (proc.global === true) {
-              hasGlobal = true;
-              break;
-            } 
-          }
-
-          if (hasGlobal && Scratch.gui) Scratch.gui.getBlockly().then(SB => setTimeout(() => {
-            listNeedsRefresh = true;
-            SB.Procedures.flyoutCategory(SB.mainWorkspace);
-          }, 100));
-        }
-      }));
+          SB.Procedures.flyoutCategory(SB.mainWorkspace);
+          queueMicrotask(() => vm.emitWorkspaceUpdate());
+        }, 100));
+      });
     }
-
-    return ogImportSprite.call(this, ...args);
-  }
+  });
 
   class SPmbpCST {
     getInfo() {
@@ -2090,9 +1841,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
 
       const thread = util.thread;
-      if (!thread[targetProcData]) return;
-
-      const { params, block, frame } = thread[targetProcData];
+      // Desktop fork (section 121): the call is the innermost stack frame with parameters (it used to be
+      // recorded by a replaced procedures_call)
+      let frameIndex = thread.stackFrames.length - 1;
+      while (frameIndex >= 0 && thread.stackFrames[frameIndex].params === null) frameIndex--;
+      if (frameIndex < 0) return;
+      const frame = thread.stackFrames[frameIndex];
+      const block = thread.blockContainer.getBlock(thread.stack[frameIndex]);
+      if (!block || !block.mutation) return;
+      const params = thread.blockContainer.getProcedureParamNamesIdsAndDefaults(block.mutation.proccode);
+      if (!params) return;
       const param = Scratch.Cast.toString(args.PARAM);
       const index = params[0].indexOf(param);
       if (index === -1) return;

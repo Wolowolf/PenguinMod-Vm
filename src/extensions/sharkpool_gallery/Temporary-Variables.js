@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Temporary-Variables.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)":
+// its compiler code is registered with runtime.registerCompiledExtensionBlocks (docs/EXTENSION-ROADMAP.md step 5c).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -34,17 +35,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   runtime.on("PROJECT_STOP_ALL", initTempVarObjects);
   initTempVarObjects();
 
-  function getCompiler() {
-    if (vm.exports.i_will_not_ask_for_help_when_these_break) return vm.exports.i_will_not_ask_for_help_when_these_break();
-    else if (vm.exports.JSGenerator && vm.exports.IRGenerator?.exports) return {
-      ...vm.exports, ScriptTreeGenerator: vm.exports.IRGenerator.exports.ScriptTreeGenerator
-    };
-  }
-  const compiler = getCompiler();
-  if (compiler) {
-    const { JSGenerator, ScriptTreeGenerator } = compiler;
-    const exp = JSGenerator.exports === undefined ? JSGenerator.unstable_exports : JSGenerator.exports;
-
+  // Desktop fork (section 121): compiled through the VM's registerCompiledExtensionBlocks instead of replacing
+  // the compiler classes' descendStackedBlock / descendInput. Same generated code.
+  {
     const _locationToObj = (name) => {
       let src;
       switch (name) {
@@ -62,173 +55,139 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     const _castAppendicFunc = `((v) => v === undefined ? 0 : typeof v === "string" ? ("" + v) : Number(v))`;
 
-    const _ogIRdescendStack = ScriptTreeGenerator.prototype.descendStackedBlock;
-    ScriptTreeGenerator.prototype.descendStackedBlock = function (block) {
-      switch (block.opcode) {
-        case "SPtempVars_setVar":
+    runtime.registerCompiledExtensionBlocks("SPtempVars", {
+      ir: {
+        setVar: (generator, block) => ({
+          kind: "stack",
+          obj: _locationToObj(block.fields.TYPE.value),
+          name: generator.descendInputOfBlock(block, "NAME"),
+          value: generator.descendInputOfBlock(block, "VALUE")
+        }),
+        changeVar: (generator, block) => ({
+          kind: "stack",
+          obj: _locationToObj(block.fields.TYPE.value),
+          name: generator.descendInputOfBlock(block, "NAME"),
+          value: generator.descendInputOfBlock(block, "VALUE")
+        }),
+        swapVar: (generator, block) => ({
+          kind: "stack",
+          obj1: _locationToObj(block.fields.TYPE1.value),
+          name1: generator.descendInputOfBlock(block, "NAME1"),
+          obj2: _locationToObj(block.fields.TYPE2.value),
+          name2: generator.descendInputOfBlock(block, "NAME2")
+        }),
+        forVar: (generator, block) => {
+          generator.analyzeLoop();
           return {
-            kind: "SPtempVars.setVar",
+            kind: "stack",
             obj: _locationToObj(block.fields.TYPE.value),
-            name: this.descendInputOfBlock(block, "NAME"),
-            value: this.descendInputOfBlock(block, "VALUE")
+            branch: generator.descendSubstack(block, "SUBSTACK"),
+            name: generator.descendInputOfBlock(block, "NAME"),
+            start: generator.descendInputOfBlock(block, "START"),
+            end: generator.descendInputOfBlock(block, "END"),
+            inc: generator.descendInputOfBlock(block, "INC_VALUE")
           };
-        case "SPtempVars_changeVar":
+        },
+        scopeVar: (generator, block) => {
+          generator.analyzeLoop();
           return {
-            kind: "SPtempVars.changeVar",
-            obj: _locationToObj(block.fields.TYPE.value),
-            name: this.descendInputOfBlock(block, "NAME"),
-            value: this.descendInputOfBlock(block, "VALUE")
-          };
-        case "SPtempVars_swapVar":
-          return {
-            kind: "SPtempVars.swapVar",
-            obj1: _locationToObj(block.fields.TYPE1.value),
-            name1: this.descendInputOfBlock(block, "NAME1"),
-            obj2: _locationToObj(block.fields.TYPE2.value),
-            name2: this.descendInputOfBlock(block, "NAME2")
-          };
-        case "SPtempVars_forVar":
-          this.analyzeLoop();
-          return {
-            kind: "SPtempVars.forVar",
-            obj: _locationToObj(block.fields.TYPE.value),
-            branch: this.descendSubstack(block, "SUBSTACK"),
-            name: this.descendInputOfBlock(block, "NAME"),
-            start: this.descendInputOfBlock(block, "START"),
-            end: this.descendInputOfBlock(block, "END"),
-            inc: this.descendInputOfBlock(block, "INC_VALUE")
-          };
-        case "SPtempVars_scopeVar":
-          this.analyzeLoop();
-          return {
-            kind: "SPtempVars.scopeVar",
+            kind: "stack",
             obj: _locationToObj("thread"),
-            branch: this.descendSubstack(block, "SUBSTACK")
+            branch: generator.descendSubstack(block, "SUBSTACK")
           };
-        case "SPtempVars_deleteAllVar":
-          return {
-            kind: "SPtempVars.deleteVars",
-            obj: _locationToObj(block.fields.TYPE.value)
-          };
-        case "SPtempVars_deleteVar":
-          return {
-            kind: "SPtempVars.deleteVar",
-            obj: _locationToObj(block.fields.TYPE.value),
-            name: this.descendInputOfBlock(block, "NAME")
-          };
-        default: return _ogIRdescendStack.call(this, block);
-      }
-    }
-    const _ogJSdescendStack = JSGenerator.prototype.descendStackedBlock;
-    JSGenerator.prototype.descendStackedBlock = function (node) {
-      switch (node.kind) {
-        case "SPtempVars.setVar": {
-          const name = this.descendInput(node.name).asString();
-          const value = this.descendInput(node.value).asUnknown();
-          this.source += `${node.obj}[${name}] = ${value};\n`;
-          break;
-        }
-        case "SPtempVars.changeVar": {
-          const name = this.descendInput(node.name).asString();
-          const value = this.descendInput(node.value).asUnknown();
-          this.source += `${node.obj}[${name}] = ${_castAppendicFunc}(${node.obj}[${name}]) + ${value}\n;`;
-          break;
-        }
-        case "SPtempVars.swapVar": {
-          const name1 = this.descendInput(node.name1).asString();
-          const name2 = this.descendInput(node.name2).asString();
-          const tempVar = this.localVariables.next();
+        },
+        deleteAllVar: (generator, block) => ({
+          kind: "stack",
+          obj: _locationToObj(block.fields.TYPE.value)
+        }),
+        deleteVar: (generator, block) => ({
+          kind: "stack",
+          obj: _locationToObj(block.fields.TYPE.value),
+          name: generator.descendInputOfBlock(block, "NAME")
+        }),
+        varExists: (generator, block) => ({
+          kind: "input",
+          obj: _locationToObj(block.fields.TYPE.value),
+          name: generator.descendInputOfBlock(block, "NAME")
+        }),
+        getVar: (generator, block) => ({
+          kind: "input",
+          obj: _locationToObj(block.fields.TYPE.value),
+          name: generator.descendInputOfBlock(block, "NAME")
+        }),
+        allVars: (generator, block) => ({
+          kind: "input",
+          obj: _locationToObj(block.fields.TYPE.value)
+        })
+      },
+      js: {
+        setVar: (node, compiler) => {
+          const name = compiler.descendInput(node.name).asString();
+          const value = compiler.descendInput(node.value).asUnknown();
+          compiler.source += `${node.obj}[${name}] = ${value};\n`;
+        },
+        changeVar: (node, compiler) => {
+          const name = compiler.descendInput(node.name).asString();
+          const value = compiler.descendInput(node.value).asUnknown();
+          compiler.source += `${node.obj}[${name}] = ${_castAppendicFunc}(${node.obj}[${name}]) + ${value}\n;`;
+        },
+        swapVar: (node, compiler) => {
+          const name1 = compiler.descendInput(node.name1).asString();
+          const name2 = compiler.descendInput(node.name2).asString();
+          const tempVar = compiler.localVariables.next();
 
-          this.source += `const ${tempVar} = ${node.obj1}[${name1}];\n`;
-          this.source += `${node.obj1}[${name1}] = ${node.obj2}[${name2}];\n`;
-          this.source += `${node.obj2}[${name2}] = ${tempVar};\n`;
-          break;
-        }
-        case "SPtempVars.forVar": {
-          const name = this.descendInput(node.name).asString();
-          const start = this.descendInput(node.start).asNumber();
-          const end = this.descendInput(node.end).asNumber();
-          const inc = this.descendInput(node.inc).asNumber();
+          compiler.source += `const ${tempVar} = ${node.obj1}[${name1}];\n`;
+          compiler.source += `${node.obj1}[${name1}] = ${node.obj2}[${name2}];\n`;
+          compiler.source += `${node.obj2}[${name2}] = ${tempVar};\n`;
+        },
+        forVar: (node, compiler, imports) => {
+          const name = compiler.descendInput(node.name).asString();
+          const start = compiler.descendInput(node.start).asNumber();
+          const end = compiler.descendInput(node.end).asNumber();
+          const inc = compiler.descendInput(node.inc).asNumber();
 
-          this.source += `${node.obj}[${name}] = ${start} - ${inc};\n`;
-          this.source += `while (${inc} < 0 ? ${end} < ${node.obj}[${name}] : ${end} > ${node.obj}[${name}]) {\n`;
-          this.source += `${node.obj}[${name}] += ${inc};\n`;
-          this.descendStack(node.branch, new exp.Frame(true));
-          this.yieldLoop();
-          this.source += `}\n`;
-          break;
-        }
-        case "SPtempVars.scopeVar": {
-          const preScopeVar = this.localVariables.next();
-          const postScopeVar = this.localVariables.next();
+          compiler.source += `${node.obj}[${name}] = ${start} - ${inc};\n`;
+          compiler.source += `while (${inc} < 0 ? ${end} < ${node.obj}[${name}] : ${end} > ${node.obj}[${name}]) {\n`;
+          compiler.source += `${node.obj}[${name}] += ${inc};\n`;
+          compiler.descendStack(node.branch, new imports.Frame(true));
+          compiler.yieldLoop();
+          compiler.source += `}\n`;
+        },
+        scopeVar: (node, compiler, imports) => {
+          const preScopeVar = compiler.localVariables.next();
+          const postScopeVar = compiler.localVariables.next();
 
-          this.source += `const ${preScopeVar} = structuredClone(${node.obj});\n`;
-          this.descendStack(node.branch, new exp.Frame(false));
-          this.source += `const ${postScopeVar} = ${node.obj};\n`;
-          this.source += `Object.keys(${postScopeVar}).forEach((k) => {\n`;
-          this.source += `if (${preScopeVar}[k] === undefined) delete ${postScopeVar}[k];\n`;
-          this.source += `else ${postScopeVar}[k] = ${preScopeVar}[k];\n`;
-          this.source += `});\n`;
-          break;
-        }
-        case "SPtempVars.deleteVars": {
-          const objVar = this.localVariables.next();
-          this.source += `const ${objVar} = ${node.obj};\n`;
-          this.source += `Object.keys(${objVar}).forEach(n => delete ${objVar}[n]);\n`;
-          break;
-        }
-        case "SPtempVars.deleteVar": {
-          const name = this.descendInput(node.name).asString();
-          this.source += `delete ${node.obj}[${name}];\n`;
-          break;
-        }
-        default: return _ogJSdescendStack.call(this, node);
+          compiler.source += `const ${preScopeVar} = structuredClone(${node.obj});\n`;
+          compiler.descendStack(node.branch, new imports.Frame(false));
+          compiler.source += `const ${postScopeVar} = ${node.obj};\n`;
+          compiler.source += `Object.keys(${postScopeVar}).forEach((k) => {\n`;
+          compiler.source += `if (${preScopeVar}[k] === undefined) delete ${postScopeVar}[k];\n`;
+          compiler.source += `else ${postScopeVar}[k] = ${preScopeVar}[k];\n`;
+          compiler.source += `});\n`;
+        },
+        deleteAllVar: (node, compiler) => {
+          const objVar = compiler.localVariables.next();
+          compiler.source += `const ${objVar} = ${node.obj};\n`;
+          compiler.source += `Object.keys(${objVar}).forEach(n => delete ${objVar}[n]);\n`;
+        },
+        deleteVar: (node, compiler) => {
+          const name = compiler.descendInput(node.name).asString();
+          compiler.source += `delete ${node.obj}[${name}];\n`;
+        },
+        varExists: (node, compiler, imports) => {
+          const name = compiler.descendInput(node.name).asString();
+          return new imports.TypedInput(`(${node.obj}[${name}] !== undefined)`, imports.TYPE_BOOLEAN);
+        },
+        getVar: (node, compiler, imports) => {
+          const name = compiler.descendInput(node.name).asString();
+          return new imports.TypedInput(`(${node.obj}[${name}] ?? "")`, imports.TYPE_UNKNOWN);
+        },
+        allVars: (node, compiler, imports) => new imports.TypedInput(
+          `JSON.stringify(Object.keys(${node.obj}))`,
+          imports.TYPE_STRING
+        )
       }
-    }
-
-    const _ogIRdescendInp = ScriptTreeGenerator.prototype.descendInput;
-    ScriptTreeGenerator.prototype.descendInput = function (block) {
-      switch (block.opcode) {
-        case "SPtempVars_varExists":
-          return {
-            kind: "SPtempVars.varExist",
-            obj: _locationToObj(block.fields.TYPE.value),
-            name: this.descendInputOfBlock(block, "NAME")
-          };
-        case "SPtempVars_getVar":
-          return {
-            kind: "SPtempVars.getVar",
-            obj: _locationToObj(block.fields.TYPE.value),
-            name: this.descendInputOfBlock(block, "NAME")
-          };
-        case "SPtempVars_allVars":
-          return {
-            kind: "SPtempVars.allVars",
-            obj: _locationToObj(block.fields.TYPE.value)
-          };
-        default: return _ogIRdescendInp.call(this, block);
-      }
-    };
-    const _ogJSdescendInp = JSGenerator.prototype.descendInput;
-    JSGenerator.prototype.descendInput = function (node) {
-      switch (node.kind) {
-        case "SPtempVars.varExist": {
-          const name = this.descendInput(node.name).asString();
-          return new exp.TypedInput(`(${node.obj}[${name}] !== undefined)`, exp.TYPE_BOOLEAN);
-        }
-        case "SPtempVars.getVar": {
-          const name = this.descendInput(node.name).asString();
-          return new exp.TypedInput(`(${node.obj}[${name}] ?? "")`, exp.TYPE_UNKNOWN);
-        }
-        case "SPtempVars.allVars": {
-          return new exp.TypedInput(
-            `JSON.stringify(Object.keys(${node.obj}))`,
-            exp.TYPE_STRING
-          );
-        }
-        default: return _ogJSdescendInp.call(this, node);
-      }
-    };
+    });
   }
 
   class SPtempVars {
