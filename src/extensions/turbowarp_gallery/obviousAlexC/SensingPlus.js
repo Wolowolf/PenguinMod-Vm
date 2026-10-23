@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's obviousAlexC/SensingPlus.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmIndexOf instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1083,6 +1083,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return scratchFingers.has(Scratch.Cast.toNumber(ID));
     }
 
+    // Desktop fork (section 125): list values through pmGetValue / pmIndexOf
     listInSprite({ index, List }) {
       const variable = getListFromMenu(List);
       if (!variable) {
@@ -1090,13 +1091,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
       const casted = Scratch.Cast.toListIndex(
         index,
-        variable.value.length,
+        variable.pmGetValue().length,
         false
       );
       if (casted === "INVALID") {
         return "";
       }
-      return variable.value[casted - 1];
+      return variable.pmGetValue()[casted - 1];
     }
 
     listContains({ term, List }) {
@@ -1104,13 +1105,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!variable) {
         return "";
       }
-      const list = variable.value;
-      for (let i = 0; i < list.length; i++) {
-        if (Scratch.Cast.compare(list[i], term) === 0) {
-          return true;
-        }
-      }
-      return false;
+      return variable.pmIndexOf(term) !== 0;
     }
 
     lengthOfListInSprite({ List }) {
@@ -1118,7 +1113,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!variable) {
         return "";
       }
-      return variable.value.length;
+      return variable.pmGetValue().length;
     }
 
     itemNumberInList({ term, List }) {
@@ -1126,13 +1121,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!variable) {
         return "";
       }
-      const list = variable.value;
-      for (let i = 0; i < list.length; i++) {
-        if (Scratch.Cast.compare(list[i], term) === 0) {
-          return i + 1;
-        }
-      }
-      return 0;
+      return variable.pmIndexOf(term);
     }
 
     touchingOriginal({ Sprite }, util) {

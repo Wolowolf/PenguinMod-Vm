@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's qxsck/var-and-list.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -328,12 +328,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
       }
     }
+    // Desktop fork (section 125): list values through pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf
     getList(args, util) {
       const variable = util.target.lookupVariableByNameAndType(
         Scratch.Cast.toString(args.LIST),
         "list"
       );
-      return variable ? variable.value.toString() : "";
+      return variable ? variable.pmGetValue().toString() : "";
     }
     getValueOfList(args, util) {
       const variable = util.target.lookupVariableByNameAndType(
@@ -343,11 +344,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!variable) return 0;
       const index = Scratch.Cast.toListIndex(
         args.INDEX,
-        variable.value.length,
+        variable.pmGetValue().length,
         false
       );
       if (index === "INVALID") return "";
-      return variable.value[index - 1];
+      return variable.pmGetValue()[index - 1];
     }
     seriListsToJson(args, util) {
       const start = Scratch.Cast.toString(args.START);
@@ -356,12 +357,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         util.runtime.getTargetForStage().variables
       )) {
         if (variable.type === "list" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.value;
+          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
         }
       }
       for (const variable of Object.values(util.target.variables)) {
         if (variable.type === "list" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.value;
+          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
         }
       }
       return JSON.stringify(serialized);
@@ -373,7 +374,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (variable) {
-        variable.value = [];
+        variable.pmSetValue([]);
       }
     }
     deleteOfList(args, util) {
@@ -385,14 +386,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (variable) {
         const index = Scratch.Cast.toListIndex(
           args.INDEX,
-          variable.value.length,
+          variable.pmGetValue().length,
           true
         );
         if (index === "ALL") {
-          variable.value = [];
+          variable.pmSetValue([]);
         } else if (index !== "INVALID") {
-          variable.value.splice(index - 1, 1);
-          variable._monitorUpToDate = false;
+          variable.pmGetValue().splice(index - 1, 1);
+          variable.pmItemsChanged();
         }
       }
     }
@@ -403,7 +404,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (variable) {
-        variable.value.push(args.VALUE);
+        variable.pmGetValue().push(args.VALUE);
         variable._monitorUpToDate = false;
       }
     }
@@ -416,12 +417,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (variable) {
         const index = Scratch.Cast.toListIndex(
           args.INDEX,
-          variable.value.length,
+          variable.pmGetValue().length,
           false
         );
         if (index !== "INVALID") {
-          variable.value[index - 1] = args.VALUE;
-          variable._monitorUpToDate = false;
+          variable.pmGetValue()[index - 1] = args.VALUE;
+          variable.pmItemsChanged();
         }
       }
     }
@@ -433,10 +434,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       const value = args.VALUE;
       if (variable) {
-        for (var i = 0; i < variable.value.length; i++) {
-          if (Scratch.Cast.compare(variable.value[i], value) === 0)
-            return i + 1;
-        }
+        return variable.pmIndexOf(value);
       }
       return 0;
     }
@@ -449,8 +447,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const value = args.VALUE;
       if (variable) {
         var indexes = [];
-        for (var i = 0; i < variable.value.length; i++) {
-          if (Scratch.Cast.compare(variable.value[i], value) === 0)
+        for (var i = 0; i < variable.pmGetValue().length; i++) {
+          if (Scratch.Cast.compare(variable.pmGetValue()[i], value) === 0)
             indexes.push(i + 1);
         }
         if (indexes.length > 0) return indexes.toString();
@@ -464,7 +462,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (variable) {
-        return variable.value.length;
+        return variable.pmGetValue().length;
       }
       return 0;
     }
@@ -476,9 +474,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       const value = args.VALUE;
       if (variable) {
-        for (var i = 0; i < variable.value.length; i++) {
-          if (Scratch.Cast.compare(variable.value[i], value) === 0) return true;
-        }
+        return variable.pmIndexOf(value) !== 0;
       }
       return false;
     }
@@ -493,7 +489,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (list1 && list2) {
-        list2.value = list1.value.slice();
+        list2.pmSetValue(list1.pmGetValue().slice());
       }
     }
   }

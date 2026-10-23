@@ -24,6 +24,8 @@
 // values that are not numbers, plus booleans, null and infinities, the only numbers whose lower-case
 // text does not read as a number: "true" matches true, "infinity" matches "Infinity").
 
+const Cast = require('../util/cast');
+
 const MIN_LENGTH = 32;
 const BUILD_FACTOR = 3;
 const MAX_FACTOR = 48;
@@ -202,11 +204,35 @@ const searched = (list, array, compared) => {
     build(state, array, stats);
 };
 
+/**
+ * Position of the first item equal to `item` (Cast.compare), from the table when there is one, else
+ * item by item (counted towards making one), like the "item # of" block.
+ * @param {Variable} list The list variable.
+ * @param {*} item The item to look for.
+ * @returns {number} 1-based position, 0 when there is none.
+ */
+const indexOf = (list, item) => {
+    const array = items(list);
+    if (array.length >= MIN_LENGTH) {
+        const found = lookup(list, array, item);
+        if (found !== -1) return found;
+    }
+    for (let i = 0; i < array.length; i++) {
+        if (Cast.compare(array[i], item) === 0) {
+            searched(list, array, i + 1);
+            return i + 1;
+        }
+    }
+    searched(list, array, array.length);
+    return 0;
+};
+
 module.exports = {
     MIN_LENGTH,
     items,
     setItems,
     changed,
     lookup,
-    searched
+    searched,
+    indexOf
 };

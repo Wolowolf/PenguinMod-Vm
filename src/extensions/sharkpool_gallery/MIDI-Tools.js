@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's MIDI-Tools.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (section 125, step 5e; marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -465,7 +465,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       for (const varId in stage.variables) {
         const v = stage.variables[varId];
         if (v.type === 'list' && v.name.toLowerCase() === listName.toLowerCase()) {
-          targetList = v.value;
+          // Desktop fork (section 125): pmGetValue instead of value
+          targetList = v.pmGetValue();
           break;
         }
       }

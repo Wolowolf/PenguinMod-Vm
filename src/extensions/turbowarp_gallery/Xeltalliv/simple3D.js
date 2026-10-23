@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Xeltalliv/simple3D.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5).
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5); lists read and written with Variable.pmGetValue / pmSetValue / pmItemsChanged instead of their `value`, so they keep their lookup tables (section 125, step 5e).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1563,42 +1563,43 @@ void main() {
    * - loops were unrolled
    * - Cast.toNumber was replaced with unary plus
    */
+  // Desktop fork (section 125): lists read with pmGetValue (and written with pmSetValue / pmItemsChanged) instead of value
   function compact(target, names, typedArray, scale = 1) {
     const lists = names.map((name) =>
       target.lookupVariableByNameAndType(name, "list")
     );
     if (lists.includes(null)) return null;
-    const targetLength = lists[0].value.length;
+    const targetLength = lists[0].pmGetValue().length;
     const listCount = lists.length;
-    if (lists.find((list) => list.value.length !== targetLength)) return null;
+    if (lists.find((list) => list.pmGetValue().length !== targetLength)) return null;
     const value = new typedArray(targetLength * listCount);
     if (scale !== 1) {
       if (listCount == 1) {
-        const list0 = lists[0].value;
+        const list0 = lists[0].pmGetValue();
         for (let i = 0; i < targetLength; i++) {
           value[i] = list0[i] * scale;
         }
       } else if (listCount == 2) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 2) {
           value[j] = list0[i] * scale;
           value[j + 1] = list1[i] * scale;
         }
       } else if (listCount == 3) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
-        const list2 = lists[2].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
+        const list2 = lists[2].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 3) {
           value[j] = list0[i] * scale;
           value[j + 1] = list1[i] * scale;
           value[j + 2] = list2[i] * scale;
         }
       } else if (listCount == 4) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
-        const list2 = lists[2].value;
-        const list3 = lists[3].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
+        const list2 = lists[2].pmGetValue();
+        const list3 = lists[3].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 4) {
           value[j] = list0[i] * scale;
           value[j + 1] = list1[i] * scale;
@@ -1609,37 +1610,37 @@ void main() {
         // Unused
         for (let i = 0, j = 0; i < targetLength; i++) {
           for (let k = 0; k < listCount; k++) {
-            value[j++] = lists[k].value[i] * scale;
+            value[j++] = lists[k].pmGetValue()[i] * scale;
           }
         }
       }
     } else {
       if (listCount == 1) {
-        const list0 = lists[0].value;
+        const list0 = lists[0].pmGetValue();
         for (let i = 0; i < targetLength; i++) {
           value[i] = +list0[i];
         }
       } else if (listCount == 2) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 2) {
           value[j] = +list0[i];
           value[j + 1] = +list1[i];
         }
       } else if (listCount == 3) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
-        const list2 = lists[2].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
+        const list2 = lists[2].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 3) {
           value[j] = +list0[i];
           value[j + 1] = +list1[i];
           value[j + 2] = +list2[i];
         }
       } else if (listCount == 4) {
-        const list0 = lists[0].value;
-        const list1 = lists[1].value;
-        const list2 = lists[2].value;
-        const list3 = lists[3].value;
+        const list0 = lists[0].pmGetValue();
+        const list1 = lists[1].pmGetValue();
+        const list2 = lists[2].pmGetValue();
+        const list3 = lists[3].pmGetValue();
         for (let i = 0, j = 0; i < targetLength; i++, j += 4) {
           value[j] = +list0[i];
           value[j + 1] = +list1[i];
@@ -1650,7 +1651,7 @@ void main() {
         // Unused
         for (let i = 0, j = 0; i < targetLength; i++) {
           for (let k = 0; k < listCount; k++) {
-            value[j++] = +lists[k].value[i];
+            value[j++] = +lists[k].pmGetValue()[i];
           }
         }
       }
@@ -1663,8 +1664,8 @@ void main() {
     let maxNum = 0;
     let value = [];
     let restarts = [];
-    for (let i = 0; i < list.value.length; i++) {
-      let num = Math.floor(Cast.toNumber(list.value[i]) - 1);
+    for (let i = 0; i < list.pmGetValue().length; i++) {
+      let num = Math.floor(Cast.toNumber(list.pmGetValue()[i]) - 1);
       if (num < 0) {
         restarts.push(i);
       } else if (num > maxNum) {
@@ -2659,7 +2660,7 @@ void main() {
           "list"
         );
         if (!mesh || !list) return;
-        const value = list.value.map(Cast.toNumber);
+        const value = list.pmGetValue().map(Cast.toNumber);
         const myData = mesh.myData;
 
         if (TRANSFORMS == "original") {
@@ -2890,7 +2891,7 @@ void main() {
           if (!mesh || !list) return;
           let output = await modelDecoder.decode(
             FILETYPE,
-            list.value.slice(),
+            list.pmGetValue().slice(),
             transforms.import
           );
           if (!output) return;
@@ -3128,10 +3129,10 @@ void main() {
         const startsList = target.lookupVariableByNameAndType(STARTS, "list");
         const endsList = target.lookupVariableByNameAndType(ENDS, "list");
         if (!startsList || !endsList || !mesh) return;
-        const starts = startsList.value.map(
+        const starts = startsList.pmGetValue().map(
           (x) => Math.max(1, Math.floor(Cast.toNumber(x))) - 1
         );
-        const ends = endsList.value.map((x) =>
+        const ends = endsList.pmGetValue().map((x) =>
           Math.max(0, Math.floor(Cast.toNumber(x)))
         );
         const lengths = ends.map((x, i) => Math.max(0, ends[i] - starts[i]));
@@ -3958,13 +3959,13 @@ void main() {
             resolve(null);
             return;
           }
-          if (list.value.length < pos + lengthRequired) {
+          if (list.pmGetValue().length < pos + lengthRequired) {
             retStatus = "insufficient list length";
             resolve(null);
             return;
           }
           const data = new Uint8Array(lengthRequired);
-          const values = list.value;
+          const values = list.pmGetValue();
           for (let i = 0; i < lengthRequired; i++) {
             data[i] = values[pos + i];
           }
@@ -4234,10 +4235,10 @@ void main() {
           "list"
         );
         if (!list) return;
-        if (!Number.isFinite(pos) || pos < 1 || pos + 15 > list.value.length)
+        if (!Number.isFinite(pos) || pos < 1 || pos + 15 > list.pmGetValue().length)
           return;
 
-        transforms[selectedTransform] = list.value
+        transforms[selectedTransform] = list.pmGetValue()
           .slice(pos - 1, pos + 15)
           .map(Cast.toNumber);
       },
@@ -4406,7 +4407,7 @@ void main() {
         if (!list) return;
         if (pos < 0 || !Number.isFinite(pos)) return;
 
-        const value = list.value;
+        const value = list.pmGetValue();
         const mat = transforms[selectedTransform];
         while (value.length < pos + 15) {
           value.push(0);
@@ -4414,7 +4415,7 @@ void main() {
         for (let i = 0; i < 16; i++) {
           value[pos + i] = mat[i];
         }
-        list._monitorUpToDate = false;
+        list.pmItemsChanged();
       },
     },
     {
@@ -4700,8 +4701,7 @@ void main() {
         if (w == 0 || h == 0) return;
         const pixels = new Uint8ClampedArray(w * h * 4);
         gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        list.value = Array.from(pixels);
-        list._monitorUpToDate = false;
+        list.pmSetValue(Array.from(pixels));
       },
     },
     {

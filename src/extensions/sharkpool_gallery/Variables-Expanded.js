@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Variables-Expanded.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its variable lookup finds only variables, not a sprite's list of the same name (section 125, step 5e; marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -360,7 +360,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       let varFind = "";
       for (const name of Object.getOwnPropertyNames(sprite.target.variables)) {
         varFind = sprite.target.variables[name].name;
-        if (varFind === varName) return sprite.target.variables[name].id;
+        // Desktop fork (section 125): only variables (a list of that name was found too and its value read)
+        if (varFind === varName && sprite.target.variables[name].type === "") return sprite.target.variables[name].id;
       }
 
       const variable = runtime.getTargetForStage().lookupVariableByNameAndType(varName, "");

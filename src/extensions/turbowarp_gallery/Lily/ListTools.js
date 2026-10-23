@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Lily/ListTools.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -30,6 +30,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     if (listObject) return listObject;
   };
 
+  // Desktop fork (section 125): list values through pmGetValue / pmSetValue / pmItemsChanged
   class Data {
     getInfo() {
       return {
@@ -384,7 +385,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return false;
-      const listLength = list.value.length;
+      const listLength = list.pmGetValue().length;
       let num1 = 0;
       let num2 = 0;
       if (!list) return;
@@ -395,9 +396,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         num1 = args.NUM1 - 1;
         num2 = args.NUM2 - 1;
       }
-      const listPart1 = list.value.slice(0, num1);
-      const listPart2 = list.value.slice(num2 + 1, listLength);
-      list.value = listPart1.concat(listPart2);
+      const listPart1 = list.pmGetValue().slice(0, num1);
+      const listPart2 = list.pmGetValue().slice(num2 + 1, listLength);
+      list.pmSetValue(listPart1.concat(listPart2));
     }
 
     deleteAllOfItem(args, util) {
@@ -407,10 +408,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return;
-      const newList = list.value.filter(function (model) {
+      const newList = list.pmGetValue().filter(function (model) {
         return model !== args.ITEM;
       });
-      list.value = newList;
+      list.pmSetValue(newList);
     }
 
     replaceAllOfItem(args, util) {
@@ -420,18 +421,18 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return;
-      const listLength = list.value.length;
+      const listLength = list.pmGetValue().length;
       const item1 = args.ITEM1;
       const item2 = args.ITEM2;
       let newList = [];
       for (let i = 0; i < listLength; i++) {
-        if (list.value[i] === item1) {
+        if (list.pmGetValue()[i] === item1) {
           newList.push(item2);
         } else {
-          newList.push(list.value[i]);
+          newList.push(list.pmGetValue()[i]);
         }
       }
-      list.value = newList;
+      list.pmSetValue(newList);
     }
 
     repeatList(args, util) {
@@ -447,9 +448,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list2) return;
-      const currentVal = list1.value;
+      const currentVal = list1.pmGetValue();
       for (let i = 0; i < args.NUM; i++) {
-        list2.value = list2.value.concat(currentVal);
+        list2.pmSetValue(list2.pmGetValue().concat(currentVal));
       }
     }
 
@@ -460,7 +461,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return "";
-      return list.value.join(args.STRING);
+      return list.pmGetValue().join(args.STRING);
     }
 
     timesItemAppears(args, util) {
@@ -470,7 +471,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return 0;
-      return list.value.filter((model) => model == args.ITEM).length;
+      return list.pmGetValue().filter((model) => model == args.ITEM).length;
     }
 
     itemIndex(args, util) {
@@ -481,8 +482,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       if (!list) return 0;
       let indexes = [];
-      for (let index = 0; index < list.value.length; index++) {
-        if (list.value[index] === args.ITEM) {
+      for (let index = 0; index < list.pmGetValue().length; index++) {
+        if (list.pmGetValue()[index] === args.ITEM) {
           indexes.push(index);
         }
       }
@@ -508,7 +509,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return true;
-      if (list.value.length > 0) return false;
+      if (list.pmGetValue().length > 0) return false;
       return true;
     }
 
@@ -521,7 +522,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!list) return false;
       const listIndex = Scratch.Cast.toListIndex(
         args.NUM,
-        list.value.length,
+        list.pmGetValue().length,
         false
       );
       if (listIndex === Scratch.Cast.LIST_INVALID) return false;
@@ -536,8 +537,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       if (!list) return false;
 
-      for (let i = 0; i < list.value.length - 1; i++) {
-        const compare = Scratch.Cast.compare(list.value[i + 1], list.value[i]);
+      for (let i = 0; i < list.pmGetValue().length - 1; i++) {
+        const compare = Scratch.Cast.compare(list.pmGetValue()[i + 1], list.pmGetValue()[i]);
         if (compare > 0 && args.ORDER === "descending") return false;
         if (compare < 0 && args.ORDER === "ascending") return false;
       }
@@ -552,19 +553,19 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       if (!list) return;
       if (args.ORDER === "reversed") {
-        list.value.reverse();
+        list.pmGetValue().reverse();
       } else if (args.ORDER === "randomised") {
-        const randomised = list.value
+        const randomised = list.pmGetValue()
           .map((value) => ({ value, sort: Math.random() }))
           .sort((a, b) => a.sort - b.sort)
           .map(({ value }) => value);
-        list.value = randomised;
+        list.pmSetValue(randomised);
       } else if (args.ORDER === "ascending") {
-        list.value.sort(Scratch.Cast.compare);
+        list.pmGetValue().sort(Scratch.Cast.compare);
       } else if (args.ORDER === "descending") {
-        list.value.sort(Scratch.Cast.compare).reverse();
+        list.pmGetValue().sort(Scratch.Cast.compare).reverse();
       }
-      list._monitorUpToDate = false;
+      list.pmItemsChanged();
     }
 
     setListToList(args, util) {
@@ -581,7 +582,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       );
       if (!list2) return;
 
-      list1.value = [...list2.value];
+      list1.pmSetValue([...list2.pmGetValue()]);
     }
 
     joinLists(args, util) {
@@ -597,7 +598,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list2) return;
-      list2.value = list2.value.concat(list1.value);
+      list2.pmSetValue(list2.pmGetValue().concat(list1.pmGetValue()));
     }
 
 
@@ -619,7 +620,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
       if (!Array.isArray(array)) return;
       const newArray = array;
-      list.value = newArray;
+      list.pmSetValue(newArray);
       list._monitorUpToDate = false;
     }
 
@@ -630,7 +631,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         "list"
       );
       if (!list) return "";
-      return JSON.stringify(list.value);
+      return JSON.stringify(list.pmGetValue());
     }
 
     _getLists() {

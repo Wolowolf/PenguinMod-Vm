@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Scenes.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the pen layer's effects are restored with Drawable.setEffectUniforms instead of writing its _uniforms (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the pen layer's effects are restored with Drawable.setEffectUniforms instead of writing its _uniforms; (section 125, step 5e) variables saved and restored with Variable.pmGetValue / pmSetValue, so lists keep their lookup tables, and a saved scene keeps a copy of each list (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -329,8 +329,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
         const safeVars = [];
         Object.values(target.variables).map((vari) => {
-          if (!vari.isCloud && this._isSerializable(vari.value)) {
-            safeVars.push([vari.id, vari.value]);
+          // Desktop fork (section 125): pmGetValue instead of value; a list is copied, so later changes to it don't change the saved scene
+          const value = vari.pmGetValue();
+          if (!vari.isCloud && this._isSerializable(value)) {
+            safeVars.push([vari.id, vari.type === "list" ? value.slice() : value]);
           }
         });
         sceneData.targets[realId] = {
@@ -439,7 +441,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         for (let i = data.vars.length - 1; i >= 0; i--) {
           const item = data.vars[i];
           if (target.variables[item[0]]) {
-            target.variables[item[0]].value = item[1];
+            target.variables[item[0]].pmSetValue(item[1]);
           } else {
             // variable is gone! (deleted probably)
             data.vars.splice(i, 1);

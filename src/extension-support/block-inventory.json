@@ -872,7 +872,7 @@
     "blocks": {
       "importImage": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait"},
       "getlist": {"type":"reporter","pure":false,"reads":["variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "setlist": {"type":"command","pure":false,"reads":["variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"replaces list.value of a stage list"},
+      "setlist": {"type":"command","pure":false,"reads":["variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"replaces a stage list's items (pmSetValue, section 125)"},
       "importSprite": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"does not wait"},
       "importSound": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait"},
       "importProject": {"type":"command","pure":false,"reads":[],"writes":["project","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"replaces the whole project (asks first in the editor)"},
@@ -1686,7 +1686,7 @@
   "lmsData": {
     "source": "src/extensions/turbowarp_gallery/Lily/ListTools.js",
     "replaces": [],
-    "note": "replaces list.value directly (turns section 62's list table off for that list)",
+    "note": "reads and replaces list items through Variable.pmGetValue / pmSetValue / pmItemsChanged (section 125), so lists keep section 62's table",
     "blocks": {
       "deleteItems": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "deleteAllOfItem": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -2476,7 +2476,7 @@
   "qxsckvarandlist": {
     "source": "src/extensions/turbowarp_gallery/qxsck/var-and-list.js",
     "replaces": [],
-    "note": "writes variable.value and list.value directly",
+    "note": "writes variable.value directly; lists through Variable.pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf (section 125), so they keep section 62's table",
     "blocks": {
       "getVar": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "seriVarsToJson": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},

@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's TheShovel/ShovelUtils.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): RUNTIME_STEP_END instead of wrapping runtime._step (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): RUNTIME_STEP_END instead of wrapping runtime._step; (section 125, step 5e) its list blocks use Variable.pmGetValue / pmSetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -289,7 +289,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         .getTargetForStage()
         .lookupVariableByNameAndType(TEXT, "list");
       if (list) {
-        return JSON.stringify(list.value);
+        // Desktop fork (section 125): pmGetValue / pmSetValue instead of value
+        return JSON.stringify(list.pmGetValue());
       } else {
         return "";
       }
@@ -320,7 +321,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return; // List was not found
       }
 
-      list.value = parsed;
+      list.pmSetValue(parsed);
     }
 
     setedtarget({ NAME }) {
