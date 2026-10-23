@@ -1,7 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Temporary-Variables.js, moved into
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)":
-// its compiler code is registered with runtime.registerCompiledExtensionBlocks (docs/EXTENSION-ROADMAP.md step 5c).
+// its compiler code is registered with runtime.registerCompiledExtensionBlocks (docs/EXTENSION-ROADMAP.md step 5c),
+// and "Desktop fork (section 122)": "change var by" adds numbers the same way compiled and interpreted.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -35,6 +36,17 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   runtime.on("PROJECT_STOP_ALL", initTempVarObjects);
   initTempVarObjects();
 
+  // Desktop fork (section 122): "change var by" adds when the variable and the value both look like numbers (numbers,
+  // true/false or number text) and joins them as text otherwise, the same compiled and interpreted. Before, the
+  // compiler turned fixed number-like inputs into numbers and the interpreter kept them as text ("5" + "2" gave 7
+  // compiled, "52" interpreted). Used as code in compiled scripts too, so it uses nothing from outside.
+  function changeValue(current, by) {
+    if (current === undefined) current = 0;
+    const isNum = v => typeof v === "number" || typeof v === "boolean" ||
+      (typeof v === "string" && v.trim() !== "" && !isNaN(Number(v)));
+    return isNum(current) && isNum(by) ? Number(current) + Number(by) : "" + current + by;
+  }
+
   // Desktop fork (section 121): compiled through the VM's registerCompiledExtensionBlocks instead of replacing
   // the compiler classes' descendStackedBlock / descendInput. Same generated code.
   {
@@ -53,7 +65,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return "(" + src + `["${VAR_KEY}"] ??= Object.create(null))`;
     };
 
-    const _castAppendicFunc = `((v) => v === undefined ? 0 : typeof v === "string" ? ("" + v) : Number(v))`;
 
     runtime.registerCompiledExtensionBlocks("SPtempVars", {
       ir: {
@@ -129,7 +140,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         changeVar: (node, compiler) => {
           const name = compiler.descendInput(node.name).asString();
           const value = compiler.descendInput(node.value).asUnknown();
-          compiler.source += `${node.obj}[${name}] = ${_castAppendicFunc}(${node.obj}[${name}]) + ${value}\n;`;
+          compiler.source += `${node.obj}[${name}] = (${changeValue.toString()})(${node.obj}[${name}], ${value});\n`;
         },
         swapVar: (node, compiler) => {
           const name1 = compiler.descendInput(node.name1).asString();
@@ -335,7 +346,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     changeVar(args, util) {
       const name = Cast.toString(args.NAME);
       const obj = this._objFromLocation(args.TYPE, util);
-      obj[name] = this._castAppendic(obj[name]) + args.VALUE;
+      obj[name] = changeValue(obj[name], args.VALUE); // Desktop fork (section 122)
     }
 
     swapVar(args, util) {

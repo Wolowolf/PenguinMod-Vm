@@ -498,9 +498,11 @@ class Thread {
         let callCount = 5; // Max number of enclosing procedure calls to examine.
         const sp = this.stackFrames.length - 1;
         for (let i = sp - 1; i >= 0; i--) {
-            const block = this.target.blocks.getBlock(this.stackFrames[i].op.id) ||
-                this.target.runtime.flyoutBlocks.getBlock(this.stackFrames[i].op.id);
-            if (block.opcode === 'procedures_call' &&
+            // PMDESKTOP (section 122): op is set by execute.js now; frames that ran no block yet are skipped
+            const op = this.stackFrames[i].op;
+            const block = op && (this.target.blocks.getBlock(op.id) ||
+                this.target.runtime.flyoutBlocks.getBlock(op.id));
+            if (block && block.opcode === 'procedures_call' &&
                 block.mutation.proccode === procedureCode) {
                 return true;
             }

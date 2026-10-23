@@ -513,6 +513,9 @@ const execute = function (sequencer, thread) {
 
         // Inputs are set during previous steps in the loop.
 
+        // PMDESKTOP (section 122): the block being run, as in TurboWarp (StackFrame.op was never set here);
+        // read by the loop-break blocks (scratch3_control _getLoopBlock, Extra Controls) and others.
+        currentStackFrame.op = opCached;
         const primitiveReportedValue = blockFunction(argValues, blockUtility);
 
         // If it's a promise, wait until promise resolves.
