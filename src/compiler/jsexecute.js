@@ -289,6 +289,20 @@ const finishExtensionCall = function*(isWarp, useFlags) {
 }`;
 
 /**
+ * Desktop fork (section 132): a direct extension call without the check (jsgen.js generateDirectExtensionCall, for
+ * the blocks in direct-blocks.json, which never return a promise, yield, change a thread's status or read stack
+ * frames): the same stack frame reset, block utility and call as guardedExtensionCall, nothing handed over, so a
+ * script made only of such calls need not be a generator.
+ */
+runtimeFunctions.directExtensionCall = `const directExtensionCall = (inputs, direct, isWarp, blockId) => {
+    const thread = globalState.thread;
+    const blockUtility = globalState.blockUtility;
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    blockUtility.init(thread, blockId, {}, null);
+    return direct.call(inputs, blockUtility);
+}`;
+
+/**
  * @param {boolean} isLoop True if the block is a LOOP by default (can be overridden by startBranch() call)
  * @returns {unknown} Branch info object for compatibility layer.
  */

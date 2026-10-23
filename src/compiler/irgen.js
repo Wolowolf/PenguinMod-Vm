@@ -12,6 +12,9 @@ const compatBlocks = require('./compat-blocks');
 // Desktop fork (roadmap step 4): extension reporters and Booleans whose answer depends only on their inputs and
 // which change nothing (from block-inventory.json: "pure", no compiler code of their own), with their answer type.
 const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
+// Desktop fork (section 132): extension blocks whose code was read and that never wait, yield, change a thread's
+// status or read stack frames (block-inventory.json: "direct"), so their direct call needs no check after it.
+const plainExtensionBlocks = new Set(require('../extension-support/direct-blocks.json'));
 
 /**
  * @fileoverview Generate intermediate representations from Scratch blocks.
@@ -2150,7 +2153,9 @@ class ScriptTreeGenerator {
         // Desktop fork (section 130): other extension commands, reporters and Booleans are called without the
         // compatibility layer too (jsgen.js generateDirectExtensionCall), but they can still wait.
         const direct = !pure && this.isDirectExtensionCall(block.opcode, blockInfo);
-        if (!pure) this.script.yields = true;
+        // Desktop fork (section 132): ...except the blocks known never to wait (plain call, no check)
+        const plain = direct && plainExtensionBlocks.has(block.opcode) && !this.runtime.pmGuardedExtensionCalls;
+        if (!pure && !plain) this.script.yields = true;
 
         const inputs = {};
         for (const name of Object.keys(block.inputs)) {
@@ -2188,7 +2193,8 @@ class ScriptTreeGenerator {
             substacks,
             compilerInfo: (blockInfo && blockInfo.compilerInfo) || {},
             pure,
-            direct
+            direct,
+            plain
         };
     }
 
@@ -2197,7 +2203,9 @@ class ScriptTreeGenerator {
      * directly: its function without the extension manager's wrapper, followed by a check whose slow path does
      * exactly what the compatibility layer does when a block returns a promise or changes the script's status.
      * Not for dynamic blocks or extensions in a worker (no `pmDirect`), nor branches and hats.
-     * `runtime.pmNoDirectExtensionCalls = true` switches this off (tests only).
+     * `runtime.pmNoDirectExtensionCalls = true` switches this off (tests only). Section 132: the blocks in
+     * direct-blocks.json are called without the check (`plain`); `runtime.pmGuardedExtensionCalls = true` keeps the
+     * check for them too (tests only).
      * @param {string} opcode The block's opcode.
      * @param {*} blockInfo The extension's block info, if any.
      * @returns {boolean} Whether it is called directly.

@@ -1392,7 +1392,8 @@ class JSGenerator {
                 throw new Error(`Unknown block type: ${blockType}`);
             }
 
-            if (isLastInLoop) {
+            // (a plain call, section 132, never waits for a promise)
+            if (isLastInLoop && !node.plain) {
                 this.source += 'if (hasResumedFromPromise) {hasResumedFromPromise = false;continue;}\n';
             }
             break;
@@ -2471,6 +2472,8 @@ class JSGenerator {
         }
         object += '}';
         const call = `${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}"`;
+        // Desktop fork (section 132): a block known never to wait (direct-blocks.json) is called without the check
+        if (node.plain) return `directExtensionCall(${call})`;
         if (isStatement) {
             return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
         }

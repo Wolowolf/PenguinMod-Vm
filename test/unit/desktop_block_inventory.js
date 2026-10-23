@@ -8,6 +8,8 @@
 // Blocks marked "compiled" only have a stub for the interpreter; their compiler code is checked in step 4.
 // - src/extension-support/pure-blocks.json (step 4: the pure blocks the compiler calls directly) lists exactly the
 //   pure reporters and Booleans without compiler code, with their answer type.
+// - src/extension-support/direct-blocks.json (section 132: blocks called without the check after a direct call) lists
+//   exactly the blocks marked "direct", each a command, reporter or Boolean that is not pure, not compiled, never waits.
 // Run: node test/unit/desktop_block_inventory.js
 const test = require('tap').test;
 const fs = require('fs');
@@ -18,6 +20,7 @@ const ArgumentType = require('../../src/extension-support/argument-type');
 const TargetType = require('../../src/extension-support/target-type');
 const inventory = require('../../src/extension-support/block-inventory.json');
 const pureBlocks = require('../../src/extension-support/pure-blocks.json');
+const directBlocks = require('../../src/extension-support/direct-blocks.json');
 
 test('pure-blocks.json matches the inventory', t => {
     const expected = {};
@@ -29,6 +32,22 @@ test('pure-blocks.json matches the inventory', t => {
         }
     }
     t.same(pureBlocks, expected);
+    t.end();
+});
+
+test('direct-blocks.json matches the inventory', t => {
+    const expected = [];
+    for (const [id, extension] of Object.entries(inventory)) {
+        for (const [opcode, block] of Object.entries(extension.blocks)) {
+            if (!('direct' in block)) continue;
+            // a plain direct call (section 132) has no check after it: only for blocks that never wait
+            t.equal(block.direct, true, `${id}_${opcode}: "direct" is only ever true`);
+            t.ok(['command', 'reporter', 'Boolean'].includes(block.type), `${id}_${opcode}: command, reporter or Boolean`);
+            t.ok(!block.pure && !block.compiled && !block.waits, `${id}_${opcode}: not pure, not compiled, never waits`);
+            expected.push(`${id}_${opcode}`);
+        }
+    }
+    t.same(directBlocks, expected);
     t.end();
 });
 
