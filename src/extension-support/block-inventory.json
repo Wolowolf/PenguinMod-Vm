@@ -485,7 +485,8 @@
   },
   "SPpartEngine": {
     "source": "src/extensions/sharkpool_gallery/Particle-Engine.js",
-    "replaces": ["replaced Drawable.prototype.getUniforms","replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
+    "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
+    "hooks": ["renderer.updateDrawableBlendMode (its engines' blend modes)","renderer.createCustomSkin"],
     "note": "own drawables and textures (renderer directly); particles move on animation frames or BEFORE_EXECUTE",
     "blocks": {
       "createEngine": {"type":"command","pure":false,"reads":["settings","sprites","stage size"],"writes":["renderer","sprites"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"stores the engine on the sprite object"},
@@ -628,6 +629,7 @@
   "SPscenes": {
     "source": "src/extensions/sharkpool_gallery/Scenes.js",
     "replaces": [],
+    "hooks": ["Drawable.setEffectUniforms (restores the pen layer's effects)"],
     "note": "a switch restores position, costume, effects, variables, extensionStorage and clones of every sprite, and the pen image",
     "blocks": {
       "createScene": {"type":"command","pure":false,"reads":["sprites","stage","variables"],"writes":["blocks","project"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -811,7 +813,8 @@
   "SPturboSkins": {
     "source": "src/extensions/sharkpool_gallery/Turbo-Skins.js",
     "replaces": [],
-    "note": "creates renderer skins and sets drawables' skin IDs directly; any costume change restores the normal skin",
+    "hooks": ["renderer.createCustomSkin"],
+    "note": "creates renderer skins (renderer.createCustomSkin) and sets drawables' skin IDs directly; any costume change restores the normal skin",
     "blocks": {
       "createSkin": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":true,"hiddenState":true,"page":true,"answer":null,"compiled":false,"note":"image address may be online (Scratch.fetch)"},
       "deleteSkin": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -1296,7 +1299,8 @@
   "g1nxIrisText": {
     "source": "src/extensions/penguinmod_gallery/Gen1x/iris-text.js",
     "replaces": [],
-    "note": "makes its own renderer skins (renderer._allSkins, _nextSkinId, BitmapSkin) and sets useNearest on them; own requestAnimationFrame loops for painting and character animations; compiler code for 3 loops and 3 reporters",
+    "hooks": ["renderer.createCustomSkin"],
+    "note": "makes its own renderer skins (renderer.createCustomSkin, BitmapSkin) and sets useNearest on them; own requestAnimationFrame loops for painting and character animations; compiler code for 3 loops and 3 reporters",
     "blocks": {
       "setText": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"[wait=] markup waits with Date.now"},
       "addLine": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"repaints on the next animation frame"},
@@ -2150,7 +2154,8 @@
   },
   "penP": {
     "source": "src/extensions/turbowarp_gallery/obviousAlexC/penPlus.js",
-    "replaces": ["replaced renderer.createPenSkin","added renderer.penClear"],
+    "replaces": [],
+    "hooks": ["renderer.pmPenClearHooks (clears its triangle layer with the pen)"],
     "note": "own WebGL programs, framebuffers (render textures), textures and shaders entered through renderer.enterDrawRegion; loads the built-in pen",
     "blocks": {
       "isPenDown": {"type":"Boolean","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
@@ -2678,7 +2683,8 @@
   },
   "stretch": {
     "source": "src/extensions/turbowarp_gallery/stretch.js",
-    "replaces": ["wraps every sprite's _getRenderedDirectionAndScale (per sprite, on creation and project load)"],
+    "replaces": [],
+    "note": "since section 120 its blocks set PenguinMod's own sprite stretch (target.stretch, setStretch), the same as the Looks stretch blocks",
     "blocks": {
       "setStretch": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "changeStretch": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -2847,8 +2853,9 @@
   },
   "videoSprites": {
     "source": "src/extensions/turbowarp_gallery/lab/video-sprites.js",
-    "replaces": ["replaced RenderedTarget.prototype.makeClone"],
-    "note": "own renderer skins (renderer._allSkins, _nextSkinId); AFTER_EXECUTE listener updates them every frame",
+    "replaces": [],
+    "hooks": ["runtime.pmCloneCreatedHooks (clones keep the video)","renderer.createCustomSkin"],
+    "note": "own renderer skins (renderer.createCustomSkin); AFTER_EXECUTE listener updates them every frame",
     "blocks": {
       "videoSpriteFillSprite": {"type":"command","pure":false,"reads":[],"writes":["input","renderer","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"turns the camera on and waits for it"},
       "videoSpriteFillColor": {"type":"command","pure":false,"reads":[],"writes":["input","renderer","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"turns the camera on and waits for it"},
@@ -2888,8 +2895,9 @@
   },
   "xeltallivSimple3D": {
     "source": "src/extensions/turbowarp_gallery/Xeltalliv/simple3D.js",
-    "replaces": ["wraps renderer.draw","sets setHighQuality on its own drawable"],
-    "note": "own WebGL2 context, canvas skin and drawable (renderer._allSkins, _allDrawables directly); block functions are inline \"def\" functions in its definitions list",
+    "replaces": [],
+    "hooks": ["renderer.pmBeforeDrawHooks (uploads its canvas before a frame)","renderer RenderQualityUpdated event (stage resized)","renderer.createCustomSkin"],
+    "note": "own WebGL2 context, canvas skin and drawable (renderer.createCustomSkin, its own layer group in renderer._groupOrdering / _layerGroups); block functions are inline \"def\" functions in its definitions list",
     "blocks": {
       "resetEverything": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false},
       "clear": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":null,"compiled":false},
@@ -2988,7 +2996,8 @@
   },
   "xeltallivclipblend": {
     "source": "src/extensions/turbowarp_gallery/Xeltalliv/clippingblending.js",
-    "replaces": ["replaced renderer._drawThese","added Drawable.prototype.getUniforms, updateClipBox, updateBlendMode","added renderer.updateDrawableClipBox, updateDrawableBlendMode","replaced renderer.createPenSkin","replaced the pen's _onTargetMoved and its pen skin's _flushLines"],
+    "replaces": [],
+    "hooks": ["renderer.updateDrawableClipBox / updateDrawableBlendMode (built in since section 120; the pen uses target.clipbox / target.blendMode)","runtime PROJECT_STOP_ALL event (resets them)","runtime.pmCloneCreatedHooks (clones copy them)"],
     "blocks": {
       "setClipbox": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite","events"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"also marks its pen state dirty (module flag)"},
       "clearClipbox": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite","events"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"also marks its pen state dirty (module flag)"},

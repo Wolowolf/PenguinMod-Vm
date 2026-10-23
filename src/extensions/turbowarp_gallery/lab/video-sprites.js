@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's lab/video-sprites.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): runtime.pmCloneCreatedHooks instead of replacing RenderedTarget.prototype.makeClone, and renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -356,9 +356,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   const attach = (target) => {
     const state = getOrCreateState(target);
     if (!state.skin) {
-      const id = renderer._nextSkinId++;
-      state.skin = new VideoSpriteSkin(id, target);
-      renderer._allSkins[id] = state.skin;
+      // Desktop fork (section 120): renderer.createCustomSkin instead of writing _allSkins
+      state.skin = renderer.createCustomSkin(VideoSpriteSkin, target);
     }
 
     renderer.updateDrawableSkinId(target.drawableID, state.skin.id);
@@ -437,11 +436,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   runtime.on("PROJECT_STOP_ALL", stopAllFills);
   runtime.on("PROJECT_LOADED", stopAllFills);
 
-  // targetWasCreated runs before the clone's Drawable is set up, so we have to patch makeClone.
-  const originalMakeClone = RenderedTarget.prototype.makeClone;
-  RenderedTarget.prototype.makeClone = function () {
-    const newClone = originalMakeClone.call(this);
-    const originalState = getState(this);
+  // targetWasCreated runs before the clone's Drawable is set up, so we use the clone hook that runs after it.
+  // Desktop fork (section 120): runtime.pmCloneCreatedHooks instead of replacing RenderedTarget.prototype.makeClone
+  runtime.pmCloneCreatedHooks.push((newClone, original) => {
+    const originalState = getState(original);
     if (originalState && originalState.skin) {
       const newState = getOrCreateState(newClone);
       newState.zoom = originalState.zoom;
@@ -449,8 +447,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       newState.maskColor = originalState.maskColor;
       attach(newClone);
     }
-    return newClone;
-  };
+  });
 
   runtime.on("targetWasRemoved", (target) => {
     const state = getState(target);

@@ -1170,6 +1170,8 @@ class RenderedTarget extends Target {
         newClone._edgeActivatedHatValues = Clone.simple(this._edgeActivatedHatValues);
         newClone.initDrawable(StageLayering.SPRITE_LAYER);
         newClone.updateAllDrawableProperties();
+        const hooks = this.runtime.pmCloneCreatedHooks;
+        for (let i = 0; i < hooks.length; i++) hooks[i](newClone, this);
         return newClone;
     }
 

@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Particle-Engine.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): its engines' blend modes are the renderer's own (renderer.updateDrawableBlendMode) instead of replacing Drawable.prototype.getUniforms, and its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -74,40 +74,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   };
 
   // ripped from Clipping and Blening extension
-  const Blendings = Object.assign(Object.create(null), {
-    default: [
-      gl.ONE,
-      gl.ONE_MINUS_SRC_ALPHA,
-      gl.ONE,
-      gl.ONE_MINUS_SRC_ALPHA,
-      gl.FUNC_ADD,
-    ],
-    additive: [gl.ONE, gl.ONE, gl.ZERO, gl.ONE, gl.FUNC_ADD],
-    "additive with alpha": [gl.ONE, gl.ONE, gl.ONE, gl.ONE, gl.FUNC_ADD],
-    subtract: [gl.ONE, gl.ONE, gl.ZERO, gl.ONE, gl.FUNC_REVERSE_SUBTRACT],
-    "subtract with alpha": [
-      gl.ONE,
-      gl.ONE,
-      gl.ONE,
-      gl.ONE,
-      gl.FUNC_REVERSE_SUBTRACT,
-    ],
-    multiply: [
-      gl.DST_COLOR,
-      gl.ONE_MINUS_SRC_ALPHA,
-      gl.DST_COLOR,
-      gl.ONE_MINUS_SRC_ALPHA,
-      gl.FUNC_ADD,
-    ],
-    invert: [
-      gl.ONE_MINUS_DST_COLOR,
-      gl.ONE_MINUS_SRC_COLOR,
-      gl.ZERO,
-      gl.ONE,
-      gl.FUNC_ADD,
-    ],
-    mask: [gl.ZERO, gl.SRC_ALPHA, gl.ZERO, gl.SRC_ALPHA, gl.FUNC_ADD],
-  });
+  // Desktop fork (section 120): blend modes are drawn by the renderer (scratch-render DrawModes.js)
 
   let deltaTime = 0;
   let prevTime = 0;
@@ -178,23 +145,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return this._texture || super.getTexture();
     }
   }
-
-  // Patch to allow opacity and blends in our engine
-  const gu = Drawable.prototype.getUniforms;
-  Drawable.prototype.getUniforms = function () {
-    const gl = this._renderer.gl;
-    if (this[engineTag]) {
-      const blend = Blendings[this[engineTag]] ?? Blendings.default;
-      gl.blendEquation(blend[4]);
-      gl.blendFuncSeparate(blend[0], blend[1], blend[2], blend[3]);
-    } else {
-      if (vm.extensionManager._loadedExtensions.has("xeltallivclipblend"))
-        return gu.call(this);
-      gl.blendEquation(gl.FUNC_ADD);
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    }
-    return gu.call(this);
-  };
 
   // Constants
   const FPS_NORM = 100 / 3; // 33.333 FPS
@@ -305,14 +255,9 @@ void main() {
     const targetName = target.getName();
     const drawableId = render.createDrawable("sprite");
     const drawable = render._allDrawables[drawableId];
-    const skinId = render._nextSkinId++;
-    const skin = new particleSkin(
-      skinId,
-      render,
-      width * 2,
-      height * 2
-    );
-    render._allSkins[skinId] = skin;
+    // Desktop fork (section 120): renderer.createCustomSkin instead of writing _allSkins
+    const skin = render.createCustomSkin(particleSkin, render, width * 2, height * 2);
+    const skinId = skin.id;
 
     const projection = twgl.m4.ortho(
       0,
@@ -349,7 +294,7 @@ void main() {
     drawable.updateScale(engine.drawableScale);
     render.updateDrawableSkinId(drawableId, skinId);
     drawable.customDrawableName = `${targetName} Particle Engine (SP)`;
-    drawable[engineTag] = "default";
+    render.updateDrawableBlendMode(drawableId, "default"); // Desktop fork (section 120)
     drawable.onStageSZChange = ((event) => {
       const size = event.newSize;
 
@@ -1228,7 +1173,7 @@ void main() {
       const target = this.getSprite(args.TARGET);
       const engine = target?.[engineTag];
       if (target && engine) {
-        engine.drawable[engineTag] = Cast.toString(args.TYPE);
+        render.updateDrawableBlendMode(engine.drawableId, Cast.toString(args.TYPE)); // Desktop fork (section 120)
       }
     }
 

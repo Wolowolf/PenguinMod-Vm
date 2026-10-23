@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Xeltalliv/simple3D.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (one line: the editor crashed on the next stage resize).
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1124,6 +1124,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return canvasUseNearest;
     }
   }
+  let onRenderQualityUpdated = null; // Desktop fork (section 120)
   function addSimple3DLayer(publicApi) {
     // Register new drawable group "simple3D"
     // To undertsand how this patch works, first understand how those are interconnected:
@@ -1139,9 +1140,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     // Create drawable and skin
-    skinId = renderer._nextSkinId++;
-    const skin = new SimpleSkin(skinId, renderer);
-    renderer._allSkins[skinId] = skin;
+    // Desktop fork (section 120): renderer.createCustomSkin instead of writing _allSkins
+    const skin = renderer.createCustomSkin(SimpleSkin, renderer);
+    skinId = skin.id;
     drawableId = renderer.createDrawable("simple3D");
     const drawable = renderer._allDrawables[drawableId];
     renderer.updateDrawableSkinId(drawableId, skinId);
@@ -1154,23 +1155,23 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     // Detect resizing
-    drawable.setHighQuality = function (...args) {
-      // Desktop fork: on this drawable, not on the prototype (whose setHighQuality now clears the drawable's touching cache, section 40)
-      Object.getPrototypeOf(this).setHighQuality.call(this, ...args);
+    // Desktop fork (section 120): the renderer's RenderQualityUpdated event (after every drawable's setHighQuality)
+    // instead of replacing this drawable's setHighQuality
+    onRenderQualityUpdated = () => {
       runtime.startHats(`${extensionId}_whenStageResized`);
-      if (!canvasNativeSize) this.skin.updateNativeSize();
-      if (!canvasResolution) this.skin.resizeCanvas();
+      if (!canvasNativeSize) skin.updateNativeSize();
+      if (!canvasResolution) skin.resizeCanvas();
     };
+    renderer.on("RenderQualityUpdated", onRenderQualityUpdated);
 
     // Support for SharkPool's Layer Control extension
     drawable.customDrawableName = "Simple3D Layer";
 
+    // Desktop fork (section 120): the renderer's pmBeforeDrawHooks (called only when it is dirty) instead of replacing renderer.draw
     if (!publicApi.redraw) {
-      const drawOriginal = renderer.draw;
-      renderer.draw = function () {
-        if (this.dirty && publicApi.redraw) publicApi.redraw();
-        drawOriginal.call(this);
-      };
+      renderer.pmBeforeDrawHooks.push(() => {
+        if (publicApi.redraw) publicApi.redraw();
+      });
     }
 
     publicApi.redraw = function () {
@@ -1182,6 +1183,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     publicApi.redraw();
   }
   function removeSimple3DLayer() {
+    // Desktop fork (section 120)
+    if (onRenderQualityUpdated) {
+      renderer.removeListener("RenderQualityUpdated", onRenderQualityUpdated);
+      onRenderQualityUpdated = null;
+    }
     renderer.destroyDrawable(drawableId, "simple3D");
     renderer.destroySkin(skinId);
 

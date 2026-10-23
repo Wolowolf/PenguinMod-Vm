@@ -1,6 +1,9 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Xeltalliv/clippingblending.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): clip boxes and blend modes are built into the renderer
+// (scratch-render DrawModes.js, Drawable updateClipBox / updateBlendMode, the pen skin's setDrawModes) and the pen extension, so this file no longer
+// replaces renderer._drawThese, gl.bindFramebuffer, Drawable.prototype.getUniforms, the renderer's createPenSkin, the pen's _onTargetMoved / _penDown,
+// the pen skin's _flushLines or RenderedTarget onStopAll / makeClone: it uses PROJECT_STOP_ALL and runtime.pmCloneCreatedHooks (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -31,274 +34,33 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       </g>
     </svg>`);
 
-  let toCorrectThing = null;
-  let active = false;
-  let flipY = false;
+  // Desktop fork (section 120): the renderer draws clip boxes and blend modes itself (scratch-render DrawModes.js),
+  // and the pen extension passes each sprite's target.clipbox / target.blendMode to the pen layer.
   const vm = Scratch.vm;
   const runtime = vm.runtime;
   const renderer = vm.renderer;
-  const _drawThese = renderer._drawThese;
-  const gl = renderer.gl;
-  const canvas = renderer.canvas;
-  let Drawable = renderer.exports.Drawable;
-  let width = 0;
-  let height = 0;
-  let scratchUnitWidth = 480;
-  let scratchUnitHeight = 360;
-  let penDirty = false;
-  const publicApi =
-    runtime.ext_clippingblendingapi ?? (runtime.ext_clippingblendingapi = {});
-  if (!publicApi.mainFramebuffer) publicApi.mainFramebuffer = null;
-  if (!publicApi.setActive)
-    publicApi.setActive = (value) => {
-      active = value;
-    };
-
-  // prettier-ignore
-  const Blendings = Object.assign(Object.create(null), {
-    "default": [gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.FUNC_ADD],
-    "default behind": [gl.ONE_MINUS_DST_ALPHA, gl.ONE, gl.ONE_MINUS_DST_ALPHA, gl.ONE, gl.FUNC_ADD],
-    "additive": [gl.ONE, gl.ONE, gl.ZERO, gl.ONE, gl.FUNC_ADD],
-    "additive with alpha": [gl.ONE, gl.ONE, gl.ONE, gl.ONE, gl.FUNC_ADD],
-    "additive legacy": [gl.ONE, gl.ONE, gl.ONE, gl.ONE, gl.FUNC_ADD],
-    "subtract": [gl.ONE, gl.ONE, gl.ZERO, gl.ONE, gl.FUNC_REVERSE_SUBTRACT],
-    "subtract with alpha": [gl.ONE, gl.ONE, gl.ONE, gl.ONE, gl.FUNC_REVERSE_SUBTRACT],
-    "subtract legacy": [gl.ONE, gl.ONE, gl.ONE, gl.ONE, gl.FUNC_REVERSE_SUBTRACT],
-    "multiply": [gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.FUNC_ADD],
-    "invert": [gl.ONE_MINUS_DST_COLOR, gl.ONE_MINUS_SRC_COLOR, gl.ZERO, gl.ONE, gl.FUNC_ADD],
-    "invert legacy": [gl.ONE_MINUS_DST_COLOR, gl.ONE_MINUS_SRC_COLOR, gl.ONE_MINUS_DST_COLOR, gl.ONE_MINUS_SRC_COLOR, gl.FUNC_ADD],
-    "mask": [gl.ZERO, gl.SRC_ALPHA, gl.ZERO, gl.SRC_ALPHA, gl.FUNC_ADD],
-    "erase": [gl.ZERO, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE_MINUS_SRC_ALPHA, gl.FUNC_ADD],
-  });
-
-  renderer._drawThese = function (drawables, drawMode, projection, opts) {
-    active = true;
-    [scratchUnitWidth, scratchUnitHeight] = renderer.getNativeSize();
-    _drawThese.call(this, drawables, drawMode, projection, opts);
-    gl.disable(gl.SCISSOR_TEST);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    active = false;
-  };
-
-  const bfb = gl.bindFramebuffer;
-  gl.bindFramebuffer = function (target, framebuffer) {
-    let toCanvas = false;
-    if (target == gl.FRAMEBUFFER) {
-      if (framebuffer == publicApi.mainFramebuffer) {
-        toCanvas = true;
-        toCorrectThing = true;
-        flipY = false;
-        width = canvas.width;
-        height = canvas.height;
-      } else if (renderer._penSkinId !== null) {
-        const fbInfo = renderer._allSkins[renderer._penSkinId]._framebuffer;
-        if (framebuffer == fbInfo.framebuffer) {
-          toCorrectThing = true;
-          flipY = true;
-          width = fbInfo.width;
-          height = fbInfo.height;
-        } else {
-          toCorrectThing = false;
-        }
-      } else {
-        toCorrectThing = false;
-      }
-    }
-    if (toCanvas === true) {
-      Blendings["subtract legacy"][2] = gl.ZERO;
-      Blendings["invert legacy"][2] = gl.ZERO;
-      Blendings["invert legacy"][3] = gl.ONE;
-    } else {
-      Blendings["subtract legacy"][2] = gl.ONE;
-      Blendings["invert legacy"][2] = gl.ONE_MINUS_DST_COLOR;
-      Blendings["invert legacy"][3] = gl.ONE_MINUS_SRC_COLOR;
-    }
-    bfb.call(this, target, framebuffer);
-  };
-
-  function setupModes(clipbox, blendMode, flipY) {
-    if (clipbox) {
-      gl.enable(gl.SCISSOR_TEST);
-      let x = ((clipbox.x_min / scratchUnitWidth + 0.5) * width) | 0;
-      let y = ((clipbox.y_min / scratchUnitHeight + 0.5) * height) | 0;
-      let x2 = ((clipbox.x_max / scratchUnitWidth + 0.5) * width) | 0;
-      let y2 = ((clipbox.y_max / scratchUnitHeight + 0.5) * height) | 0;
-      let w = x2 - x;
-      let h = y2 - y;
-      if (flipY) {
-        y = ((-clipbox.y_max / scratchUnitHeight + 0.5) * height) | 0;
-      }
-      gl.scissor(x, y, w, h);
-    } else {
-      gl.disable(gl.SCISSOR_TEST);
-    }
-    const blend = Blendings[blendMode] ?? Blendings.default;
-    gl.blendEquation(blend[4]);
-    gl.blendFuncSeparate(blend[0], blend[1], blend[2], blend[3]);
-  }
-
-  // Modifying and expanding Drawable
-  const gu = Drawable.prototype.getUniforms;
-  Drawable.prototype.getUniforms = function () {
-    if (active && toCorrectThing) {
-      setupModes(this.clipbox, this.blendMode, flipY);
-    }
-    return gu.call(this);
-  };
-  Drawable.prototype.updateClipBox = function (clipbox) {
-    this.clipbox = clipbox;
-  };
-  Drawable.prototype.updateBlendMode = function (blendMode) {
-    this.blendMode = blendMode;
-  };
-
-  // Expanding renderer
-  renderer.updateDrawableClipBox = function (drawableID, clipbox) {
-    const drawable = this._allDrawables[drawableID];
-    if (!drawable) return;
-    drawable.updateClipBox(clipbox);
-  };
-  renderer.updateDrawableBlendMode = function (drawableID, blendMode) {
-    const drawable = this._allDrawables[drawableID];
-    if (!drawable) return;
-    drawable.updateBlendMode(blendMode);
-  };
 
   // Reset on stop & clones inherit effects
-  const regTargetStuff = function (args) {
-    if (args.editingTarget) {
-      vm.removeListener("targetsUpdate", regTargetStuff);
-      const proto = vm.runtime.targets[0].__proto__;
-      const osa = proto.onStopAll;
-      proto.onStopAll = function () {
-        this.clipbox = null;
-        this.blendMode = "default";
-        this.renderer.updateDrawableClipBox.call(
-          renderer,
-          this.drawableID,
-          null
-        );
-        this.renderer.updateDrawableBlendMode.call(
-          renderer,
-          this.drawableID,
-          null
-        );
-        osa.call(this);
-      };
-      const mc = proto.makeClone;
-      proto.makeClone = function () {
-        const newTarget = mc.call(this);
-        if (this.clipbox || this.blendMode) {
-          newTarget.clipbox = this.clipbox
-            ? Object.assign({}, this.clipbox)
-            : null;
-          newTarget.blendMode = this.blendMode;
-          renderer.updateDrawableClipBox.call(
-            renderer,
-            newTarget.drawableID,
-            this.clipbox
-          );
-          renderer.updateDrawableBlendMode.call(
-            renderer,
-            newTarget.drawableID,
-            this.blendMode
-          );
-        }
-        return newTarget;
-      };
-    }
-  };
-  vm.on("targetsUpdate", regTargetStuff);
-
-  // Pen lines support
-  let emptyObject = {};
-  let lastTarget = emptyObject;
-  let lastClipbox = {};
-  let lastBlendMode = "default";
-  function patchPen(skin) {
-    const ext_pen = runtime.ext_pen;
-    skin._lineOnBufferDrawRegionId.exit = () => {
-      skin._exitDrawLineOnBuffer();
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.disable(gl.SCISSOR_TEST);
-      lastTarget = emptyObject;
-      lastClipbox = null;
-      lastBlendMode = "default";
-    };
-    const willDrawPenWithTarget = function (target) {
-      if (!penDirty && target == lastTarget) return;
-      penDirty = false;
-
-      const clipbox = target.clipbox;
-      if (
-        !lastClipbox ^ !clipbox ||
-        lastBlendMode != target.blendMode ||
-        (clipbox &&
-          (clipbox.x_min != lastClipbox.x_min ||
-            clipbox.y_min != lastClipbox.y_min ||
-            clipbox.x_max != lastClipbox.x_max ||
-            clipbox.y_max != lastClipbox.y_max))
-      ) {
-        if (skin.attribute_index || skin.a_lineColorIndex) {
-          // Supporting both before and after https://github.com/TurboWarp/scratch-render/pull/11
-          skin._flushLines();
-        }
-        lastTarget = target;
-        if (clipbox) {
-          lastClipbox = {
-            x_min: clipbox.x_min,
-            y_min: clipbox.y_min,
-            x_max: clipbox.x_max,
-            y_max: clipbox.y_max,
-          };
-        } else {
-          lastClipbox = null;
-        }
-        lastBlendMode = target.blendMode;
-      }
-    };
-    // onTargetMoved function of pen draws a line.
-    // When drawing a line it is important to know the target.
-    // This saves target.
-    const onTargetMoved = ext_pen._onTargetMoved;
-    ext_pen._onTargetMoved = function (target, oldX, oldY, isForce) {
-      willDrawPenWithTarget(target);
-      onTargetMoved.call(this, target, oldX, oldY, isForce);
-    };
-    // Existing targets may still have old onTargetMoved
-    for (let target of runtime.targets) {
-      if (target.onTargetMoved == onTargetMoved) {
-        target.onTargetMoved = ext_pen._onTargetMoved;
+  runtime.on("PROJECT_STOP_ALL", () => {
+    for (const target of runtime.targets) {
+      if (target.clipbox || target.blendMode) {
+        target.clipbox = null;
+        target.blendMode = null;
+        renderer.updateDrawableClipBox(target.drawableID, null);
+        renderer.updateDrawableBlendMode(target.drawableID, null);
       }
     }
-    // When drawing a dot it is important to know the target.
-    // This saves target.
-    const penDown = ext_pen._penDown;
-    ext_pen._penDown = function (target) {
-      willDrawPenWithTarget(target);
-      penDown.call(this, target);
-    };
-    // Set up correct clipping/blending before drawing
-    const flushLines = skin.__proto__._flushLines;
-    skin.__proto__._flushLines = function () {
-      setupModes(lastClipbox, lastBlendMode, true);
-      flushLines.call(this);
-    };
-  }
-  if (renderer._allSkins[renderer._penSkinId]) {
-    // If pen skin already exists, things can be patched
-    patchPen(renderer._allSkins[renderer._penSkinId]);
-  } else {
-    // If pen skin does not exist, wait until it will,
-    // trigger code once, and return everything as it was
-    const createPenSkin = renderer.createPenSkin;
-    renderer.createPenSkin = function () {
-      let skinId = createPenSkin.call(this);
-      patchPen(renderer._allSkins[skinId]);
-      renderer.createPenSkin = createPenSkin;
-      return skinId;
-    };
-  }
+  });
+  runtime.pmCloneCreatedHooks.push((newTarget, original) => {
+    if (original.clipbox || original.blendMode) {
+      newTarget.clipbox = original.clipbox
+        ? Object.assign({}, original.clipbox)
+        : null;
+      newTarget.blendMode = original.blendMode;
+      renderer.updateDrawableClipBox(newTarget.drawableID, original.clipbox);
+      renderer.updateDrawableBlendMode(newTarget.drawableID, original.blendMode);
+    }
+  });
 
   class Extension {
     getInfo() {
@@ -453,7 +215,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         x_max: Math.max(X1, X2),
         y_max: Math.max(Y1, Y2),
       };
-      penDirty = true;
       target.clipbox = newClipbox;
       renderer.updateDrawableClipBox.call(
         renderer,
@@ -471,7 +232,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     clearClipbox(args, { target }) {
       if (target.isStage) return;
       target.clipbox = null;
-      penDirty = true;
       renderer.updateDrawableClipBox.call(renderer, target.drawableID, null);
       if (target.visible) {
         renderer.dirty = true;
@@ -524,7 +284,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     _setBlend(newValue, target) {
       if (target.isStage) return;
-      penDirty = true;
       target.blendMode = newValue;
       renderer.updateDrawableBlendMode.call(
         renderer,

@@ -348,6 +348,8 @@ class Runtime extends EventEmitter {
          * pmVisualReportHooks: (value) => the value shown in the editor's value bubble.
          * pmUsernameChangedHooks: () after the username changed (io/userData.js).
          * pmSpriteLookupById: getSpriteTargetByName also accepts target IDs.
+         * pmCloneCreatedHooks (section 120): (clone, original) at the end of makeClone, when the clone's drawable
+         * exists (the targetWasCreated event comes before it).
          */
         this.pmRestartThreadHooks = [];
         this.pmCostumeChangedHooks = [];
@@ -355,6 +357,7 @@ class Runtime extends EventEmitter {
         this.pmVisualReportHooks = [];
         this.pmUsernameChangedHooks = [];
         this.pmSpriteLookupById = false;
+        this.pmCloneCreatedHooks = [];
 
         /**
          * All threads that finished running and were removed from this.threads

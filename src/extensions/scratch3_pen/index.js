@@ -110,6 +110,12 @@ class Scratch3PenBlocks {
         this._penSkinId = -1;
 
         /**
+         * Desktop fork (section 120): whether a sprite ever drew with a clip box or blend mode (see _penDrawModes).
+         * @type {boolean}
+         */
+        this._penDrawModesUsed = false;
+
+        /**
          * The attribute of print text.
          * @type {object}
          */
@@ -274,6 +280,7 @@ class Scratch3PenBlocks {
                 if (target.cameraBound >= 0) {
                     [oldX, oldY] = translateForCamera(this.runtime, target.cameraBound, oldX, oldY);
                 }
+                this._penDrawModes(penSkinId, target);
                 this.runtime.renderer.penLine(penSkinId, penState.penAttributes, oldX, oldY, newX, newY);
                 this.runtime.requestRedraw();
             }
@@ -1156,6 +1163,20 @@ class Scratch3PenBlocks {
     penDown (args, util) {
         this._penDown(util.target);
     }
+    /**
+     * Desktop fork (section 120): a sprite's clip box and blend mode (TurboWarp Clipping & Blending, which sets
+     * target.clipbox and target.blendMode) also apply to the pen lines and dots it draws.
+     * @param {number} penSkinId - the pen layer's skin ID.
+     * @param {RenderedTarget} target - the sprite about to draw.
+     * @private
+     */
+    _penDrawModes (penSkinId, target) {
+        if (target.clipbox || target.blendMode || this._penDrawModesUsed) {
+            this._penDrawModesUsed = true;
+            this.runtime.renderer.penDrawModes(penSkinId, target.clipbox || null, target.blendMode || null);
+        }
+    }
+
     _penDown (target) { // used by compiler
         const penState = this._getPenState(target);
 
@@ -1166,6 +1187,7 @@ class Scratch3PenBlocks {
 
         const penSkinId = this._getPenLayerID();
         if (penSkinId >= 0) {
+            this._penDrawModes(penSkinId, target);
             this.runtime.renderer.penPoint(penSkinId, penState.penAttributes, target.x, target.y);
             this.runtime.requestRedraw();
         }

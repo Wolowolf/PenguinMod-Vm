@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/iris-text.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -3999,12 +3999,11 @@ Enjoy!! :D
 
         if (state.skinId === null) {
             const BitmapSkin = renderer.exports.BitmapSkin;
-            const skinId = renderer._nextSkinId++;
-            const skin = new BitmapSkin(skinId, renderer);
+            // Desktop fork (section 120): renderer.createCustomSkin instead of writing _allSkins
+            const skin = renderer.createCustomSkin(BitmapSkin, renderer);
             installLinearFiltering(skin, state);
             skin.setBitmap(canvas, DEST_SCALE, rotationCenter);
-            renderer._allSkins[skinId] = skin;
-            state.skinId = skinId;
+            state.skinId = skin.id;
         } else {
             renderer.updateBitmapSkin(state.skinId, canvas, DEST_SCALE, rotationCenter);
             const current = renderer._allSkins[state.skinId];

@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Scenes.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the pen layer's effects are restored with Drawable.setEffectUniforms instead of writing its _uniforms (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -519,11 +519,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           visible: extras.penData.visible,
         });
 
-        Object.entries(extras.penData.effects).forEach((att) => {
-          penSource._uniforms[att[0]] = [att[1]];
-        });
-        render.dirty = true;
-        penSource.setConvexHullDirty();
+        // Desktop fork (section 120): setEffectUniforms instead of writing _uniforms (also redraws and updates the shape)
+        penSource.setEffectUniforms(extras.penData.effects);
       }
 
       const runtimeOpts = extras.runtimeOpts;

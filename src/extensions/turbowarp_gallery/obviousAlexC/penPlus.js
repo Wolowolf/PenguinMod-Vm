@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's obviousAlexC/penPlus.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the renderer's pmPenClearHooks instead of replacing renderer.penClear (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -380,7 +380,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   let parentExtension = null;
 
   //?Override pen Clear with pen+
-  renderer.penClear = (penSkinID) => {
+  // Desktop fork (section 120): the renderer's pmPenClearHooks (it then clears the pen layer itself) instead of replacing renderer.penClear
+  renderer.pmPenClearHooks.push(() => {
     lastFB = gl.getParameter(gl.FRAMEBUFFER_BINDING);
     //Pen+ Overrides default pen Clearing
     gl.bindFramebuffer(gl.FRAMEBUFFER, triBufferInfo.framebuffer);
@@ -394,12 +395,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       renderer._backgroundColor4f[2],
       renderer._backgroundColor4f[3]
     );
-
-    //Old clearing
-    renderer.dirty = true;
-    const skin = /** @type {PenSkin} */ renderer._allSkins[penSkinID];
-    skin.clear();
-  };
+  });
 
   class extension {
     /* EXTENSION SETTINGS */
