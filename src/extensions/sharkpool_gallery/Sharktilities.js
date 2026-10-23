@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Sharktilities.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 123)"
+// (docs/EXTENSION-ROADMAP.md step 5d): "old value" is dragged as a copy through the block's canDragDuplicate
+// instead of replacing ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -25,14 +27,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   var lastValues = {};
 
   runtime.on("BEFORE_EXECUTE", () => runtime.startHats("SharkPoolSharktilities_whenChanged"));
-  if (Scratch.gui) Scratch.gui.getBlockly().then(SB => {
-    const ogCheck = SB.scratchBlocksUtils.isShadowArgumentReporter;
-    SB.scratchBlocksUtils.isShadowArgumentReporter = function (block) {
-      const result = ogCheck(block);
-      if (result) return true;
-      return block.isShadow() && regenReporters.includes(block.type);
-    };
-  });
+  // Desktop fork (section 123): the block's canDragDuplicate makes the block library treat it like an argument reporter
 
   // This function was taken from Looks+ by LilyMakesThings
   const packageTest = (blockName) => {
@@ -103,7 +98,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "changeV", blockType: Scratch.BlockType.REPORTER,
-            hideFromPalette: true, text: "old value"
+            hideFromPalette: true, text: "old value", canDragDuplicate: true // Desktop fork (section 123)
           },
           {
             opcode: "isChanged",

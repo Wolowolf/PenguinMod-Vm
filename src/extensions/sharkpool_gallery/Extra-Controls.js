@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 121)"
 // (docs/EXTENSION-ROADMAP.md step 5c): engine hooks instead of replacing window.Error, console.error,
 // _restartThread, visualReport, Blocks.prototype.getNextBlock / getBranch and the compiler classes.
+// Section 123 (step 5d): "data" is dragged as a copy through the block's canDragDuplicate instead of replacing
+// ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter; marked "Desktop fork (section 123)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -58,13 +60,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let hats = { ...runtime._hats }, overrideCalls = {};
 
   const regenReporters = ["SPadvControl_threadArgs"];
-  if (Scratch.gui) Scratch.gui.getBlockly().then(SB => {
-    const originalCheck = SB.scratchBlocksUtils.isShadowArgumentReporter;
-    SB.scratchBlocksUtils.isShadowArgumentReporter = function (block) {
-      if (originalCheck(block)) return true;
-      return block.isShadow() && regenReporters.includes(block.type);
-    };
-  });
+  // Desktop fork (section 123): the block's canDragDuplicate makes the block library treat it like an argument reporter
 
   const resetStorage = () => {
     conditionStorage = Object.create(null);
@@ -297,6 +293,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "threadArgs", blockType: Scratch.BlockType.REPORTER, extensions: ["colours_control"],
             hideFromPalette: true, text: "data", allowDropAnywhere: true,
+            canDragDuplicate: true, // Desktop fork (section 123)
           },
           {
             opcode: "runType",

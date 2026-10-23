@@ -278,8 +278,8 @@
   },
   "SPadvControl": {
     "source": "src/extensions/sharkpool_gallery/Extra-Controls.js",
-    "replaces": ["replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
-    "hooks": ["runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmRestartThreadHooks","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
+    "replaces": [],
+    "hooks": ["ScratchBlocks canDragDuplicate block option (editor)","runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmRestartThreadHooks","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
     "note": "some blocks run branches in Thread objects it makes itself (interpreter only); key listeners in the page post bound keys",
     "blocks": {
       "runFlag": {"type":"command","pure":false,"reads":["sprites","threads"],"writes":["events","sound","sprites","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -359,7 +359,8 @@
   },
   "SPcolorMaster": {
     "source": "src/extensions/sharkpool_gallery/Color-Master.js",
-    "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
+    "replaces": [],
+    "hooks": ["ScratchBlocks.BlockSvg.pmGradients (its block gradient, editor)"],
     "blocks": {
       "hexString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "convPen": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -487,8 +488,8 @@
   },
   "SPpartEngine": {
     "source": "src/extensions/sharkpool_gallery/Particle-Engine.js",
-    "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
-    "hooks": ["renderer.updateDrawableBlendMode (its engines' blend modes)","renderer.createCustomSkin"],
+    "replaces": [],
+    "hooks": ["ScratchBlocks.BlockSvg.pmGradients (its block gradient, editor)","renderer.updateDrawableBlendMode (its engines' blend modes)","renderer.createCustomSkin"],
     "note": "own drawables and textures (renderer directly); particles move on animation frames or BEFORE_EXECUTE",
     "blocks": {
       "createEngine": {"type":"command","pure":false,"reads":["settings","sprites","stage size"],"writes":["renderer","sprites"],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"note":"stores the engine on the sprite object"},
@@ -588,7 +589,8 @@
   },
   "SPqrCodes": {
     "source": "src/extensions/sharkpool_gallery/QR-Codes.js",
-    "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
+    "replaces": [],
+    "hooks": ["ScratchBlocks.BlockSvg.pmGradients (its block gradient, editor)"],
     "blocks": {
       "createQR": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":true,"answer":"string","compiled":false,"note":"uses the colours set by setColors"},
       "setColors": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false},
@@ -612,7 +614,7 @@
   },
   "SPrigidBody": {
     "source": "src/extensions/sharkpool_gallery/Rigidbodies.js",
-    "replaces": ["replaced ScratchBlocks BlockSvg.prototype.render (editor)"],
+    "replaces": [],
     "note": "bodies are registered in the extension (allRigidbodies) or built from JSON",
     "blocks": {
       "isColliding": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":"boolean","compiled":false},
@@ -836,7 +838,8 @@
   },
   "SharkPoolSharktilities": {
     "source": "src/extensions/sharkpool_gallery/Sharktilities.js",
-    "replaces": ["replaced ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter (editor)"],
+    "replaces": [],
+    "hooks": ["ScratchBlocks canDragDuplicate block option (editor)"],
     "blocks": {
       "penLayer": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false},
       "getText": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},

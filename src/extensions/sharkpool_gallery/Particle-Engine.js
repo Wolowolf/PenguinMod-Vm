@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Particle-Engine.js, moved into
 // the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): its engines' blend modes are the renderer's own (renderer.updateDrawableBlendMode) instead of replacing Drawable.prototype.getUniforms, and its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
+// Section 123 (step 5d): its block gradient goes into the block library's own gradient table (ScratchBlocks.BlockSvg.pmGradients) instead of replacing BlockSvg.prototype.render; marked "Desktop fork (section 123)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1399,27 +1400,8 @@ void main() {
         document.body.append(grad);
       }
       add2Body();
-      if (!SB?.SPgradients?.patched) {
-        /* Gradient Patch by SharkPool, inspired by 0znzw */
-        SB.SPgradients = { gradientUrls: new Map(), patched: true };
-        const ogBlockRender = SB.BlockSvg.prototype.render;
-        SB.BlockSvg.prototype.render = function (...args) {
-          const result = ogBlockRender.apply(this, args);
-          const grad = SB.SPgradients.gradientUrls.get(
-            this.type.slice(0, this.type.indexOf("_"))
-          );
-          if (grad && this?.svgPath_ && this?.category_) {
-            const svg = this.svgPath_;
-            const fill = svg.getAttribute("fill");
-            this.svgPath_.setAttribute(
-              fill === grad.check || fill === grad.path ? "fill" : "stroke",
-              grad.path
-            );
-          }
-          return result;
-        };
-      }
-      SB.SPgradients.gradientUrls.set("SPpartEngine", {
+      // Desktop fork (section 123): the block library applies the gradient itself (BlockSvg.pmGradients)
+      SB.BlockSvg.pmGradients.set("SPpartEngine", {
         path: "url(#SPpartEngine-GRAD)",
         check: color1,
       });

@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Rigidbodies.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (section 123, docs/EXTENSION-ROADMAP.md step 5d): its
+// TurboWarp-only octagon patch of BlockSvg.prototype.render is removed (it never ran in PenguinMod, which draws
+// the octagon shape itself).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -544,41 +546,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
   }
 
-  // Octagon Block Shape for Turbowarp
-  if (Scratch.gui && !isPM) Scratch.gui.getBlockly().then(SB => {
-    // Custom Octagon Block Shape
-    const makeShape = (width, height) => {
-      width -= 18;
-      return (`M 9 0 l -10 10 v ${height - 20}
-        l 10 10 h ${width} l 10 -10 v -${height - 20}
-        l -10 -10 h -${width} z
-      `).replaceAll("\n", "").trim();
-    };
-
-    const ogRender = SB.BlockSvg.prototype.render;
-    SB.BlockSvg.prototype.render = function (...args) {
-      const data = ogRender.call(this, ...args);
-      if (this.svgPath_ && this.type.startsWith("SPrigidBody_")) {
-        if (this.type.startsWith("SPrigidBody_body")) {
-          const fixedWidth = this.width - 35;
-          this.svgPath_.setAttribute("transform", `scale(1, ${this.height / 40})`);
-          this.svgPath_.setAttribute("d", makeShape(this.width, this.height));
-        }
-        this.inputList.forEach((input) => {
-          if (input.name.startsWith("OCT_SHAPE")) {
-            const block = input.connection.targetBlock();
-            if (block && block.svgPath_ && block.type.startsWith("SPrigidBody_menu_")) {
-              block.svgPath_.setAttribute("transform", `scale(1, ${block.height / 33})`);
-              block.svgPath_.setAttribute("d", makeShape(block.width, block.height));
-            } else if (input.outlinePath) {
-              input.outlinePath.setAttribute("d", makeShape(46, 32));
-            }
-          }
-        });
-      }
-      return data;
-    }
-  });
+  // Desktop fork (section 123): the TurboWarp-only octagon render patch is removed
 
   class SPrigidBody {
     constructor() {
