@@ -360,6 +360,23 @@ const FOLDABLE_KINDS = new Set([
 ]);
 
 /**
+ * Desktop fork (roadmap step 4): JavaScript for a value known when the script is compiled (an argument of a pure
+ * extension block), or null if it cannot be written as one.
+ * @param {*} value The value.
+ * @returns {string|null} The source.
+ */
+const knownValueSource = value => {
+    if (typeof value === 'number') {
+        if (Object.is(value, -0)) return '(-0)';
+        return Number.isNaN(value) ? 'NaN' : `(${value})`;
+    }
+    if (typeof value === 'boolean') return `${value}`;
+    if (typeof value === 'string') return `"${sanitize(value)}"`;
+    if (value === undefined) return 'undefined';
+    return null;
+};
+
+/**
  * PMDESKTOP_FOLD (section 44): whether generated code is one unbroken term whose meaning cannot change with the
  * code around it: `(...)`, `name(...)`, `"text"`, any of those followed by `.name`, or `!` in front of one.
  * (Some generated code, e.g. "not" of a text, is not: it reads differently depending on what it is put into.
@@ -732,6 +749,7 @@ class JSGenerator {
             return new TypedInput(`p${node.index}`, TYPE_UNKNOWN);
 
         case 'compat':
+            if (node.pure) return this.descendPureExtensionBlock(node);
             // Compatibility layer inputs never use flags.
             // log.log('compat')
             return new TypedInput(`(${this.generateCompatibilityLayerCall(node, false, null, visualReport)})`, TYPE_UNKNOWN);
@@ -2257,6 +2275,132 @@ class JSGenerator {
     safeConstantInput (value) {
         const unsafe = typeof value === 'string' && this.namesOfCostumesAndSounds.has(value);
         return new ConstantInput(value, !unsafe);
+    }
+
+    /**
+     * Desktop fork (roadmap step 4): a pure extension reporter or Boolean (irgen.js getPureExtensionAnswer) is
+     * called directly instead of through the compatibility layer: no generator, no thread status checks and not
+     * through the extension manager's wrapper, which only converts the arguments; that conversion is written into
+     * the call (left out where the input's type already matches, done now for fixed values). The arguments object
+     * holds the same values in the same order as the wrapper would pass on. When every input is a fixed value the
+     * block runs once now and its answer replaces the call (like section 44). Its answer type lets the code around
+     * it skip conversions (numbers may be NaN; text answers stay of unknown type, since the compiler's true/false
+     * test for known text differs from Scratch's for "" and "FALSE").
+     * @param {*} node The "compat" node, with `pure` set to the answer type from the inventory.
+     * @returns {Input} The compiled call or its answer.
+     */
+    descendPureExtensionBlock (node) {
+        const opcode = node.opcode;
+        const direct = this.target.runtime.getOpcodeFunction(opcode).pmDirect;
+        const directName = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}").pmDirect`);
+        const type = node.pure === 'number' ? TYPE_NUMBER_NAN : node.pure === 'boolean' ? TYPE_BOOLEAN : TYPE_UNKNOWN;
+        const types = new Map(direct.argumentTypes());
+        let fixed = !this.target.runtime.pmNoConstantFolding;
+        // [name, source, value known now]
+        const args = [];
+        const addKnown = (name, value) => {
+            const expected = types.get(name);
+            if (expected) value = direct.normalize(value, expected);
+            const source = knownValueSource(value);
+            if (source === null) {
+                fixed = false;
+                args.push([name, `${directName}.normalize(${JSON.stringify(value)}, "${expected}")`]);
+                return;
+            }
+            args.push([name, source, value]);
+        };
+        for (const inputName of Object.keys(node.inputs)) {
+            const inputNode = node.inputs[inputName];
+            const input = this.descendInput(inputNode);
+            const source = input.asSafe();
+            if (input instanceof ConstantInput || this.foldedNodes.has(inputNode)) {
+                // a fixed value: known now, so it is converted now
+                let value;
+                try {
+                    value = jsexecute.evalPure(source, this.pureRuntime || (this.pureRuntime = {optimizationUtil: this.target.runtime.optimizationUtil}));
+                } catch (e) {
+                    value = null;
+                }
+                if (value !== null && typeof value !== 'object') {
+                    addKnown(inputName, value);
+                    continue;
+                }
+            }
+            fixed = false;
+            const expected = types.get(inputName);
+            if (!expected || (input instanceof TypedInput && (
+                (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
+                (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
+                (expected === 'string' && input.type === TYPE_STRING)))) {
+                args.push([inputName, source]);
+            } else {
+                args.push([inputName, `${directName}.normalize(${source}, "${expected}")`]);
+            }
+        }
+        for (const fieldName of Object.keys(node.fields)) {
+            const field = node.fields[fieldName];
+            if (typeof field === 'string') {
+                addKnown(fieldName, field);
+            } else {
+                // (as the compatibility layer passes it)
+                fixed = false;
+                args.push([fieldName, JSON.stringify(field)]);
+            }
+        }
+        // (the compatibility layer always passes "mutation", undefined when the block has none)
+        args.push(['mutation', `${JSON.stringify(node.mutation)}`, node.mutation]);
+        // arguments the block declares but has no input for: the wrapper converts undefined
+        for (const [name] of types) {
+            if (!args.some(arg => arg[0] === name)) addKnown(name, undefined);
+        }
+
+        if (fixed) {
+            const folded = this.foldPureExtensionBlock(direct, args, type);
+            if (folded) {
+                this.foldedNodes.add(node);
+                return folded;
+            }
+        }
+
+        let object = '{';
+        for (const [name, source] of args) object += `"${sanitize(name)}":${source},`;
+        object += '}';
+        return new TypedInput(`${directName}.call(${object}, globalState.blockUtility)`, type);
+    }
+
+    /**
+     * Desktop fork (roadmap step 4): run a pure extension block whose arguments are all known now and give its
+     * answer as a fixed value; null when the answer is not an ordinary number (NaN, infinity, -0), a string or a
+     * boolean of the recorded type, or when running it fails: then the block is called as usual.
+     * @param {*} direct The block function's `pmDirect`.
+     * @param {Array} args [name, source, value] of every argument.
+     * @param {number} type The answer type.
+     * @returns {Input|null} The answer, or null.
+     */
+    foldPureExtensionBlock (direct, args, type) {
+        const object = {};
+        for (const [name, , value] of args) {
+            object[name] = (typeof value === 'object' && value !== null) ? JSON.parse(JSON.stringify(value)) : value;
+        }
+        let value;
+        try {
+            value = direct.call(object, jsexecute.globalState.blockUtility);
+        } catch (e) {
+            return null;
+        }
+        if (typeof value === 'number') {
+            if (!Number.isFinite(value) || Object.is(value, -0) || type === TYPE_BOOLEAN) return null;
+            return new TypedInput(`(${value})`, type);
+        }
+        if (typeof value === 'boolean') {
+            if (type === TYPE_NUMBER_NAN) return null;
+            return new TypedInput(`(${value})`, type);
+        }
+        if (typeof value === 'string') {
+            if (type !== TYPE_UNKNOWN) return null;
+            return new TypedInput(`("${sanitize(value)}")`, type);
+        }
+        return null;
     }
 
     /**

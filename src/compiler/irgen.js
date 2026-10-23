@@ -9,6 +9,9 @@ const log = require('../util/log');
 const Clone = require('../util/clone');
 const {IntermediateScript, IntermediateRepresentation} = require('./intermediate');
 const compatBlocks = require('./compat-blocks');
+// Desktop fork (roadmap step 4): extension reporters and Booleans whose answer depends only on their inputs and
+// which change nothing (from block-inventory.json: "pure", no compiler code of their own), with their answer type.
+const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
 
 /**
  * @fileoverview Generate intermediate representations from Scratch blocks.
@@ -2117,12 +2120,15 @@ class ScriptTreeGenerator {
      * @returns {Node} The parsed node.
      */
     descendCompatLayer (block, blockInfo) {
-        this.script.yields = true;
         if (!blockInfo) {
             blockInfo = this.getBlockInfo(block.opcode);
             blockInfo = blockInfo ? blockInfo.info : null;
         }
-        
+        // Desktop fork (roadmap step 4): a pure extension reporter or Boolean is called directly (jsgen.js
+        // descendPureExtensionBlock), so it never waits and the script does not have to be able to pause for it.
+        const pure = this.getPureExtensionAnswer(block.opcode, blockInfo);
+        if (!pure) this.script.yields = true;
+
         const inputs = {};
         for (const name of Object.keys(block.inputs)) {
             if (!name.startsWith('SUBSTACK')) {
@@ -2157,8 +2163,26 @@ class ScriptTreeGenerator {
             inputs,
             fields,
             substacks,
-            compilerInfo: (blockInfo && blockInfo.compilerInfo) || {}
+            compilerInfo: (blockInfo && blockInfo.compilerInfo) || {},
+            pure
         };
+    }
+
+    /**
+     * Desktop fork (roadmap step 4): whether a block is a pure extension reporter or Boolean that can be called
+     * directly (pure-blocks.json, and its function can be called without the extension manager's wrapper).
+     * `runtime.pmNoPureExtensionCalls = true` switches this off (tests only).
+     * @param {string} opcode The block's opcode.
+     * @param {*} blockInfo The extension's block info, if any.
+     * @returns {string|null} The answer type from the inventory ("number", "boolean", "string", ...), or null.
+     */
+    getPureExtensionAnswer (opcode, blockInfo) {
+        if (!blockInfo || !Object.prototype.hasOwnProperty.call(pureExtensionBlocks, opcode)) return null;
+        if (blockInfo.blockType !== BlockType.REPORTER && blockInfo.blockType !== BlockType.BOOLEAN) return null;
+        if (this.runtime.pmNoPureExtensionCalls) return null;
+        const opcodeFunction = this.runtime.getOpcodeFunction(opcode);
+        if (!opcodeFunction || !opcodeFunction.pmDirect) return null;
+        return pureExtensionBlocks[opcode];
     }
 
     analyzeLoop () {

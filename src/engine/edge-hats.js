@@ -12,11 +12,14 @@
  *   holding objects (extension types) are always checked, since an object can change without a new value.
  * - "when timer > value" where value is a number or one variable: the timer is read and compared directly. The
  *   timer only changes once per frame (it uses the frame's clock), so the answer is the one the check would give.
- * Everything else (touching, loudness, mouse, keys, lists, "of" blocks, random, extension hats and blocks, ...)
- * is checked every frame as before.
+ *   Since roadmap step 4 the condition may also use the pure extension reporters and Booleans (pure-blocks.json:
+ *   their answer depends only on their inputs) and their menus.
+ * Everything else (touching, loudness, mouse, keys, lists, "of" blocks, random, extension hats and other extension
+ * blocks, ...) is checked every frame as before.
  */
 
 const Cast = require('../util/cast');
+const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
 
 // Blocks that are fixed values (a number or text typed into an input).
 const CONSTANT_OPCODES = new Set([
@@ -63,7 +66,14 @@ const collect = (blocks, blockId, plan, budget) => {
         if (plan.fields.indexOf(name) === -1) plan.fields.push(name);
         return true;
     }
-    if (!PURE_OPCODES.has(opcode)) return false;
+    if (!PURE_OPCODES.has(opcode) && !hasOwn(pureExtensionBlocks, opcode)) {
+        // a menu of an extension block: a shadow block holding only fixed fields
+        if (!block.shadow || Object.keys(block.inputs).length) return false;
+        for (const name in block.fields) {
+            if (block.fields[name].id || block.fields[name].variableType) return false;
+        }
+        return true;
+    }
     for (const name in block.inputs) {
         const input = block.inputs[name];
         if (!input || !input.block) continue; // empty input: a fixed value

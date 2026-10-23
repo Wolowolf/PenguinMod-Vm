@@ -6,6 +6,8 @@
 // test's galleries folder (or DESKTOP_GALLERIES), and are skipped when it is not there; gallery extensions moved into
 // the VM (step 3, "source" in src/) from their file in the VM, run the way the gallery runs them.
 // Blocks marked "compiled" only have a stub for the interpreter; their compiler code is checked in step 4.
+// - src/extension-support/pure-blocks.json (step 4: the pure blocks the compiler calls directly) lists exactly the
+//   pure reporters and Booleans without compiler code, with their answer type.
 // Run: node test/unit/desktop_block_inventory.js
 const test = require('tap').test;
 const fs = require('fs');
@@ -15,6 +17,20 @@ const BlockType = require('../../src/extension-support/block-type');
 const ArgumentType = require('../../src/extension-support/argument-type');
 const TargetType = require('../../src/extension-support/target-type');
 const inventory = require('../../src/extension-support/block-inventory.json');
+const pureBlocks = require('../../src/extension-support/pure-blocks.json');
+
+test('pure-blocks.json matches the inventory', t => {
+    const expected = {};
+    for (const [id, extension] of Object.entries(inventory)) {
+        for (const [opcode, block] of Object.entries(extension.blocks)) {
+            if (block.pure && !block.compiled && (block.type === 'reporter' || block.type === 'Boolean')) {
+                expected[`${id}_${opcode}`] = block.answer;
+            }
+        }
+    }
+    t.same(pureBlocks, expected);
+    t.end();
+});
 
 // Built-in extension modules, read from the extension manager's list (the manager itself needs a page).
 const managerFile = path.join(__dirname, '../../src/extension-support/extension-manager.js');

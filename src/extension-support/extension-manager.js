@@ -826,21 +826,35 @@ class ExtensionManager {
                     serviceObject[funcName](args, util, realBlockInfo);
             })();
 
+            const normal = {
+                'angle': "number",
+                'Boolean': "boolean",
+                'color': "string",
+                'number': "number",
+                'string': "string",
+                'matrix': "string",
+                'note': "number",
+                'image': "string",
+                'polygon': "object",
+                // normalization exceptions
+                'list': "exception",
+                'broadcast': "exception"
+            };
+            // Desktop fork (roadmap step 4): the arguments this wrapper converts, with the type each is converted to
+            // (the same rules as below).
+            const argumentTypes = realBlockInfo => {
+                const types = [];
+                for (const arg in realBlockInfo.arguments) {
+                    const expected = normal[realBlockInfo.arguments[arg].type];
+                    if (realBlockInfo.arguments[arg].exemptFromNormalization === true) continue;
+                    if (expected === 'exception') continue;
+                    if (!expected) continue;
+                    if (typeof menus[realBlockInfo.arguments[arg].menu]?.variableType === 'string') continue;
+                    types.push([arg, expected]);
+                }
+                return types;
+            };
             blockInfo.func = (args, util, visualReport) => {
-                const normal = {
-                    'angle': "number",
-                    'Boolean': "boolean",
-                    'color': "string",
-                    'number': "number",
-                    'string': "string",
-                    'matrix': "string",
-                    'note': "number",
-                    'image': "string",
-                    'polygon': "object",
-                    // normalization exceptions
-                    'list': "exception",
-                    'broadcast': "exception"
-                };
                 const realBlockInfo = getBlockInfo(args);
                 for (const arg in realBlockInfo.arguments) {
                     const expected = normal[realBlockInfo.arguments[arg].type];
@@ -859,6 +873,18 @@ class ExtensionManager {
                 //if (!visualReport && isCustomAPI && realBlockInfo.exemptFromNormalization !== true) return returnValue.value;
                 return returnValue;
             };
+            // Desktop fork (roadmap step 4): what the compiler needs to call a pure block's function without this
+            // wrapper (src/compiler/jsgen.js descendPureExtensionBlock): the call itself, the arguments the wrapper
+            // would convert, and the conversion. Not for dynamic blocks (their info comes with each call) or
+            // extensions in a worker.
+            if (!blockInfo.isDynamic && !dispatch._isRemoteService(serviceName)) {
+                let types = null;
+                blockInfo.func.pmDirect = {
+                    call: (args, util) => callBlockFunc(args, util, blockInfo),
+                    argumentTypes: () => types || (types = argumentTypes(blockInfo)),
+                    normalize: (value, type) => (typeof value === type ? value : this._normalize(value, type))
+                };
+            }
             break;
         }
         }
