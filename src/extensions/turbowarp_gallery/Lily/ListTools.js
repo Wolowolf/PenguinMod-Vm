@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Lily/ListTools.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged instead of its `value`, so the list keeps its lookup table (section 125, step 5e); the "index # of item" block has its first / last / random menu (section 126) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -155,9 +155,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             text: Scratch.translate("index # [INDEX] of item [ITEM] in [LIST]"),
             disableMonitor: true,
             arguments: {
+              // Desktop fork (section 126): the first / last / random menu was never attached; dropping a number in still picks the Nth
               INDEX: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "1",
+                type: Scratch.ArgumentType.STRING,
+                menu: "indexType",
+                defaultValue: "first",
               },
               ITEM: {
                 type: Scratch.ArgumentType.STRING,
@@ -354,7 +356,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           indexType: {
-            acceptReporters: false,
+            acceptReporters: true,
             items: [
               {
                 text: Scratch.translate("first"),
@@ -488,17 +490,18 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
       }
 
+      // Desktop fork (section 126): the menu's values (were "_first_", "_last_", "_random_", which it never gives)
       switch (args.INDEX) {
-        case "_first_":
+        case "first":
           return Scratch.Cast.toNumber(indexes[0] + 1);
-        case "_last_":
+        case "last":
           return Scratch.Cast.toNumber(indexes[indexes.length - 1] + 1);
-        case "_random_":
+        case "random":
           return Scratch.Cast.toNumber(
             indexes[Math.floor(Math.random() * indexes.length)] + 1
           );
         default:
-          return Scratch.Cast.toNumber(indexes[args.INDEX - 1] + 1);
+          return Scratch.Cast.toNumber(indexes[Scratch.Cast.toNumber(args.INDEX) - 1] + 1);
       }
     }
 
