@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's lab/face-sensing.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged except for `/* webpackIgnore: true */` in the import() of its 4 bundled libraries, so the build leaves it to the browser.
+// the VM as a built-in extension. The code is the gallery file unchanged except for `/* webpackIgnore: true */` in the import() of its 4 bundled libraries, so the build leaves it to the browser, and its hats are checked only while a face is detected and in the frame after (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`; section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -285,6 +285,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
   checkIfShouldTurnOnVideoForFirstRun();
 
+  // Desktop fork (section 127): without a detected face every hat answers false
+  let pmWasDetected = false;
+  Scratch.vm.runtime.on("RUNTIME_STEP_START", () => {
+    if (isFaceCurrentlyDetected || pmWasDetected) Scratch.vm.runtime.pmEdgeHatsChanged("faceSensing");
+    pmWasDetected = isFaceCurrentlyDetected;
+  });
+
   // made by https://scratch.mit.edu/users/man-o-valor/
   const blockIconURI = `data:image/svg+xml;,${encodeURIComponent(`
     <svg xmlns="http://www.w3.org/2000/svg" width="79.639" height="79.771">
@@ -354,6 +361,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             blockType: Scratch.BlockType.HAT,
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["faceSensing"] }, // Desktop fork (section 127)
             opcode: "whenTilted",
             text: Scratch.translate("when face tilts [DIRECTION]"),
             arguments: {
@@ -367,6 +375,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             blockType: Scratch.BlockType.HAT,
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["faceSensing"] }, // Desktop fork (section 127)
             opcode: "whenSpriteTouchesPart",
             text: Scratch.translate("when this sprite touches a [PART]"),
             arguments: {
@@ -380,6 +389,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             blockType: Scratch.BlockType.HAT,
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["faceSensing"] }, // Desktop fork (section 127)
             opcode: "whenFaceDetected",
             text: Scratch.translate("when a face is detected"),
           },

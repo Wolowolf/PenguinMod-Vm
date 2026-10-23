@@ -108,6 +108,15 @@ class Scratch3VideoSensingBlocks {
 
             // Kick off looping the analysis logic.
             this._loop();
+
+            // PMDESKTOP_EDGEHATS (section 127): "when video motion >" can only change while the detector holds
+            // camera frames (and in the frame after they were cleared)
+            this._pmHadFrames = false;
+            this.runtime.on(Runtime.RUNTIME_STEP_START, () => {
+                const hasFrames = this.detect.curr !== null;
+                if (hasFrames || this._pmHadFrames) this.runtime.pmEdgeHatsChanged('videoSensing');
+                this._pmHadFrames = hasFrames;
+            });
         }
     }
 
@@ -423,6 +432,7 @@ class Scratch3VideoSensingBlocks {
                     // @todo this hat needs to be set itself to restart existing
                     // threads like Scratch 2's behaviour.
                     opcode: 'whenMotionGreaterThan',
+                    pmEdgeHat: {signals: ['videoSensing']}, // PMDESKTOP_EDGEHATS (section 127)
                     text: formatMessage({
                         id: 'videoSensing.whenMotionGreaterThan',
                         default: 'when video motion > [REFERENCE]',

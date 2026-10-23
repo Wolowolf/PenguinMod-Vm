@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/beat_sync.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its hats are checked only while syncing runs and in the frame after it stopped (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -151,6 +151,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             if (isPenguinMod) {
                 vm.runtime.on('RUNTIME_STEP_START', () => {
                     this.tick();
+                    // Desktop fork (section 127): the hats' answers change with time only while syncing runs
+                    // (stopped, they answer false, "when syncing stops" true)
+                    if (this.isRunning || this._pmWasRunning) vm.runtime.pmEdgeHatsChanged('beatSync');
+                    this._pmWasRunning = this.isRunning;
                 });
             }
         }
@@ -286,7 +290,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'onBeat',
                         blockType: Scratch.BlockType.HAT,
                         text: 'on beat [BEAT]',
-                        isEdgeActivated: true,
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] },
                         arguments: {
                             BEAT: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -298,7 +302,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'everyNBeats',
                         blockType: Scratch.BlockType.HAT,
                         text: 'every [N] beats',
-                        isEdgeActivated: true,
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] },
                         arguments: {
                             N: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -310,7 +314,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'whenBeatReachesStep',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when beat reaches step [STEP]',
-                        isEdgeActivated: true,
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] },
                         arguments: {
                             STEP: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -322,7 +326,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'whenBeatBetween',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when beat position between [A] and [B]',
-                        isEdgeActivated: true,
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] },
                         arguments: {
                             A: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -338,19 +342,19 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'whenFullBeat',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when full beat happens',
-                        isEdgeActivated: true
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] }
                     },
                     {
                         opcode: 'whenMeasureHappen',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when new measure starts',
-                        isEdgeActivated: true
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] }
                     },
                     {
                         opcode: 'whenNthBeatInMeasure',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when beat [N] in measure starts',
-                        isEdgeActivated: true,
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] },
                         arguments: {
                             N: {
                                 type: Scratch.ArgumentType.NUMBER,
@@ -362,13 +366,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'whenBeatStarted',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when syncing starts',
-                        isEdgeActivated: true
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] }
                     },
                     {
                         opcode: 'whenBeatStopped',
                         blockType: Scratch.BlockType.HAT,
                         text: 'when syncing stops',
-                        isEdgeActivated: true
+                        isEdgeActivated: true, pmEdgeHat: { signals: ['beatSync'] }
                     }
                 ],
                 menus: {}

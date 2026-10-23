@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Lily/lmsutils.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its two edge-activated hats say when their answer can change (`pmEdgeHat`), so the engine checks them only then (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -42,6 +42,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             blockType: Scratch.BlockType.HAT,
             text: Scratch.translate("when [INPUT] is true"),
             isEdgeActivated: true,
+            pmEdgeHat: {}, // Desktop fork (section 127): checked only when what its input reads changed
             arguments: {
               INPUT: {
                 type: Scratch.ArgumentType.BOOLEAN,
@@ -54,6 +55,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             blockType: Scratch.BlockType.HAT,
             text: Scratch.translate("when key [KEY_OPTION] pressed"),
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["keyboard"] }, // Desktop fork (section 127): and after a key changed
             arguments: {
               KEY_OPTION: {
                 type: Scratch.ArgumentType.STRING,

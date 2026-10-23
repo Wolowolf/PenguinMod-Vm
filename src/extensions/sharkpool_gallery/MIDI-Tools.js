@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's MIDI-Tools.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except: its list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (section 125, step 5e; marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except: its list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (section 125, step 5e; marked "Desktop fork"); its note hats are checked only after the set of played notes changed (`pmEdgeHat`; section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -41,6 +41,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       this.midiData = null;
 
       this._triggeredNotes = new Set();
+      // Desktop fork (section 127): every change of the played notes tells the engine to check the note hats
+      for (const name of ['add', 'delete', 'clear']) {
+        const original = this._triggeredNotes[name];
+        this._triggeredNotes[name] = function (...args) {
+          Scratch.vm.runtime.pmEdgeHatsChanged('ObscurasMIDITools');
+          return original.apply(this, args);
+        };
+      }
       this._timers = [];
 
       this._isPlaying = false;
@@ -267,6 +275,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.HAT,
             text: 'when note [NOTE] is played',
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ['ObscurasMIDITools'] }, // Desktop fork (section 127)
             arguments: {
               NOTE: {
                 type: Scratch.ArgumentType.NOTE,
@@ -278,7 +287,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             opcode: 'onAnyNote',
             blockType: Scratch.BlockType.HAT,
             text: 'when any note is played',
-            isEdgeActivated: true
+            isEdgeActivated: true,
+            pmEdgeHat: { signals: ['ObscurasMIDITools'] } // Desktop fork (section 127)
           },
           {
             opcode: 'onPlaybackEnd',

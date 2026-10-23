@@ -217,6 +217,8 @@ class Keyboard {
             }
             this._numeralKeyCodesToStringKey.set(keyCode, scratchKey);
         }
+        // PMDESKTOP_EDGEHATS (section 127): extension key hats are checked again
+        this.runtime.pmEdgeHatsChanged('keyboard');
     }
 
     /**

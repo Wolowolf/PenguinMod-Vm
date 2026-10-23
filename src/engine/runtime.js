@@ -341,6 +341,20 @@ class Runtime extends EventEmitter {
         this._skippedEdgeHatChecks = 0;
 
         /**
+         * PMDESKTOP_EDGEHATS (section 127): how often each signal was given (pmEdgeHatsChanged). An extension hat
+         * with `pmEdgeHat: {signals: [...]}` in its block info is checked again only when one of its signals was
+         * given since its last check, or when what its inputs read changed (edge-hats.js).
+         * @type {Object.<string, number>}
+         */
+        this._pmEdgeSignals = Object.create(null);
+
+        /**
+         * PMDESKTOP_EDGEHATS (section 127), tests only: true checks every edge-activated hat every frame.
+         * @type {boolean}
+         */
+        this.pmEveryFrameHats = false;
+
+        /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions
          * (docs/EXTENSION-ROADMAP.md step 5). Broadcasts and other started hats: the HATS_STARTED event.
          * pmRestartThreadHooks: (thread) => a thread to use instead of restarting it, or nothing.
@@ -1577,7 +1591,9 @@ class Runtime extends EventEmitter {
                     if (blockInfo.blockType === BlockType.EVENT || blockInfo.blockType === BlockType.HAT) {
                         this._hats[opcode] = {
                             edgeActivated: blockInfo.isEdgeActivated,
-                            restartExistingThreads: blockInfo.shouldRestartExistingThreads
+                            restartExistingThreads: blockInfo.shouldRestartExistingThreads,
+                            // PMDESKTOP_EDGEHATS (section 127): when the hat's answer can change (edge-hats.js)
+                            pmEdgeHat: blockInfo.isEdgeActivated && blockInfo.pmEdgeHat ? blockInfo.pmEdgeHat : null
                         };
                     }
                 }
@@ -2746,6 +2762,16 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * PMDESKTOP_EDGEHATS (section 127): the answer of the hats that listed this signal in `pmEdgeHat.signals` may
+     * have changed: they are checked again in the next frame. Extensions call it whenever what their hats read
+     * changes (or every frame while it can change all the time); the keyboard gives 'keyboard'.
+     * @param {string} name The signal.
+     */
+    pmEdgeHatsChanged (name) {
+        this._pmEdgeSignals[name] = (this._pmEdgeSignals[name] || 0) + 1;
+    }
+
+    /**
      * Start all relevant hats.
      * @param {!string} requestedHatOpcode Opcode of hats to start.
      * @param {object=} optMatchFields Optionally, fields to match on the hat.
@@ -2774,8 +2800,10 @@ class Runtime extends EventEmitter {
         // PMDESKTOP_EDGEHATS (section 63): hats whose answer cannot have changed since their last check are
         // skipped (edge-hats.js). A skipped hat would not have started either way: its script is already
         // running, or its check would give the same answer as last time.
-        const skipUnchanged = hatMeta.edgeActivated && !optMatchFields && !this.paused &&
-            (requestedHatOpcode === 'event_whenanything' || requestedHatOpcode === 'event_whengreaterthan');
+        // Section 127: also the extension hats that say when their answer can change (hatMeta.pmEdgeHat).
+        const skipUnchanged = hatMeta.edgeActivated && !optMatchFields && !this.paused && !this.pmEveryFrameHats &&
+            (requestedHatOpcode === 'event_whenanything' || requestedHatOpcode === 'event_whengreaterthan' ||
+                !!hatMeta.pmEdgeHat);
 
         // Consider all scripts, looking for hats with opcode `requestedHatOpcode`.
         this.allScriptsByOpcodeDo(requestedHatOpcode, (script, target) => {
@@ -2784,7 +2812,7 @@ class Runtime extends EventEmitter {
                 fieldsOfInputs: hatFields
             } = script;
 
-            const edgePlan = skipUnchanged ? edgeHats.getPlan(script) : false;
+            const edgePlan = skipUnchanged ? edgeHats.getPlan(script, hatMeta) : false;
             if (edgePlan && edgeHats.isUnchanged(edgePlan, target, topBlockId, this)) {
                 this._skippedEdgeHatChecks++;
                 return;

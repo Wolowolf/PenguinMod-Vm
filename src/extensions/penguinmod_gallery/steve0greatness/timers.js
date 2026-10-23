@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's steve0greatness/timers.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: "when [timer] > []" is checked only while a timer runs or after a timer was paused, restarted or changed (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -49,11 +49,15 @@ function xml_escape(unsafe) {
   });
 }
 
+// Desktop fork (section 127): the timers that are not paused (deleted ones may stay in it: that only costs checks)
+const runningTimers = new Set();
+const timersChanged = runtime => runtime.pmEdgeHatsChanged("steve0greatnesstimers");
 class Timer {
   static customId = "externaltimer";
 
   constructor(runtime, id, name) {
     this.runtime = runtime;
+    runningTimers.add(this); // Desktop fork (section 127)
    
     this.id   = id ?? uid_clone();
     this.name = name;
@@ -128,6 +132,7 @@ class Timer {
    * Starts over a timer, also resets the pause time if it's not null.
    */
   restart() {
+    timersChanged(this.runtime); // Desktop fork (section 127)
     this.startTime = Date.now();
 
     if (this.is_paused)
@@ -135,6 +140,7 @@ class Timer {
   }
 
   add(time) {
+    timersChanged(this.runtime); // Desktop fork (section 127)
     this.startTime = this.startTime - time;
   }
 
@@ -154,12 +160,16 @@ class Timer {
 
     this.tempPaused = false;
     this.pausedTime = Date.now();
+    runningTimers.delete(this); // Desktop fork (section 127)
+    timersChanged(this.runtime);
   }
   unpause() {
     if (!this.is_paused)
       return;
 
     this.tempPaused = false;
+    runningTimers.add(this); // Desktop fork (section 127)
+    timersChanged(this.runtime);
     this.startTime += Date.now() - this.pausedTime;
     this.pausedTime = null;
   }
@@ -190,6 +200,11 @@ class SteveZeroGreatnessExtraTimersExt {
     this.runtime = runtime;
 
     this.runtime.registerVariable(Timer.customId, Timer);
+    // Desktop fork (section 127): a running timer can change the hat's answer in any frame
+    this.runtime.on("RUNTIME_STEP_START", () => {
+      if (runningTimers.size) timersChanged(this.runtime);
+    });
+    this.runtime.on("RUNTIME_DISPOSED", () => runningTimers.clear());
 
     this.runtime.on("variableCreate", (type, id) => {
       if (type !== Timer.customId) return;
@@ -381,6 +396,7 @@ class SteveZeroGreatnessExtraTimersExt {
           blockType: Scratch.BlockType.HAT,
           text: Scratch.translate("when [TIMER] > [TIME] [UNITS]"),
           isEdgeActivated: true,
+          pmEdgeHat: { signals: ["steve0greatnesstimers"] }, // Desktop fork (section 127)
           restartExistingThreads: false,
           arguments: {
             TIMER: {

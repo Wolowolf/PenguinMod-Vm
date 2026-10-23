@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's electricfuzzball_pm/MIDI.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its note hats are checked only after a MIDI message or after one of them used up its note (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -93,10 +93,10 @@ class MIDI {
                 { opcode: "noteNumberToName", blockType: Scratch.BlockType.REPORTER, text: "note name of [NOTE]",
                   arguments: { NOTE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 60 } } },
 
-                { opcode: "whenNotePressed", blockType: Scratch.BlockType.HAT, text: "when MIDI note pressed" },
+                { opcode: "whenNotePressed", blockType: Scratch.BlockType.HAT, text: "when MIDI note pressed", pmEdgeHat: { signals: ["midi"] } /* Desktop fork (section 127) */ },
                 
-                { opcode: "whenNoteReleased", blockType: Scratch.BlockType.HAT, text: "when MIDI note released" },
-                { opcode: "whenSpecificNotePressed", blockType: Scratch.BlockType.HAT, text: "when note [NOTE] pressed",
+                { opcode: "whenNoteReleased", blockType: Scratch.BlockType.HAT, text: "when MIDI note released", pmEdgeHat: { signals: ["midi"] } /* Desktop fork (section 127) */ },
+                { opcode: "whenSpecificNotePressed", blockType: Scratch.BlockType.HAT, text: "when note [NOTE] pressed", pmEdgeHat: { signals: ["midi"] } /* Desktop fork (section 127) */,
                   arguments: { NOTE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 60 } } },
 
                 { opcode: "getPitchBend", blockType: Scratch.BlockType.REPORTER, text: "pitch bend" },
@@ -122,7 +122,7 @@ class MIDI {
                 { opcode: "deviceChannels", blockType: Scratch.BlockType.REPORTER, text: "MIDI device channels [INDEX]",
                   arguments: { INDEX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 } } },
 
-                { opcode: "whenSequencePlayed", blockType: Scratch.BlockType.HAT, text: "when sequence [SEQUENCE] played",
+                { opcode: "whenSequencePlayed", blockType: Scratch.BlockType.HAT, text: "when sequence [SEQUENCE] played", pmEdgeHat: { signals: ["midi"] } /* Desktop fork (section 127) */,
                   arguments: { SEQUENCE: { type: Scratch.ArgumentType.STRING, defaultValue: "60 62 64" } } },
 
                 { opcode: "visualizerControl", blockType: Scratch.BlockType.COMMAND, text: "[ACTION] visualizer",
@@ -211,6 +211,7 @@ class MIDI {
             else this._noteOff(channel, note);
             this.notePressTimes.delete(note);
         }
+        Scratch.vm.runtime.pmEdgeHatsChanged("midi"); // Desktop fork (section 127)
     }
 
     getPitchBend() { return this.pitchBend; }
@@ -241,6 +242,7 @@ class MIDI {
     whenNotePressed() {
         if (this.notePressedFlag) {
             this.notePressedFlag = false;
+            Scratch.vm.runtime.pmEdgeHatsChanged("midi"); // Desktop fork (section 127): used up
             return true;
         }
         return false;
@@ -249,6 +251,7 @@ class MIDI {
     whenNoteReleased() {
         if (this.noteReleasedFlag) {
             this.noteReleasedFlag = false;
+            Scratch.vm.runtime.pmEdgeHatsChanged("midi"); // Desktop fork (section 127): used up
             return true;
         }
         return false;
@@ -258,6 +261,7 @@ class MIDI {
         const n = args.NOTE;
         if (this.specificNotePressedFlags[n]) {
             this.specificNotePressedFlags[n] = false;
+            Scratch.vm.runtime.pmEdgeHatsChanged("midi"); // Desktop fork (section 127): used up
             return true;
         }
         return false;

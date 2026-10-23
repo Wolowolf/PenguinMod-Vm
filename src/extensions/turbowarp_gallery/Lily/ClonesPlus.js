@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Lily/ClonesPlus.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: "when I start as a clone with [variable] set to []" says when its answer can change (`pmEdgeHat`), so the engine checks it only then (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -66,6 +66,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             text: Scratch.translate(
               "when I start as a clone with [INPUTA] set to [INPUTB]"
             ),
+            // Desktop fork (section 127): checked only when the variable or what INPUTB reads changed
+            pmEdgeHat: { variables: ["INPUTA"] },
             filter: [Scratch.TargetType.SPRITE],
             arguments: {
               INPUTA: {

@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's cloudlink.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except: its three message hats are checked only while a connection is open or being made, and in the frame after (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -816,6 +816,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     };
   }
 
+  // Desktop fork (section 127): the message hats can only answer true while there is a connection
+  let pmWasConnected = false;
+  Scratch.vm.runtime.on("RUNTIME_STEP_START", () => {
+    const connected = clVars.socket != null;
+    if (connected || pmWasConnected) Scratch.vm.runtime.pmEdgeHatsChanged("cloudlink");
+    pmWasConnected = connected;
+  });
+
   // Declare the CloudLink library.
   class CloudLink {
     getInfo() {
@@ -972,6 +980,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               "when I receive new message with listener [ID]"
             ),
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["cloudlink"] }, // Desktop fork (section 127)
             arguments: {
               ID: {
                 type: Scratch.ArgumentType.STRING,
@@ -985,6 +994,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.HAT,
             text: Scratch.translate("when I receive new [TYPE] message"),
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["cloudlink"] }, // Desktop fork (section 127)
             arguments: {
               TYPE: {
                 type: Scratch.ArgumentType.STRING,
@@ -999,6 +1009,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.HAT,
             text: Scratch.translate("When I receive new [TYPE] data for [VAR]"),
             isEdgeActivated: true,
+            pmEdgeHat: { signals: ["cloudlink"] }, // Desktop fork (section 127)
             arguments: {
               TYPE: {
                 type: Scratch.ArgumentType.STRING,

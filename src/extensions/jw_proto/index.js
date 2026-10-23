@@ -40,6 +40,8 @@ class jwProto {
                     }),
                     disableMonitor: true,
                     blockType: BlockType.HAT,
+                    // Desktop fork (section 127): its answer is always false, so it is never checked
+                    isEdgeActivated: false,
                     arguments: {
                         LABEL: {
                             type: ArgumentType.STRING,

@@ -14,7 +14,12 @@
  *   timer only changes once per frame (it uses the frame's clock), so the answer is the one the check would give.
  *   Since roadmap step 4 the condition may also use the pure extension reporters and Booleans (pure-blocks.json:
  *   their answer depends only on their inputs) and their menus.
- * Everything else (touching, loudness, mouse, keys, lists, "of" blocks, random, extension hats and other extension
+ * - Section 127 (roadmap step 6a): extension hats whose block info has `pmEdgeHat: {signals: [...], variables: [...]}`.
+ *   Their answer depends only on their inputs (which must qualify like a "when <>" condition), on the variables
+ *   whose IDs the arguments named in `variables` hold, and on state of their extension (or the keyboard) that
+ *   gives one of the named signals with runtime.pmEdgeHatsChanged whenever it changes. They are checked again when
+ *   a value read differs or a signal was given since the last check. `pmEdgeHat: {}`: inputs only.
+ * Everything else (touching, loudness, mouse, keys, lists, "of" blocks, random, other extension hats and extension
  * blocks, ...) is checked every frame as before.
  */
 
@@ -82,10 +87,39 @@ const collect = (blocks, blockId, plan, budget) => {
     return true;
 };
 
-const makePlan = (blocks, hatId) => {
+/**
+ * The value of an argument given by a field of the hat or by a menu in its input; undefined when it is not fixed.
+ */
+const fixedArgument = (blocks, hat, name) => {
+    if (hasOwn(hat.fields, name)) return hat.fields[name].value;
+    const input = hat.inputs[name];
+    const block = input && input.block && blocks.getBlock(input.block);
+    if (!block || !block.shadow || Object.keys(block.inputs).length) return;
+    const names = Object.keys(block.fields);
+    if (names.length !== 1) return;
+    return block.fields[names[0]].value;
+};
+
+const makePlan = (blocks, hatId, hatMeta) => {
     const hat = blocks.getBlock(hatId);
     if (!hat) return NOT_ELIGIBLE;
-    const plan = {timer: false, value: 0, valueVarId: null, varIds: [], fields: []};
+    const plan = {timer: false, value: 0, valueVarId: null, varIds: [], fields: [], signals: null};
+    const extensionHat = hatMeta && hatMeta.pmEdgeHat;
+    if (extensionHat) {
+        for (const name in hat.inputs) {
+            const input = hat.inputs[name];
+            if (!input || !input.block) continue;
+            if (!collect(blocks, input.block, plan, {left: MAX_BLOCKS})) return NOT_ELIGIBLE;
+        }
+        const variables = extensionHat.variables || [];
+        for (let i = 0; i < variables.length; i++) {
+            const id = fixedArgument(blocks, hat, variables[i]);
+            if (typeof id !== 'string') return NOT_ELIGIBLE;
+            if (plan.varIds.indexOf(id) === -1) plan.varIds.push(id);
+        }
+        plan.signals = extensionHat.signals || [];
+        return plan;
+    }
     if (hat.opcode === 'event_whenanything') {
         for (const name in hat.inputs) {
             const input = hat.inputs[name];
@@ -122,11 +156,12 @@ const makePlan = (blocks, hatId) => {
  * What a hat's condition reads, or false if it has to be checked every frame. Kept on the engine's cached entry
  * for the script (blocks-runtime-cache.js), which is made again whenever a block changes.
  * @param {RuntimeScriptCache} script The hat's script, from BlocksRuntimeCache.getScripts.
+ * @param {object} hatMeta The hat's entry in runtime._hats.
  * @returns {object|boolean} Plan, or false.
  */
-const getPlan = script => {
+const getPlan = (script, hatMeta) => {
     let plan = script.edgeHatPlan;
-    if (typeof plan === 'undefined') plan = script.edgeHatPlan = makePlan(script.container, script.blockId);
+    if (typeof plan === 'undefined') plan = script.edgeHatPlan = makePlan(script.container, script.blockId, hatMeta);
     return plan;
 };
 
@@ -177,6 +212,11 @@ const isUnchanged = (plan, target, hatId, runtime) => {
     for (let i = 0; i < plan.fields.length; i++) {
         if (!Object.is(target[plan.fields[i]], memo.fields[i])) return false;
     }
+    if (plan.signals) {
+        for (let i = 0; i < plan.signals.length; i++) {
+            if ((runtime._pmEdgeSignals[plan.signals[i]] || 0) !== memo.signals[i]) return false;
+        }
+    }
     return true;
 };
 
@@ -194,7 +234,7 @@ const remember = (plan, target, hatId, runtime) => {
         targetMemos = Object.create(null);
         memos.set(target, targetMemos);
     }
-    const memo = {plan, variables: [], values: [], fields: []};
+    const memo = {plan, variables: [], values: [], fields: [], signals: []};
     const stage = runtime.getTargetForStage();
     for (let i = 0; i < plan.varIds.length; i++) {
         const variable = findVariable(target, stage, plan.varIds[i]);
@@ -212,6 +252,9 @@ const remember = (plan, target, hatId, runtime) => {
             return;
         }
         memo.fields.push(value);
+    }
+    if (plan.signals) {
+        for (let i = 0; i < plan.signals.length; i++) memo.signals.push(runtime._pmEdgeSignals[plan.signals[i]] || 0);
     }
     targetMemos[hatId] = memo;
 };

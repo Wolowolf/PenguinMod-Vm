@@ -552,6 +552,8 @@ class pmEventsExpansion {
                     text: 'when [CONDITION] becomes [STATE]',
                     blockType: BlockType.HAT,
                     isEdgeActivated: true,
+                    // Desktop fork (section 127): checked only when what its condition reads changed
+                    pmEdgeHat: {},
                     arguments: {
                         CONDITION: {type: ArgumentType.BOOLEAN},
                         STATE: {type: ArgumentType.STRING, menu: 'boolean', defaultValue: 'true'}
@@ -599,6 +601,8 @@ class pmEventsExpansion {
                     text: 'when [KEY_OPTION] key [ACTION]',
                     blockType: BlockType.HAT,
                     isEdgeActivated: true,
+                    // Desktop fork (section 127): checked only after a key changed (or its key input did)
+                    pmEdgeHat: {signals: ['keyboard']},
                     arguments: {
                         KEY_OPTION: {type: ArgumentType.STRING, menu: 'keyboardButtons', defaultValue: 'space'},
                         ACTION: {type: ArgumentType.STRING, menu: 'keyAction', defaultValue: 'hit'}
