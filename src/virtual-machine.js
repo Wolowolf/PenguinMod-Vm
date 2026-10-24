@@ -7,6 +7,7 @@ if (typeof TextEncoder === 'undefined') {
 }
 const EventEmitter = require('events');
 const JSZip = require('jszip');
+const ExtendedJSON = require('@turbowarp/json');
 
 const Buffer = require('buffer').Buffer;
 const ExtensionManager = require('./extension-support/extension-manager');
@@ -33,6 +34,30 @@ const {exportCostume} = require('./serialization/tw-costume-import-export');
 const Base64Util = require('./util/base64-util');
 
 const RESERVED_NAMES = ['_mouse_', '_stage_', '_edge_', '_myself_', '_random_'];
+
+// Desktop fork (section 143): what scratch-parser did for addSprite, for Scratch 3 sprites only: a .sprite3
+// zip (its sprite.json, at the top or in one folder) or the sprite's JSON text, parsed like the parser did
+// (Infinity / NaN allowed, backspace control characters removed). Resolves to [sprite, zip or null].
+const parseSpriteJSON = text => ExtendedJSON.parse(text.replace(
+    /(\\+)(b|u0008)/g,
+    // an odd number of backslashes is an actual backspace; an even number is backslashes followed by b
+    (match, backslash, code) => (backslash.length % 2 ? match.replace(`\\${code}`, '') : match)
+));
+const unpackSprite3 = async input => {
+    if (typeof input !== 'string') {
+        const bytes = input instanceof ArrayBuffer ?
+            new Uint8Array(input) :
+            new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+        if (bytes[0] === 0x50 && bytes[1] === 0x4B) { // "PK": a zip
+            const zip = await JSZip.loadAsync(bytes);
+            const file = zip.file(/^([^/]*\/)?sprite\.json$/)[0];
+            if (!file) throw new Error('Failed to unzip and extract sprite.json');
+            return [parseSpriteJSON(await file.async('string')), zip];
+        }
+        input = new TextDecoder('utf-8').decode(bytes);
+    }
+    return [parseSpriteJSON(input), null];
+};
 const PM_LIBRARY_API = "https://library.penguinmod.com/";
 
 const IRGenerator = require('./compiler/irgen');
@@ -462,11 +487,9 @@ class VirtualMachine extends EventEmitter {
         return this.runtime.getPeripheralIsConnected(extensionId);
     }
 
-    isSB2(json) {
-        return Array.isArray(json.children) && !Array.isArray(json.targets);
-    }
     /**
-     * Load a Scratch project from a .sb, .sb2, .sb3 or json string.
+     * Load a Scratch 3 project from a .sb3 / .pmp file or json string.
+     * Desktop fork (section 143): Scratch 1.4 (.sb) and 2.0 (.sb2) projects are not supported.
      * @param {string | object} input A json string, object, or ArrayBuffer representing the project to load.
      * @return {!Promise} Promise that resolves after targets are installed.
      */
@@ -475,24 +498,16 @@ class VirtualMachine extends EventEmitter {
         return new Promise(async (resolve, reject) => {
             try {
                 const arr = new Uint8Array(input);
-                const tag = [...arr.slice(0, 7)]
+                const tag = [...arr.slice(0, 2)]
                     .map(char => String.fromCharCode(char))
                     .join('');
-                if (tag === 'Scratch') {
-                    const { SB1File } = require('scratch-sb1-converter');
-                    const sb1 = new SB1File(input);
-                    const json = sb1.json;
-                    json.projectVersion = 2;
-                    return resolve([json, sb1.zip]);
-                }
 
                 if (typeof input === 'string') input = JSON.parse(input);
                 // generic objects return [object Object] on stringify
                 if (input.toString() === '[object Object]') {
-                    input.projectVersion = this.isSB2(input) ? 2 : 3;
                     return resolve([input, null]);
                 }
-                if (tag.slice(0, 2) !== 'PK') {
+                if (tag !== 'PK') {
                     // if it isnt a zip, maby its the project.json in ArrayBuffer form
                     const decoder = new TextDecoder('UTF-8');
                     input = decoder.decode(input);
@@ -500,7 +515,6 @@ class VirtualMachine extends EventEmitter {
                     if (typeof input === 'string') input = JSON.parse(input);
                     // generic objects return [object Object] on stringify
                     if (input.toString() === '[object Object]') {
-                        input.projectVersion = this.isSB2(input) ? 2 : 3;
                         return resolve([input, null]);
                     }
                 }
@@ -509,7 +523,6 @@ class VirtualMachine extends EventEmitter {
                 const proj = zip.file('project.json');
                 if (!proj) return reject('No project.json file inside the given project');
                 const json = JSON.parse(await proj.async('string'));
-                json.projectVersion = this.isSB2(json) ? 2 : 3;
 
                 this._projectZip = zip
                 return resolve([json, zip]);
@@ -822,17 +835,13 @@ class VirtualMachine extends EventEmitter {
         }
         const runtime = this.runtime;
         const deserializePromise = function () {
-            const projectVersion = projectJSON.projectVersion;
-            if (projectVersion === 2) {
-                const sb2 = require('./serialization/sb2');
-                return sb2.deserialize(projectJSON, runtime, false, zip);
+            // Desktop fork (section 143): only Scratch 3 projects (an sb3 project.json has "targets")
+            if (!projectJSON || !Array.isArray(projectJSON.targets)) {
+                return Promise.reject('Not a Scratch 3 project.');
             }
-            if (projectVersion === 3) {
-                const sb3 = require('./serialization/sb3');
-                // eslint-disable-next-line no-invalid-this
-                return sb3.deserialize(projectJSON, runtime, zip, false, this);
-            }
-            return Promise.reject('Unable to verify Scratch Project version.');
+            const sb3 = require('./serialization/sb3');
+            // eslint-disable-next-line no-invalid-this
+            return sb3.deserialize(projectJSON, runtime, zip, false, this);
         };
         return deserializePromise()
             .then(({targets, extensions}) => {
@@ -964,8 +973,8 @@ class VirtualMachine extends EventEmitter {
     }
 
     /**
-     * Add a sprite, this could be .sprite2 or .sprite3. Unpack and validate
-     * such a file first.
+     * Add a sprite from a .sprite3 file. Unpack and validate it first.
+     * Desktop fork (section 143): Scratch 2 sprites (.sprite2) are not supported.
      * @param {string | object} input A json string, object, or ArrayBuffer representing the project to load.
      * @return {!Promise} Promise that resolves after targets are installed.
      */
@@ -982,51 +991,16 @@ class VirtualMachine extends EventEmitter {
             input = JSON.stringify(input);
         }
 
-        const validationPromise = new Promise((resolve, reject) => {
-            const validate = require('scratch-parser');
-            // The second argument of true below indicates to the parser/validator
-            //  the given input should be treated as a single sprite and not
-            // an entire project
-            validate(input, true, (error, res) => {
-                if (error) return reject(error);
-                resolve(res);
-            });
-        });
-
-        return validationPromise
-            .then(validatedInput => {
-                const projectVersion = validatedInput[0].projectVersion;
-                if (projectVersion === 2) {
-                    return this._addSprite2(validatedInput[0], validatedInput[1]);
+        return unpackSprite3(input)
+            .then(([sprite, zip]) => {
+                if (!sprite || typeof sprite !== 'object' || !('name' in sprite)) {
+                    return Promise.reject('Not a Scratch 3 sprite.');
                 }
-                if (projectVersion === 3) {
-                    return this._addSprite3(validatedInput[0], validatedInput[1]);
-                }
-                return Promise.reject(`${errorPrefix} Unable to verify sprite version.`);
+                return this._addSprite3(sprite, zip);
             })
             .then(() => this.runtime.emitProjectChanged())
-            .catch(error => {
-                // Intentionally rejecting here (want errors to be handled by caller)
-                if (error.hasOwnProperty('validationError')) {
-                    return Promise.reject(JSON.stringify(error));
-                }
-                return Promise.reject(`${errorPrefix} ${error}`);
-            });
-    }
-
-    /**
-     * Add a single sprite from the "Sprite2" (i.e., SB2 sprite) format.
-     * @param {object} sprite Object representing 2.0 sprite to be added.
-     * @param {?ArrayBuffer} zip Optional zip of assets being referenced by json
-     * @returns {Promise} Promise that resolves after the sprite is added
-     */
-    _addSprite2 (sprite, zip) {
-        // Validate & parse
-
-        const sb2 = require('./serialization/sb2');
-        return sb2.deserialize(sprite, this.runtime, true, zip)
-            .then(({targets, extensions}) =>
-                this.installTargets(targets, extensions, false));
+            // Intentionally rejecting here (want errors to be handled by caller)
+            .catch(error => Promise.reject(`${errorPrefix} ${error}`));
     }
 
     /**
@@ -1053,10 +1027,9 @@ class VirtualMachine extends EventEmitter {
      * @property {number} rotationCenterY - the Y component of the costume's origin.
      * @property {number} [bitmapResolution] - the resolution scale for a bitmap costume.
      * @param {string} optTargetId - the id of the target to add to, if not the editing target.
-     * @param {number} optVersion - if this is 2, load costume as sb2, otherwise load costume as sb3.
      * @returns {?Promise} - a promise that resolves when the costume has been added
      */
-    addCostume (md5ext, costumeObject, optTargetId, optVersion) {
+    addCostume (md5ext, costumeObject, optTargetId) {
         const target = optTargetId ? this.runtime.getTargetById(optTargetId) :
             this.editingTarget;
         if (target) {
@@ -1079,7 +1052,7 @@ class VirtualMachine extends EventEmitter {
                                 asset: asset,
                                 name: costumeObject.name
                             }
-                            loadCostume(newCostumeObject.md5, newCostumeObject, this.runtime, optVersion).then(costumeAsset => {
+                            loadCostume(newCostumeObject.md5, newCostumeObject, this.runtime).then(costumeAsset => {
                                 target.addCostume(newCostumeObject);
                                 target.setCostume(
                                     target.getCostumes().length - 1
@@ -1090,7 +1063,7 @@ class VirtualMachine extends EventEmitter {
                         }).catch(reject);
                 });
             }
-            return loadCostume(md5ext, costumeObject, this.runtime, optVersion).then(costumeObject => {
+            return loadCostume(md5ext, costumeObject, this.runtime).then(costumeObject => {
                 target.addCostume(costumeObject);
                 target.setCostume(
                     target.getCostumes().length - 1
@@ -1114,7 +1087,7 @@ class VirtualMachine extends EventEmitter {
      */
     addCostumeFromLibrary (md5ext, costumeObject) {
         if (!this.editingTarget) return Promise.reject();
-        return this.addCostume(md5ext, costumeObject, this.editingTarget.id, 2 /* optVersion */);
+        return this.addCostume(md5ext, costumeObject, this.editingTarget.id);
     }
 
     /**

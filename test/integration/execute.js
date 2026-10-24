@@ -9,7 +9,7 @@ const readFileToBuffer = require('../fixtures/readProjectFile').readFileToBuffer
 const VirtualMachine = require('../../src/index');
 
 /**
- * @fileoverview Transform each sb2 in fixtures/execute into a test.
+ * @fileoverview Transform each sb3 in fixtures/execute into a test.
  *
  * Test execution of a group of scratch blocks by SAYing if a test did "pass",
  * or did "fail". Four keywords can be set at the beginning of a SAY messaage
@@ -59,7 +59,7 @@ const whenThreadsComplete = (t, vm, timeLimit = 2000) => (
 const executeDir = path.resolve(__dirname, '../fixtures/execute');
 
 fs.readdirSync(executeDir)
-    .filter(uri => uri.endsWith('.sb2') || uri.endsWith('.sb3'))
+    .filter(uri => uri.endsWith('.sb3'))
     .forEach(uri => {
         const run = (t, enableCompiler) => {
             // Disable logging during this test.

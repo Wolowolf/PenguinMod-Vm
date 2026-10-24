@@ -51,8 +51,6 @@
     "minilog": "3.1.0",
     "pathfinding": "^0.4.18",
     "schema-utils": "^2.7.1",
-    "scratch-parser": "github:Wolowolf/PenguinMod-Parser#c56c7aad93f71aa5d1a126bae1d5e663c161e8eb",
-    "scratch-sb1-converter": "0.2.7",
     "scratch-translate-extension-languages": "0.0.20191118205314",
     "simplex-noise": "^4.0.1",
     "taffydb": "^2.7.3",

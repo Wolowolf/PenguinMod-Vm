@@ -27,8 +27,6 @@
         "minilog": "3.1.0",
         "pathfinding": "^0.4.18",
         "schema-utils": "^2.7.1",
-        "scratch-parser": "github:Wolowolf/PenguinMod-Parser#c56c7aad93f71aa5d1a126bae1d5e663c161e8eb",
-        "scratch-sb1-converter": "0.2.7",
         "scratch-translate-extension-languages": "0.0.20191118205314",
         "simplex-noise": "^4.0.1",
         "taffydb": "^2.7.3",
@@ -642,8 +640,6 @@
 
     "copy-webpack-plugin": ["copy-webpack-plugin@4.5.4", "", { "dependencies": { "cacache": "^10.0.4", "find-cache-dir": "^1.0.0", "globby": "^7.1.1", "is-glob": "^4.0.0", "loader-utils": "^1.1.0", "minimatch": "^3.0.4", "p-limit": "^1.0.0", "serialize-javascript": "^1.4.0" } }, ""],
 
-    "core-js": ["core-js@2.3.0", "", {}, ""],
-
     "core-js-compat": ["core-js-compat@3.35.0", "", { "dependencies": { "browserslist": "^4.22.2" } }, ""],
 
     "core-util-is": ["core-util-is@1.0.2", "", {}, ""],
@@ -775,8 +771,6 @@
     "es6-iterator": ["es6-iterator@2.0.3", "", { "dependencies": { "d": "1", "es5-ext": "^0.10.35", "es6-symbol": "^3.1.1" } }, ""],
 
     "es6-map": ["es6-map@0.1.5", "", { "dependencies": { "d": "1", "es5-ext": "~0.10.14", "es6-iterator": "~2.0.1", "es6-set": "~0.1.5", "es6-symbol": "~3.1.1", "event-emitter": "~0.3.5" } }, ""],
-
-    "es6-promise": ["es6-promise@3.0.2", "", {}, ""],
 
     "es6-set": ["es6-set@0.1.6", "", { "dependencies": { "d": "^1.0.1", "es5-ext": "^0.10.62", "es6-iterator": "~2.0.3", "es6-symbol": "^3.1.3", "event-emitter": "^0.3.5", "type": "^2.7.2" } }, ""],
 
@@ -1530,7 +1524,7 @@
 
     "picomatch": ["picomatch@2.3.1", "", {}, ""],
 
-    "pify": ["pify@4.0.1", "", {}, ""],
+    "pify": ["pify@3.0.0", "", {}, ""],
 
     "pinkie": ["pinkie@2.0.4", "", {}, ""],
 
@@ -1692,13 +1686,9 @@
 
     "scratch-l10n": ["scratch-l10n@3.14.20220526031602", "", { "dependencies": { "@babel/cli": "^7.1.2", "@babel/core": "^7.1.2", "babel-plugin-react-intl": "^3.0.1", "transifex": "1.6.6" }, "bin": { "build-i18n-src": "scripts/build-i18n-src.js", "tx-push-src": "scripts/tx-push-src.js" } }, ""],
 
-    "scratch-parser": ["scratch-parser@github:Wolowolf/PenguinMod-Parser#c56c7aa", { "dependencies": { "@turbowarp/json": "^0.1.1", "ajv": "6.3.0", "jszip": "3.1.5", "pify": "4.0.1" } }, "Wolowolf-PenguinMod-Parser-c56c7aa", "sha512-T0vy48cK0E4mUdMXJUg3iey17kYahcq6HL0xm9N/ZSu6RBaHRu6Bip0w03lulrPXUXE4vTYmDV5zQreY2c1jbw=="],
-
     "scratch-render": ["scratch-render@github:Wolowolf/PenguinMod-Render#86bce34", { "dependencies": { "grapheme-breaker": "0.3.2", "hull.js": "0.2.10", "ify-loader": "1.0.4", "linebreak": "0.3.0", "minilog": "3.1.0", "raw-loader": "^0.5.1", "scratch-svg-renderer": "github:Wolowolf/penguinmod-svg-renderer#700e6c498d3154b3b45734eae9e7ff88abb1b4d5", "twgl.js": "4.4.0" }, "peerDependencies": { "scratch-render-fonts": "github:Wolowolf/penguinmod-render-fonts#fbca3cc01bd32e73d1c3e42cd5c2ee5f60a9a7c5" } }, "Wolowolf-PenguinMod-Render-86bce34", "sha512-/iBaHp+AcJhzyAFnatpwa/nV676vOknDiZJoq2tOill/5XoV5ismLh9PRz1Zce+OVeSlShIF/5YY66pb1h2Klg=="],
 
     "scratch-render-fonts": ["scratch-render-fonts@github:Wolowolf/penguinmod-render-fonts#fbca3cc", { "dependencies": { "base64-loader": "1.0.0" } }, "Wolowolf-penguinmod-render-fonts-fbca3cc", "sha512-XjybJz3iHsABtbo2g1sbsjtwu++CCEqOeEe3ONFV02NX9/mFh9+E5r+set6bX6zVFb8ydt2jFRhVJAVfsD2Zvg=="],
-
-    "scratch-sb1-converter": ["scratch-sb1-converter@0.2.7", "", { "dependencies": { "js-md5": "0.7.3", "minilog": "3.1.0", "text-encoding": "^0.7.0" } }, ""],
 
     "scratch-storage": ["scratch-storage@github:Wolowolf/PenguinMod-Storage#96f45f7", { "dependencies": { "arraybuffer-loader": "^1.0.3", "base64-js": "1.3.0", "fastestsmallesttextencoderdecoder": "^1.0.7", "js-md5": "0.7.3", "minilog": "3.1.0", "worker-loader": "^2.0.0" } }, "Wolowolf-PenguinMod-Storage-96f45f7", "sha512-9MVDYQGj3ewdQSWar7sCyIfxB4peM9EBDN1BXI5RPhqopo9lFCipEYu+ubuFixiaOUsbdkGhoMLRRcoPZkASNQ=="],
 
@@ -2158,6 +2148,8 @@
 
     "del/globby": ["globby@6.1.0", "", { "dependencies": { "array-union": "^1.0.1", "glob": "^7.0.3", "object-assign": "^4.0.1", "pify": "^2.0.0", "pinkie-promise": "^2.0.0" } }, ""],
 
+    "del/pify": ["pify@4.0.1", "", {}, ""],
+
     "diffie-hellman/bn.js": ["bn.js@4.12.0", "", {}, ""],
 
     "dom-serializer/domelementtype": ["domelementtype@2.3.0", "", {}, ""],
@@ -2255,8 +2247,6 @@
     "glob-parent/is-glob": ["is-glob@3.1.0", "", { "dependencies": { "is-extglob": "^2.1.0" } }, ""],
 
     "globby/ignore": ["ignore@3.3.10", "", {}, ""],
-
-    "globby/pify": ["pify@3.0.0", "", {}, ""],
 
     "has-ansi/ansi-regex": ["ansi-regex@2.1.1", "", {}, ""],
 
@@ -2772,8 +2762,6 @@
 
     "parallel-transform/readable-stream": ["readable-stream@2.3.8", "", { "dependencies": { "core-util-is": "~1.0.0", "inherits": "~2.0.3", "isarray": "~1.0.0", "process-nextick-args": "~2.0.0", "safe-buffer": "~5.1.1", "string_decoder": "~1.1.1", "util-deprecate": "~1.0.1" } }, ""],
 
-    "path-type/pify": ["pify@3.0.0", "", {}, ""],
-
     "pkg-dir/find-up": ["find-up@4.1.0", "", { "dependencies": { "locate-path": "^5.0.0", "path-exists": "^4.0.0" } }, ""],
 
     "portfinder/async": ["async@2.6.4", "", { "dependencies": { "lodash": "^4.17.14" } }, ""],
@@ -2803,10 +2791,6 @@
     "resolve-cwd/resolve-from": ["resolve-from@3.0.0", "", {}, ""],
 
     "safe-array-concat/isarray": ["isarray@2.0.5", "", {}, ""],
-
-    "scratch-parser/ajv": ["ajv@6.3.0", "", { "dependencies": { "fast-deep-equal": "^1.0.0", "fast-json-stable-stringify": "^2.0.0", "json-schema-traverse": "^0.3.0" } }, ""],
-
-    "scratch-parser/jszip": ["jszip@3.1.5", "", { "dependencies": { "core-js": "~2.3.0", "es6-promise": "~3.0.2", "lie": "~3.1.0", "pako": "~1.0.2", "readable-stream": "~2.0.6" } }, ""],
 
     "scratch-storage/worker-loader": ["worker-loader@2.0.0", "", { "dependencies": { "loader-utils": "^1.0.0", "schema-utils": "^0.4.0" }, "peerDependencies": { "webpack": "^3.0.0 || ^4.0.0-alpha.0 || ^4.0.0" } }, ""],
 
@@ -2951,6 +2935,8 @@
     "@babel/cli/chokidar/is-binary-path": ["is-binary-path@2.1.0", "", { "dependencies": { "binary-extensions": "^2.0.0" } }, ""],
 
     "@babel/cli/chokidar/readdirp": ["readdirp@3.6.0", "", { "dependencies": { "picomatch": "^2.2.1" } }, ""],
+
+    "@babel/cli/make-dir/pify": ["pify@4.0.1", "", {}, ""],
 
     "@babel/cli/make-dir/semver": ["semver@5.7.2", "", { "bin": "bin/semver" }, ""],
 
@@ -3146,14 +3132,6 @@
 
     "readdirp/readable-stream/safe-buffer": ["safe-buffer@5.1.2", "", {}, ""],
 
-    "scratch-parser/ajv/fast-deep-equal": ["fast-deep-equal@1.1.0", "", {}, ""],
-
-    "scratch-parser/ajv/json-schema-traverse": ["json-schema-traverse@0.3.1", "", {}, ""],
-
-    "scratch-parser/jszip/lie": ["lie@3.1.1", "", { "dependencies": { "immediate": "~3.0.5" } }, ""],
-
-    "scratch-parser/jszip/readable-stream": ["readable-stream@2.0.6", "", { "dependencies": { "core-util-is": "~1.0.0", "inherits": "~2.0.1", "isarray": "~1.0.0", "process-nextick-args": "~1.0.6", "string_decoder": "~0.10.x", "util-deprecate": "~1.0.1" } }, ""],
-
     "scratch-storage/worker-loader/schema-utils": ["schema-utils@0.4.7", "", { "dependencies": { "ajv": "^6.1.0", "ajv-keywords": "^3.1.0" } }, ""],
 
     "send/debug/ms": ["ms@2.0.0", "", {}, ""],
@@ -3250,8 +3228,6 @@
 
     "babel-code-frame/chalk/strip-ansi/ansi-regex": ["ansi-regex@2.1.1", "", {}, ""],
 
-    "copy-webpack-plugin/find-cache-dir/make-dir/pify": ["pify@3.0.0", "", {}, ""],
-
     "copy-webpack-plugin/find-cache-dir/pkg-dir/find-up": ["find-up@2.1.0", "", { "dependencies": { "locate-path": "^2.0.0" } }, ""],
 
     "enhanced-resolve/memory-fs/readable-stream/safe-buffer": ["safe-buffer@5.1.2", "", {}, ""],
@@ -3336,15 +3312,11 @@
 
     "pkg-dir/find-up/locate-path/p-locate": ["p-locate@4.1.0", "", { "dependencies": { "p-limit": "^2.2.0" } }, ""],
 
-    "scratch-parser/jszip/readable-stream/process-nextick-args": ["process-nextick-args@1.0.7", "", {}, ""],
-
-    "scratch-parser/jszip/readable-stream/string_decoder": ["string_decoder@0.10.31", "", {}, ""],
-
     "terser-webpack-plugin/cacache/mississippi/pump": ["pump@3.0.0", "", { "dependencies": { "end-of-stream": "^1.1.0", "once": "^1.3.1" } }, ""],
 
-    "terser-webpack-plugin/find-cache-dir/make-dir/semver": ["semver@5.7.2", "", { "bin": "bin/semver" }, ""],
+    "terser-webpack-plugin/find-cache-dir/make-dir/pify": ["pify@4.0.1", "", {}, ""],
 
-    "uglifyjs-webpack-plugin/find-cache-dir/make-dir/pify": ["pify@3.0.0", "", {}, ""],
+    "terser-webpack-plugin/find-cache-dir/make-dir/semver": ["semver@5.7.2", "", { "bin": "bin/semver" }, ""],
 
     "uglifyjs-webpack-plugin/find-cache-dir/pkg-dir/find-up": ["find-up@2.1.0", "", { "dependencies": { "locate-path": "^2.0.0" } }, ""],
 

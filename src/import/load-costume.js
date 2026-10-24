@@ -1,10 +1,9 @@
 const StringUtil = require('../util/string-util');
 const log = require('../util/log');
 const AsyncLimiter = require('../util/async-limiter');
-const {loadSvgString, serializeSvgToString} = require('scratch-svg-renderer');
 const {parseVectorMetadata} = require('../serialization/tw-costume-import-export');
 
-const loadVector_ = function (costume, runtime, rotationCenter, optVersion) {
+const loadVector_ = function (costume, runtime, rotationCenter) {
     return new Promise(resolve => {
         let svgString = costume.asset.decodeText();
 
@@ -15,22 +14,6 @@ const loadVector_ = function (costume, runtime, rotationCenter, optVersion) {
                 rotationCenter = parsedRotationCenter;
                 costume.rotationCenterX = rotationCenter[0];
                 costume.rotationCenterY = rotationCenter[1];
-            }
-        }
-    
-        // SVG Renderer load fixes "quirks" associated with Scratch 2 projects
-        if (optVersion && optVersion === 2) {
-            // scratch-svg-renderer fixes syntax that causes loading issues,
-            // and if optVersion is 2, fixes "quirks" associated with Scratch 2 SVGs,
-            const fixedSvgString = serializeSvgToString(loadSvgString(svgString, true /* fromVersion2 */));
-        
-            // If the string changed, put back into storage
-            if (svgString !== fixedSvgString) {
-                svgString = fixedSvgString;
-                const storage = runtime.storage;
-                costume.asset.encodeTextData(fixedSvgString, storage.DataFormat.SVG, true);
-                costume.assetId = costume.asset.assetId;
-                costume.md5 = `${costume.assetId}.${costume.dataFormat}`;
             }
         }
 
@@ -162,8 +145,6 @@ const readImage = new AsyncLimiter(_persistentReadImage, 25);
 /**
  * Return a promise to fetch a bitmap from storage and return it as a canvas
  * If the costume has bitmapResolution 1, it will be converted to bitmapResolution 2 here (the standard for Scratch 3)
- * If the costume has a text layer asset, which is a text part from Scratch 1.4, then this function
- * will merge the two image assets. See the issue LLK/scratch-vm#672 for more information.
  * @param {!object} costume - the Scratch costume object.
  * @param {!Runtime} runtime - Scratch runtime, used to access the v2BitmapAdapter
  * @param {?object} rotationCenter - optionally passed in coordinates for the center of rotation for the image. If
@@ -181,33 +162,15 @@ const fetchBitmapCanvas_ = function (costume, runtime, rotationCenter) {
         return Promise.reject('No V2 Bitmap adapter present.');
     }
 
-    return Promise.all([costume.asset, costume.textLayerAsset].map(asset => {
-        if (!asset) {
-            return null;
-        }
-
-        return readImage.do(asset);
-    }))
-        .then(([baseImageElement, textImageElement]) => {
+    return readImage.do(costume.asset)
+        .then(baseImageElement => {
             if (!baseImageElement) {
                 throw new Error('Loading bitmap costume base failed.');
             }
 
             const scale = costume.bitmapResolution === 1 ? 2 : 1;
 
-            let imageOrCanvas;
-            let canvas;
-            if (textImageElement) {
-                canvas = canvasPool.create();
-                canvas.width = baseImageElement.width;
-                canvas.height = baseImageElement.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(baseImageElement, 0, 0);
-                ctx.drawImage(textImageElement, 0, 0);
-                imageOrCanvas = canvas;
-            } else {
-                imageOrCanvas = baseImageElement;
-            }
+            let imageOrCanvas = baseImageElement;
             if (scale !== 1) {
                 // resize() returns a new canvas.
                 imageOrCanvas = runtime.v2BitmapAdapter.resize(
@@ -215,10 +178,6 @@ const fetchBitmapCanvas_ = function (costume, runtime, rotationCenter) {
                     imageOrCanvas.width * scale,
                     imageOrCanvas.height * scale
                 );
-                // Old canvas is no longer used.
-                if (canvas) {
-                    canvasPool.release(canvas);
-                }
             }
 
             // This informs TurboWarp/scratch-render that this canvas won't be reused by the canvas pool,
@@ -234,21 +193,12 @@ const fetchBitmapCanvas_ = function (costume, runtime, rotationCenter) {
             }
             costume.bitmapResolution = 2;
 
-            // Clean up the costume object
-            delete costume.textLayerMD5;
-            delete costume.textLayerAsset;
-
             return {
                 image: imageOrCanvas,
                 rotationCenter,
                 // True if the asset matches the base layer; false if it required adjustment
-                assetMatchesBase: scale === 1 && !textImageElement
+                assetMatchesBase: scale === 1
             };
-        })
-        .finally(() => {
-            // Clean up the text layer properties if it fails to load
-            delete costume.textLayerMD5;
-            delete costume.textLayerAsset;
         });
 };
 
@@ -385,11 +335,9 @@ const handleCostumeLoadError = function (costume, runtime) {
  * @property {number} [bitmapResolution] - the resolution scale for a bitmap costume.
  * @property {!Asset} costume.asset - the asset of the costume loaded from storage.
  * @param {!Runtime} runtime - Scratch runtime, used to access the storage module.
- * @param {?int} optVersion - Version of Scratch that the costume comes from. If this is set
- *     to 2, scratch 3 will perform an upgrade step to handle quirks in SVGs from Scratch 2.0.
  * @returns {?Promise} - a promise which will resolve after skinId is set, or null on error.
  */
-const loadCostumeFromAsset = function (costume, runtime, optVersion) {
+const loadCostumeFromAsset = function (costume, runtime) {
     costume.assetId = costume.asset.assetId;
     const renderer = runtime.renderer;
     if (!renderer) {
@@ -405,14 +353,14 @@ const loadCostumeFromAsset = function (costume, runtime, optVersion) {
         rotationCenter = [costume.rotationCenterX, costume.rotationCenterY];
     }
     if (costume.asset.assetType.runtimeFormat === AssetType.ImageVector.runtimeFormat) {
-        return loadVector_(costume, runtime, rotationCenter, optVersion)
+        return loadVector_(costume, runtime, rotationCenter)
             .catch(error => {
                 log.warn(`Error loading vector image: ${error}`);
                 return handleCostumeLoadError(costume, runtime);
                 
             });
     }
-    return loadBitmap_(costume, runtime, rotationCenter, optVersion)
+    return loadBitmap_(costume, runtime, rotationCenter)
         .catch(error => {
             log.warn(`Error loading bitmap image: ${error}`);
             return handleCostumeLoadError(costume, runtime);
@@ -430,11 +378,9 @@ const loadCostumeFromAsset = function (costume, runtime, optVersion) {
  * @property {number} rotationCenterY - the Y component of the costume's origin.
  * @property {number} [bitmapResolution] - the resolution scale for a bitmap costume.
  * @param {!Runtime} runtime - Scratch runtime, used to access the storage module.
- * @param {?int} optVersion - Version of Scratch that the costume comes from. If this is set
- *     to 2, scratch 3 will perform an upgrade step to handle quirks in SVGs from Scratch 2.0.
  * @returns {?Promise} - a promise which will resolve after skinId is set, or null on error.
  */
-const loadCostume = function (md5ext, costume, runtime, optVersion) {
+const loadCostume = function (md5ext, costume, runtime) {
     const idParts = StringUtil.splitFirst(md5ext, '.');
     const md5 = idParts[0];
     const ext = idParts[1].toLowerCase();
@@ -442,7 +388,7 @@ const loadCostume = function (md5ext, costume, runtime, optVersion) {
 
     if (costume.asset) {
         // Costume comes with asset. It could be coming from image upload, drag and drop, or file
-        return loadCostumeFromAsset(costume, runtime, optVersion);
+        return loadCostumeFromAsset(costume, runtime);
     }
 
     // Need to load the costume from storage. The server should have a reference to this md5.
@@ -459,27 +405,14 @@ const loadCostume = function (md5ext, costume, runtime, optVersion) {
     const AssetType = runtime.storage.AssetType;
     const assetType = (ext === 'svg') ? AssetType.ImageVector : AssetType.ImageBitmap;
 
-    const costumePromise = runtime.storage.load(assetType, md5, ext);
-
-    let textLayerPromise;
-    if (costume.textLayerMD5) {
-        textLayerPromise = runtime.storage.load(AssetType.ImageBitmap, costume.textLayerMD5, 'png');
-    } else {
-        textLayerPromise = Promise.resolve(null);
-    }
-
-    return Promise.all([costumePromise, textLayerPromise])
-        .then(assetArray => {
-            if (assetArray[0]) {
-                costume.asset = assetArray[0];
+    return runtime.storage.load(assetType, md5, ext)
+        .then(asset => {
+            if (asset) {
+                costume.asset = asset;
             } else {
                 return handleCostumeLoadError(costume, runtime);
             }
-
-            if (assetArray[1]) {
-                costume.textLayerAsset = assetArray[1];
-            }
-            return loadCostumeFromAsset(costume, runtime, optVersion);
+            return loadCostumeFromAsset(costume, runtime);
         })
         .catch(error => {
             // Handle case where storage.load rejects with errors
