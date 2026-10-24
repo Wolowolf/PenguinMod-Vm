@@ -1,4 +1,3 @@
-const dispatch = require('../dispatch/central-dispatch');
 const log = require('../util/log');
 const maybeFormatMessage = require('../util/maybe-format-message');
 
@@ -272,20 +271,11 @@ const coreExtensionList = Object.getOwnPropertyNames(defaultBuiltinExtensions);
  * @property {Array.<object>} menus - the menus provided by this category
  */
 
-const createExtensionService = extensionManager => {
-    const service = {};
-    service.registerExtensionServiceSync = extensionManager.registerExtensionServiceSync.bind(extensionManager);
-    return service;
-};
-
+// Desktop fork (section 142): extensions are plain objects kept here and called directly. The message
+// system for extensions in workers (src/dispatch, "extension_<n>_<id>" service names) is gone: every
+// extension is built in and runs on the page.
 class ExtensionManager {
     constructor(vm) {
-        /**
-         * The number in the service name of the next extension.
-         * @type {int}
-         */
-        this.nextExtensionWorker = 0;
-
         /**
          * Set by the editor: (extension id, gallery address or undefined) => name to show instead of the
          * extension's own name, or a falsy value to keep it.
@@ -294,8 +284,8 @@ class ExtensionManager {
         this.categoryNameOf = null;
 
         /**
-         * Map of loaded extension URLs/IDs to service names.
-         * @type {Map.<string, string>}
+         * Map of loaded extension IDs to extension objects.
+         * @type {Map.<string, object>}
          * @private
          */
         this._loadedExtensions = new Map();
@@ -320,11 +310,6 @@ class ExtensionManager {
         this.builtinExtensions = Object.assign({}, defaultBuiltinExtensions);
         // Desktop fork: moved gallery extensions still waiting to register (ID => promise)
         this._movedGalleryLoads = new Map();
-
-        dispatch.setService('extensions', createExtensionService(this)).catch(e => {
-            log.error(`ExtensionManager was unable to register extension service: ${JSON.stringify(e)}`);
-        });
-
     }
 
     getCoreExtensionList() {
@@ -389,11 +374,11 @@ class ExtensionManager {
     }
 
     _addBuiltinExtensionInstance(extensionId, extensionInstance) {
-        const serviceName = this._registerInternalExtension(extensionInstance);
+        this._registerInternalExtension(extensionInstance);
         // devs are stupid so uh
         // get the ACTUAL id of the ext so that saving/loading doesnt error
         const realId = extensionInstance.getInfo().id;
-        this._loadedExtensions.set(extensionId, serviceName);
+        this._loadedExtensions.set(extensionId, extensionInstance);
         this.runtime.compilerRegisterExtension(realId, extensionInstance);
     }
 
@@ -450,12 +435,12 @@ class ExtensionManager {
      * @returns {Promise} resolved once all the extensions have been reinitialized
      */
     refreshDynamicCategorys(extension) {
-        const refresh_service = service =>
-            dispatch.call(service, 'getInfo')
+        const refresh_service = extensionObject =>
+            new Promise(resolve => resolve(extensionObject.getInfo()))
                 .then(info => {
-                    info = this._prepareExtensionInfo(service, info);
+                    info = this._prepareExtensionInfo(extensionObject, info);
                     if (!info.isDynamic) return;
-                    dispatch.call('runtime', '_refreshExtensionPrimitives', info);
+                    this._callRuntime('_refreshExtensionPrimitives', info);
                 })
                 .catch(e => {
                     log.error(`Failed to refresh built-in extension primitives: ${e}`);
@@ -479,11 +464,11 @@ class ExtensionManager {
      * @returns {Promise} resolved once all the extensions have been reinitialized
      */
     refreshBlocks(extension) {
-        const refresh_service = service =>
-            dispatch.call(service, 'getInfo')
+        const refresh_service = extensionObject =>
+            new Promise(resolve => resolve(extensionObject.getInfo()))
                 .then(info => {
-                    info = this._prepareExtensionInfo(service, info);
-                    dispatch.call('runtime', '_refreshExtensionPrimitives', info);
+                    info = this._prepareExtensionInfo(extensionObject, info);
+                    this._callRuntime('_refreshExtensionPrimitives', info);
                 })
                 .catch(e => {
                     log.error(`Failed to refresh built-in extension primitives: ${e}`);
@@ -500,26 +485,39 @@ class ExtensionManager {
         return refresh_service(this._loadedExtensions.get(extension));
     }
 
+    // Desktop fork (section 142): calls an extension's dispose() and logs what it throws, as the old message
+    // system did.
+    _disposeExtension(extensionObject) {
+        if (!extensionObject || typeof extensionObject.dispose !== 'function') return;
+        try {
+            extensionObject.dispose();
+        } catch (e) {
+            log.error('Extension dispose failed', e);
+        }
+    }
+
+    // Desktop fork (section 142): calls a runtime method and logs what it throws (the old message system
+    // turned it into a rejected promise that nothing waited for).
+    _callRuntime(method, ...args) {
+        try {
+            this.runtime[method](...args);
+        } catch (e) {
+            log.error(`Runtime ${method} failed:`, e);
+        }
+    }
+
     prepareSwap(id) {
-        const serviceName = this._loadedExtensions.get(id);
-        const { provider, isRemote } = dispatch._getServiceProvider(serviceName);
-        if (isRemote || typeof provider.dispose === 'function') 
-            dispatch.call(serviceName, 'dispose');
-        delete dispatch.services[serviceName];
+        this._disposeExtension(this._loadedExtensions.get(id));
         delete this.runtime[`ext_${id}`];
 
         this._loadedExtensions.delete(id);
     }
     removeExtension(id) {
-        const serviceName = this._loadedExtensions.get(id);
-        const { provider, isRemote } = dispatch._getServiceProvider(serviceName);
-        if (isRemote || typeof provider.dispose === 'function') 
-            dispatch.call(serviceName, 'dispose');
-        delete dispatch.services[serviceName];
+        this._disposeExtension(this._loadedExtensions.get(id));
         delete this.runtime[`ext_${id}`];
 
         this._loadedExtensions.delete(id);
-        dispatch.call('runtime', '_removeExtensionPrimitive', id);
+        this._callRuntime('_removeExtensionPrimitive', id);
         this.refreshBlocks();
     }
     getExtensionIdFromOpcode(opcode) {
@@ -555,50 +553,35 @@ class ExtensionManager {
     }
 
     /**
-     * Synchronously collect extension metadata from the specified service and begin the extension registration process.
-     * @param {string} serviceName - the name of the service hosting the extension.
-     */
-    registerExtensionServiceSync(serviceName) {
-        const info = dispatch.callSync(serviceName, 'getInfo');
-        this._registerExtensionInfo(serviceName, info);
-    }
-
-    /**
-     * Register an internal (non-Worker) extension object
+     * Register an extension object's blocks with the VM.
      * @param {object} extensionObject - the extension object to register
-     * @returns {string} The name of the registered extension service
+     * @returns {object} The extension object (what _loadedExtensions keeps)
      */
     _registerInternalExtension(extensionObject) {
-        const extensionInfo = extensionObject.getInfo();
-        const fakeWorkerId = this.nextExtensionWorker++;
-        const serviceName = `extension_${fakeWorkerId}_${extensionInfo.id}`;
-        dispatch.setServiceSync(serviceName, extensionObject);
-        dispatch.callSync('extensions', 'registerExtensionServiceSync', serviceName);
-        return serviceName;
+        this._registerExtensionInfo(extensionObject, extensionObject.getInfo());
+        return extensionObject;
     }
 
     /**
      * Sanitize extension info then register its primitives with the VM.
-     * @param {string} serviceName - the name of the service hosting the extension
+     * @param {object} extensionObject - the extension object
      * @param {ExtensionInfo} extensionInfo - the extension's metadata
      * @private
      */
-    _registerExtensionInfo(serviceName, extensionInfo) {
-        extensionInfo = this._prepareExtensionInfo(serviceName, extensionInfo);
-        dispatch.call('runtime', '_registerExtensionPrimitives', extensionInfo).catch(e => {
-            log.error(`Failed to register primitives for extension on service ${serviceName}:`, e);
-        });
+    _registerExtensionInfo(extensionObject, extensionInfo) {
+        extensionInfo = this._prepareExtensionInfo(extensionObject, extensionInfo);
+        this._callRuntime('_registerExtensionPrimitives', extensionInfo);
     }
 
     /**
      * Apply minor cleanup and defaults for optional extension fields.
      * TODO: make the ID unique in cases where two copies of the same extension are loaded.
-     * @param {string} serviceName - the name of the service hosting this extension block
+     * @param {object} extensionObject - the extension object
      * @param {ExtensionInfo} extensionInfo - the extension info to be sanitized
      * @returns {ExtensionInfo} - a new extension info object with cleaned-up values
      * @private
      */
-    _prepareExtensionInfo(serviceName, extensionInfo) {
+    _prepareExtensionInfo(extensionObject, extensionInfo) {
         extensionInfo = Object.assign({}, extensionInfo);
         if (!/^[a-z0-9]+$/i.test(extensionInfo.id)) {
             throw new Error('Invalid extension id');
@@ -612,7 +595,7 @@ class ExtensionManager {
         extensionInfo.blocks = extensionInfo.blocks || [];
         extensionInfo.targetTypes = extensionInfo.targetTypes || [];
         extensionInfo.menus = extensionInfo.menus || {};
-        extensionInfo.menus = this._prepareMenuInfo(serviceName, extensionInfo.menus);
+        extensionInfo.menus = this._prepareMenuInfo(extensionObject, extensionInfo.menus);
         extensionInfo.blocks = extensionInfo.blocks.reduce((results, blockInfo) => {
             try {
                 let result;
@@ -621,7 +604,7 @@ class ExtensionManager {
                     result = '---';
                     break;
                 default: // an ExtensionBlockMetadata object
-                    result = this._prepareBlockInfo(serviceName, blockInfo, extensionInfo.menus);
+                    result = this._prepareBlockInfo(extensionObject, blockInfo, extensionInfo.menus);
                     break;
                 }
                 results.push(result);
@@ -636,12 +619,12 @@ class ExtensionManager {
 
     /**
      * Prepare extension menus. e.g. setup binding for dynamic menu functions.
-     * @param {string} serviceName - the name of the service hosting this extension block
+     * @param {object} extensionObject - the extension object
      * @param {Array.<MenuInfo>} menus - the menu defined by the extension.
      * @returns {Array.<MenuInfo>} - a menuInfo object with all preprocessing done.
      * @private
      */
-    _prepareMenuInfo(serviceName, menus) {
+    _prepareMenuInfo(extensionObject, menus) {
         const menuNames = Object.getOwnPropertyNames(menus);
         for (let i = 0; i < menuNames.length; i++) {
             const menuName = menuNames[i];
@@ -659,9 +642,8 @@ class ExtensionManager {
             // function should return an array of items to populate the menu when it is opened.
             if (typeof menuInfo.items === 'string') {
                 const menuItemFunctionName = menuInfo.items;
-                const serviceObject = dispatch.services[serviceName];
                 // Bind the function here so we can pass a simple item generation function to Scratch Blocks later.
-                menuInfo.items = this._getExtensionMenuItems.bind(this, serviceObject, menuItemFunctionName);
+                menuInfo.items = this._getExtensionMenuItems.bind(this, extensionObject, menuItemFunctionName);
             }
         }
         return menus;
@@ -694,7 +676,6 @@ class ExtensionManager {
             }
         }
 
-        // TODO: Fix this to use dispatch.call when extensions are running in workers.
         const menuFunc = extensionObject[menuItemFunctionName];
         const menuItems = menuFunc.call(extensionObject, editingTargetID, blockArgs).map(
             item => {
@@ -732,13 +713,13 @@ class ExtensionManager {
 
     /**
      * Apply defaults for optional block fields.
-     * @param {string} serviceName - the name of the service hosting this extension block
+     * @param {object} extensionObject - the extension object
      * @param {ExtensionBlockMetadata} blockInfo - the block info from the extension
      * @param {object.<ExtensionMenuMetadata>} menus The menus from the extension
      * @returns {ExtensionBlockMetadata} - a new block info object which has values for all relevant optional fields.
      * @private
      */
-    _prepareBlockInfo(serviceName, blockInfo, menus) {
+    _prepareBlockInfo(extensionObject, blockInfo, menus) {
         if (blockInfo.blockType === BlockType.XML) {
             blockInfo = Object.assign({}, blockInfo);
             blockInfo.xml = String(blockInfo.xml) || '';
@@ -768,7 +749,8 @@ class ExtensionManager {
                 blockInfo.opcode = blockInfo.func;
             }
             const funcName = blockInfo.opcode;
-            const callBlockFunc = (...args) => dispatch.call(serviceName, funcName, ...args);
+            // a promise, as from the old message system
+            const callBlockFunc = (...args) => new Promise(resolve => resolve(extensionObject[funcName](...args)));
 
             blockInfo.func = callBlockFunc;
             break;
@@ -784,47 +766,12 @@ class ExtensionManager {
             const getBlockInfo = blockInfo.isDynamic ?
                 args => args && args.mutation && args.mutation.blockInfo :
                 () => blockInfo;
-            const callBlockFunc = (() => {
-                if (dispatch._isRemoteService(serviceName)) {
-                    return (args, util, realBlockInfo) =>
-                        dispatch.call(serviceName, funcName, args, util, realBlockInfo)
-                            .then(result => {
-                                // Scratch is only designed to handle these types.
-                                // If any other value comes in such as undefined, null, an object, etc.
-                                // we'll convert it to a string to avoid undefined behavior.
-                                if (
-                                    typeof result === 'number' ||
-                                        typeof result === 'string' ||
-                                        typeof result === 'boolean'
-                                ) {
-                                    return result;
-                                }
-                                return `${result}`;
-                            })
-                        // When an error happens, instead of returning undefined, we'll return a stringified
-                        // version of the error so that it can be debugged.
-                            .catch(err => {
-                                // We want the full error including stack to be printed but the log helper
-                                // messes with that.
-                                // eslint-disable-next-line no-console
-                                console.error('Custom extension block error', err);
-                                return `${err}`;
-                            });
-                }
-
-                // avoid promise latency if we can call direct
-                const serviceObject = dispatch.services[serviceName];
-                if (!serviceObject) {
-                    // extension was likely removed
-                    return () => {};
-                }
-                if (!serviceObject[funcName]) {
-                    // The function might show up later as a dynamic property of the service object
-                    log.warn(`Could not find extension block function called ${funcName}`);
-                }
-                return (args, util, realBlockInfo) =>
-                    serviceObject[funcName](args, util, realBlockInfo);
-            })();
+            if (!extensionObject[funcName]) {
+                // The function might show up later as a dynamic property of the extension object
+                log.warn(`Could not find extension block function called ${funcName}`);
+            }
+            const callBlockFunc = (args, util, realBlockInfo) =>
+                extensionObject[funcName](args, util, realBlockInfo);
 
             const normal = {
                 'angle': "number",
@@ -875,9 +822,8 @@ class ExtensionManager {
             };
             // Desktop fork (roadmap step 4): what the compiler needs to call a pure block's function without this
             // wrapper (src/compiler/jsgen.js descendPureExtensionBlock): the call itself, the arguments the wrapper
-            // would convert, and the conversion. Not for dynamic blocks (their info comes with each call) or
-            // extensions in a worker.
-            if (!blockInfo.isDynamic && !dispatch._isRemoteService(serviceName)) {
+            // would convert, and the conversion. Not for dynamic blocks (their info comes with each call).
+            if (!blockInfo.isDynamic) {
                 let types = null;
                 blockInfo.func.pmDirect = {
                     call: (args, util) => callBlockFunc(args, util, blockInfo),

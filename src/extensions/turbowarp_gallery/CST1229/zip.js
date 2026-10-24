@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's CST1229/zip.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged, except (section 142) its last line, which passes the Scratch object it is given instead of globalThis.Scratch.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -1347,7 +1347,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
   // @ts-ignore
   Scratch.extensions.register(new ZipExt());
-})(globalThis.Scratch);
+})(Scratch);
 /* snippet suffix */function __internal_setup() {/* snippet base85decode */__internal.base85decode = (function () {
   const getBase85DecodeValue = (code) => {
     if (code === 0x28) code = 0x5c;
