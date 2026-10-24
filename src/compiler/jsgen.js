@@ -362,7 +362,11 @@ const FOLDABLE_KINDS = new Set([
     'op.toCase', 'op.charToCode', 'op.codeToChar', 'op.indexOfText', 'op.lastIndexOfText', 'op.startsOrEndsWith',
     'op.countIn', 'op.hasLetterFrom', 'op.replaceAll', 'op.replaceFirst', 'op.lettersFromTo', 'op.readLine',
     'op.regexMatch', 'sensing.isNumber', 'sensing.hasNumber', 'sensing.isText', 'sensing.isUpperCase',
-    'sensing.regexTest', 'sensing.distanceTo'
+    'sensing.regexTest', 'sensing.distanceTo',
+    // Operators Expansion blocks compiled to inline code (section 140); helpers in PURE_HELPER_NAMES too
+    'pmInline.isMultipleOf', 'pmInline.isInteger', 'pmInline.isPrime', 'pmInline.isEven', 'pmInline.between',
+    'pmInline.partOfRatio', 'pmInline.simplifyRatio', 'pmInline.number', 'pmInline.truncate', 'pmInline.reverse',
+    'pmInline.textAfter', 'pmInline.textBefore', 'pmInline.exactlyEqual'
 ]);
 
 /**
@@ -1024,6 +1028,65 @@ class JSGenerator {
             return new TypedInput(`coreItemExists(${this.rawValue(this.descendInput(node.index))}, ${this.listItems(node.list)}.length)`, TYPE_BOOLEAN);
         case 'list.isEmpty':
             return new TypedInput(`(${this.listItems(node.list)}.length < 1)`, TYPE_BOOLEAN);
+
+        // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks (irgen.js
+        // descendExpansionInlineInput). Each does what the extension's function does with the arguments the
+        // extension manager's wrapper gives it (number arguments: Cast.toNumber, text: String); helpers in
+        // jsexecute.js take them in the block's order. Text answers stay of unknown type, as in section 118.
+        case 'pmInline.isMultipleOf':
+            return new TypedInput(`((${this.exactNumber(this.descendInput(node.num))} % ${this.exactNumber(this.descendInput(node.multiple))}) === 0)`, TYPE_BOOLEAN);
+        case 'pmInline.isInteger':
+            return new TypedInput(`pmxIsInteger(${this.exactNumber(this.descendInput(node.num))})`, TYPE_BOOLEAN);
+        case 'pmInline.isPrime':
+            return new TypedInput(`pmxIsPrime(${this.exactNumber(this.descendInput(node.num))})`, TYPE_BOOLEAN);
+        case 'pmInline.isEven':
+            return new TypedInput(`(${this.exactNumber(this.descendInput(node.num))} % 2 == 0)`, TYPE_BOOLEAN);
+        case 'pmInline.between':
+            return new TypedInput(`pmxBetween(${this.exactNumber(this.descendInput(node.num))}, ${this.exactNumber(this.descendInput(node.min))}, ${this.exactNumber(this.descendInput(node.max))})`, TYPE_BOOLEAN);
+        case 'pmInline.partOfRatio':
+            return new TypedInput(`pmxPartOfRatio(${this.exactString(this.descendInput(node.part))}, ${this.exactString(this.descendInput(node.ratio))})`, TYPE_UNKNOWN);
+        case 'pmInline.simplifyRatio':
+            return new TypedInput(`pmxSimplifyRatio(${this.exactString(this.descendInput(node.ratio))})`, TYPE_UNKNOWN);
+        case 'pmInline.number':
+            return new TypedInput(`(${node.source})`, TYPE_NUMBER);
+        case 'pmInline.truncate':
+            return new TypedInput(`Math.trunc(${this.exactNumber(this.descendInput(node.num))})`, TYPE_NUMBER);
+        case 'pmInline.reverse':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.split("").reverse().join(""))`, TYPE_UNKNOWN);
+        case 'pmInline.textAfter':
+            return new TypedInput(`pmxTextAfter(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.base))})`, TYPE_UNKNOWN);
+        case 'pmInline.textBefore':
+            return new TypedInput(`pmxTextBefore(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.base))})`, TYPE_UNKNOWN);
+        case 'pmInline.exactlyEqual':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.one))} === ${this.exactString(this.descendInput(node.two))})`, TYPE_BOOLEAN);
+        case 'pmInline.rotationStyle':
+            return new TypedInput('(target.rotationStyle)', TYPE_UNKNOWN);
+        case 'pmInline.directionTo':
+            return new TypedInput(`pmxDirectionTo(target, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))})`, TYPE_NUMBER_NAN);
+        case 'pmInline.distanceTo':
+            return new TypedInput(`pmxDistanceTo(target, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))})`, TYPE_NUMBER_NAN);
+        case 'pmInline.spriteSize':
+            return new TypedInput(`pmxSpriteSize(runtime, target, "${sanitize(node.what)}")`, TYPE_NUMBER_NAN);
+        case 'pmInline.packaged':
+            return new TypedInput('(runtime.isPackagedProject)', TYPE_UNKNOWN);
+        case 'pmInline.spriteName':
+            return new TypedInput('(target.getName())', TYPE_UNKNOWN);
+        case 'pmInline.currentMillisecond':
+            return new TypedInput('(Date.now() % 1000)', TYPE_NUMBER);
+        case 'pmInline.deltaTime':
+            return new TypedInput('pmxDeltaTime(runtime.ext_pmSensingExpansion)', TYPE_NUMBER);
+        case 'pmInline.maxSpriteLayers':
+            return new TypedInput('(runtime.renderer._drawList.length - 1)', TYPE_NUMBER);
+        case 'pmInline.scrollingDistance':
+            return new TypedInput('(runtime.ext_pmSensingExpansion.scrollDistance)', TYPE_UNKNOWN);
+        case 'pmInline.currentKey':
+            return new TypedInput('pmxCurrentKey(runtime)', TYPE_UNKNOWN);
+        case 'pmInline.lastKey':
+            return new TypedInput('(runtime.ioDevices.keyboard.getLastKeyPressed())', TYPE_UNKNOWN);
+        case 'pmInline.keyHeld':
+            return new TypedInput(`pmxKeyHeld(runtime, ${this.exactString(this.descendInput(node.key))})`, TYPE_NUMBER_NAN);
+        case 'pmInline.buttonDown':
+            return new TypedInput(`(runtime.ioDevices.mouse.getButtonIsDown(${this.exactNumber(this.descendInput(node.button))}))`, TYPE_BOOLEAN);
 
         case 'op.abs':
             return new TypedInput(`Math.abs(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
@@ -2063,6 +2126,24 @@ class JSGenerator {
             this.source += `${list}._monitorUpToDate = false;\n`;
             break;
         }
+
+        // Desktop fork (section 140): Operators, Motion and Sensing Expansion commands (irgen.js
+        // descendExpansionInlineStack), as the extension's functions are.
+        case 'pmInline.fence':
+            this.source += 'pmxFence(runtime, target);\n';
+            break;
+        case 'pmInline.stepTowards':
+            this.source += `pmxStepTowards(target, ${this.exactNumber(this.descendInput(node.steps))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            break;
+        case 'pmInline.tweenTowards':
+            this.source += `pmxTweenTowards(target, ${this.exactNumber(this.descendInput(node.percent))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            break;
+        case 'pmInline.setScrolling':
+            this.source += `runtime.ext_pmSensingExpansion.scrollDistance = ${this.exactNumber(this.descendInput(node.amount))};\n`;
+            break;
+        case 'pmInline.changeScrolling':
+            this.source += `runtime.ext_pmSensingExpansion.scrollDistance += ${this.exactNumber(this.descendInput(node.amount))};\n`;
+            break;
 
         case 'motion.changeX':
             this.source += `target.setXY(target.x + ${this.descendInput(node.dx).asNumber()}, target.y);\n`;

@@ -15,6 +15,25 @@ const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
 // Desktop fork (section 132): extension blocks whose code was read and that never wait, yield, change a thread's
 // status or read stack frames (block-inventory.json: "direct"), so their direct call needs no check after it.
 const plainExtensionBlocks = new Set(require('../extension-support/direct-blocks.json'));
+// Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks compiled to inline code
+// (descendExpansionInlineInput / Stack).
+const EXPANSION_INLINE_INPUTS = new Set([
+    'pmOperatorsExpansion_isNumberMultipleOf', 'pmOperatorsExpansion_isInteger', 'pmOperatorsExpansion_isPrime',
+    'pmOperatorsExpansion_isEven', 'pmOperatorsExpansion_betweenNumbers', 'pmOperatorsExpansion_partOfRatio',
+    'pmOperatorsExpansion_simplifyRatio', 'pmOperatorsExpansion_pi', 'pmOperatorsExpansion_euler',
+    'pmOperatorsExpansion_infinity', 'pmOperatorsExpansion_truncateNumber', 'pmOperatorsExpansion_reverseChars',
+    'pmOperatorsExpansion_textAfter', 'pmOperatorsExpansion_textBefore', 'pmOperatorsExpansion_exactlyEqual',
+    'pmMotionExpansion_rotationStyle', 'pmMotionExpansion_directionto', 'pmMotionExpansion_distanceto',
+    'pmMotionExpansion_spritewh', 'pmSensingExpansion_packaged', 'pmSensingExpansion_spriteName',
+    'pmSensingExpansion_currentMillisecond', 'pmSensingExpansion_deltaTime', 'pmSensingExpansion_maxSpriteLayers',
+    'pmSensingExpansion_scrollingDistance', 'pmSensingExpansion_currentKeyPressed',
+    'pmSensingExpansion_getLastKeyPressed', 'pmSensingExpansion_amountOfTimeKeyHasBeenHeld',
+    'pmSensingExpansion_getButtonIsDown'
+]);
+const EXPANSION_INLINE_STACKS = new Set([
+    'pmMotionExpansion_fence', 'pmMotionExpansion_steptowards', 'pmMotionExpansion_tweentowards',
+    'pmSensingExpansion_setScrollingDistance', 'pmSensingExpansion_changeScrollingDistanceBy'
+]);
 
 /**
  * @fileoverview Generate intermediate representations from Scratch blocks.
@@ -988,6 +1007,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 138)
                 const core = this.descendCoreInlineInput(block);
                 if (core) return core;
+                // Desktop fork (section 140)
+                const expansion = this.descendExpansionInlineInput(block);
+                if (expansion) return expansion;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -1979,6 +2001,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 138)
                 const core = this.descendCoreInlineStack(block);
                 if (core) return core;
+                // Desktop fork (section 140)
+                const expansion = this.descendExpansionInlineStack(block);
+                if (expansion) return expansion;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.statementBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2339,6 +2364,130 @@ class ScriptTreeGenerator {
             if (!list.isList) return null;
             return {kind: 'list.reverse', list};
         }
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 140): reporters and Booleans of PenguinMod's built-in Operators, Motion and Sensing
+     * Expansion extensions that never wait, yield, start or stop scripts or need the page get their own nodes
+     * instead of section 118's and 132's direct calls; jsgen.js writes code that does exactly what the extension's
+     * function does with the arguments the extension manager's wrapper gives it (the wrapper's conversion and the
+     * function's own written out). Inputs in the order of the block's text, checked like section 139
+     * (coreInputsInOrder). Menu values the function does not know keep the direct call.
+     * runtime.pmNoExpansionInline = true puts all of them back on the direct calls (tests only).
+     * @param {Block} block The block.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendExpansionInlineInput (block) {
+        if (this.runtime.pmNoExpansionInline || !EXPANSION_INLINE_INPUTS.has(block.opcode) ||
+            !this.coreInputsInOrder(block, this.expansionInlineInputNode)) return null;
+        return this.expansionInlineInputNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 140): the node of descendExpansionInlineInput.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    expansionInlineInputNode (block, input) {
+        switch (block.opcode) {
+        case 'pmOperatorsExpansion_isNumberMultipleOf':
+            return {kind: 'pmInline.isMultipleOf', num: input('NUM'), multiple: input('MULTIPLE')};
+        case 'pmOperatorsExpansion_isInteger':
+            return {kind: 'pmInline.isInteger', num: input('NUM')};
+        case 'pmOperatorsExpansion_isPrime':
+            return {kind: 'pmInline.isPrime', num: input('NUM')};
+        case 'pmOperatorsExpansion_isEven':
+            return {kind: 'pmInline.isEven', num: input('NUM')};
+        case 'pmOperatorsExpansion_betweenNumbers':
+            return {kind: 'pmInline.between', num: input('NUM'), min: input('MIN'), max: input('MAX')};
+        case 'pmOperatorsExpansion_partOfRatio':
+            return {kind: 'pmInline.partOfRatio', part: input('PART'), ratio: input('RATIO')};
+        case 'pmOperatorsExpansion_simplifyRatio':
+            return {kind: 'pmInline.simplifyRatio', ratio: input('RATIO')};
+        case 'pmOperatorsExpansion_pi':
+            return {kind: 'pmInline.number', source: 'Math.PI'};
+        case 'pmOperatorsExpansion_euler':
+            return {kind: 'pmInline.number', source: 'Math.E'};
+        case 'pmOperatorsExpansion_infinity':
+            return {kind: 'pmInline.number', source: 'Infinity'};
+        case 'pmOperatorsExpansion_truncateNumber':
+            return {kind: 'pmInline.truncate', num: input('NUM')};
+        case 'pmOperatorsExpansion_reverseChars':
+            return {kind: 'pmInline.reverse', text: input('TEXT')};
+        case 'pmOperatorsExpansion_textAfter':
+            return {kind: 'pmInline.textAfter', text: input('TEXT'), base: input('BASE')};
+        case 'pmOperatorsExpansion_textBefore':
+            return {kind: 'pmInline.textBefore', text: input('TEXT'), base: input('BASE')};
+        case 'pmOperatorsExpansion_exactlyEqual':
+            return {kind: 'pmInline.exactlyEqual', one: input('ONE'), two: input('TWO')};
+        case 'pmMotionExpansion_rotationStyle':
+            return {kind: 'pmInline.rotationStyle'};
+        case 'pmMotionExpansion_directionto':
+            return {kind: 'pmInline.directionTo', x: input('X'), y: input('Y')};
+        case 'pmMotionExpansion_distanceto':
+            return {kind: 'pmInline.distanceTo', x: input('X'), y: input('Y')};
+        case 'pmMotionExpansion_spritewh': {
+            // (only a fixed menu value it knows; anything else answers undefined, left to the direct call)
+            const what = input('WHAT');
+            if (what.kind !== 'constant' || ['width', 'height', 'costume width', 'costume height'].indexOf(what.value) === -1) return null;
+            return {kind: 'pmInline.spriteSize', what: what.value};
+        }
+        case 'pmSensingExpansion_packaged':
+            return {kind: 'pmInline.packaged'};
+        case 'pmSensingExpansion_spriteName':
+            return {kind: 'pmInline.spriteName'};
+        case 'pmSensingExpansion_currentMillisecond':
+            return {kind: 'pmInline.currentMillisecond'};
+        case 'pmSensingExpansion_deltaTime':
+            return {kind: 'pmInline.deltaTime'};
+        case 'pmSensingExpansion_maxSpriteLayers':
+            return {kind: 'pmInline.maxSpriteLayers'};
+        case 'pmSensingExpansion_scrollingDistance':
+            return {kind: 'pmInline.scrollingDistance'};
+        case 'pmSensingExpansion_currentKeyPressed':
+            return {kind: 'pmInline.currentKey'};
+        case 'pmSensingExpansion_getLastKeyPressed':
+            return {kind: 'pmInline.lastKey'};
+        case 'pmSensingExpansion_amountOfTimeKeyHasBeenHeld':
+            return {kind: 'pmInline.keyHeld', key: input('KEY')};
+        case 'pmSensingExpansion_getButtonIsDown':
+            return {kind: 'pmInline.buttonDown', button: input('MOUSE_BUTTON')};
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 140): the commands of descendExpansionInlineInput's kind.
+     * @param {Block} block The block.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendExpansionInlineStack (block) {
+        if (this.runtime.pmNoExpansionInline || !EXPANSION_INLINE_STACKS.has(block.opcode) ||
+            !this.coreInputsInOrder(block, this.expansionInlineStackNode)) return null;
+        return this.expansionInlineStackNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 140): the node of descendExpansionInlineStack.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node.
+     */
+    expansionInlineStackNode (block, input) {
+        switch (block.opcode) {
+        case 'pmMotionExpansion_fence':
+            return {kind: 'pmInline.fence'};
+        case 'pmMotionExpansion_steptowards':
+            return {kind: 'pmInline.stepTowards', steps: input('STEPS'), x: input('X'), y: input('Y')};
+        case 'pmMotionExpansion_tweentowards':
+            return {kind: 'pmInline.tweenTowards', percent: input('PERCENT'), x: input('X'), y: input('Y')};
+        case 'pmSensingExpansion_setScrollingDistance':
+            return {kind: 'pmInline.setScrolling', amount: input('AMOUNT')};
+        case 'pmSensingExpansion_changeScrollingDistanceBy':
+            return {kind: 'pmInline.changeScrolling', amount: input('AMOUNT')};
         }
         return null;
     }

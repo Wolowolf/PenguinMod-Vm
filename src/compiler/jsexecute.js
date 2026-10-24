@@ -917,13 +917,106 @@ const scopedEval = source => {
     }
 };
 
+/**
+ * Desktop fork (section 140): helpers for the Operators, Motion and Sensing Expansion blocks compiled to inline
+ * code (jsgen.js, irgen.js descendExpansionInlineInput / Stack). Each is the extension's function with its
+ * arguments already converted as the extension manager's wrapper and the function convert them; the parameters
+ * are in the block's input order. Those in PURE_HELPER_NAMES read nothing but their parameters.
+ */
+runtimeFunctions.pmxIsInteger = `const pmxIsInteger = num => Math.trunc(num) === num`;
+runtimeFunctions.pmxIsPrime = `const pmxIsPrime = number => {
+    number = Math.trunc(number);
+    if (number <= 1 || !Number.isFinite(number)) return false;
+    for (let i = 2; i * i <= number; i++) {
+        if (number % i === 0) return false;
+    }
+    return true;
+}`;
+runtimeFunctions.pmxBetween = `const pmxBetween = (number, min, max) => {
+    if (max < min) {
+        const switchover = max;
+        max = min;
+        min = switchover;
+    }
+    return (number <= max) && (number >= min);
+}`;
+runtimeFunctions.pmxPartOfRatio = `const pmxPartOfRatio = (part, ratio) => {
+    part = part.toLowerCase();
+    if (!ratio.includes(":")) return "";
+    const split = ratio.split(":");
+    return globalState.Cast.toNumber(split[Number(part === "last")]);
+}`;
+runtimeFunctions.pmxSimplifyRatio = `const pmxSimplifyRatio = ratio => {
+    if (!ratio.includes(":")) return "";
+    const split = ratio.split(":");
+    const first = globalState.Cast.toNumber(split[0]);
+    const last = globalState.Cast.toNumber(split[1]);
+    const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+    const divisor = gcd(first, last);
+    return globalState.Cast.toNumber(first / divisor) + ":" + globalState.Cast.toNumber(last / divisor);
+}`;
+runtimeFunctions.pmxTextAfter = `const pmxTextAfter = (text, base) => {
+    const idx = base.indexOf(text);
+    if (idx < 0) return "";
+    return base.substring(idx + text.length);
+}`;
+runtimeFunctions.pmxTextBefore = `const pmxTextBefore = (text, base) => {
+    const idx = base.indexOf(text);
+    if (idx < 0) return "";
+    return base.substring(0, idx);
+}`;
+runtimeFunctions.pmxDirectionTo = `const pmxDirectionTo = (target, x, y) => (180 / Math.PI) * Math.atan2(x - target.x, y - target.y)`;
+runtimeFunctions.pmxDistanceTo = `const pmxDistanceTo = (target, x, y) => Math.sqrt((x - target.x) ** 2 + (y - target.y) ** 2)`;
+runtimeFunctions.pmxSpriteSize = `const pmxSpriteSize = (runtime, target, what) => {
+    if (what === "width" || what === "height") {
+        const bounds = runtime.renderer.getBounds(target.drawableID);
+        return Math.ceil(what === "width" ? bounds.width : bounds.height);
+    }
+    const costume = target.sprite.costumes[target.currentCostume];
+    return Math.ceil(what === "costume width" ? costume.size[0] : costume.size[1]);
+}`;
+runtimeFunctions.pmxDeltaTime = `const pmxDeltaTime = ext => {
+    const now = Date.now();
+    const dt = now - ext.lastUpdate;
+    ext.lastUpdate = now;
+    return dt;
+}`;
+runtimeFunctions.pmxCurrentKey = `const pmxCurrentKey = runtime => {
+    const keys = runtime.ioDevices.keyboard.getAllKeysPressed();
+    const key = keys[keys.length - 1];
+    if (!key) return "";
+    return String(key).toLowerCase();
+}`;
+runtimeFunctions.pmxKeyHeld = `const pmxKeyHeld = (runtime, key) => {
+    const keyTimestamp = runtime.ioDevices.keyboard.getKeyTimestamp(key);
+    if (keyTimestamp === 0) return 0;
+    return (Date.now() - keyTimestamp) / 1000;
+}`;
+runtimeFunctions.pmxFence = `const pmxFence = (runtime, target) => {
+    const newpos = runtime.renderer.getFencedPositionOfDrawable(target.drawableID, [target.x, target.y]);
+    target.setXY(newpos[0], newpos[1]);
+}`;
+runtimeFunctions.pmxStepTowards = `const pmxStepTowards = (target, steps, x, y) => {
+    const val = steps / Math.sqrt((x - target.x) ** 2 + (y - target.y) ** 2);
+    if (val >= 1) {
+        target.setXY(x, y);
+    } else {
+        target.setXY((x - target.x) * val + target.x, (y - target.y) * val + target.y);
+    }
+}`;
+runtimeFunctions.pmxTweenTowards = `const pmxTweenTowards = (target, val, x, y) => {
+    target.setXY((x - target.x) * (val / 100) + target.x, (y - target.y) * (val / 100) + target.y);
+}`;
+
 // PMDESKTOP_FOLD (section 44): evaluates an expression that uses no project state (only the runtime helpers
 // below, which are the very same source text compiled scripts get) while a script is being compiled.
 // The helpers and the evaluating function are made once; each call is a plain eval of the expression.
 const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan", "mod", "tan",
     // section 138
     "coreNumber", "coreConstrain", "coreLerp", "coreRoot", "coreLog", "coreIndexOf", "coreLastIndexOf", "coreCountIn",
-    "coreHasLetterFrom", "coreLetters", "coreLine", "coreRegexMatch", "coreRegexTest", "coreIsNumber", "coreDistanceTo"];
+    "coreHasLetterFrom", "coreLetters", "coreLine", "coreRegexMatch", "coreRegexTest", "coreIsNumber", "coreDistanceTo",
+    // section 140
+    "pmxIsInteger", "pmxIsPrime", "pmxBetween", "pmxPartOfRatio", "pmxSimplifyRatio", "pmxTextAfter", "pmxTextBefore"];
 let pureEvaluator = null;
 const evalPure = (source, runtime) => {
     if (pureEvaluator === null) {
