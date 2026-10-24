@@ -384,17 +384,20 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     async request(args) {
       if (args.THING === "redraw") runtime.requestRedraw();
       else if (args.THING === "block refresh") vm.extensionManager.refreshBlocks();
-      else if (args.THING === "project step") await this.ignoreError(runtime._step());
+      else if (args.THING === "project step") await this.ignoreError(() => runtime._step()); // Desktop fork (section 146)
       else runtime.requestToolboxExtensionsUpdate();
     }
-    async stepInter() { await this.ignoreError(runtime.frameLoop.stepCallback()) }
+    async stepInter() { await this.ignoreError(() => runtime.frameLoop.stepCallback()) } // Desktop fork (section 146)
+    // Desktop fork (section 146): the extra engine step runs right after the step this block runs in (a microtask:
+    // an engine step is one synchronous call). Run inside it, it re-entered the running script ("Generator is
+    // already running" compiled, a stack overflow interpreted), and the step's result was passed instead of a
+    // function. The block's script waits for the extra step and goes on in the next frame; its errors are ignored.
     ignoreError(call) {
-      return new Promise(async (resolve, reject) => {
-        try {
-          call();
-          await new Promise(resolve => setTimeout(resolve, 1));
+      return new Promise((resolve) => {
+        queueMicrotask(() => {
+          try { call(); } catch {}
           resolve();
-        } catch { reject() }
+        });
       });
     }
 
