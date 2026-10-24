@@ -2167,8 +2167,46 @@ class ScriptTreeGenerator {
      * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
      */
     descendCoreInlineInput (block) {
-        if (this.runtime.pmNoCoreInline) return null;
-        const input = name => this.descendCoreInput(block, name);
+        if (this.runtime.pmNoCoreInline || !this.coreInputsInOrder(block, this.coreInlineInputNode)) return null;
+        return this.coreInlineInputNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 138): whether the compiled code works out the block's inputs in the order the
+     * interpreter and the compatibility layer do (the order they are stored in, normally the block's own) and
+     * no other input holds a block (they would work it out too). Matters only for inputs that change something
+     * (pick random, custom reporters), but such a block keeps the compatibility layer in any case.
+     * @param {Block} block The block.
+     * @param {Function} makeNode coreInlineInputNode or coreInlineStackNode.
+     * @returns {boolean} true if the inline code may be used.
+     */
+    coreInputsInOrder (block, makeNode) {
+        const used = [];
+        makeNode.call(this, block, name => {
+            used.push(name);
+            return {kind: 'constant', value: undefined};
+        });
+        let next = 0;
+        for (const name of Object.keys(block.inputs)) {
+            if (used.indexOf(name) === -1) {
+                const input = block.inputs[name];
+                if (input && input.block && input.block !== input.shadow) return false;
+                continue;
+            }
+            while (next < used.length && !Object.prototype.hasOwnProperty.call(block.inputs, used[next])) next++;
+            if (used[next] !== name) return false;
+            next++;
+        }
+        return true;
+    }
+
+    /**
+     * Desktop fork (section 138): the node of descendCoreInlineInput.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
+     */
+    coreInlineInputNode (block, input) {
         const field = name => (block.fields[name] ? block.fields[name].value : undefined);
         switch (block.opcode) {
         case 'operator_notequal':
@@ -2273,8 +2311,17 @@ class ScriptTreeGenerator {
      * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
      */
     descendCoreInlineStack (block) {
-        if (this.runtime.pmNoCoreInline) return null;
-        const input = name => this.descendCoreInput(block, name);
+        if (this.runtime.pmNoCoreInline || !this.coreInputsInOrder(block, this.coreInlineStackNode)) return null;
+        return this.coreInlineStackNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 138): the node of descendCoreInlineStack.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
+     */
+    coreInlineStackNode (block, input) {
         switch (block.opcode) {
         case 'looks_setStretch':
             return {kind: 'looks.setStretch', x: input('X'), y: input('Y')};
