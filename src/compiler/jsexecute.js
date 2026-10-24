@@ -342,6 +342,90 @@ runtimeFunctions.toBoolean = `const toBoolean = value => {
 }`;
 
 /**
+ * Desktop fork (section 138): helpers for core blocks that used the compatibility layer (jsgen.js, irgen.js
+ * descendCoreInlineInput). Each is the block's function from src/blocks with its inputs already converted where
+ * the block converts them; the parameters are in the block's input order. Those in PURE_HELPER_NAMES read nothing
+ * but their parameters.
+ */
+runtimeFunctions.coreNumber = `const coreNumber = globalState.Cast.toNumber`;
+runtimeFunctions.coreConstrain = `const coreConstrain = (value, min, max) => Math.min(Math.max(min, value), max)`;
+runtimeFunctions.coreLerp = `const coreLerp = (one, two, amount) => ((two - one) * amount) + one`;
+runtimeFunctions.coreRoot = `const coreRoot = (one, two, three) => one * Math.pow(three, 1 / two)`;
+runtimeFunctions.coreLog = `const coreLog = (one, two, three) => one * Math.log(three) / Math.log(two)`;
+runtimeFunctions.coreIndexOf = `const coreIndexOf = (find, text) => (text.includes(find) ? text.indexOf(find) + 1 : 0)`;
+runtimeFunctions.coreLastIndexOf = `const coreLastIndexOf = (find, text) => (text.includes(find) ? text.lastIndexOf(find) + 1 : 0)`;
+runtimeFunctions.coreCountIn = `const coreCountIn = (find, text) => {
+    const parts = text.split(find);
+    return parts.length <= 1 ? 0 : parts.length - 1;
+}`;
+runtimeFunctions.coreHasLetterFrom = `const coreHasLetterFrom = (text, letters) => {
+    let includes = false;
+    letters.split('').forEach(letter => {
+        if (text.includes(letter)) includes = true;
+    });
+    return includes;
+}`;
+runtimeFunctions.coreLetters = `const coreLetters = (from, to, text) => text.substring((from ? from : 1) - 1, to ? to : 1)`;
+runtimeFunctions.coreLine = `const coreLine = (line, text) => text.split('\\n')[(line ? line : 1) - 1] || ''`;
+runtimeFunctions.coreRegexMatch = `const coreRegexMatch = args => {
+    let regex;
+    try {
+        regex = new RegExp(args.reg, args.regrule);
+    } catch (e) {
+        return '[]';
+    }
+    const matches = args.text.match(regex);
+    return JSON.stringify(matches ? matches : []);
+}`;
+runtimeFunctions.coreRegexTest = `const coreRegexTest = (reg, regrule, text) => {
+    let regex;
+    try {
+        regex = new RegExp(reg, regrule);
+    } catch (e) {
+        return false;
+    }
+    return regex.test(text);
+}`;
+runtimeFunctions.coreIsNumber = `const coreIsNumber = value => (String(value).trim().endsWith('.') ? false : !isNaN(Number(value)))`;
+runtimeFunctions.coreDirectionTo = `const coreDirectionTo = (x2, y2, x1, y1, noClamp) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const direction = 90 - (Math.atan2(dy, dx) * 180 / Math.PI);
+    if (noClamp) return direction;
+    // MathUtil.wrapClamp(direction, -179, 180)
+    return direction - (Math.floor((direction - -179) / 360) * 360);
+}`;
+runtimeFunctions.coreDistanceTo = `const coreDistanceTo = (x1, y1, x2, y2) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    return Math.sqrt((dx * dx) + (dy * dy));
+}`;
+runtimeFunctions.coreTurnAround = `const coreTurnAround = (target, degrees, x, y) => {
+    const radians = (Math.PI * degrees) / 180;
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const dx = target.x - x;
+    const dy = target.y - y;
+    target.setXY((cos * dx) - (sin * dy) + x, (cos * dy) + (sin * dx) + y);
+}`;
+// Cast.toListIndex(index, length, false) !== Cast.LIST_INVALID, including its random number for "random"
+runtimeFunctions.coreItemExists = `const coreItemExists = (index, length) => {
+    if (typeof index !== 'number') {
+        if (index === 'all') return false;
+        if (index === 'last') return length > 0;
+        if (index === 'random' || index === 'any') {
+            if (length > 0) {
+                Math.random();
+                return true;
+            }
+            return false;
+        }
+    }
+    index = Math.floor(globalState.Cast.toNumber(index));
+    return !(index < 1 || index > length);
+}`;
+
+/**
  * If a number is very close to a whole number, round to that whole number.
  * @param {number} value Value to round
  * @returns {number} Rounded number or original number
@@ -836,7 +920,10 @@ const scopedEval = source => {
 // PMDESKTOP_FOLD (section 44): evaluates an expression that uses no project state (only the runtime helpers
 // below, which are the very same source text compiled scripts get) while a script is being compiled.
 // The helpers and the evaluating function are made once; each call is a plain eval of the expression.
-const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan", "mod", "tan"];
+const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan", "mod", "tan",
+    // section 138
+    "coreNumber", "coreConstrain", "coreLerp", "coreRoot", "coreLog", "coreIndexOf", "coreLastIndexOf", "coreCountIn",
+    "coreHasLetterFrom", "coreLetters", "coreLine", "coreRegexMatch", "coreRegexTest", "coreIsNumber", "coreDistanceTo"];
 let pureEvaluator = null;
 const evalPure = (source, runtime) => {
     if (pureEvaluator === null) {

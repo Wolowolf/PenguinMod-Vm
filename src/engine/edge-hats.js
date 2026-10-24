@@ -43,6 +43,18 @@ const PURE_OPCODES = new Set([
     'operator_nor', 'operator_xor', 'operator_xnor', 'operator_join', 'operator_letter_of', 'operator_length',
     'operator_contains'
 ]);
+// Desktop fork (section 138): more core reporters whose answer depends only on their inputs (and their own menus);
+// not with runtime.pmNoCoreInline (tests only).
+const CORE_PURE_OPCODES = new Set([
+    'operator_constrainnumber', 'operator_lerpFunc', 'operator_advMathExpanded', 'operator_newLine',
+    'operator_tabCharacter', 'operator_stringify', 'operator_boolify', 'operator_toUpperLowerCase',
+    'operator_character_to_code', 'operator_code_to_character', 'operator_indexOfTextInText',
+    'operator_lastIndexOfTextInText', 'operator_textStartsOrEndsWith', 'operator_countAppearTimes',
+    'operator_textIncludesLetterFrom', 'operator_replaceAll', 'operator_replaceFirst',
+    'operator_getLettersFromIndexToIndexInTextFixed', 'operator_readLineInMultilineText', 'operator_regexmatch',
+    'sensing_thing_is_number', 'sensing_thing_has_number', 'sensing_thing_is_text', 'sensing_isUpperCase',
+    'sensing_regextest', 'sensing_distanceTo'
+]);
 // Reporters that read one field of the sprite itself.
 const TARGET_FIELDS = {
     motion_xposition: 'x',
@@ -76,7 +88,8 @@ const collect = (blocks, blockId, plan, budget) => {
         if (plan.fields.indexOf(name) === -1) plan.fields.push(name);
         return true;
     }
-    if (!PURE_OPCODES.has(opcode) && !hasOwn(pureExtensionBlocks, opcode)) {
+    const corePure = CORE_PURE_OPCODES.has(opcode) && !(blocks.runtime && blocks.runtime.pmNoCoreInline);
+    if (!PURE_OPCODES.has(opcode) && !corePure && !hasOwn(pureExtensionBlocks, opcode)) {
         // a menu of an extension block: a shadow block holding only fixed fields
         if (!block.shadow || Object.keys(block.inputs).length) return false;
         for (const name in block.fields) {

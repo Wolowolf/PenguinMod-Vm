@@ -356,7 +356,13 @@ const FOLDABLE_KINDS = new Set([
     'pmOperatorsExpansion.shiftLeft', 'pmOperatorsExpansion.shiftRight', 'pmOperatorsExpansion.binnaryAnd',
     'pmOperatorsExpansion.binnaryOr', 'pmOperatorsExpansion.binnaryXor', 'pmOperatorsExpansion.binnaryNot',
     'pmOperatorsExpansion.orIfFalsey', 'pmOperatorsExpansion.ifIsTruthy', 'pmOperatorsExpansion.speedToPitch',
-    'pmOperatorsExpansion.pitchToSpeed', 'pmOperatorsExpansion.atan2'
+    'pmOperatorsExpansion.pitchToSpeed', 'pmOperatorsExpansion.atan2',
+    // core blocks that used the compatibility layer (section 138); their helpers are in jsexecute.js PURE_HELPER_NAMES
+    'op.nand', 'op.nor', 'op.xor', 'op.xnor', 'op.constrain', 'op.lerp', 'op.advMath', 'op.stringify', 'op.boolify',
+    'op.toCase', 'op.charToCode', 'op.codeToChar', 'op.indexOfText', 'op.lastIndexOfText', 'op.startsOrEndsWith',
+    'op.countIn', 'op.hasLetterFrom', 'op.replaceAll', 'op.replaceFirst', 'op.lettersFromTo', 'op.readLine',
+    'op.regexMatch', 'sensing.isNumber', 'sensing.hasNumber', 'sensing.isText', 'sensing.isUpperCase',
+    'sensing.regexTest', 'sensing.distanceTo'
 ]);
 
 /**
@@ -940,6 +946,85 @@ class JSGenerator {
             source += '})())';
             return new TypedInput(source, TYPE_STRING);
         }
+        // Desktop fork (section 138): core blocks that used the compatibility layer (irgen.js
+        // descendCoreInlineInput). Each does what the block's function in src/blocks does with the values the
+        // interpreter gives it (Cast conversions written out exactly; helpers in jsexecute.js take the inputs in the
+        // block's order, so they are worked out in the same order). Answer types only where they always hold.
+        case 'op.nand':
+            return new TypedInput(`((!${this.exactBoolean(this.descendInput(node.left))} | !${this.exactBoolean(this.descendInput(node.right))}) !== 0)`, TYPE_BOOLEAN);
+        case 'op.nor':
+            return new TypedInput(`((!${this.exactBoolean(this.descendInput(node.left))} & !${this.exactBoolean(this.descendInput(node.right))}) !== 0)`, TYPE_BOOLEAN);
+        case 'op.xor':
+            return new TypedInput(`(!${this.exactBoolean(this.descendInput(node.left))} !== !${this.exactBoolean(this.descendInput(node.right))})`, TYPE_BOOLEAN);
+        case 'op.xnor':
+            return new TypedInput(`(!${this.exactBoolean(this.descendInput(node.left))} === !${this.exactBoolean(this.descendInput(node.right))})`, TYPE_BOOLEAN);
+        case 'op.constrain':
+            return new TypedInput(`coreConstrain(${this.rawValue(this.descendInput(node.value))}, ${this.rawValue(this.descendInput(node.min))}, ${this.rawValue(this.descendInput(node.max))})`, TYPE_NUMBER_NAN);
+        case 'op.lerp':
+            return new TypedInput(`coreLerp(${this.exactNumber(this.descendInput(node.from))}, ${this.exactNumber(this.descendInput(node.to))}, ${this.exactNumber(this.descendInput(node.amount))})`, TYPE_NUMBER_NAN);
+        case 'op.advMath':
+            return new TypedInput(`${node.option === 'root' ? 'coreRoot' : 'coreLog'}(${this.exactNumber(this.descendInput(node.one))}, ${this.exactNumber(this.descendInput(node.two))}, ${this.exactNumber(this.descendInput(node.three))})`, TYPE_NUMBER_NAN);
+        case 'op.stringify':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.value))})`, TYPE_STRING);
+        case 'op.boolify':
+            return new TypedInput(`(${this.exactBoolean(this.descendInput(node.value))})`, TYPE_BOOLEAN);
+        case 'op.toCase':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.upper ? 'toUpperCase' : 'toLowerCase'}())`, TYPE_STRING);
+        case 'op.charToCode':
+            // ("" gives NaN, as the block's own check does)
+            return new TypedInput(`(${this.exactString(this.descendInput(node.value))}.charCodeAt(0))`, TYPE_NUMBER_NAN);
+        case 'op.codeToChar':
+            return new TypedInput(`String.fromCharCode(${this.exactNumber(this.descendInput(node.value))})`, TYPE_STRING);
+        case 'op.indexOfText':
+            return new TypedInput(`coreIndexOf(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+        case 'op.lastIndexOfText':
+            return new TypedInput(`coreLastIndexOf(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+        case 'op.startsOrEndsWith':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.starts ? 'startsWith' : 'endsWith'}(${this.exactString(this.descendInput(node.part))}))`, TYPE_BOOLEAN);
+        case 'op.countIn':
+            return new TypedInput(`coreCountIn(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+        case 'op.hasLetterFrom':
+            return new TypedInput(`coreHasLetterFrom(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.letters))})`, TYPE_BOOLEAN);
+        case 'op.replaceAll':
+        case 'op.replaceFirst':
+            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.kind === 'op.replaceAll' ? 'replaceAll' : 'replace'}(${this.rawValue(this.descendInput(node.term))}, ${this.rawValue(this.descendInput(node.res))}))`, TYPE_STRING);
+        case 'op.lettersFromTo':
+            // (asNumber's 0 for -0 changes nothing: the block uses 1 for both)
+            return new TypedInput(`coreLetters(${this.descendInput(node.from).asNumber()}, ${this.descendInput(node.to).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
+        case 'op.readLine':
+            return new TypedInput(`coreLine(${this.descendInput(node.line).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
+        case 'op.regexMatch':
+            // (an object named args, so that a text that is not a string fails with the block's own error message)
+            return new TypedInput(`coreRegexMatch({text: ${this.rawValue(this.descendInput(node.text))}, reg: ${this.rawValue(this.descendInput(node.reg))}, regrule: ${this.rawValue(this.descendInput(node.regrule))}})`, TYPE_STRING);
+        case 'sensing.isNumber':
+            return new TypedInput(`coreIsNumber(${this.rawValue(this.descendInput(node.value))})`, TYPE_BOOLEAN);
+        case 'sensing.hasNumber':
+            return new TypedInput(`(/\\d/.test(${this.exactString(this.descendInput(node.value))}))`, TYPE_BOOLEAN);
+        case 'sensing.isText':
+            return new TypedInput(`(isNaN(Number(${this.rawValue(this.descendInput(node.value))})))`, TYPE_BOOLEAN);
+        case 'sensing.isUpperCase':
+            return new TypedInput(`(/[A-Z]/g.test(${this.rawValue(this.descendInput(node.text))}))`, TYPE_BOOLEAN);
+        case 'sensing.regexTest':
+            return new TypedInput(`coreRegexTest(${this.rawValue(this.descendInput(node.reg))}, ${this.rawValue(this.descendInput(node.regrule))}, ${this.rawValue(this.descendInput(node.text))})`, TYPE_BOOLEAN);
+        case 'sensing.directionTo':
+            return new TypedInput(`coreDirectionTo(${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))}, ${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, runtime.runtimeOptions.disableDirectionClamping)`, TYPE_NUMBER_NAN);
+        case 'sensing.distanceTo':
+            return new TypedInput(`coreDistanceTo(${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, ${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))})`, TYPE_NUMBER_NAN);
+        case 'looks.visible':
+            return new TypedInput('(target.visible)', TYPE_UNKNOWN);
+        case 'looks.effectValue': {
+            const effect = sanitize(node.effect);
+            return new TypedInput(`(target.effects.hasOwnProperty("${effect}") ? coreNumber(target.effects["${effect}"]) : 0)`, TYPE_NUMBER);
+        }
+        case 'looks.layer':
+            return new TypedInput('(target.getLayerOrder())', TYPE_UNKNOWN);
+        case 'looks.stretch':
+            return new TypedInput(`(target._getRenderedDirectionAndScale().stretch[${node.index}])`, TYPE_UNKNOWN);
+        case 'list.itemExists':
+            return new TypedInput(`coreItemExists(${this.rawValue(this.descendInput(node.index))}, ${this.listItems(node.list)}.length)`, TYPE_BOOLEAN);
+        case 'list.isEmpty':
+            return new TypedInput(`(${this.listItems(node.list)}.length < 1)`, TYPE_BOOLEAN);
+
         case 'op.abs':
             return new TypedInput(`Math.abs(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.acos':
@@ -1934,6 +2019,51 @@ class JSGenerator {
             this.source += `runtime.ext_scratch3_looks._setCostume(target, ${this.descendInput(node.costume).asSafe()});\n`;
             break;
 
+        // Desktop fork (section 138): core commands that used the compatibility layer (irgen.js
+        // descendCoreInlineStack), written as their functions in src/blocks are: inputs first, in the block's order.
+        case 'looks.setStretch':
+            this.source += `target.setStretch(${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            break;
+        case 'looks.changeStretch': {
+            const x = this.localVariables.next();
+            const y = this.localVariables.next();
+            const stretch = this.localVariables.next();
+            this.source += `const ${x} = ${this.exactNumber(this.descendInput(node.x))};\n`;
+            this.source += `const ${y} = ${this.exactNumber(this.descendInput(node.y))};\n`;
+            this.source += `const ${stretch} = target._getRenderedDirectionAndScale().stretch;\n`;
+            this.source += `target.setStretch(${stretch}[0] + ${x}, ${stretch}[1] + ${y});\n`;
+            break;
+        }
+        case 'motion.changeXY': {
+            const dx = this.localVariables.next();
+            const dy = this.localVariables.next();
+            this.source += `const ${dx} = ${this.exactNumber(this.descendInput(node.dx))};\n`;
+            this.source += `const ${dy} = ${this.exactNumber(this.descendInput(node.dy))};\n`;
+            this.source += `target.setXY(target.x + ${dx}, target.y + ${dy});\n`;
+            break;
+        }
+        case 'motion.pointTowardsXY': {
+            const x = this.localVariables.next();
+            const y = this.localVariables.next();
+            this.source += `const ${x} = ${this.exactNumber(this.descendInput(node.x))};\n`;
+            this.source += `const ${y} = ${this.exactNumber(this.descendInput(node.y))};\n`;
+            // (MathUtil.radToDeg is r * 180 / Math.PI)
+            this.source += `target.setDirection(90 - (Math.atan2(${y} - target.y, ${x} - target.x) * 180 / Math.PI));\n`;
+            break;
+        }
+        case 'motion.turnAround': {
+            const degrees = this.exactNumber(this.descendInput(node.degrees));
+            this.source += `coreTurnAround(target, ${node.right ? `-(${degrees})` : degrees}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            break;
+        }
+        case 'list.reverse': {
+            const list = this.referenceVariable(node.list);
+            this.source += `${this.listItems(node.list)}.reverse();\n`;
+            this.source += this.listChanged(node.list);
+            this.source += `${list}._monitorUpToDate = false;\n`;
+            break;
+        }
+
         case 'motion.changeX':
             this.source += `target.setXY(target.x + ${this.descendInput(node.dx).asNumber()}, target.y);\n`;
             break;
@@ -2284,6 +2414,60 @@ class JSGenerator {
     safeConstantInput (value) {
         const unsafe = typeof value === 'string' && this.namesOfCostumesAndSounds.has(value);
         return new ConstantInput(value, !unsafe);
+    }
+
+    /**
+     * Desktop fork (section 138): JS for an input converted exactly as Cast.toNumber does (asNumber turns -0
+     * into 0). Fixed values are converted now.
+     * @param {Input} input The compiled input.
+     * @returns {string} The JS.
+     */
+    exactNumber (input) {
+        if (input instanceof ConstantInput) return knownValueSource(Cast.toNumber(input.constantValue));
+        if (input.type === TYPE_NUMBER) return input.source;
+        if (input.type === TYPE_BOOLEAN) return `(+(${input.source}))`;
+        return `coreNumber(${input.asUnknown()})`;
+    }
+
+    /**
+     * Desktop fork (section 138): JS for an input converted exactly as Cast.toString (String) does ("" + value
+     * can differ for objects).
+     * @param {Input} input The compiled input.
+     * @returns {string} The JS.
+     */
+    exactString (input) {
+        if (input instanceof ConstantInput) return `"${sanitize(String(input.constantValue))}"`;
+        if (input.type === TYPE_STRING) return input.source;
+        if (input.type === TYPE_NUMBER || input.type === TYPE_NUMBER_NAN || input.type === TYPE_BOOLEAN) return `("" + (${input.source}))`;
+        return `String(${input.asUnknown()})`;
+    }
+
+    /**
+     * Desktop fork (section 138): JS for an input converted exactly as Cast.toBoolean does (asBoolean of a text
+     * differs for "" and "FALSE").
+     * @param {Input} input The compiled input.
+     * @returns {string} The JS.
+     */
+    exactBoolean (input) {
+        if (input instanceof ConstantInput) return `${Cast.toBoolean(input.constantValue)}`;
+        if (input.type === TYPE_BOOLEAN) return `(${input.source})`;
+        if (input.type === TYPE_NUMBER) return `(${input.source} !== 0)`;
+        if (input.type === TYPE_NUMBER_NAN) return `(!!(${input.source}))`;
+        return `toBoolean(${input.asUnknown()})`;
+    }
+
+    /**
+     * Desktop fork (section 138): JS for an input's value as the block's function gets it from the interpreter
+     * (a fixed value keeps its type: asUnknown would make "10" a number and undefined null).
+     * @param {Input} input The compiled input.
+     * @returns {string} The JS.
+     */
+    rawValue (input) {
+        if (input instanceof ConstantInput) {
+            const source = knownValueSource(input.constantValue);
+            if (source !== null) return source;
+        }
+        return input.asUnknown();
     }
 
     /**

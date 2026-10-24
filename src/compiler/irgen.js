@@ -985,6 +985,9 @@ class ScriptTreeGenerator {
         default: {
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {
+                // Desktop fork (section 138)
+                const core = this.descendCoreInlineInput(block);
+                if (core) return core;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -1973,6 +1976,9 @@ class ScriptTreeGenerator {
         default: {
             const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
             if (opcodeFunction) {
+                // Desktop fork (section 138)
+                const core = this.descendCoreInlineStack(block);
+                if (core) return core;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.statementBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2133,6 +2139,161 @@ class ScriptTreeGenerator {
         }
 
         return createVariableData('target', newVariable);
+    }
+
+    /**
+     * Desktop fork (section 138): an input of a core block compiled by descendCoreInlineInput / Stack. An empty or
+     * missing input is undefined, the value the block's function gets from the interpreter and from the
+     * compatibility layer (descendInputOfBlock's null would be turned into "null" by text blocks).
+     * @param {Block} block The block.
+     * @param {string} name The input's name.
+     * @returns {Node} The input's node.
+     */
+    descendCoreInput (block, name) {
+        const input = block.inputs[name];
+        const inputBlock = input && input.block ? this.getBlockById(input.block) : null;
+        if (!inputBlock) return {kind: 'constant', value: undefined};
+        return this.descendInput(inputBlock);
+    }
+
+    /**
+     * Desktop fork (section 138): core reporters and Booleans that have no compiler code of their own and never
+     * wait, yield, start or stop scripts or need the page get their own nodes instead of the compatibility layer;
+     * jsgen.js writes code that does exactly what the block's function (src/blocks) does with the values it gets.
+     * Inputs are given in the order the block has them, which is the order they are worked out in.
+     * Menu values the block's function does not know keep the compatibility layer (the answer is the same).
+     * runtime.pmNoCoreInline = true puts all of them back on the compatibility layer (tests only).
+     * @param {Block} block The block.
+     * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
+     */
+    descendCoreInlineInput (block) {
+        if (this.runtime.pmNoCoreInline) return null;
+        const input = name => this.descendCoreInput(block, name);
+        const field = name => (block.fields[name] ? block.fields[name].value : undefined);
+        switch (block.opcode) {
+        case 'operator_notequal':
+            return {kind: 'op.not', operand: {kind: 'op.equals', left: input('OPERAND1'), right: input('OPERAND2')}};
+        case 'operator_ltorequal':
+            return {kind: 'op.not', operand: {kind: 'op.greater', left: input('OPERAND1'), right: input('OPERAND2')}};
+        case 'operator_gtorequal':
+            return {kind: 'op.not', operand: {kind: 'op.less', left: input('OPERAND1'), right: input('OPERAND2')}};
+        case 'operator_nand':
+        case 'operator_nor':
+        case 'operator_xor':
+        case 'operator_xnor':
+            return {kind: `op.${block.opcode.slice(9)}`, left: input('OPERAND1'), right: input('OPERAND2')};
+        case 'operator_constrainnumber':
+            return {kind: 'op.constrain', value: input('inp'), min: input('min'), max: input('max')};
+        case 'operator_lerpFunc':
+            return {kind: 'op.lerp', from: input('ONE'), to: input('TWO'), amount: input('AMOUNT')};
+        case 'operator_advMathExpanded': {
+            const option = String(field('OPTION'));
+            if (option !== 'root' && option !== 'log') return null;
+            return {kind: 'op.advMath', option, one: input('ONE'), two: input('TWO'), three: input('THREE')};
+        }
+        case 'operator_newLine':
+            return {kind: 'constant', value: '\n'};
+        case 'operator_tabCharacter':
+            return {kind: 'constant', value: '\t'};
+        case 'operator_stringify':
+            return {kind: 'op.stringify', value: input('ONE')};
+        case 'operator_boolify':
+            return {kind: 'op.boolify', value: input('ONE')};
+        case 'operator_toUpperLowerCase': {
+            const option = field('OPTION');
+            if (option !== 'upper' && option !== 'lower') return null;
+            return {kind: 'op.toCase', upper: option === 'upper', text: input('TEXT')};
+        }
+        case 'operator_character_to_code':
+            return {kind: 'op.charToCode', value: input('ONE')};
+        case 'operator_code_to_character':
+            return {kind: 'op.codeToChar', value: input('ONE')};
+        case 'operator_indexOfTextInText':
+            return {kind: 'op.indexOfText', find: input('TEXT1'), text: input('TEXT2')};
+        case 'operator_lastIndexOfTextInText':
+            return {kind: 'op.lastIndexOfText', find: input('TEXT1'), text: input('TEXT2')};
+        case 'operator_textStartsOrEndsWith':
+            return {kind: 'op.startsOrEndsWith', starts: String(field('OPTION')) === 'starts', text: input('TEXT1'), part: input('TEXT2')};
+        case 'operator_countAppearTimes':
+            return {kind: 'op.countIn', find: input('TEXT1'), text: input('TEXT2')};
+        case 'operator_textIncludesLetterFrom':
+            return {kind: 'op.hasLetterFrom', text: input('TEXT1'), letters: input('TEXT2')};
+        case 'operator_replaceAll':
+            return {kind: 'op.replaceAll', text: input('text'), term: input('term'), res: input('res')};
+        case 'operator_replaceFirst':
+            return {kind: 'op.replaceFirst', text: input('text'), term: input('term'), res: input('res')};
+        case 'operator_getLettersFromIndexToIndexInTextFixed':
+            return {kind: 'op.lettersFromTo', from: input('INDEX1'), to: input('INDEX2'), text: input('TEXT')};
+        case 'operator_readLineInMultilineText':
+            return {kind: 'op.readLine', line: input('LINE'), text: input('TEXT')};
+        case 'operator_regexmatch':
+            return {kind: 'op.regexMatch', text: input('text'), reg: input('reg'), regrule: input('regrule')};
+        case 'sensing_thing_is_number':
+            return {kind: 'sensing.isNumber', value: input('TEXT1')};
+        case 'sensing_thing_has_number':
+            return {kind: 'sensing.hasNumber', value: input('TEXT1')};
+        case 'sensing_thing_is_text':
+            return {kind: 'sensing.isText', value: input('TEXT1')};
+        case 'sensing_isUpperCase':
+            return {kind: 'sensing.isUpperCase', text: input('text')};
+        case 'sensing_regextest':
+            // (the block shows "test regex %2 %3 with text %1": its inputs come in that order)
+            return {kind: 'sensing.regexTest', reg: input('reg'), regrule: input('regrule'), text: input('text')};
+        case 'sensing_directionTo':
+            return {kind: 'sensing.directionTo', x2: input('x2'), y2: input('y2'), x1: input('x1'), y1: input('y1')};
+        case 'sensing_distanceTo':
+            return {kind: 'sensing.distanceTo', x1: input('x1'), y1: input('y1'), x2: input('x2'), y2: input('y2')};
+        case 'looks_getSpriteVisible':
+            return {kind: 'looks.visible'};
+        case 'looks_getEffectValue':
+            return {kind: 'looks.effectValue', effect: String(field('EFFECT')).toLowerCase()};
+        case 'looks_layersGetLayer':
+            return {kind: 'looks.layer'};
+        case 'looks_stretchGetX':
+            return {kind: 'looks.stretch', index: 0};
+        case 'looks_stretchGetY':
+            return {kind: 'looks.stretch', index: 1};
+        case 'data_itemexistslist': {
+            const list = this.descendVariable(block, 'LIST', LIST_TYPE);
+            if (!list.isList) return null;
+            return {kind: 'list.itemExists', index: input('INDEX'), list};
+        }
+        case 'data_listisempty': {
+            const list = this.descendVariable(block, 'LIST', LIST_TYPE);
+            if (!list.isList) return null;
+            return {kind: 'list.isEmpty', list};
+        }
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 138): the commands of descendCoreInlineInput's kind.
+     * @param {Block} block The block.
+     * @returns {Node|null} The node, or null when the block keeps the compatibility layer.
+     */
+    descendCoreInlineStack (block) {
+        if (this.runtime.pmNoCoreInline) return null;
+        const input = name => this.descendCoreInput(block, name);
+        switch (block.opcode) {
+        case 'looks_setStretch':
+            return {kind: 'looks.setStretch', x: input('X'), y: input('Y')};
+        case 'looks_changeStretch':
+            return {kind: 'looks.changeStretch', x: input('X'), y: input('Y')};
+        case 'motion_changebyxy':
+            return {kind: 'motion.changeXY', dx: input('DX'), dy: input('DY')};
+        case 'motion_pointtowardsxy':
+            return {kind: 'motion.pointTowardsXY', x: input('X'), y: input('Y')};
+        case 'motion_turnrightaroundxy':
+        case 'motion_turnleftaroundxy':
+            return {kind: 'motion.turnAround', right: block.opcode === 'motion_turnrightaroundxy', degrees: input('DEGREES'), x: input('X'), y: input('Y')};
+        case 'data_reverselist': {
+            const list = this.descendVariable(block, 'LIST', LIST_TYPE);
+            if (!list.isList) return null;
+            return {kind: 'list.reverse', list};
+        }
+        }
+        return null;
     }
 
     /**
