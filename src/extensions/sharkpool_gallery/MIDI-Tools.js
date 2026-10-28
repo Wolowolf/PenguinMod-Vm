@@ -854,6 +854,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
   }
 
-  Scratch.extensions.register(new ObscurasMIDITools());
+  // Desktop fork (section 150): give it the runtime, or its pause / resume / playback-end hats never start
+  Scratch.extensions.register(new ObscurasMIDITools(Scratch.vm.runtime));
 })(Scratch);
 });

@@ -310,14 +310,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     addSystemFont(args) {
       const name = Scratch.Cast.toString(args.NAME);
-      if (fontManager.isValidSystemFont(name)) {
+      // Desktop fork (section 150): this engine's font manager names the check isValidFamily
+      if (fontManager.isValidFamily(name)) {
         fontManager.addSystemFont(name, Scratch.Cast.toString(args.BACKUP));
       }
     }
 
     async addCustomFont(args) {
       const name = Scratch.Cast.toString(args.NAME);
-      if (!fontManager.isValidCustomFont(name)) {
+      // Desktop fork (section 150): this engine's font manager names the check isValidFamily
+      if (!fontManager.isValidFamily(name)) {
         return;
       }
 

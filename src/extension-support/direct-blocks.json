@@ -88,8 +88,6 @@
   "MouseCursor_hideCur",
   "MouseCursor_getCur",
   "ObscurasMIDITools_playMidi",
-  "ObscurasMIDITools_pauseMidi",
-  "ObscurasMIDITools_resumeMidi",
   "ObscurasMIDITools_stopMidi",
   "ObscurasMIDITools_setPlaybackSpeed",
   "ObscurasMIDITools_jumpToTime",
