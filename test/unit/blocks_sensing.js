@@ -4,6 +4,7 @@ const Runtime = require('../../src/engine/runtime');
 const Sprite = require('../../src/sprites/sprite');
 const RenderedTarget = require('../../src/sprites/rendered-target');
 const BlockUtility = require('../../src/engine/block-utility');
+const Variable = require('../../src/engine/variable');
 
 test('getPrimitives', t => {
     const rt = new Runtime();
@@ -233,16 +234,26 @@ test('loud? boolean', t => {
 
     // The simplest way to test this is to actually override the getLoudness
     // method, which isLoud uses.
+    // PenguinMod: loud means more than 15 louder than the average of the last 30 values (the current one included),
+    // not Scratch's "louder than 10" (desktop fork, section 151: test brought up to date)
     let simulatedLoudness = 0;
     sensing.getLoudness = () => simulatedLoudness;
     t.false(sensing.isLoud());
 
-    // Check for GREATER than 10, not equal.
     simulatedLoudness = 10;
     t.false(sensing.isLoud());
 
+    // [0, 10, 11]: average 7, not more than 15 above it
     simulatedLoudness = 11;
+    t.false(sensing.isLoud());
+
+    // [0, 10, 11, 100]: average 30.25
+    simulatedLoudness = 100;
     t.true(sensing.isLoud());
+
+    // staying this loud becomes the average
+    for (let i = 0; i < 30; i++) sensing.isLoud();
+    t.false(sensing.isLoud());
 
     t.end();
 });
@@ -271,6 +282,25 @@ test('get attribute of variable that does not exist', t => {
     const target = new RenderedTarget(s, rt);
     rt.getTargetForStage = () => target;
     t.equal(sensing.getAttributeOf({PROPERTY: 'variableThatDoesNotExist'}), 0);
+
+    t.end();
+});
+
+// Desktop fork (section 151)
+test('set attribute of sprite variable and position', t => {
+    const rt = new Runtime();
+    const sensing = new Sensing(rt);
+    const s = new Sprite(null, rt);
+    const target = new RenderedTarget(s, rt);
+    target.variables.anId = new Variable('anId', 'cars', '', false);
+    rt.getSpriteTargetByName = name => (name === 'S' ? target : undefined);
+    sensing.setAttributeOf({OBJECT: 'S', PROPERTY: 'cars', VALUE: '9'});
+    t.strictEqual(target.variables.anId.value, '9');
+    sensing.setAttributeOf({OBJECT: 'S', PROPERTY: 'x position', VALUE: '12'});
+    t.equal(target.x, 12);
+    // a sprite that does not exist: nothing happens
+    sensing.setAttributeOf({OBJECT: 'nobody', PROPERTY: 'cars', VALUE: 'x'});
+    t.strictEqual(target.variables.anId.value, '9');
 
     t.end();
 });

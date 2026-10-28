@@ -5,6 +5,9 @@ const adapter = require('../../src/engine/adapter');
 const Runtime = require('../../src/engine/runtime');
 const events = require('../fixtures/events.json');
 
+// Desktop fork (section 151): the block adapter uses the browser's DOMParser, which Node does not have
+if (typeof DOMParser === 'undefined') global.DOMParser = require('jsdom').jsdom('').defaultView.DOMParser;
+
 test('spec', t => {
     const target = new Target(new Runtime());
 
@@ -122,12 +125,13 @@ test('createVariable does not call cloud io device\'s requestCreateVariable if t
     t.end();
 });
 
-test('createVariable throws when given invalid type', t => {
+// PenguinMod: an unknown type is kept as a placeholder for an extension's variable type (runtime.newVariableInstance)
+test('createVariable keeps an unknown type as a placeholder', t => {
     const target = new Target(new Runtime());
-    t.throws(
-        (() => target.createVariable('foo', 'bar', 'baz')),
-        new Error('Invalid variable type: baz')
-    );
+    target.createVariable('foo', 'bar', 'baz');
+    const variable = target.variables.foo;
+    t.equal(variable.type, 'baz');
+    t.equal(variable.mustRecreate, true);
 
     t.end();
 });

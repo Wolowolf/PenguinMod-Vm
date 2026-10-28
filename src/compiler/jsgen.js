@@ -758,13 +758,18 @@ class JSGenerator {
         case 'args.stringNumber':
             return new TypedInput(`p${node.index}`, TYPE_UNKNOWN);
 
-        case 'compat':
+        case 'compat': {
             if (node.pure) return this.descendPureExtensionBlock(node);
             // Desktop fork (section 130); visualReport changes nothing for extension blocks (the wrapper ignores it)
-            if (node.direct) return new TypedInput(`(${this.generateDirectExtensionCall(node, false)})`, TYPE_UNKNOWN);
             // Compatibility layer inputs never use flags.
             // log.log('compat')
-            return new TypedInput(`(${this.generateCompatibilityLayerCall(node, false, null, visualReport)})`, TYPE_UNKNOWN);
+            const call = node.direct ?
+                this.generateDirectExtensionCall(node, false) :
+                this.generateCompatibilityLayerCall(node, false, null, visualReport);
+            // Desktop fork (section 151): the block may have set any variable
+            this.resetVariableInputs();
+            return new TypedInput(`(${call})`, TYPE_UNKNOWN);
+        }
 
         case 'constant':
             return this.safeConstantInput(node.value);
@@ -1616,6 +1621,8 @@ class JSGenerator {
             if (isLastInLoop && !node.plain) {
                 this.source += 'if (hasResumedFromPromise) {hasResumedFromPromise = false;continue;}\n';
             }
+            // Desktop fork (section 151): the block may have set any variable
+            this.resetVariableInputs();
             break;
         }
         case 'procedures.set':
@@ -2223,6 +2230,8 @@ class JSGenerator {
             const v = this.dataName(node.name, '', false);
             const value = this.exactString(this.descendInput(node.value));
             this.source += `pmdSetVar(runtime, thread.target, ${v.site}, ${v.name}, ${value});\n`;
+            // (section 151) the variable it set is not known now
+            this.forgetVariablesNamed(v.fixed);
             break;
         }
         case 'qxsck.clear': {
@@ -2505,6 +2514,8 @@ class JSGenerator {
                 this.source += `{\nconst ${variableReference} = ${objectReference} ? ${objectReference}.lookupVariableByNameAndType("${sanitize(property)}", "", true) : "";\n`;
                 this.source += `if (${variableReference}) `;
                 this.source += `${variableReference}.value = ${value.asUnknown()};\n}\n`;
+                // Desktop fork (section 151): it may have set one of this script's variables
+                this.forgetVariablesNamed(property);
                 break;
             }
             break;
@@ -2673,7 +2684,24 @@ class JSGenerator {
         const site = input instanceof ConstantInput ?
             this.evaluateOnce(`new pmdName(runtime, "${type}", ${stageFirst}, "${sanitize(String(input.constantValue))}")`) :
             this.evaluateOnce(`new pmdNameAny(runtime, "${type}", ${stageFirst})`);
-        return {site, name: this.exactString(input)};
+        return {site, name: this.exactString(input), fixed: input instanceof ConstantInput ? String(input.constantValue) : null};
+    }
+
+    /**
+     * Desktop fork (section 151): forget the remembered types of this script's variables with this name (a block
+     * set a variable found by name), or of all of them when the name is not known now.
+     * @param {string|null} name The variable's name.
+     */
+    forgetVariablesNamed (name) {
+        if (name === null) {
+            this.resetVariableInputs();
+            return;
+        }
+        const stage = this.target.runtime.getTargetForStage();
+        for (const id of Object.keys(this.variableInputs)) {
+            const variable = this.target.variables[id] || (stage && stage.variables[id]);
+            if (!variable || variable.name === name) delete this.variableInputs[id];
+        }
     }
 
     /**
@@ -2769,10 +2797,15 @@ class JSGenerator {
             if (input instanceof ConstantInput || this.foldedNodes.has(inputNode)) {
                 // a fixed value: known now, so it is converted now
                 let value;
-                try {
-                    value = jsexecute.evalPure(source, this.pureRuntime || (this.pureRuntime = {optimizationUtil: this.target.runtime.optimizationUtil}));
-                } catch (e) {
-                    value = null;
+                if (input instanceof ConstantInput) {
+                    // (section 151) as the interpreter passes it: typed text stays text ("9", not 9)
+                    value = input.constantValue;
+                } else {
+                    try {
+                        value = jsexecute.evalPure(source, this.pureRuntime || (this.pureRuntime = {optimizationUtil: this.target.runtime.optimizationUtil}));
+                    } catch (e) {
+                        value = null;
+                    }
                 }
                 if (value !== null && typeof value !== 'object') {
                     addKnown(inputName, value);
@@ -2893,6 +2926,11 @@ class JSGenerator {
         };
         for (const inputName of Object.keys(node.inputs)) {
             const input = this.descendInput(node.inputs[inputName]);
+            if (input instanceof ConstantInput) {
+                // (section 151) a fixed value as the interpreter passes it (typed text stays text), converted now
+                addKnown(inputName, input.constantValue);
+                continue;
+            }
             const expected = types.get(inputName);
             if (!expected || (input instanceof TypedInput && (
                 (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
@@ -2945,7 +2983,11 @@ class JSGenerator {
                 result += '}),';
                 continue;
             }
-            const compiledInput = this.descendInput(input).asSafe();
+            const descended = this.descendInput(input);
+            // Desktop fork (section 151): typed text stays text, as the interpreter passes it ("9", not 9)
+            const compiledInput = descended instanceof ConstantInput && typeof descended.constantValue === 'string' ?
+                descended.asString() :
+                descended.asSafe();
             result += `"${sanitize(inputName)}":${compiledInput},`;
         }
         for (const fieldName of Object.keys(node.fields)) {

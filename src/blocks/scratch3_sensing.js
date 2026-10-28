@@ -70,6 +70,7 @@ class Scratch3SensingBlocks {
             sensing_timer: this.getTimer,
             sensing_resettimer: this.resetTimer,
             sensing_of: this.getAttributeOf,
+            sensing_set_of: this.setAttributeOf,
             sensing_mousex: this.getMouseX,
             sensing_mousey: this.getMouseY,
             sensing_setdragmode: this.setDragMode,
@@ -595,6 +596,48 @@ class Scratch3SensingBlocks {
     pushLoudness (value) {
       if (this._loudnessList.length >= 30) this._loudnessList.shift(); // remove first item
       this._loudnessList.push(value ?? this.getLoudness());
+    }
+
+    /**
+     * Desktop fork (section 151): "set [PROPERTY] of [OBJECT] to [VALUE]" was compiled only (jsgen.js
+     * sensing.set.of) and did nothing in the interpreter; this does what the compiled code does.
+     * @param {object} args The block's arguments.
+     */
+    setAttributeOf (args) {
+        const target = args.OBJECT === '_stage_' ?
+            this.runtime.getTargetForStage() :
+            this.runtime.getSpriteTargetByName(Cast.toString(args.OBJECT));
+        if (!target) return;
+        const value = args.VALUE;
+        switch (args.PROPERTY) {
+        case 'volume':
+            // (not waiting for the promise it may return, as the compiled code does not)
+            this.runtime.ext_scratch3_sound._updateVolume(Cast.toNumber(value), target);
+            break;
+        case 'x position':
+            target.setXY(Cast.toNumber(value), target.y);
+            break;
+        case 'y position':
+            target.setXY(target.x, Cast.toNumber(value));
+            break;
+        case 'direction':
+            target.setDirection(Cast.toNumber(value));
+            break;
+        case 'costume':
+            this.runtime.ext_scratch3_looks._setCostume(target, typeof value === 'number' ? value : Cast.toString(value));
+            break;
+        case 'backdrop':
+            this.runtime.ext_scratch3_looks._setBackdrop(target, typeof value === 'number' ? value : Cast.toString(value));
+            break;
+        case 'size':
+            target.setSize(Cast.toNumber(value));
+            break;
+        default: {
+            const variable = target.lookupVariableByNameAndType(args.PROPERTY, '', true);
+            if (variable) variable.value = value;
+            break;
+        }
+        }
     }
 
     getAttributeOf (args) {
