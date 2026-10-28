@@ -303,6 +303,174 @@ runtimeFunctions.directExtensionCall = `const directExtensionCall = (inputs, dir
 }`;
 
 /**
+ * Desktop fork (section 152): an extension branch or loop block (CONDITIONAL, LOOP) called without the
+ * compatibility layer's generator (jsgen.js, irgen.js getBranchCallKind 'direct'), like guardedExtensionCall: the
+ * first call does what executeInCompatibilityLayer does before and for its first call with the branch info (stack
+ * frame, block utility; arguments converted as the wrapper would), and answers the branch to run as its `finish`
+ * does. When the block returned a promise or changed the thread's status, extensionCallUnfinished is true and the
+ * compiled code continues with finishExtensionCallBranch, which does exactly what executeInCompatibilityLayer does
+ * after its first call (the branch started is read after the wait, as there). Uses guardedExtensionCall's
+ * variables (insertRuntime adds it: the name contains it).
+ */
+runtimeFunctions.guardedExtensionCallBranch = `const startedExtensionBranch = (branchInfo, returnValue) => {
+    const blockUtility = globalState.blockUtility;
+    if (typeof returnValue === 'undefined' && blockUtility._startedBranch) {
+        branchInfo.isLoop = blockUtility._startedBranch[1];
+        return blockUtility._startedBranch[0];
+    }
+    branchInfo.isLoop = branchInfo.defaultIsLoop;
+    return returnValue;
+};
+const guardedExtensionCallBranch = (inputs, direct, isWarp, blockId, branchInfo) => {
+    const thread = globalState.thread;
+    const blockUtility = globalState.blockUtility;
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    blockUtility.init(thread, blockId, branchInfo.stackFrame, branchInfo);
+    const returnValue = direct.call(inputs, blockUtility);
+    extensionCallUnfinished = thread.status !== 0 /* STATUS_RUNNING */ || isPromise(returnValue);
+    if (extensionCallUnfinished) {
+        extensionCallState = [thread, inputs, direct, blockId, branchInfo, returnValue];
+        return;
+    }
+    return startedExtensionBranch(branchInfo, returnValue);
+};
+const finishExtensionCallBranch = function*(isWarp) {
+    const [thread, inputs, direct, blockId, branchInfo, firstValue] = extensionCallState;
+    extensionCallState = null;
+    extensionCallUnfinished = false;
+    const blockUtility = globalState.blockUtility;
+    let returnValue = firstValue;
+    if (isPromise(returnValue)) {
+        return startedExtensionBranch(branchInfo, yield* waitPromise(returnValue));
+    }
+    if (thread.status === 1 /* STATUS_PROMISE_WAIT */ || thread.status === 4 /* STATUS_DONE */) {
+        yield;
+        return '';
+    }
+    while (thread.status === 2 /* STATUS_YIELD */ || thread.status === 3 /* STATUS_YIELD_TICK */) {
+        if (thread.status === 2 /* STATUS_YIELD */) {
+            thread.status = 0; // STATUS_RUNNING
+            if (!isWarp || isStuck()) {
+                yield;
+            }
+        } else {
+            yield;
+        }
+        blockUtility.init(thread, blockId, branchInfo.stackFrame, branchInfo);
+        returnValue = direct.call(inputs, blockUtility);
+        if (isPromise(returnValue)) {
+            return startedExtensionBranch(branchInfo, yield* waitPromise(returnValue));
+        }
+        if (thread.status === 1 /* STATUS_PROMISE_WAIT */ || thread.status === 4 /* STATUS_DONE */) {
+            yield;
+            return startedExtensionBranch(branchInfo, '');
+        }
+    }
+    return startedExtensionBranch(branchInfo, returnValue);
+}`;
+
+/**
+ * Desktop fork (section 152): the inline code of Extra Controls' branch and loop blocks (irgen.js BRANCH_INLINE).
+ * Each does exactly what the extension manager's wrapper (argument conversion by type) and then the block's
+ * function in Extra-Controls.js do, with the branch info's stack frame as `util.stackFrame`, and answers like
+ * executeInCompatibilityLayer's `finish`: the branch started (setting isLoop), else undefined. Parameters in the
+ * block's input order, so the inputs are worked out in the same order.
+ */
+runtimeFunctions.pmBranchInline = `const pmBranchString = value => (typeof value === 'string' ? value : globalState.Cast.toString(value));
+const pmBranchNumber = value => (typeof value === 'number' ? value : globalState.Cast.toNumber(value));
+const pmBranchBoolean = value => (typeof value === 'boolean' ? value : globalState.Cast.toBoolean(value));
+const pmBranchStart = (branchInfo, isLoop) => {
+    branchInfo.isLoop = isLoop;
+    return 1;
+};
+const pmBranchNone = branchInfo => {
+    branchInfo.isLoop = branchInfo.defaultIsLoop;
+};
+const pmBranchStartTimer = (stackFrame, duration) => {
+    const runtime = globalState.thread.target.runtime;
+    stackFrame.timer = new globalState.Timer({now: () => runtime.currentMSecs});
+    stackFrame.timer.start();
+    stackFrame.duration = duration;
+    runtime.requestRedraw();
+};
+const pmBranchInline_ifPart = (branchInfo, CON, ID, extension) => {
+    const Cast = globalState.Cast;
+    CON = pmBranchBoolean(CON);
+    ID = pmBranchString(ID);
+    const con = Cast.toBoolean(CON);
+    extension.pmConditionStorage[Cast.toString(ID)] = con;
+    if (con) return pmBranchStart(branchInfo, false);
+    pmBranchNone(branchInfo);
+};
+const pmBranchInline_elsePart = (branchInfo, ID, extension) => {
+    ID = pmBranchString(ID);
+    const conditionStorage = extension.pmConditionStorage;
+    const id = globalState.Cast.toString(ID);
+    if (conditionStorage[id] !== undefined && conditionStorage[id] === false) return pmBranchStart(branchInfo, false);
+    pmBranchNone(branchInfo);
+};
+const pmBranchSecUntil = (branchInfo, NUM, CON) => {
+    const Cast = globalState.Cast;
+    const stackFrame = branchInfo.stackFrame;
+    const con = Cast.toBoolean(CON);
+    if (con) return pmBranchNone(branchInfo);
+    if (!stackFrame.timer) {
+        pmBranchStartTimer(stackFrame, Math.max(0, 1000 * Cast.toNumber(NUM)));
+        return pmBranchStart(branchInfo, true);
+    } else if (stackFrame.timer.timeElapsed() < stackFrame.duration && !con) {
+        return pmBranchStart(branchInfo, true);
+    }
+    pmBranchNone(branchInfo);
+};
+const pmBranchInline_waitSecsOrCon = (branchInfo, NUM, CON) =>
+    pmBranchSecUntil(branchInfo, pmBranchNumber(NUM), pmBranchBoolean(CON));
+const pmBranchInline_repeatSecUntil = (branchInfo, NUM, CON) =>
+    pmBranchSecUntil(branchInfo, pmBranchString(NUM), pmBranchBoolean(CON));
+const pmBranchInline_waitChanged = (branchInfo, THING) => {
+    const Cast = globalState.Cast;
+    const stackFrame = branchInfo.stackFrame;
+    const input = Cast.toString(THING);
+    if (stackFrame.SPwaitChange === undefined) stackFrame.SPwaitChange = input;
+    if (Cast.compare(stackFrame.SPwaitChange, input) === 0) return pmBranchStart(branchInfo, true);
+    pmBranchNone(branchInfo);
+};
+const pmBranchInline_repeatForUntil = (branchInfo, NUM, CON) => {
+    const Cast = globalState.Cast;
+    const stackFrame = branchInfo.stackFrame;
+    NUM = pmBranchString(NUM);
+    CON = pmBranchBoolean(CON);
+    if (typeof stackFrame.loopCounter === 'undefined') stackFrame.loopCounter = Math.round(Cast.toNumber(NUM));
+    stackFrame.loopCounter--;
+    if (!Cast.toBoolean(CON) && stackFrame.loopCounter >= 0) return pmBranchStart(branchInfo, true);
+    pmBranchNone(branchInfo);
+};
+const pmBranchInline_repeatSecs = (branchInfo, NUM) => {
+    const stackFrame = branchInfo.stackFrame;
+    NUM = pmBranchString(NUM);
+    if (!stackFrame.timer) {
+        pmBranchStartTimer(stackFrame, Math.max(0, 1000 * globalState.Cast.toNumber(NUM)));
+        return pmBranchStart(branchInfo, true);
+    } else if (stackFrame.timer.timeElapsed() < stackFrame.duration) {
+        return pmBranchStart(branchInfo, true);
+    }
+    pmBranchNone(branchInfo);
+};
+const pmBranchInline_spayedCondition = (branchInfo, CON1, CON2) => {
+    const Cast = globalState.Cast;
+    const stackFrame = branchInfo.stackFrame;
+    CON1 = pmBranchBoolean(CON1);
+    CON2 = pmBranchBoolean(CON2);
+    if (typeof stackFrame.index === 'undefined') stackFrame.index = true;
+    if (!Cast.toBoolean(CON1) && stackFrame.index) return pmBranchNone(branchInfo);
+    if (!Cast.toBoolean(CON2)) {
+        stackFrame.index = false;
+        return pmBranchStart(branchInfo, true);
+    }
+    stackFrame.index = true;
+    pmBranchNone(branchInfo);
+}`;
+
+/**
  * @param {boolean} isLoop True if the block is a LOOP by default (can be overridden by startBranch() call)
  * @returns {unknown} Branch info object for compatibility layer.
  */
@@ -887,7 +1055,9 @@ const insertRuntime = source => {
     for (const functionName of Object.keys(runtimeFunctions)) {
         // Desktop fork (section 130): guarded extension calls use the compatibility layer's helpers
         if (source.includes(functionName) ||
-            (functionName === 'executeInCompatibilityLayer' && source.includes('guardedExtensionCall'))) {
+            (functionName === 'executeInCompatibilityLayer' && source.includes('guardedExtensionCall')) ||
+            // (section 152: inline branch code after which the loop checks hasResumedFromPromise)
+            (functionName === 'executeInCompatibilityLayer' && source.includes('hasResumedFromPromise'))) {
             result += `${runtimeFunctions[functionName]};`;
         }
     }

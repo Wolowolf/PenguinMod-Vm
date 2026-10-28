@@ -1598,7 +1598,17 @@ class JSGenerator {
                 const branchVariable = this.localVariables.next();
                 const label = "compatLoopLabel" + branchVariable;
                 this.source += `const ${branchVariable} = createBranchInfo(${blockType === BlockType.LOOP});\n`;
-                this.source += `${label}: while (${branchVariable}.branch = +(${this.generateCompatibilityLayerCall(node, false, branchVariable)})) {\n`;
+                // Desktop fork (section 152): the block's own code or a direct call instead of the compatibility layer
+                let call;
+                if (node.branchCall === 'inline') {
+                    call = this.generateBranchInline(node, branchVariable);
+                } else if (node.branchCall === 'direct') {
+                    const {object, directName} = this.generateDirectExtensionArguments(node);
+                    call = `extensionAnswer = guardedExtensionCallBranch(${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}", ${branchVariable}), extensionCallUnfinished ? (yield* finishExtensionCallBranch(${this.isWarp})) : extensionAnswer`;
+                } else {
+                    call = this.generateCompatibilityLayerCall(node, false, branchVariable);
+                }
+                this.source += `${label}: while (${branchVariable}.branch = +(${call})) {\n`;
                 this.source += `switch (${branchVariable}.branch) {\n`;
                 this.compatBranchInfo = { node, branchVar: branchVariable, label };
                 for (let i = 0; i < node.substacks.length; i++) {
@@ -1608,7 +1618,10 @@ class JSGenerator {
                     this.source += `}\n`; // close case
                 }
                 this.source += '}\n'; // close switch
-                this.source += `if (${branchVariable}.onEnd[0]) yield ${branchVariable}.onEnd.shift()(${branchVariable});\n`;
+                // (the inline code never adds an end function)
+                if (node.branchCall !== 'inline') {
+                    this.source += `if (${branchVariable}.onEnd[0]) yield ${branchVariable}.onEnd.shift()(${branchVariable});\n`;
+                }
                 this.source += `if (!${branchVariable}.isLoop) break;\n`;
                 this.yieldLoop();
                 this.source += '}\n'; // close while
@@ -2904,6 +2917,23 @@ class JSGenerator {
      * @returns {string} The JS of the call.
      */
     generateDirectExtensionCall (node, setFlags, isStatement) {
+        const {object, directName} = this.generateDirectExtensionArguments(node);
+        const call = `${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}"`;
+        // Desktop fork (section 132): a block known never to wait (direct-blocks.json) is called without the check
+        if (node.plain) return `directExtensionCall(${call})`;
+        if (isStatement) {
+            return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+        }
+        return `extensionAnswer = guardedExtensionCall(${call}), extensionCallUnfinished ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
+    }
+
+    /**
+     * Desktop fork (section 130): the arguments object of a direct extension call, converted as the extension
+     * manager's wrapper would (section 152: also for branch and loop blocks), and the variable holding `pmDirect`.
+     * @param {*} node The "compat" node.
+     * @returns {{object: string, directName: string}} The JS of the object and the variable's name.
+     */
+    generateDirectExtensionArguments (node) {
         const opcode = node.opcode;
         const direct = this.target.runtime.getOpcodeFunction(opcode).pmDirect;
         const directName = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}").pmDirect`);
@@ -2953,13 +2983,33 @@ class JSGenerator {
             if (!names.has(name)) addKnown(name, undefined);
         }
         object += '}';
-        const call = `${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}"`;
-        // Desktop fork (section 132): a block known never to wait (direct-blocks.json) is called without the check
-        if (node.plain) return `directExtensionCall(${call})`;
-        if (isStatement) {
-            return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+        return {object, directName};
+    }
+
+    /**
+     * Desktop fork (section 152): the call of an Extra Controls branch or loop block's inline code (irgen.js
+     * BRANCH_INLINE), which answers the branch to run as the compatibility layer would. Inputs as the compatibility
+     * layer passes them (fixed text stays text), in the block's order; a missing one is undefined.
+     * @param {*} node The "compat" node, with `branchCall` 'inline'.
+     * @param {string} branchVariable The branch info's variable.
+     * @returns {string} The JS of the call.
+     */
+    generateBranchInline (node, branchVariable) {
+        const name = node.opcode.slice('SPadvControl_'.length);
+        const args = [branchVariable];
+        for (const inputName of node.branchInputs) {
+            if (!Object.prototype.hasOwnProperty.call(node.inputs, inputName)) {
+                args.push('undefined');
+                continue;
+            }
+            const input = this.descendInput(node.inputs[inputName]);
+            args.push(input instanceof ConstantInput && typeof input.constantValue === 'string' ?
+                input.asString() :
+                input.asSafe());
         }
-        return `extensionAnswer = guardedExtensionCall(${call}), extensionCallUnfinished ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
+        // (the branch IDs are kept by the extension, read after the inputs as the block does)
+        if (name === 'ifPart' || name === 'elsePart') args.push('runtime.ext_SPadvControl');
+        return `pmBranchInline_${name}(${args.join(', ')})`;
     }
 
     /**

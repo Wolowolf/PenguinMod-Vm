@@ -6,6 +6,7 @@
 // Section 123 (step 5d): "data" is dragged as a copy through the block's canDragDuplicate instead of replacing
 // ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter; marked "Desktop fork (section 123)".
 // Section 131: thread arguments ("data") kept on the thread, "run [forward]" works interpreted; marked "Desktop fork (section 131)".
+// Section 152: the branch IDs of "if" / "else" readable by the compiler's inline code; marked "Desktop fork (section 152)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -162,6 +163,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   });
 
   class SPadvControl {
+    // Desktop fork (section 152): read by the inline code of "if" / "else" (src/compiler/jsexecute.js pmBranchInline)
+    get pmConditionStorage() { return conditionStorage; }
+
     getInfo() {
       return {
         id: "SPadvControl",

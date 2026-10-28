@@ -49,6 +49,18 @@ const DATA_INLINE_STACKS = new Set([
     'lmsData_deleteItems', 'lmsData_deleteAllOfItem', 'lmsData_replaceAllOfItem', 'lmsData_repeatList',
     'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists', 'lmsData_setListArray'
 ]);
+// Desktop fork (section 152): Extra Controls branch and loop blocks compiled to inline code (jsexecute.js
+// pmBranchInline_<opcode>): the inputs they are given, in the order of the block's text, and whether they can loop.
+const BRANCH_INLINE = {
+    SPadvControl_ifPart: {inputs: ['CON', 'ID'], loop: false},
+    SPadvControl_elsePart: {inputs: ['ID'], loop: false},
+    SPadvControl_waitSecsOrCon: {inputs: ['NUM', 'CON'], loop: true},
+    SPadvControl_waitChanged: {inputs: ['THING'], loop: true},
+    SPadvControl_repeatForUntil: {inputs: ['NUM', 'CON'], loop: true},
+    SPadvControl_repeatSecs: {inputs: ['NUM'], loop: true},
+    SPadvControl_repeatSecUntil: {inputs: ['NUM', 'CON'], loop: true},
+    SPadvControl_spayedCondition: {inputs: ['CON1', 'CON2'], loop: true}
+};
 
 /**
  * @fileoverview Generate intermediate representations from Scratch blocks.
@@ -2629,7 +2641,14 @@ class ScriptTreeGenerator {
         const direct = !pure && this.isDirectExtensionCall(block.opcode, blockInfo);
         // Desktop fork (section 132): ...except the blocks known never to wait (plain call, no check)
         const plain = direct && plainExtensionBlocks.has(block.opcode) && !this.runtime.pmGuardedExtensionCalls;
-        if (!pure && !plain) this.script.yields = true;
+        const blockType = (blockInfo && blockInfo.blockType) || BlockType.COMMAND;
+        // Desktop fork (section 152): branch and loop blocks without compiler code of their own
+        const branchCall = this.getBranchCallKind(block, blockType);
+        if (branchCall === 'inline') {
+            if (BRANCH_INLINE[block.opcode].loop) this.analyzeLoop();
+        } else if (!pure && !plain) {
+            this.script.yields = true;
+        }
 
         const inputs = {};
         for (const name of Object.keys(block.inputs)) {
@@ -2641,7 +2660,6 @@ class ScriptTreeGenerator {
 
         const fields = {};
         const substacks = [];
-        const blockType = (blockInfo && blockInfo.blockType) || BlockType.COMMAND;
         if (blockType === BlockType.CONDITIONAL || blockType === BlockType.LOOP) {
             for (let i in (blockInfo.branches || [])) {
                 const inputName = i === "0" ? 'SUBSTACK' : `SUBSTACK${Number(i) + 1}`;
@@ -2668,8 +2686,38 @@ class ScriptTreeGenerator {
             compilerInfo: (blockInfo && blockInfo.compilerInfo) || {},
             pure,
             direct,
-            plain
+            plain,
+            branchCall,
+            branchInputs: branchCall === 'inline' ? BRANCH_INLINE[block.opcode].inputs : null
         };
+    }
+
+    /**
+     * Desktop fork (section 152): how an extension branch or loop block (CONDITIONAL, LOOP) without compiler code of
+     * its own is called. 'direct': its function without the extension manager's wrapper and without the
+     * compatibility layer's generator (jsexecute.js guardedExtensionCallBranch), which does exactly what
+     * executeInCompatibilityLayer does, the generator only when the block waits or changes the script's status.
+     * 'inline': BRANCH_INLINE's Extra Controls blocks, whose code (jsexecute.js pmBranchInline_<opcode>) does exactly
+     * what the block's function does after the wrapper's conversion; only when the block's inputs are stored in
+     * their usual order and no other input holds a block (they are worked out in that order). The generated loop
+     * around the call is the same as before, so blocks in the branches behave as before (break, continue, the last
+     * block in a loop). null: the compatibility layer (dynamic blocks, a block with no `pmDirect`).
+     * `runtime.pmNoBranchInline = true` puts all of them back on the compatibility layer (tests only).
+     * @param {Block} block The block.
+     * @param {string} blockType Its block type.
+     * @returns {string|null} 'inline', 'direct' or null.
+     */
+    getBranchCallKind (block, blockType) {
+        if (blockType !== BlockType.CONDITIONAL && blockType !== BlockType.LOOP) return null;
+        if (this.runtime.pmNoBranchInline) return null;
+        const opcodeFunction = this.runtime.getOpcodeFunction(block.opcode);
+        if (!opcodeFunction || !opcodeFunction.pmDirect) return null;
+        const inline = BRANCH_INLINE[block.opcode];
+        if (!inline) return 'direct';
+        const stored = Object.keys(block.inputs).filter(name => !name.startsWith('SUBSTACK'));
+        const expected = inline.inputs.filter(name => Object.prototype.hasOwnProperty.call(block.inputs, name));
+        if (stored.length !== expected.length || stored.some((name, i) => name !== expected[i])) return 'direct';
+        return 'inline';
     }
 
     /**
