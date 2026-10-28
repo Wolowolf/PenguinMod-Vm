@@ -1,0 +1,1224 @@
+{
+    "Bitwise": {},
+    "CameraSensingPlusSP": {
+        "page": {
+            "document.createElement": 3,
+            "navigator.mediaDevices": 2
+        },
+        "internals": {
+            "._allDrawables": 2,
+            "._drawable": 1,
+            "._id": 1,
+            "._skin": 1,
+            "._skinId": 1
+        }
+    },
+    "DICandSPmonitorsPlus": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 2,
+            "setTimeout": 1
+        },
+        "page": {
+            "document.createElement": 7,
+            "document.fonts": 1,
+            "document.getElementById": 1,
+            "document.querySelector": 15,
+            "document.querySelectorAll": 1
+        }
+    },
+    "Encoding": {
+        "random": {
+            "Math.random": 2
+        }
+    },
+    "Gamepad": {
+        "page": {
+            "navigator.getGamepads": 2
+        }
+    },
+    "HyperSense2SP": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "document.addEventListener": 2,
+            "document.createElement": 2,
+            "document.querySelector": 4,
+            "window.addEventListener": 2
+        },
+        "internals": {
+            "._answer": 1,
+            "._drawList": 1,
+            "._gl": 2
+        }
+    },
+    "LZcollisionsSP": {
+        "internals": {
+            "write runtime.pmSpriteLookupById": 1
+        }
+    },
+    "MouseCursor": {
+        "page": {
+            "MutationObserver": 1,
+            "document.createElement": 1,
+            "renderer.canvas": 1
+        },
+        "internals": {
+            "._allSkins": 1,
+            "._colorData": 1,
+            "._height": 2,
+            "._silhouette": 1,
+            "._svgImage": 2,
+            "._width": 2
+        }
+    },
+    "ObscurasMIDITools": {
+        "clock": {
+            "performance.now": 8,
+            "setTimeout": 3
+        },
+        "page": {
+            "alert": 1,
+            "document.body": 1,
+            "document.createElement": 1,
+            "window.Midi": 2
+        }
+    },
+    "P7BoxPhys": {
+        "random": {
+            "Math.random": 2
+        },
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "Image": 1,
+            "document.createElement": 1
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._convexHullPoints": 1,
+            "._getConvexHullPointsForDrawable": 1
+        }
+    },
+    "SPASfontManager": {},
+    "SPadvControl": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 1,
+            "setInterval": 1,
+            "setTimeout": 1
+        },
+        "internals": {
+            "._blocks": 2,
+            "._hats": 5,
+            "._keysPressed": 1,
+            "._pushThread": 4
+        }
+    },
+    "SPanimations": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 2
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._paused": 1
+        }
+    },
+    "SPcolorMaster": {
+        "random": {
+            "Math.random": 1
+        },
+        "page": {
+            "document.body": 1,
+            "document.createElement": 1,
+            "document.querySelector": 1
+        },
+        "internals": {
+            "._loadedExtensions": 1
+        }
+    },
+    "SPgeolocation": {
+        "clock": {
+            "Date.now": 2
+        },
+        "page": {
+            "navigator.geolocation": 4
+        }
+    },
+    "SPgifManager": {
+        "clock": {
+            "new Date()": 5,
+            "setTimeout": 8
+        },
+        "page": {
+            "Image": 2,
+            "document.createElement": 4,
+            "document.getElementById": 1,
+            "window": 11,
+            "window.URL": 1
+        }
+    },
+    "SPgrids": {},
+    "SPlayering": {
+        "internals": {
+            "._allDrawables": 6,
+            "._drawList": 7,
+            "._drawable": 3
+        }
+    },
+    "SPmbpCST": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "setTimeout": 3
+        },
+        "page": {
+            "alert": 2,
+            "confirm": 1,
+            "document.body": 1,
+            "document.createElement": 18,
+            "document.querySelector": 3,
+            "document.querySelectorAll": 1,
+            "prompt": 1,
+            "window.addEventListener": 1,
+            "window.removeEventListener": 1
+        },
+        "internals": {
+            "._blocks": 10,
+            "._cache": 1,
+            "write runtime.SPmbpCSTOldStorage": 3,
+            "write runtime.extensionStorage": 1,
+            "write vm.globalBlocksCache": 1
+        }
+    },
+    "SPmessagePlus": {
+        "internals": {
+            "._pushThread": 2,
+            "._restartThread": 1
+        }
+    },
+    "SPpartEngine": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "requestAnimationFrame": 4
+        },
+        "page": {
+            "Image": 1,
+            "document.body": 1,
+            "document.createElement": 1,
+            "document.querySelector": 1,
+            "renderer.gl": 1
+        },
+        "internals": {
+            "._allDrawables": 2,
+            "._paused": 2,
+            "._visible": 1
+        }
+    },
+    "SPpenPapers": {
+        "page": {
+            "document.createElement": 1
+        },
+        "internals": {
+            "._allDrawables": 5,
+            "._allSkins": 2,
+            "._nativeSize": 1,
+            "._penSkinId": 2,
+            "._updateRenderQuality": 2,
+            "._visible": 1
+        }
+    },
+    "SPpopups": {
+        "random": {
+            "Math.random": 1
+        },
+        "page": {
+            "document.body": 1,
+            "document.createElement": 20,
+            "document.fonts": 1
+        },
+        "internals": {
+            "._keyStringToScratchKey": 1
+        }
+    },
+    "SPqrCodes": {
+        "page": {
+            "Image": 1,
+            "document.body": 1,
+            "document.createElement": 6,
+            "document.createElementNS": 1,
+            "document.documentElement": 1,
+            "document.getElementById": 1,
+            "document.querySelector": 1,
+            "window._android": 6,
+            "window.devicePixelRatio": 1
+        },
+        "internals": {
+            "write CanvasRenderingContext2D.prototype.drawImage": 1
+        }
+    },
+    "SPrecording2": {
+        "clock": {
+            "setTimeout": 2
+        },
+        "page": {
+            "MediaRecorder": 1,
+            "navigator.mediaDevices": 1,
+            "window.AudioContext": 1,
+            "window.webkitAudioContext": 1
+        }
+    },
+    "SPrigidBody": {
+        "random": {
+            "Math.random": 1
+        },
+        "page": {
+            "document.createElement": 4,
+            "document.querySelector": 1
+        },
+        "internals": {
+            "write runtime.extensionStorage": 1
+        }
+    },
+    "SPscenes": {
+        "page": {
+            "alert": 2,
+            "document.createElement": 5,
+            "document.documentElement": 3,
+            "document.querySelector": 1,
+            "document.querySelectorAll": 1
+        },
+        "internals": {
+            "._allDrawables": 2,
+            "._customState": 1,
+            "._direction": 1,
+            "._position": 2,
+            "._scale": 2,
+            "._uniforms": 1,
+            "._visible": 1,
+            "write runtime.extensionStorage": 4
+        }
+    },
+    "SPsoundWaves": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "document.addEventListener": 2
+        }
+    },
+    "SPspriteEffectsV2": {
+        "random": {
+            "Math.random": 3
+        },
+        "clock": {
+            "Date.now": 1
+        },
+        "page": {
+            "DOMParser": 1,
+            "Image": 3,
+            "alert": 2,
+            "document.body": 1,
+            "document.createElement": 3,
+            "document.createElementNS": 1
+        },
+        "internals": {
+            "._allSkins": 1,
+            "._svgImage": 1,
+            "._texture": 1
+        }
+    },
+    "SPspriteParent": {},
+    "SPsvgSheets": {
+        "page": {
+            "DOMParser": 2
+        }
+    },
+    "SPtempVars": {
+        "internals": {
+            "write runtime.[]": 1
+        }
+    },
+    "SPtimeCalc": {
+        "clock": {
+            "Date.now": 1,
+            "new Date()": 6
+        }
+    },
+    "SPtuneShark3": {
+        "random": {
+            "Math.random": 3
+        },
+        "clock": {
+            "performance.now": 1,
+            "setTimeout": 1,
+            "window.setTimeout": 1
+        },
+        "page": {
+            "alert": 3,
+            "navigator.getUserMedia": 4,
+            "navigator.mediaDevices": 4,
+            "navigator.mozGetUserMedia": 1,
+            "navigator.msGetUserMedia": 1,
+            "navigator.webkitGetUserMedia": 1,
+            "window": 1,
+            "window.AudioContext": 1,
+            "window.setTimeout": 1,
+            "window.webkitAudioContext": 1
+        },
+        "internals": {
+            "._pushThread": 1
+        }
+    },
+    "SPturboSkins": {
+        "page": {
+            "Image": 1
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._id": 5,
+            "._rotationCenter": 3,
+            "._skinWasAltered": 1,
+            "._svgImageLoaded": 1
+        }
+    },
+    "SharkPoolSharktilities": {
+        "random": {
+            "Math.random": 2
+        },
+        "page": {
+            "Image": 1,
+            "alert": 1,
+            "document.createElement": 2
+        },
+        "internals": {
+            "._customState": 2,
+            "._getSoundState": 1,
+            "._setBackdrop": 1,
+            "._setCostume": 1,
+            "._step": 1,
+            "._syncEffectsForTarget": 2
+        }
+    },
+    "ShovelUtils": {
+        "clock": {
+            "performance.now": 1
+        },
+        "page": {
+            "confirm": 2
+        }
+    },
+    "battery": {
+        "page": {
+            "navigator.getBattery": 2
+        }
+    },
+    "beatSync": {
+        "clock": {
+            "requestAnimationFrame": 1,
+            "setTimeout": 3
+        },
+        "page": {
+            "document.addEventListener": 1,
+            "document.hidden": 3,
+            "window.AudioContext": 1,
+            "window.webkitAudioContext": 1
+        },
+        "internals": {
+            "write runtime.extensionStorage": 3
+        }
+    },
+    "claytonhtmlencode": {},
+    "clipboard": {
+        "page": {
+            "navigator.clipboard": 5,
+            "window.addEventListener": 2,
+            "window.clipboardData": 1
+        }
+    },
+    "cloudlink": {
+        "clock": {
+            "window.setTimeout": 1
+        },
+        "page": {
+            "confirm": 1,
+            "window.clearTimeout": 3,
+            "window.setTimeout": 1
+        }
+    },
+    "cst1229zip": {
+        "internals": {
+            "write runtime.ext_cst1229zip": 1
+        }
+    },
+    "cubesterKeySimulation": {
+        "clock": {
+            "setTimeout": 2
+        },
+        "page": {
+            "ResizeObserver": 1,
+            "renderer.canvas": 2,
+            "window.ResizeObserver": 1
+        }
+    },
+    "cubesterWindowControls": {
+        "random": {
+            "Math.random": 1
+        },
+        "page": {
+            "confirm": 1,
+            "document.documentElement": 4,
+            "document.exitFullscreen": 2,
+            "document.fullscreenElement": 2,
+            "document.hasFocus": 1,
+            "document.title": 2,
+            "document.webkitExitFullscreen": 2,
+            "document.webkitFullscreenElement": 2,
+            "screen.height": 9,
+            "screen.width": 9,
+            "window.close": 1,
+            "window.innerHeight": 9,
+            "window.innerWidth": 9,
+            "window.moveBy": 2,
+            "window.moveTo": 13,
+            "window.outerHeight": 18,
+            "window.outerWidth": 18,
+            "window.resizeBy": 2,
+            "window.resizeTo": 12,
+            "window.screenLeft": 3,
+            "window.screenTop": 3,
+            "window.screenX": 1,
+            "window.screenY": 1
+        }
+    },
+    "discordauth": {
+        "random": {
+            "crypto.getRandomValues": 1
+        },
+        "clock": {
+            "Date.now": 2,
+            "setInterval": 1
+        },
+        "page": {
+            "document.body": 1,
+            "document.createElement": 8,
+            "document.fullscreenElement": 1,
+            "window.PMLogin": 4,
+            "window.open": 2
+        }
+    },
+    "divVecQuat": {
+        "page": {
+            "document.body": 1,
+            "document.createElement": 18,
+            "document.getElementById": 1,
+            "document.head": 1
+        },
+        "internals": {
+            "write vm.divVecQuat": 1
+        }
+    },
+    "dninwakelock": {
+        "page": {
+            "document.addEventListener": 1,
+            "document.visibilityState": 3,
+            "navigator.wakeLock": 2
+        }
+    },
+    "dogeiscutResolution": {
+        "page": {
+            "window.addEventListener": 1,
+            "window.devicePixelRatio": 1,
+            "window.innerHeight": 4,
+            "window.innerWidth": 4,
+            "window.screen": 2
+        }
+    },
+    "dtbyxeroname": {
+        "clock": {
+            "performance.now": 1
+        }
+    },
+    "e2ee": {
+        "page": {
+            "window.atob": 1,
+            "window.crypto": 11
+        }
+    },
+    "embintranslation": {
+        "page": {
+            "navigator.userLanguage": 2
+        }
+    },
+    "enderKeysPlusV2": {
+        "clock": {
+            "Date.now": 8
+        },
+        "page": {
+            "window.addEventListener": 6
+        }
+    },
+    "faceSensing": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "window.faceDetection": 1
+        },
+        "internals": {
+            "._allDrawables": 1
+        }
+    },
+    "filesExpanded": {
+        "clock": {
+            "Date.now": 2,
+            "requestIdleCallback": 1,
+            "setTimeout": 1
+        },
+        "page": {
+            "document.body": 3,
+            "document.createElement": 6,
+            "document.querySelectorAll": 1,
+            "window": 1,
+            "window.showDirectoryPicker": 1,
+            "window.showOpenFilePicker": 1
+        },
+        "internals": {
+            "write runtime.ext_filesExpanded": 1
+        }
+    },
+    "g1nxIrisText": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 6,
+            "performance": 1,
+            "performance.now": 2,
+            "requestAnimationFrame": 4,
+            "setTimeout": 1
+        },
+        "page": {
+            "Image": 1,
+            "alert": 1,
+            "document.createElement": 13,
+            "document.fonts": 5,
+            "localStorage": 2,
+            "localStorage.getItem": 1,
+            "localStorage.setItem": 1,
+            "navigator": 1
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._allSkins": 4,
+            "._canvas": 2,
+            "._height": 1,
+            "._lazyData": 2,
+            "._silhouette": 7,
+            "._svgImage": 2,
+            "._svgImageLoaded": 1,
+            "._width": 5,
+            "write runtime.ext_irisText": 1
+        }
+    },
+    "g1nxLighting": {
+        "clock": {
+            "setTimeout": 5
+        },
+        "page": {
+            "MutationObserver": 1,
+            "ResizeObserver": 1,
+            "alert": 1,
+            "document.addEventListener": 1,
+            "document.body": 1,
+            "document.createElement": 36,
+            "document.querySelector": 1,
+            "prompt": 2,
+            "renderer.canvas": 7,
+            "window.ScratchBlocks": 1,
+            "window.addEventListener": 1,
+            "window.devicePixelRatio": 3
+        },
+        "internals": {
+            "._drawList": 1,
+            "write runtime.extensionStorage": 2
+        }
+    },
+    "gaimeriCryptoExtension": {
+        "random": {
+            "crypto.getRandomValues": 2,
+            "crypto.randomUUID": 2
+        }
+    },
+    "gaimeriDeviceMotionExtension": {
+        "page": {
+            "window.addEventListener": 2
+        }
+    },
+    "googleAuth": {
+        "random": {
+            "crypto.getRandomValues": 1
+        },
+        "clock": {
+            "Date.now": 2,
+            "setInterval": 1
+        },
+        "page": {
+            "document.body": 1,
+            "document.createElement": 8,
+            "document.fullscreenElement": 1,
+            "window.PMLogin": 4,
+            "window.open": 2
+        }
+    },
+    "griffpatch": {
+        "random": {
+            "Math.random": 2
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._convexHullPoints": 1,
+            "._getConvexHullPointsForDrawable": 1
+        }
+    },
+    "gsaWebsocket": {},
+    "itch": {
+        "page": {
+            "screen.height": 1,
+            "screen.width": 1
+        }
+    },
+    "iygPerlin": {},
+    "jgPrism": {
+        "clock": {
+            "setInterval": 1
+        },
+        "page": {
+            "Audio": 1,
+            "addEventListener": 1,
+            "window": 2,
+            "window.FileReader": 1,
+            "window.fetch": 1
+        }
+    },
+    "jgTailgating": {},
+    "jgTween": {},
+    "jwColor": {
+        "page": {
+            "document.createElement": 5
+        },
+        "internals": {
+            "write vm.jwColor": 1
+        }
+    },
+    "jwProto": {},
+    "lmsData": {
+        "random": {
+            "Math.random": 2
+        },
+        "internals": {
+            "._monitorUpToDate": 1
+        }
+    },
+    "lmsLooksPlus": {
+        "page": {
+            "alert": 1
+        },
+        "internals": {
+            "._allSkins": 4,
+            "._svgImage": 4,
+            "._svgImageLoaded": 1,
+            "write renderer._allSkins": 2
+        }
+    },
+    "lmsSoundExpanded": {
+        "internals": {
+            "._addWaitingSound": 2,
+            "._removeWaitingSound": 1,
+            "write runtime.audioEngine": 2
+        }
+    },
+    "lmsVideo": {
+        "page": {
+            "alert": 1,
+            "document.body": 1,
+            "document.createElement": 4
+        },
+        "internals": {
+            "._allDrawables": 3,
+            "._allSkins": 4,
+            "._id": 1,
+            "._nextSkinId": 1,
+            "write renderer._allSkins": 1,
+            "write renderer._nextSkinId": 1,
+            "write runtime.ext_lmsVideo": 1
+        }
+    },
+    "lmsclonesplus": {
+        "internals": {
+            "._cloneCounter": 1,
+            "._createClone": 2
+        }
+    },
+    "lmsutilsblocks": {
+        "random": {
+            "Math.random": 1
+        },
+        "page": {
+            "screen.height": 1,
+            "screen.width": 1,
+            "window.innerHeight": 1,
+            "window.innerWidth": 1
+        },
+        "internals": {
+            "._cloneCounter": 1
+        }
+    },
+    "localstorage": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 3
+        },
+        "page": {
+            "alert": 1,
+            "localStorage": 1,
+            "localStorage.getItem": 1,
+            "localStorage.removeItem": 1,
+            "localStorage.setItem": 1,
+            "window.addEventListener": 1
+        },
+        "internals": {
+            "write runtime.extensionStorage": 1
+        }
+    },
+    "mdwaltersnotifications": {
+        "page": {
+            "navigator": 1,
+            "navigator.serviceWorker": 1
+        }
+    },
+    "medericodertextcase": {
+        "random": {
+            "Math.random": 2
+        }
+    },
+    "midi": {
+        "clock": {
+            "Date.now": 3
+        },
+        "page": {
+            "alert": 1,
+            "document.addEventListener": 2,
+            "document.body": 2,
+            "document.createElement": 1,
+            "navigator.requestMIDIAccess": 2
+        }
+    },
+    "mobilekeyboard0419": {
+        "page": {
+            "document.body": 1,
+            "document.createElement": 1
+        }
+    },
+    "mubiloppenguinhook": {},
+    "music": {},
+    "navigatorinfo": {
+        "page": {
+            "window.matchMedia": 3
+        }
+    },
+    "nonameawagraph": {},
+    "numberUtilities": {},
+    "obviousAlexCMath3d": {},
+    "obviousalexsensing": {
+        "page": {
+            "alert": 1,
+            "document.createElement": 2,
+            "location.hostname": 1,
+            "navigator.clipboard": 6,
+            "navigator.maxTouchPoints": 1,
+            "renderer.canvas": 1,
+            "webkitSpeechRecognition": 1,
+            "window.SpeechRecognition": 2,
+            "window.addEventListener": 2,
+            "window.webkitSpeechRecognition": 1
+        },
+        "internals": {
+            "._drawList": 1
+        }
+    },
+    "p7videosharing": {
+        "page": {
+            "Image": 1,
+            "document.body": 2,
+            "document.createElement": 11,
+            "document.getElementById": 1,
+            "document.querySelector": 2,
+            "localStorage.getItem": 1,
+            "navigator.mediaDevices": 4,
+            "window.getComputedStyle": 1,
+            "window.resolve8932902095902": 2
+        },
+        "internals": {
+            "._allDrawables": 2,
+            "._allSkins": 2,
+            "._id": 10,
+            "._skin": 12
+        }
+    },
+    "pen": {
+        "page": {
+            "Image": 2,
+            "document.createElement": 1
+        },
+        "internals": {
+            "._allSkins": 2,
+            "._customState": 1,
+            "._setTexture": 1,
+            "._size": 2,
+            "._translatePossitionToCamera": 1
+        }
+    },
+    "penP": {
+        "clock": {
+            "Date.now": 1,
+            "setTimeout": 1
+        },
+        "page": {
+            "Image": 2,
+            "alert": 1,
+            "document.body": 14,
+            "document.createElement": 35,
+            "renderer.canvas": 1,
+            "window.addEventListener": 2,
+            "window.location": 2
+        },
+        "internals": {
+            "._allSkins": 4,
+            "._backgroundColor4f": 12,
+            "._editingTarget": 5,
+            "._framebuffer": 1,
+            "._gl": 1,
+            "._nativeSize": 12,
+            "._penSkinId": 3,
+            "._stamp": 1,
+            "._texture": 1,
+            "write renderer.dirty": 2,
+            "write runtime.ext_obviousalexc_penPlus": 1,
+            "write runtime.extensionStorage": 6
+        }
+    },
+    "pmCamera": {
+        "internals": {
+            "._customState": 1
+        }
+    },
+    "pmControlsExpansion": {
+        "internals": {
+            "._pushThread": 2,
+            "._restartThread": 1
+        }
+    },
+    "pmEventsExpansion": {
+        "clock": {
+            "performance.now": 2,
+            "requestAnimationFrame": 3
+        },
+        "page": {
+            "ResizeObserver": 2,
+            "document": 1,
+            "document.addEventListener": 2,
+            "document.fullscreenElement": 1,
+            "document.webkitFullscreenElement": 1,
+            "renderer.canvas": 1
+        },
+        "internals": {
+            "._blockInfo": 1,
+            "._hats": 1,
+            "._pushThread": 2,
+            "._restartThread": 2,
+            "write runtime.pmEventsExpansion": 1
+        }
+    },
+    "pmMotionExpansion": {
+        "internals": {
+            "._allDrawables": 2
+        }
+    },
+    "pmOperatorsExpansion": {
+        "random": {
+            "Math.random": 5,
+            "crypto.getRandomValues": 4
+        },
+        "clock": {
+            "Date.now": 1,
+            "new Date()": 3,
+            "setTimeout": 1
+        },
+        "page": {
+            "document": 3,
+            "document.all": 1,
+            "document.domain": 1,
+            "navigator": 1,
+            "window": 6
+        },
+        "internals": {
+            "write Function.prototype.toString": 1
+        }
+    },
+    "pmSensingExpansion": {
+        "clock": {
+            "Date.now": 4,
+            "setInterval": 1,
+            "setTimeout": 1
+        },
+        "page": {
+            "history.replaceState": 1,
+            "location": 1,
+            "location.origin": 3,
+            "navigator": 4,
+            "navigator.getBattery": 2,
+            "navigator.vibrate": 1,
+            "window": 5,
+            "window.parent": 2
+        },
+        "internals": {
+            "._drawList": 1,
+            "._gl": 2
+        }
+    },
+    "pmTextToSpeech": {
+        "random": {
+            "Math.random": 4
+        },
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "Audio": 1,
+            "OfflineAudioContext": 1,
+            "document.body": 1,
+            "document.createElement": 1,
+            "location.href": 1
+        },
+        "internals": {
+            "._blocks": 1,
+            "write runtime.pmCreditProviders": 1
+        }
+    },
+    "pointerlock": {
+        "page": {
+            "document.addEventListener": 5,
+            "document.exitPointerLock": 2,
+            "document.pointerLockElement": 1,
+            "renderer.canvas": 1,
+            "window.addEventListener": 1
+        },
+        "internals": {
+            "._clientX": 3,
+            "._clientY": 3,
+            "._scratchX": 2,
+            "._scratchY": 2
+        }
+    },
+    "pooiod7Dictation": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "AudioContext": 1,
+            "AudioWorkletNode": 2,
+            "location.href": 1,
+            "navigator.mediaDevices": 3,
+            "window.confirm": 1
+        },
+        "internals": {
+            "._blocks": 1,
+            "write runtime.pmCreditProviders": 1
+        }
+    },
+    "qxsckbignumber": {
+        "random": {
+            "Math.random": 1
+        }
+    },
+    "qxsckvarandlist": {
+        "internals": {
+            "._monitorUpToDate": 1
+        }
+    },
+    "randomutils": {
+        "random": {
+            "Math.random": 10
+        }
+    },
+    "runtimeoptions": {},
+    "sharkpoolPrinting": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "Image": 1,
+            "document.createElement": 4,
+            "window.open": 1
+        }
+    },
+    "shovelColorPicker": {
+        "page": {
+            "document.createElement": 1
+        }
+    },
+    "shovellzcompresss": {},
+    "skyhigh173BigInt": {},
+    "speechSP": {
+        "page": {
+            "document.createElement": 4,
+            "document.querySelector": 2,
+            "document.querySelectorAll": 3,
+            "window.getComputedStyle": 1
+        }
+    },
+    "spritesheeter": {
+        "clock": {
+            "Date.now": 3
+        },
+        "page": {
+            "DOMParser": 1,
+            "Image": 1,
+            "document.createElement": 2
+        }
+    },
+    "steamworks": {},
+    "steve0greatnesstimers": {
+        "random": {
+            "Math.random": 1
+        },
+        "clock": {
+            "Date.now": 5
+        },
+        "page": {
+            "document.createElement": 1
+        }
+    },
+    "stretch": {},
+    "strings": {
+        "random": {
+            "Math.random": 1
+        }
+    },
+    "theshovelcanvaseffects": {
+        "page": {
+            "MutationObserver": 1,
+            "renderer.canvas": 1,
+            "window.devicePixelRatio": 1
+        }
+    },
+    "toastnotifs": {
+        "clock": {
+            "setTimeout": 2
+        },
+        "page": {
+            "Audio": 1,
+            "document.body": 1,
+            "document.createElement": 7,
+            "document.getElementById": 2,
+            "document.head": 1
+        }
+    },
+    "truefantombase": {},
+    "truefantommath": {},
+    "truefantomnetwork": {
+        "page": {
+            "document.URL": 1,
+            "window.screen": 8
+        }
+    },
+    "utilities": {
+        "clock": {
+            "Date.now": 1
+        }
+    },
+    "videoSensing": {
+        "clock": {
+            "Date.now": 1,
+            "setTimeout": 1
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "write runtime.ioDevices": 1
+        }
+    },
+    "videoSprites": {
+        "page": {
+            "document.createElement": 1,
+            "renderer.gl": 1
+        },
+        "internals": {
+            "._allDrawables": 1,
+            "._allSkins": 5,
+            "._colorData": 1,
+            "._height": 1,
+            "._width": 1
+        }
+    },
+    "webrtc": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "RTCIceCandidate": 2,
+            "RTCPeerConnection": 1,
+            "RTCSessionDescription": 4,
+            "document.body": 2,
+            "document.createElement": 1,
+            "document.getElementById": 1,
+            "navigator.mediaDevices": 1
+        }
+    },
+    "xeltallivSimple3D": {
+        "clock": {
+            "setTimeout": 1
+        },
+        "page": {
+            "HTMLCanvasElement": 1,
+            "HTMLImageElement": 1,
+            "Image": 3,
+            "alert": 4,
+            "document.createElement": 5,
+            "location.href": 1,
+            "renderer.canvas": 4,
+            "renderer.gl": 1,
+            "window.location": 2,
+            "window.open": 2
+        },
+        "internals": {
+            "._allDrawables": 3,
+            "._allSkins": 8,
+            "._groupOrdering": 9,
+            "._layerGroups": 7,
+            "write renderer._allDrawables": 1,
+            "write renderer._layerGroups": 3,
+            "write renderer.dirty": 11,
+            "write runtime.ext_xeltallivSimple3Dapi": 1
+        }
+    },
+    "xeltallivclipblend": {
+        "internals": {
+            "write renderer.dirty": 3
+        }
+    }
+}
