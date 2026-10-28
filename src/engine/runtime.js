@@ -708,6 +708,13 @@ class Runtime extends EventEmitter {
         this.variables = Object.create(null);
 
         /**
+         * Desktop fork (section 149): goes up whenever a variable or list is added to a target, deleted or renamed,
+         * so the compiler's lookups of a variable by a fixed name (jsexecute.js pmdName) know they must look again.
+         * @type {number}
+         */
+        this.pmVarNamesVersion = 0;
+
+        /**
          * Part of a recreation of the TurboWarp extensionStorage
          * API. The only real reason this is here is to make sure
          * that extensions that only implement TurboWarp's store
@@ -2950,6 +2957,8 @@ class Runtime extends EventEmitter {
                 // variable must be fully created now as we couldnt earlier
                 const newVar = this.newVariableInstance(variable.type, ...variable.value);
                 // variable type doesnt exist, remove variable entirely
+                // Desktop fork (section 149)
+                this.pmVarNamesVersion++;
                 if (newVar.mustRecreate) {
                     delete target.variables[varId];
                     continue;
@@ -4087,6 +4096,8 @@ class Runtime extends EventEmitter {
         const variable = this.newVariableInstance(varType, optVarId || uid(), newName);
         const stage = this.getTargetForStage();
         stage.variables[variable.id] = variable;
+        // Desktop fork (section 149)
+        this.pmVarNamesVersion++;
         return variable;
     }
 

@@ -1008,6 +1008,316 @@ runtimeFunctions.pmxTweenTowards = `const pmxTweenTowards = (target, val, x, y) 
     target.setXY((x - target.x) * (val / 100) + target.x, (y - target.y) * (val / 100) + target.y);
 }`;
 
+/**
+ * Desktop fork (section 149): helpers for the TurboWarp "Variable and list" (pmd…) and List Tools (pml…) blocks
+ * compiled to inline code (jsgen.js, irgen.js descendDataInline). Each is the extension's function with its
+ * arguments already converted as the extension manager's wrapper does; the parameters after `site` are in the
+ * block's input order. Lists are read and changed only through the Variable methods (pmGetValue, pmSetValue,
+ * pmItemsChanged, pmIndexOf), as in the extensions, so section 62's lookup tables stay right. `site` finds the
+ * variable or list by name as the extension does (List Tools: the stage's first): a pmdName for a name fixed in
+ * the block looks once and keeps the answer while the target is the same and runtime.pmVarNamesVersion has not
+ * changed (no variable added, deleted or renamed since); a pmdNameAny looks on every call.
+ */
+runtimeFunctions.pmdName = `class pmdName {
+    constructor (runtime, type, stageFirst, name) {
+        this.runtime = runtime;
+        this.type = type;
+        this.stageFirst = stageFirst;
+        this.name = name;
+        this.target = null;
+        this.version = -1;
+        this.variable = null;
+    }
+    static find (runtime, target, name, type, stageFirst) {
+        if (stageFirst) {
+            const variable = runtime.getTargetForStage().lookupVariableByNameAndType(name, type);
+            if (variable) return variable;
+            return target.lookupVariableByNameAndType(name, type) || undefined;
+        }
+        return target.lookupVariableByNameAndType(name, type);
+    }
+    get (target) {
+        if (target !== this.target || this.version !== this.runtime.pmVarNamesVersion) {
+            this.variable = pmdName.find(this.runtime, target, this.name, this.type, this.stageFirst);
+            this.target = target;
+            this.version = this.runtime.pmVarNamesVersion;
+        }
+        return this.variable;
+    }
+}
+class pmdNameAny {
+    constructor (runtime, type, stageFirst) {
+        this.runtime = runtime;
+        this.type = type;
+        this.stageFirst = stageFirst;
+    }
+    get (target, name) {
+        return pmdName.find(this.runtime, target, name, this.type, this.stageFirst);
+    }
+}`;
+runtimeFunctions.pmdGetVar = `const pmdGetVar = (target, site, name) => {
+    const variable = site.get(target, name);
+    return variable ? variable.value : "";
+}`;
+runtimeFunctions.pmdToJson = `const pmdToJson = (runtime, target, type, start) => {
+    const serialized = {};
+    for (const variable of Object.values(runtime.getTargetForStage().variables)) {
+        if (variable.type === type && variable.name.startsWith(start)) {
+            serialized[variable.name.replace(start, "")] = type === "list" ? variable.pmGetValue() : variable.value;
+        }
+    }
+    for (const variable of Object.values(target.variables)) {
+        if (variable.type === type && variable.name.startsWith(start)) {
+            serialized[variable.name.replace(start, "")] = type === "list" ? variable.pmGetValue() : variable.value;
+        }
+    }
+    return JSON.stringify(serialized);
+}`;
+runtimeFunctions.pmdSetVar = `const pmdSetVar = (runtime, target, site, name, value) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        variable.value = value;
+        if (variable.isCloud) {
+            runtime.ioDevices.cloud.requestUpdateVariable(variable.name, variable.value);
+        }
+    }
+}`;
+runtimeFunctions.pmdGetList = `const pmdGetList = (target, site, name) => {
+    const variable = site.get(target, name);
+    return variable ? variable.pmGetValue().toString() : "";
+}`;
+runtimeFunctions.pmdItemOf = `const pmdItemOf = (target, site, index, name) => {
+    const variable = site.get(target, name);
+    if (!variable) return 0;
+    const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false);
+    if (position === "INVALID") return "";
+    return variable.pmGetValue()[position - 1];
+}`;
+runtimeFunctions.pmdClear = `const pmdClear = (target, site, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        variable.pmSetValue([]);
+    }
+}`;
+runtimeFunctions.pmdDeleteOf = `const pmdDeleteOf = (target, site, index, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, true);
+        if (position === "ALL") {
+            variable.pmSetValue([]);
+        } else if (position !== "INVALID") {
+            variable.pmGetValue().splice(position - 1, 1);
+            variable.pmItemsChanged();
+        }
+    }
+}`;
+runtimeFunctions.pmdAdd = `const pmdAdd = (target, site, value, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        variable.pmGetValue().push(value);
+        variable._monitorUpToDate = false;
+    }
+}`;
+runtimeFunctions.pmdReplace = `const pmdReplace = (target, site, index, name, value) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false);
+        if (position !== "INVALID") {
+            variable.pmGetValue()[position - 1] = value;
+            variable.pmItemsChanged();
+        }
+    }
+}`;
+runtimeFunctions.pmdIndexOf = `const pmdIndexOf = (target, site, value, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        return variable.pmIndexOf(value);
+    }
+    return 0;
+}`;
+runtimeFunctions.pmdIndexesOf = `const pmdIndexesOf = (target, site, value, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        const indexes = [];
+        for (let i = 0; i < variable.pmGetValue().length; i++) {
+            if (globalState.Cast.compare(variable.pmGetValue()[i], value) === 0) indexes.push(i + 1);
+        }
+        if (indexes.length > 0) return indexes.toString();
+    }
+    return "0";
+}`;
+runtimeFunctions.pmdLength = `const pmdLength = (target, site, name) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        return variable.pmGetValue().length;
+    }
+    return 0;
+}`;
+runtimeFunctions.pmdContains = `const pmdContains = (target, site, name, value) => {
+    const variable = site.get(target, name);
+    if (variable) {
+        return variable.pmIndexOf(value) !== 0;
+    }
+    return false;
+}`;
+runtimeFunctions.pmdCopy = `const pmdCopy = (target, site1, site2, name1, name2) => {
+    const list1 = site1.get(target, name1);
+    const list2 = site2.get(target, name2);
+    if (list1 && list2) {
+        list2.pmSetValue(list1.pmGetValue().slice());
+    }
+}`;
+runtimeFunctions.pmlDeleteItems = `const pmlDeleteItems = (target, site, num1, num2, name) => {
+    const list = site.get(target, name);
+    if (!list) return;
+    const listLength = list.pmGetValue().length;
+    let first = 0;
+    let last = 0;
+    if (num1 > num2) {
+        first = num2 - 1;
+        last = num1 - 1;
+    } else {
+        first = num1 - 1;
+        last = num2 - 1;
+    }
+    const listPart1 = list.pmGetValue().slice(0, first);
+    const listPart2 = list.pmGetValue().slice(last + 1, listLength);
+    list.pmSetValue(listPart1.concat(listPart2));
+}`;
+runtimeFunctions.pmlDeleteAll = `const pmlDeleteAll = (target, site, item, name) => {
+    const list = site.get(target, name);
+    if (!list) return;
+    const newList = list.pmGetValue().filter(model => model !== item);
+    list.pmSetValue(newList);
+}`;
+runtimeFunctions.pmlReplaceAll = `const pmlReplaceAll = (target, site, item1, item2, name) => {
+    const list = site.get(target, name);
+    if (!list) return;
+    const listLength = list.pmGetValue().length;
+    const newList = [];
+    for (let i = 0; i < listLength; i++) {
+        if (list.pmGetValue()[i] === item1) {
+            newList.push(item2);
+        } else {
+            newList.push(list.pmGetValue()[i]);
+        }
+    }
+    list.pmSetValue(newList);
+}`;
+runtimeFunctions.pmlRepeat = `const pmlRepeat = (target, site1, site2, name1, num, name2) => {
+    const list1 = site1.get(target, name1);
+    if (!list1) return;
+    const list2 = site2.get(target, name2);
+    if (!list2) return;
+    const currentVal = list1.pmGetValue();
+    for (let i = 0; i < num; i++) {
+        list2.pmSetValue(list2.pmGetValue().concat(currentVal));
+    }
+}`;
+runtimeFunctions.pmlJoin = `const pmlJoin = (target, site, name, string) => {
+    const list = site.get(target, name);
+    if (!list) return "";
+    return list.pmGetValue().join(string);
+}`;
+runtimeFunctions.pmlTimesAppears = `const pmlTimesAppears = (target, site, item, name) => {
+    const list = site.get(target, name);
+    if (!list) return 0;
+    return list.pmGetValue().filter(model => model == item).length;
+}`;
+runtimeFunctions.pmlItemIndex = `const pmlItemIndex = (target, site, index, item, name) => {
+    const list = site.get(target, name);
+    if (!list) return 0;
+    const indexes = [];
+    for (let i = 0; i < list.pmGetValue().length; i++) {
+        if (list.pmGetValue()[i] === item) {
+            indexes.push(i);
+        }
+    }
+    switch (index) {
+    case "first":
+        return globalState.Cast.toNumber(indexes[0] + 1);
+    case "last":
+        return globalState.Cast.toNumber(indexes[indexes.length - 1] + 1);
+    case "random":
+        return globalState.Cast.toNumber(indexes[Math.floor(Math.random() * indexes.length)] + 1);
+    default:
+        return globalState.Cast.toNumber(indexes[globalState.Cast.toNumber(index) - 1] + 1);
+    }
+}`;
+runtimeFunctions.pmlIsEmpty = `const pmlIsEmpty = (target, site, name) => {
+    const list = site.get(target, name);
+    if (!list) return true;
+    if (list.pmGetValue().length > 0) return false;
+    return true;
+}`;
+runtimeFunctions.pmlItemExists = `const pmlItemExists = (target, site, num, name) => {
+    const list = site.get(target, name);
+    if (!list) return false;
+    const listIndex = globalState.Cast.toListIndex(num, list.pmGetValue().length, false);
+    if (listIndex === "INVALID") return false;
+    return true;
+}`;
+runtimeFunctions.pmlOrderIs = `const pmlOrderIs = (target, site, name, order) => {
+    const list = site.get(target, name);
+    if (!list) return false;
+    for (let i = 0; i < list.pmGetValue().length - 1; i++) {
+        const compare = globalState.Cast.compare(list.pmGetValue()[i + 1], list.pmGetValue()[i]);
+        if (compare > 0 && order === "descending") return false;
+        if (compare < 0 && order === "ascending") return false;
+    }
+    return true;
+}`;
+runtimeFunctions.pmlOrder = `const pmlOrder = (target, site, name, order) => {
+    const list = site.get(target, name);
+    if (!list) return;
+    if (order === "reversed") {
+        list.pmGetValue().reverse();
+    } else if (order === "randomised") {
+        const randomised = list.pmGetValue()
+            .map(value => ({value, sort: Math.random()}))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({value}) => value);
+        list.pmSetValue(randomised);
+    } else if (order === "ascending") {
+        list.pmGetValue().sort(globalState.Cast.compare);
+    } else if (order === "descending") {
+        list.pmGetValue().sort(globalState.Cast.compare).reverse();
+    }
+    list.pmItemsChanged();
+}`;
+runtimeFunctions.pmlSetToList = `const pmlSetToList = (target, site1, site2, name1, name2) => {
+    const list1 = site1.get(target, name1);
+    if (!list1) return;
+    const list2 = site2.get(target, name2);
+    if (!list2) return;
+    list1.pmSetValue([...list2.pmGetValue()]);
+}`;
+runtimeFunctions.pmlConcat = `const pmlConcat = (target, site1, site2, name1, name2) => {
+    const list1 = site1.get(target, name1);
+    if (!list1) return;
+    const list2 = site2.get(target, name2);
+    if (!list2) return;
+    list2.pmSetValue(list2.pmGetValue().concat(list1.pmGetValue()));
+}`;
+runtimeFunctions.pmlSetArray = `const pmlSetArray = (target, site, name, array) => {
+    const list = site.get(target, name);
+    if (!list) return;
+    let parsed;
+    try {
+        parsed = JSON.parse(array);
+    } catch (error) {
+        return;
+    }
+    if (!Array.isArray(parsed)) return;
+    list.pmSetValue(parsed);
+    list._monitorUpToDate = false;
+}`;
+runtimeFunctions.pmlAsArray = `const pmlAsArray = (target, site, name) => {
+    const list = site.get(target, name);
+    if (!list) return "";
+    return JSON.stringify(list.pmGetValue());
+}`;
+
 // PMDESKTOP_FOLD (section 44): evaluates an expression that uses no project state (only the runtime helpers
 // below, which are the very same source text compiled scripts get) while a script is being compiled.
 // The helpers and the evaluating function are made once; each call is a plain eval of the expression.

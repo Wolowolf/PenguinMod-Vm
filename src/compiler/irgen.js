@@ -34,6 +34,21 @@ const EXPANSION_INLINE_STACKS = new Set([
     'pmMotionExpansion_fence', 'pmMotionExpansion_steptowards', 'pmMotionExpansion_tweentowards',
     'pmSensingExpansion_setScrollingDistance', 'pmSensingExpansion_changeScrollingDistanceBy'
 ]);
+// Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks compiled to inline code
+// (descendDataInlineInput / Stack).
+const DATA_INLINE_INPUTS = new Set([
+    'qxsckvarandlist_getVar', 'qxsckvarandlist_seriVarsToJson', 'qxsckvarandlist_getList',
+    'qxsckvarandlist_getValueOfList', 'qxsckvarandlist_seriListsToJson', 'qxsckvarandlist_getIndexOfList',
+    'qxsckvarandlist_getIndexesOfList', 'qxsckvarandlist_length', 'qxsckvarandlist_listContains',
+    'lmsData_getListJoin', 'lmsData_timesItemAppears', 'lmsData_itemIndex', 'lmsData_listIsEmpty',
+    'lmsData_itemNumExists', 'lmsData_orderIs', 'lmsData_getListArray'
+]);
+const DATA_INLINE_STACKS = new Set([
+    'qxsckvarandlist_setVar', 'qxsckvarandlist_clearList', 'qxsckvarandlist_deleteOfList',
+    'qxsckvarandlist_addValueInList', 'qxsckvarandlist_replaceOfList', 'qxsckvarandlist_copyList',
+    'lmsData_deleteItems', 'lmsData_deleteAllOfItem', 'lmsData_replaceAllOfItem', 'lmsData_repeatList',
+    'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists', 'lmsData_setListArray'
+]);
 
 /**
  * @fileoverview Generate intermediate representations from Scratch blocks.
@@ -1010,6 +1025,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 140)
                 const expansion = this.descendExpansionInlineInput(block);
                 if (expansion) return expansion;
+                // Desktop fork (section 149)
+                const data = this.descendDataInline(block, DATA_INLINE_INPUTS);
+                if (data) return data;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2004,6 +2022,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 140)
                 const expansion = this.descendExpansionInlineStack(block);
                 if (expansion) return expansion;
+                // Desktop fork (section 149)
+                const data = this.descendDataInline(block, DATA_INLINE_STACKS);
+                if (data) return data;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.statementBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2151,6 +2172,8 @@ class ScriptTreeGenerator {
         // Create it locally...
         const newVariable = this.runtime.newVariableInstance(type, id, name, false);
         target.variables[id] = newVariable;
+        // Desktop fork (section 149): (also for the clones below)
+        this.runtime.pmVarNamesVersion++;
 
         if (target.sprite) {
             // Create the variable in all instances of this sprite.
@@ -2488,6 +2511,100 @@ class ScriptTreeGenerator {
             return {kind: 'pmInline.setScrolling', amount: input('AMOUNT')};
         case 'pmSensingExpansion_changeScrollingDistanceBy':
             return {kind: 'pmInline.changeScrolling', amount: input('AMOUNT')};
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 149): the blocks of TurboWarp's "Variable and list" (qxsckvarandlist) and List Tools
+     * (lmsData) get their own nodes instead of section 132's plain direct calls, like section 140; jsgen.js writes
+     * code that does exactly what the extension's function does with the arguments the extension manager's wrapper
+     * gives it, and finds the variable or list by its name once when the name is fixed in the block (jsexecute.js
+     * pmdName). Inputs in the order of the block's text, checked like section 139 (coreInputsInOrder); only while
+     * the extension is loaded (as the direct call). runtime.pmNoDataInline = true puts all of them back on the
+     * direct calls (tests only).
+     * @param {Block} block The block.
+     * @param {Set} opcodes DATA_INLINE_INPUTS or DATA_INLINE_STACKS.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendDataInline (block, opcodes) {
+        if (this.runtime.pmNoDataInline || !opcodes.has(block.opcode) ||
+            !this.runtime.getOpcodeFunction(block.opcode) ||
+            !this.coreInputsInOrder(block, this.dataInlineNode)) return null;
+        return this.dataInlineNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 149): the node of descendDataInline. `name`, `name1` and `name2` are the inputs that
+     * give a variable's or list's name.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node.
+     */
+    dataInlineNode (block, input) {
+        // (a menu without reporters is a field; the wrapper turns a missing one into "undefined")
+        const field = name => String(block.fields[name] ? block.fields[name].value : undefined);
+        switch (block.opcode) {
+        case 'qxsckvarandlist_getVar':
+            return {kind: 'qxsck.getVar', name: input('VAR')};
+        case 'qxsckvarandlist_seriVarsToJson':
+            return {kind: 'qxsck.toJson', type: '', start: input('START')};
+        case 'qxsckvarandlist_setVar':
+            return {kind: 'qxsck.setVar', name: input('VAR'), value: input('VALUE')};
+        case 'qxsckvarandlist_getList':
+            return {kind: 'qxsck.getList', name: input('LIST')};
+        case 'qxsckvarandlist_getValueOfList':
+            return {kind: 'qxsck.itemOf', index: input('INDEX'), name: input('LIST')};
+        case 'qxsckvarandlist_seriListsToJson':
+            return {kind: 'qxsck.toJson', type: 'list', start: input('START')};
+        case 'qxsckvarandlist_clearList':
+            return {kind: 'qxsck.clear', name: input('LIST')};
+        case 'qxsckvarandlist_deleteOfList':
+            return {kind: 'qxsck.deleteOf', index: input('INDEX'), name: input('LIST')};
+        case 'qxsckvarandlist_addValueInList':
+            return {kind: 'qxsck.add', value: input('VALUE'), name: input('LIST')};
+        case 'qxsckvarandlist_replaceOfList':
+            return {kind: 'qxsck.replace', index: input('INDEX'), name: input('LIST'), value: input('VALUE')};
+        case 'qxsckvarandlist_getIndexOfList':
+            return {kind: 'qxsck.indexOf', value: input('VALUE'), name: input('LIST')};
+        case 'qxsckvarandlist_getIndexesOfList':
+            return {kind: 'qxsck.indexesOf', value: input('VALUE'), name: input('LIST')};
+        case 'qxsckvarandlist_length':
+            return {kind: 'qxsck.length', name: input('LIST')};
+        case 'qxsckvarandlist_listContains':
+            return {kind: 'qxsck.contains', name: input('LIST'), value: input('VALUE')};
+        case 'qxsckvarandlist_copyList':
+            return {kind: 'qxsck.copy', name1: input('LIST1'), name2: input('LIST2')};
+        case 'lmsData_deleteItems':
+            return {kind: 'lms.deleteItems', num1: input('NUM1'), num2: input('NUM2'), name: input('LIST')};
+        case 'lmsData_deleteAllOfItem':
+            return {kind: 'lms.deleteAll', item: input('ITEM'), name: input('LIST')};
+        case 'lmsData_replaceAllOfItem':
+            return {kind: 'lms.replaceAll', item1: input('ITEM1'), item2: input('ITEM2'), name: input('LIST')};
+        case 'lmsData_repeatList':
+            return {kind: 'lms.repeat', name1: input('LIST1'), num: input('NUM'), name2: input('LIST2')};
+        case 'lmsData_getListJoin':
+            return {kind: 'lms.join', name: input('LIST'), string: input('STRING')};
+        case 'lmsData_timesItemAppears':
+            return {kind: 'lms.timesAppears', item: input('ITEM'), name: input('LIST')};
+        case 'lmsData_itemIndex':
+            return {kind: 'lms.itemIndex', index: input('INDEX'), item: input('ITEM'), name: input('LIST')};
+        case 'lmsData_listIsEmpty':
+            return {kind: 'lms.isEmpty', name: input('LIST')};
+        case 'lmsData_itemNumExists':
+            return {kind: 'lms.itemExists', num: input('NUM'), name: input('LIST')};
+        case 'lmsData_orderIs':
+            return {kind: 'lms.orderIs', name: input('LIST'), order: field('ORDER')};
+        case 'lmsData_orderList':
+            return {kind: 'lms.order', name: input('LIST'), order: field('ORDER')};
+        case 'lmsData_setListToList':
+            return {kind: 'lms.setToList', name1: input('LIST1'), name2: input('LIST2')};
+        case 'lmsData_joinLists':
+            return {kind: 'lms.concat', name1: input('LIST1'), name2: input('LIST2')};
+        case 'lmsData_setListArray':
+            return {kind: 'lms.setArray', name: input('LIST'), array: input('ARRAY')};
+        case 'lmsData_getListArray':
+            return {kind: 'lms.asArray', name: input('LIST')};
         }
         return null;
     }

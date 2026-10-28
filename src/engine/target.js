@@ -141,6 +141,7 @@ class Target extends EventEmitter {
         // No variable with this name exists - create it locally.
         const newVariable = new Variable(id, name, Variable.SCALAR_TYPE, false);
         this.variables[id] = newVariable;
+        this.pmVarNamesChanged();
         return newVariable;
     }
 
@@ -259,6 +260,7 @@ class Target extends EventEmitter {
         // No variable with this name exists - create it locally.
         const newList = new Variable(id, name, Variable.LIST_TYPE, false);
         this.variables[id] = newList;
+        this.pmVarNamesChanged();
         return newList;
     }
 
@@ -280,7 +282,16 @@ class Target extends EventEmitter {
                 this.runtime.ioDevices.cloud.requestCreateVariable(newVariable);
             }
             this.variables[id] = newVariable;
+            this.pmVarNamesChanged();
         }
+    }
+
+    /**
+     * Desktop fork (section 149): call after adding a variable to a target's `variables`, deleting one or
+     * renaming one (runtime.pmVarNamesVersion).
+     */
+    pmVarNamesChanged () {
+        if (this.runtime) this.runtime.pmVarNamesVersion++;
     }
 
     /**
@@ -324,6 +335,7 @@ class Target extends EventEmitter {
             if (variable.id === id) {
                 const oldName = variable.name;
                 variable.name = newName;
+                this.pmVarNamesChanged();
 
                 if (this.runtime) {
                     if (variable.isCloud && this.isStage) {
@@ -375,6 +387,7 @@ class Target extends EventEmitter {
             const deletedVariableName = this.variables[id].name;
             const deletedVariableWasCloud = this.variables[id].isCloud;
             delete this.variables[id];
+            this.pmVarNamesChanged();
             if (this.runtime) {
                 if (deletedVariableWasCloud && this.isStage) {
                     this.runtime.ioDevices.cloud.requestDeleteVariable(deletedVariableName);
@@ -606,6 +619,7 @@ class Target extends EventEmitter {
             const newVar = this.runtime.newVariableInstance(varType, null, varName);
             newVarId = newVar.id;
             sprite.variables[newVarId] = newVar;
+            sprite.pmVarNamesChanged();
         }
 
         // Merge with the local variable on the new sprite.

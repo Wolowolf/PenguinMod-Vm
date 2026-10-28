@@ -1088,6 +1088,78 @@ class JSGenerator {
         case 'pmInline.buttonDown':
             return new TypedInput(`(runtime.ioDevices.mouse.getButtonIsDown(${this.exactNumber(this.descendInput(node.button))}))`, TYPE_BOOLEAN);
 
+        // Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks (irgen.js
+        // descendDataInline). Each does what the extension's function does with the arguments the extension
+        // manager's wrapper gives it (helpers in jsexecute.js; inputs in the block's order, the variable found
+        // inside the helper after them, as the function does). Text answers stay of unknown type, as in section 118.
+        case 'qxsck.getVar': {
+            const v = this.dataName(node.name, '', false);
+            return new TypedInput(`pmdGetVar(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
+        }
+        case 'qxsck.toJson':
+            return new TypedInput(`pmdToJson(runtime, thread.target, "${node.type}", ${this.exactString(this.descendInput(node.start))})`, TYPE_UNKNOWN);
+        case 'qxsck.getList': {
+            const v = this.dataName(node.name, 'list', false);
+            return new TypedInput(`pmdGetList(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
+        }
+        case 'qxsck.itemOf': {
+            const index = this.exactString(this.descendInput(node.index));
+            const v = this.dataName(node.name, 'list', false);
+            return new TypedInput(`pmdItemOf(thread.target, ${v.site}, ${index}, ${v.name})`, TYPE_UNKNOWN);
+        }
+        case 'qxsck.indexOf': {
+            const value = this.exactString(this.descendInput(node.value));
+            const v = this.dataName(node.name, 'list', false);
+            return new TypedInput(`pmdIndexOf(thread.target, ${v.site}, ${value}, ${v.name})`, TYPE_NUMBER);
+        }
+        case 'qxsck.indexesOf': {
+            const value = this.exactString(this.descendInput(node.value));
+            const v = this.dataName(node.name, 'list', false);
+            return new TypedInput(`pmdIndexesOf(thread.target, ${v.site}, ${value}, ${v.name})`, TYPE_UNKNOWN);
+        }
+        case 'qxsck.length': {
+            const v = this.dataName(node.name, 'list', false);
+            return new TypedInput(`pmdLength(thread.target, ${v.site}, ${v.name})`, TYPE_NUMBER);
+        }
+        case 'qxsck.contains': {
+            const v = this.dataName(node.name, 'list', false);
+            const value = this.exactString(this.descendInput(node.value));
+            return new TypedInput(`pmdContains(thread.target, ${v.site}, ${v.name}, ${value})`, TYPE_BOOLEAN);
+        }
+        case 'lms.join': {
+            const v = this.dataName(node.name, 'list', true);
+            const string = this.exactString(this.descendInput(node.string));
+            return new TypedInput(`pmlJoin(thread.target, ${v.site}, ${v.name}, ${string})`, TYPE_UNKNOWN);
+        }
+        case 'lms.timesAppears': {
+            const item = this.exactString(this.descendInput(node.item));
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlTimesAppears(thread.target, ${v.site}, ${item}, ${v.name})`, TYPE_NUMBER);
+        }
+        case 'lms.itemIndex': {
+            const index = this.exactString(this.descendInput(node.index));
+            const item = this.exactString(this.descendInput(node.item));
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlItemIndex(thread.target, ${v.site}, ${index}, ${item}, ${v.name})`, TYPE_NUMBER);
+        }
+        case 'lms.isEmpty': {
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlIsEmpty(thread.target, ${v.site}, ${v.name})`, TYPE_BOOLEAN);
+        }
+        case 'lms.itemExists': {
+            const num = this.exactNumber(this.descendInput(node.num));
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlItemExists(thread.target, ${v.site}, ${num}, ${v.name})`, TYPE_BOOLEAN);
+        }
+        case 'lms.orderIs': {
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlOrderIs(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}")`, TYPE_BOOLEAN);
+        }
+        case 'lms.asArray': {
+            const v = this.dataName(node.name, 'list', true);
+            return new TypedInput(`pmlAsArray(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
+        }
+
         case 'op.abs':
             return new TypedInput(`Math.abs(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.acos':
@@ -2145,6 +2217,95 @@ class JSGenerator {
             this.source += `runtime.ext_pmSensingExpansion.scrollDistance += ${this.exactNumber(this.descendInput(node.amount))};\n`;
             break;
 
+        // Desktop fork (section 149): "Variable and list" and List Tools commands (irgen.js descendDataInline), as
+        // the extension's functions are.
+        case 'qxsck.setVar': {
+            const v = this.dataName(node.name, '', false);
+            const value = this.exactString(this.descendInput(node.value));
+            this.source += `pmdSetVar(runtime, thread.target, ${v.site}, ${v.name}, ${value});\n`;
+            break;
+        }
+        case 'qxsck.clear': {
+            const v = this.dataName(node.name, 'list', false);
+            this.source += `pmdClear(thread.target, ${v.site}, ${v.name});\n`;
+            break;
+        }
+        case 'qxsck.deleteOf': {
+            const index = this.exactString(this.descendInput(node.index));
+            const v = this.dataName(node.name, 'list', false);
+            this.source += `pmdDeleteOf(thread.target, ${v.site}, ${index}, ${v.name});\n`;
+            break;
+        }
+        case 'qxsck.add': {
+            const value = this.exactString(this.descendInput(node.value));
+            const v = this.dataName(node.name, 'list', false);
+            this.source += `pmdAdd(thread.target, ${v.site}, ${value}, ${v.name});\n`;
+            break;
+        }
+        case 'qxsck.replace': {
+            const index = this.exactString(this.descendInput(node.index));
+            const v = this.dataName(node.name, 'list', false);
+            const value = this.exactString(this.descendInput(node.value));
+            this.source += `pmdReplace(thread.target, ${v.site}, ${index}, ${v.name}, ${value});\n`;
+            break;
+        }
+        case 'qxsck.copy': {
+            const v1 = this.dataName(node.name1, 'list', false);
+            const v2 = this.dataName(node.name2, 'list', false);
+            this.source += `pmdCopy(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
+            break;
+        }
+        case 'lms.deleteItems': {
+            const num1 = this.exactNumber(this.descendInput(node.num1));
+            const num2 = this.exactNumber(this.descendInput(node.num2));
+            const v = this.dataName(node.name, 'list', true);
+            this.source += `pmlDeleteItems(thread.target, ${v.site}, ${num1}, ${num2}, ${v.name});\n`;
+            break;
+        }
+        case 'lms.deleteAll': {
+            const item = this.exactString(this.descendInput(node.item));
+            const v = this.dataName(node.name, 'list', true);
+            this.source += `pmlDeleteAll(thread.target, ${v.site}, ${item}, ${v.name});\n`;
+            break;
+        }
+        case 'lms.replaceAll': {
+            const item1 = this.exactString(this.descendInput(node.item1));
+            const item2 = this.exactString(this.descendInput(node.item2));
+            const v = this.dataName(node.name, 'list', true);
+            this.source += `pmlReplaceAll(thread.target, ${v.site}, ${item1}, ${item2}, ${v.name});\n`;
+            break;
+        }
+        case 'lms.repeat': {
+            const v1 = this.dataName(node.name1, 'list', true);
+            const num = this.exactNumber(this.descendInput(node.num));
+            const v2 = this.dataName(node.name2, 'list', true);
+            this.source += `pmlRepeat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${num}, ${v2.name});\n`;
+            break;
+        }
+        case 'lms.order': {
+            const v = this.dataName(node.name, 'list', true);
+            this.source += `pmlOrder(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}");\n`;
+            break;
+        }
+        case 'lms.setToList': {
+            const v1 = this.dataName(node.name1, 'list', true);
+            const v2 = this.dataName(node.name2, 'list', true);
+            this.source += `pmlSetToList(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
+            break;
+        }
+        case 'lms.concat': {
+            const v1 = this.dataName(node.name1, 'list', true);
+            const v2 = this.dataName(node.name2, 'list', true);
+            this.source += `pmlConcat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
+            break;
+        }
+        case 'lms.setArray': {
+            const v = this.dataName(node.name, 'list', true);
+            const array = this.exactString(this.descendInput(node.array));
+            this.source += `pmlSetArray(thread.target, ${v.site}, ${v.name}, ${array});\n`;
+            break;
+        }
+
         case 'motion.changeX':
             this.source += `target.setXY(target.x + ${this.descendInput(node.dx).asNumber()}, target.y);\n`;
             break;
@@ -2495,6 +2656,24 @@ class JSGenerator {
     safeConstantInput (value) {
         const unsafe = typeof value === 'string' && this.namesOfCostumesAndSounds.has(value);
         return new ConstantInput(value, !unsafe);
+    }
+
+    /**
+     * Desktop fork (section 149): the input giving a variable's or list's name for a data block compiled to inline
+     * code, and the object that finds that variable as the extension does (jsexecute.js): for a name fixed in the
+     * block a pmdName, which looks once and again only for another sprite or after a variable was added, deleted
+     * or renamed; for any other name a pmdNameAny, which looks on every call.
+     * @param {*} node The input's node.
+     * @param {string} type '' (variable) or 'list'.
+     * @param {boolean} stageFirst List Tools: the stage's variables first.
+     * @returns {{site: string, name: string}} The finder's JS and the name's JS (converted as String does).
+     */
+    dataName (node, type, stageFirst) {
+        const input = this.descendInput(node);
+        const site = input instanceof ConstantInput ?
+            this.evaluateOnce(`new pmdName(runtime, "${type}", ${stageFirst}, "${sanitize(String(input.constantValue))}")`) :
+            this.evaluateOnce(`new pmdNameAny(runtime, "${type}", ${stageFirst})`);
+        return {site, name: this.exactString(input)};
     }
 
     /**
