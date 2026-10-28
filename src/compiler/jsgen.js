@@ -768,7 +768,9 @@ class JSGenerator {
                 this.generateCompatibilityLayerCall(node, false, null, visualReport);
             // Desktop fork (section 151): the block may have set any variable
             this.resetVariableInputs();
-            return new TypedInput(`(${call})`, TYPE_UNKNOWN);
+            // Desktop fork (section 152): a plain call's answer type, when its code was read (irgen.js; may be NaN)
+            const type = node.answer === 'number' ? TYPE_NUMBER_NAN : node.answer === 'boolean' ? TYPE_BOOLEAN : TYPE_UNKNOWN;
+            return new TypedInput(`(${call})`, type);
         }
 
         case 'constant':

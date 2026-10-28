@@ -15,6 +15,9 @@ const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
 // Desktop fork (section 132): extension blocks whose code was read and that never wait, yield, change a thread's
 // status or read stack frames (block-inventory.json: "direct"), so their direct call needs no check after it.
 const plainExtensionBlocks = new Set(require('../extension-support/direct-blocks.json'));
+// Desktop fork (section 152): plainly called reporters and Booleans whose code was read and that answer exactly a
+// number or exactly true / false on every path (block-inventory.json: "typed"), with that type.
+const typedExtensionAnswers = require('../extension-support/typed-answers.json');
 // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks compiled to inline code
 // (descendExpansionInlineInput / Stack).
 const EXPANSION_INLINE_INPUTS = new Set([
@@ -2630,6 +2633,11 @@ class ScriptTreeGenerator {
         // Desktop fork (section 132): ...except the blocks known never to wait (plain call, no check)
         const plain = direct && plainExtensionBlocks.has(block.opcode) && !this.runtime.pmGuardedExtensionCalls;
         if (!pure && !plain) this.script.yields = true;
+        // Desktop fork (section 152): ...and the answer type of those whose code was read (not for guarded calls:
+        // a stopped script answers ""). runtime.pmNoExtensionAnswerTypes = true leaves them unknown (tests only).
+        const answer = plain && !this.runtime.pmNoExtensionAnswerTypes &&
+            Object.prototype.hasOwnProperty.call(typedExtensionAnswers, block.opcode) ?
+            typedExtensionAnswers[block.opcode] : null;
 
         const inputs = {};
         for (const name of Object.keys(block.inputs)) {
@@ -2668,7 +2676,8 @@ class ScriptTreeGenerator {
             compilerInfo: (blockInfo && blockInfo.compilerInfo) || {},
             pure,
             direct,
-            plain
+            plain,
+            answer
         };
     }
 
