@@ -165,7 +165,8 @@ class Scratch3EventBlocks {
             const broadcastOption = util.stackFrame.broadcastVar.name;
             // Have we run before, starting threads?
             if (!util.stackFrame.startedThreads) {
-                broadcastVar.isSent = true;
+                // Desktop fork (section 157): was `broadcastVar`, a name that does not exist here (the block threw)
+                util.stackFrame.broadcastVar.isSent = true;
                 // No - start hats for this broadcast.
                 util.stackFrame.startedThreads = util.startHats(
                     'event_whenbroadcastreceived', {
