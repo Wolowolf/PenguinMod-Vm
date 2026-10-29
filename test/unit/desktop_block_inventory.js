@@ -51,6 +51,39 @@ test('direct-blocks.json matches the inventory', t => {
     t.end();
 });
 
+// Session 168: an extension with hidden-state blocks lists its own state ("state": variable -> kind), and each such
+// block says which kinds it only reads ("stateReads") and which it changes ("stateWrites").
+const STATE_KINDS = ['sprite', 'shared', 'setting', 'outside', 'cache'];
+test('hidden state is described', t => {
+    for (const [id, extension] of Object.entries(inventory)) {
+        const blocks = Object.entries(extension.blocks);
+        const hidden = blocks.filter(([, block]) => block.hiddenState);
+        if (!hidden.length) {
+            t.notOk('state' in extension, `${id}: no "state" without hidden-state blocks`);
+            continue;
+        }
+        const kinds = new Set(Object.values(extension.state || {}));
+        t.ok(kinds.size && [...kinds].every(kind => STATE_KINDS.includes(kind)),
+            `${id}: "state" lists its state with known kinds`);
+        for (const [opcode, block] of blocks) {
+            const name = `${id}_${opcode}`;
+            if (!block.hiddenState) {
+                t.ok(!('stateReads' in block) && !('stateWrites' in block),
+                    `${name}: no state fields without hiddenState`);
+                continue;
+            }
+            const {stateReads: reads, stateWrites: writes} = block;
+            t.ok(Array.isArray(reads) && Array.isArray(writes) && reads.length + writes.length > 0,
+                `${name}: stateReads / stateWrites present, not both empty`);
+            const all = [...(reads || []), ...(writes || [])];
+            t.equal(new Set(all).size, all.length,
+                `${name}: no kind twice (one that changes is not also in stateReads)`);
+            t.ok(all.every(kind => kinds.has(kind)), `${name}: every kind is one of the extension's "state"`);
+        }
+    }
+    t.end();
+});
+
 // Built-in extension modules, read from the extension manager's list (the manager itself needs a page).
 const managerFile = path.join(__dirname, '../../src/extension-support/extension-manager.js');
 const builtinPaths = {};
