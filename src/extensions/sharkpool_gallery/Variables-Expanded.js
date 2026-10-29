@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its variable lookup finds only variables, not a sprite's list of the same name (section 125, step 5e; marked "Desktop fork"); its button hat is checked only after a monitor button changed and every frame while one is down (`pmEdgeHat`; section 128, roadmap step 6b; marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Variables Expanded
 // ID: DICandSPmonitorsPlus
@@ -353,7 +355,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       // Used for creating IDs for variables
       const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       const id = [];
-      for (let i = 0; i < 20; i++) id.push(soup.charAt(Math.random() * soup.length));
+      for (let i = 0; i < 20; i++) id.push(soup.charAt(Scratch.vm.runtime.pmRandom() * soup.length));
       return id.join("");
     }
     
@@ -411,7 +413,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       };
       const buttonClick = (ID, down) => {
         runtime.pmEdgeHatsChanged("DICandSPmonitorsPlus"); // Desktop fork (section 128)
-        if (down) monitorButtons[ID] = { varName : ID, isDown : down, timeClick : Date.now() };
+        if (down) monitorButtons[ID] = { varName : ID, isDown : down, timeClick : Scratch.vm.runtime.pmDateNow() };
         else delete monitorButtons[ID];
       };
 
@@ -709,7 +711,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         if (args.TYPE === "held") return true;
         else {
           const date = monitorButtons[varId].timeClick;
-          const now = Date.now();
+          const now = Scratch.vm.runtime.pmDateNow();
           // Ignore Last 3 Digits, as Events => Hats arent Instant
           const con = Math.floor(date / 1000) === Math.floor(now / 1000);
           if (con) delete monitorButtons[varId];

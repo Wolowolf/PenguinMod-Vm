@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Ikelene/googleAuthExtension.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Google Auth: lets players log in with their Google account, using the game maker's own Google
 // login setup (Google Cloud "OAuth client"). Nothing goes through anyone else's server: the game
@@ -92,7 +94,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     // Waits until the popup is back on the game's own site and returns that address.
     const waitForPopup = (popup, returnPage) => new Promise((resolve, reject) => {
-        const start = Date.now();
+        const start = Scratch.vm.runtime.pmDateNow();
         const timer = setInterval(() => {
             let href = '';
             try {
@@ -105,7 +107,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             } else if (popup.closed) {
                 clearInterval(timer);
                 reject(new Error('login window closed'));
-            } else if (Date.now() - start > POPUP_TIMEOUT) {
+            } else if (Scratch.vm.runtime.pmDateNow() - start > POPUP_TIMEOUT) {
                 clearInterval(timer);
                 popup.close();
                 reject(new Error('timed out'));

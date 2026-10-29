@@ -245,9 +245,10 @@ class pmEventsExpansion {
                     resolve();
                     return;
                 }
-                const startTime = performance.now();
+                // Desktop fork (section 154): the runtime's clock
+                const startTime = runtime.pmPerfNow();
                 const check = () => {
-                    if (performance.now() - startTime > MAX_BEFORE_SAVE_MS ||
+                    if (runtime.pmPerfNow() - startTime > MAX_BEFORE_SAVE_MS ||
                         threads.every(thread => !runtime.isActiveThread(thread))) {
                         runtime.off('AFTER_EXECUTE', check);
                         resolve();

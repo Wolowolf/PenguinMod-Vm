@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the renderer's pmPenClearHooks instead of replacing renderer.penClear; (section 125, step 5e) its triangle list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Pen Plus V7
 // ID: penP
@@ -1370,7 +1372,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       //Create data in the json object
       this.shaders[name] = {
         projectData: data,
-        modifyDate: Date.now(),
+        modifyDate: Scratch.vm.runtime.pmDateNow(),
       };
 
       this.programs[name] = {

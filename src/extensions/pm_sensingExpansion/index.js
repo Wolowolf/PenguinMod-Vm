@@ -106,7 +106,8 @@ class pmSensingExpansion {
 
         this.canVibrate = true;
 
-        this.lastUpdate = Date.now();
+        // Desktop fork (section 154): the runtime's clock, here and below
+        this.lastUpdate = runtime.pmDateNow();
 
         this.canGetLoudness = false;
         this.loudnessArray = [0];
@@ -572,7 +573,7 @@ class pmSensingExpansion {
         const key = Cast.toString(args.KEY);
         const keyTimestamp = util.ioQuery('keyboard', 'getKeyTimestamp', [key]);
         if (keyTimestamp === 0) return 0;
-        const currentTime = Date.now();
+        const currentTime = this.runtime.pmDateNow();
         const timestamp = currentTime - keyTimestamp;
         return timestamp / 1000;
     }
@@ -708,11 +709,11 @@ class pmSensingExpansion {
     }
 
     currentMillisecond() {
-        return Date.now() % 1000;
+        return this.runtime.pmDateNow() % 1000;
     }
 
     deltaTime() {
-        let now = Date.now();
+        let now = this.runtime.pmDateNow();
         let dt = now - this.lastUpdate;
         this.lastUpdate = now;
         return dt;

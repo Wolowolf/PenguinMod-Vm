@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Medericoder/textcase.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Text Case
 // ID: medericodertextcase
@@ -200,7 +202,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     } else if (format === "random") {
       let x = "";
       for (let i = 0; i < text.length; i++) {
-        if (Math.random() < 0.5) {
+        if (Scratch.vm.runtime.pmRandom() < 0.5) {
           x += text.toString()[i].toUpperCase();
         } else {
           x += text.toString()[i].toLowerCase();
@@ -416,7 +418,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     glitch(args) {
       var x = "";
       for (let i = 0; i < args.TEXT.toString().length; i++) {
-        if (Math.random() * 100 < args.PROBA) {
+        if (Scratch.vm.runtime.pmRandom() * 100 < args.PROBA) {
           x += funchangecase(args.TEXT.toString()[i], "invert");
         } else {
           x += args.TEXT.toString()[i];

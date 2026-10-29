@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's utilities.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Utilities
 // ID: utilities
@@ -352,7 +354,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     currentMillisecond() {
-      return Date.now() % 1000;
+      return Scratch.vm.runtime.pmDateNow() % 1000;
     }
 
     fetchFrom({ URL }) {

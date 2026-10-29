@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (add / subtract: any time zone).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Time Calculation
 // ID: SPtimeCalc
@@ -166,7 +168,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     calculatetimedurationfromdate(args) {
       const startDate = new Date(args.DATE ? args.DATE : null);
       const difference = this.calcTimeDiff(
-        startDate, new Date(), args.TIME_MENU, true
+        startDate, new Date(Scratch.vm.runtime.pmDateNow()), args.TIME_MENU, true
       );
       if (isNaN(difference)) return "Invalid Time Input";
       else return difference;
@@ -185,10 +187,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     calculatetimedurationfromtime(args) {
       const startTime = args.START_TIME ? args.START_TIME : null;
       const [startHour, startMinute] = startTime.split(":");
-      const startDate = new Date();
+      const startDate = new Date(Scratch.vm.runtime.pmDateNow());
       startDate.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
       const difference = this.calcTimeDiff(
-        startDate, new Date(), args.TIME_MENU, true
+        startDate, new Date(Scratch.vm.runtime.pmDateNow()), args.TIME_MENU, true
       );
       if (isNaN(difference)) return "Invalid Time Input";
       else return difference;
@@ -197,8 +199,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     calculatetimedifference(args) {
       const startTime = args.START_TIME ? args.START_TIME : null;
       const endTime = args.END_TIME ? args.END_TIME : null;
-      const startDate = new Date();
-      const endDate = new Date();
+      const startDate = new Date(Scratch.vm.runtime.pmDateNow());
+      const endDate = new Date(Scratch.vm.runtime.pmDateNow());
       const startHour = parseInt(startTime.split(":")[0]);
       const startMinute = parseInt(startTime.split(":")[1]);
       const endHour = parseInt(endTime.split(":")[0]);
@@ -232,7 +234,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const dateString = args.TIME ? args.TIME : null;
       const startDate = new Date(dateString);
       const difference = this.calcTimeDiff(
-        startDate, new Date(), args.MENU, false
+        startDate, new Date(Scratch.vm.runtime.pmDateNow()), args.MENU, false
       );
       if (isNaN(difference)) return "Invalid Time Input";
       else return difference;
@@ -240,7 +242,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     countdownBoolean(args) {
       const startDate = new Date(args.TIME ? args.TIME : null);
-      return startDate - Date.now() <= 0;
+      return startDate - Scratch.vm.runtime.pmDateNow() <= 0;
     }
 
     evaluateTime(args) {

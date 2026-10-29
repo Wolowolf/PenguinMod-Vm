@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -85,7 +87,7 @@ Enjoy!! :D
 
     function randomFontOtherThan(currentFont) {
         const others = FONT_IDS.filter(id => id !== currentFont);
-        return others[Math.floor(Math.random() * others.length)];
+        return others[Math.floor(Scratch.vm.runtime.pmRandom() * others.length)];
     }
 
     function buildFontMenuItems() {
@@ -2374,7 +2376,7 @@ Enjoy!! :D
     }
 
     function nowMs() {
-        return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        return Scratch.vm.runtime.pmPerfNow(); // Desktop fork (section 154): the runtime's clock
     }
 
     const linear = x => x;
@@ -5871,7 +5873,7 @@ Enjoy!! :D
             if (state.revealToken !== frame.irisToken) return;
 
             if (frame.irisWaitUntil !== null) {
-                if (Date.now() < frame.irisWaitUntil) {
+                if (Scratch.vm.runtime.pmDateNow() < frame.irisWaitUntil) {
                     util.yieldTick();
                     return;
                 }
@@ -5890,7 +5892,7 @@ Enjoy!! :D
             frame.irisStageIndex++;
             if (frame.irisStageIndex >= frame.irisStages.length) return;
 
-            frame.irisWaitUntil = Date.now() + stage.waitAfter * 1000;
+            frame.irisWaitUntil = Scratch.vm.runtime.pmDateNow() + stage.waitAfter * 1000;
             util.yieldTick();
         }
 
@@ -5962,7 +5964,7 @@ Enjoy!! :D
             }
 
             if (frame.irisTypingWaitUntil !== null) {
-                if (Date.now() < frame.irisTypingWaitUntil) {
+                if (Scratch.vm.runtime.pmDateNow() < frame.irisTypingWaitUntil) {
                     util.yieldTick();
                     return;
                 }
@@ -5973,7 +5975,7 @@ Enjoy!! :D
                 const step = frame.irisTypingSteps[frame.irisTypingStepIndex++];
                 if (step.wait !== undefined) {
                     if (step.wait > 0) {
-                        frame.irisTypingWaitUntil = Date.now() + step.wait * 1000;
+                        frame.irisTypingWaitUntil = Scratch.vm.runtime.pmDateNow() + step.wait * 1000;
                         util.yieldTick();
                         return;
                     }
@@ -5988,7 +5990,7 @@ Enjoy!! :D
 
                 const delay = Math.max(0, Scratch.Cast.toNumber(typingDelayForCharacter(state, step.char)));
                 if (delay > 0) {
-                    frame.irisTypingWaitUntil = Date.now() + delay * 1000;
+                    frame.irisTypingWaitUntil = Scratch.vm.runtime.pmDateNow() + delay * 1000;
                     util.yieldTick();
                     return;
                 }

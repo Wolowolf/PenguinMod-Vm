@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Tune-Shark-V3.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Tune Shark V3
 // ID: SPtuneShark3
@@ -207,7 +209,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         this.ctrlSounds({ CONTROL: "unpause" });
       });
       runtime.on("BEFORE_EXECUTE", () => {
-        const now = performance.now();
+        const now = Scratch.vm.runtime.pmPerfNow();
         deltaTime = prevFrameTime === 0 ? 0 : (now - prevFrameTime) * 0.001;
         prevFrameTime = now;
 
@@ -1092,7 +1094,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         if (context.playing && sound.overlap) {
           // Clone context to soundBank for 'audioControlDo'
           const clone = context.clone();
-          const newName = `${sound.name}_COPY_${Math.random()}`;
+          const newName = `${sound.name}_COPY_${Scratch.vm.runtime.pmRandom()}`;
           soundBank[newName] = {
             ...sound,
             context: clone,

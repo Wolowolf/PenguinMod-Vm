@@ -2779,6 +2779,33 @@ class Runtime extends EventEmitter {
         this._pmEdgeSignals[name] = (this._pmEdgeSignals[name] || 0) + 1;
     }
 
+    // Desktop fork (section 154): the one source of random numbers and the one clock of the shipped extensions
+    // (docs/EXTENSION-INTEGRATION.md "Engine contacts"), so a deterministic mode, replays or rewind need to change
+    // only these. Each returns exactly what the browser call it stands for returns.
+
+    /**
+     * @returns {number} A random number from 0 up to (not including) 1, like Math.random().
+     */
+    pmRandom () {
+        return Math.random();
+    }
+
+    /**
+     * Wall-clock time: `new Date()` without arguments is `new Date(runtime.pmDateNow())`.
+     * @returns {number} Milliseconds since 1970, like Date.now().
+     */
+    pmDateNow () {
+        return Date.now();
+    }
+
+    /**
+     * The monotonic clock, for measuring time between two moments.
+     * @returns {number} Milliseconds since the page started, like performance.now().
+     */
+    pmPerfNow () {
+        return performance.now();
+    }
+
     /**
      * Start all relevant hats.
      * @param {!string} requestedHatOpcode Opcode of hats to start.

@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (distance: the angle is turned into degrees).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Geolocation
 // ID: SPgeolocation
@@ -257,13 +259,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     async getIP() {
       if (!await Scratch.canGeolocate()) return "";
       try {
-        if (IP_CACHE.ip === undefined || Date.now() > (IP_CACHE.expires || 0)) {
+        if (IP_CACHE.ip === undefined || Scratch.vm.runtime.pmDateNow() > (IP_CACHE.expires || 0)) {
           const response = await Scratch.fetch("https://api.ipify.org?format=json");
           const data = await response.json();
           const ip = data.ip ? data.ip : "";
           if (ip) {
             IP_CACHE.ip = ip;
-            IP_CACHE.expires = Date.now() + 30000; // 30 sec timeout
+            IP_CACHE.expires = Scratch.vm.runtime.pmDateNow() + 30000; // 30 sec timeout
           }
 
           return ip;

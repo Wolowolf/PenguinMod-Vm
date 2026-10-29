@@ -5,6 +5,8 @@
 // marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Keys+ V2
 // ID: enderKeysPlusV2
@@ -105,7 +107,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
             this._mouseDown = {};
             this._scrollDeltaY = 0;
-            this._lastScrollTime = Date.now();
+            this._lastScrollTime = Scratch.vm.runtime.pmDateNow();
 
             this._keysPressed = {};
             this._lastKeyPressed = "";
@@ -122,7 +124,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 const key = format(event);
                 this._lastKeyPressed = key;
                 if (!this._keysPressed[key]) {
-                    this._keysPressed[key] = { time: Date.now(), code: event.code, value: event.key };
+                    this._keysPressed[key] = { time: Scratch.vm.runtime.pmDateNow(), code: event.code, value: event.key };
                     startKeyEvents("when");
                 };
             });
@@ -144,7 +146,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             window.addEventListener("mousedown", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 if (!this._mouseDown[event.button]) {
-                    this._mouseDown[event.button] = { time: Date.now() };
+                    this._mouseDown[event.button] = { time: Scratch.vm.runtime.pmDateNow() };
                     runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "when" });
                 }
             });
@@ -155,7 +157,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             })
             window.addEventListener("wheel", (event) => {
                 this._scrollDeltaY = event.deltaY;
-                this._lastScrollTime = Date.now()
+                this._lastScrollTime = Scratch.vm.runtime.pmDateNow()
                 runtime.startHats("enderKeysPlusV2_eventScroll")
             });
         }
@@ -653,18 +655,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
         timeMouseDown(args) {
             const button = this._mouseDown[Cast.toNumber(args.button)];
-            return button ? (Date.now() - button.time) / 1000 : 0;
+            return button ? (Scratch.vm.runtime.pmDateNow() - button.time) / 1000 : 0;
         }
         // Scrolling
         eventScroll(args) {
             return args.dir === "up" ? this._scrollDeltaY < 0 : this._scrollDeltaY > 0;
         }
         isScrolling({ dir }) {
-            const withinRange = Date.now() - this._lastScrollTime < 50;
+            const withinRange = Scratch.vm.runtime.pmDateNow() - this._lastScrollTime < 50;
             return dir === "up" ? this._scrollDeltaY < 0 && withinRange : this._scrollDeltaY > 0 && withinRange;
         }   
         scrollDirection() {
-            if (this._scrollDeltaY && Date.now() - this._lastScrollTime < 50) {
+            if (this._scrollDeltaY && Scratch.vm.runtime.pmDateNow() - this._lastScrollTime < 50) {
                 return this._scrollDeltaY < 0 ? "up" : "down";
             }
             return "none";
@@ -741,7 +743,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         timeKeyPressed(args) {
             const data = this._isKeyPressed(args.key, true);
             const key = this._keysPressed["_" + data.source];
-            return key ? (Date.now() - key.time) / 1000 : 0;
+            return key ? (Scratch.vm.runtime.pmDateNow() - key.time) / 1000 : 0;
         }
         // Keybinding
         eventKeybindTriggered(args) {

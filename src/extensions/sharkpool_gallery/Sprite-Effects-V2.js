@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (no error when the stage canvas is not in the page).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sprite Effects V2
 // ID: SPspriteEffectsV2
@@ -1087,7 +1089,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           );
         case "grain":
           if (amt === 0) return svg;
-          seed = Math.round(10 * (Math.sin(Date.now() * 50)));
+          seed = Math.round(10 * (Math.sin(Scratch.vm.runtime.pmDateNow() * 50)));
           return this._injectFilter(
             svg, "grain",
             `<filter><feTurbulence type="fractalNoise" baseFrequency="${amt / 100}" numOctaves="3" result="turbulence" seed="${seed}"/><feColorMatrix in="turbulence" type="saturate" values="0" result="grain"/><feComposite in="grain" in2="SourceGraphic" operator="in"/><feComposite in="0.5" in2="SourceGraphic" operator="over"/></filter>`
@@ -1191,7 +1193,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     applyGlitch(args) {
       const svg = this._handleSVG(args.SRC);
-      const rng = () => Math.random() > 0.5 ? 1 : -1;
+      const rng = () => Scratch.vm.runtime.pmRandom() > 0.5 ? 1 : -1;
       const multiplier = svg === CANVAS_SVG ? 999 : 100;
 
       let axis = Cast.toString(args.AXIS);
@@ -1212,7 +1214,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         // generate random chunks
         allMerges += `<feMergeNode in="merge${i}"/>`;
         mergeTxt += `<feOffset in="SourceGraphic" dx="${x * rng()}" dy="${y * rng()}" result="off${i}"/>`;
-        mergeTxt += `<feMerge x="${axis[0] ? Math.random() * multiplier : 0}%" y="${axis[1] ? Math.random() * multiplier : 0}%" width="${size[0]}%" height="${size[1]}%" result="merge${i}">`;
+        mergeTxt += `<feMerge x="${axis[0] ? Scratch.vm.runtime.pmRandom() * multiplier : 0}%" y="${axis[1] ? Scratch.vm.runtime.pmRandom() * multiplier : 0}%" width="${size[0]}%" height="${size[1]}%" result="merge${i}">`;
         mergeTxt += `<feMergeNode in="SourceGraphic"/><feMergeNode in="off${i}"/></feMerge>`;
       }
       return this._injectFilter(

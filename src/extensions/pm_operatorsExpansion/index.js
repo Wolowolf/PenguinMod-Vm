@@ -1036,7 +1036,8 @@ class pmOperatorsExpansion {
   shuffleChars(args) {
     const text = Cast.toString(args.TEXT);
     const split = text.split("");
-    const shuffled = split.sort(() => Math.random() - 0.5);
+    // Desktop fork (section 154): the runtime's random numbers
+    const shuffled = split.sort(() => this.runtime.pmRandom() - 0.5);
     return shuffled.join("");
   }
 

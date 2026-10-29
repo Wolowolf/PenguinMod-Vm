@@ -1077,7 +1077,7 @@ class JSGenerator {
         case 'pmInline.spriteName':
             return new TypedInput('(target.getName())', TYPE_UNKNOWN);
         case 'pmInline.currentMillisecond':
-            return new TypedInput('(Date.now() % 1000)', TYPE_NUMBER);
+            return new TypedInput('(runtime.pmDateNow() % 1000)', TYPE_NUMBER);
         case 'pmInline.deltaTime':
             return new TypedInput('pmxDeltaTime(runtime.ext_pmSensingExpansion)', TYPE_NUMBER);
         case 'pmInline.maxSpriteLayers':

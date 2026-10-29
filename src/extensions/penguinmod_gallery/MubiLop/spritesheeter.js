@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's MubiLop/spritesheeter.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // CODE GENERATED USING mCompiler (v1.0) | Made by MubiLop | https://github.com/cicerorph/mCompiler
 // Hash: 6b8205cd | Generated: 3/25/2025, 10:02:58 PM UTC
@@ -718,12 +720,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             `frame_${sheet.currentFrame}`,
             {
               format: 'png',
-              baseLayerID: `frame_${Date.now()}`,
-              baseLayerMD5: `frame_${Date.now()}.png`,
+              baseLayerID: `frame_${Scratch.vm.runtime.pmDateNow()}`,
+              baseLayerMD5: `frame_${Scratch.vm.runtime.pmDateNow()}.png`,
               dataFormat: 'png',
               asset: new Scratch.vm.runtime.Storage.Asset(
                 Scratch.vm.runtime.storage.AssetType.ImageBitmap,
-                `frame_${Date.now()}`,
+                `frame_${Scratch.vm.runtime.pmDateNow()}`,
                 'png',
                 new Uint8Array(Scratch.vm.runtime._bufferedImage(dataURL))
               )

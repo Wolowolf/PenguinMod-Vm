@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's local-storage.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Local Storage
 // ID: localstorage
@@ -81,7 +83,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             // If we find that turbowarp.org is commonly running out of shared space in local storage,
             // having a timestamp here makes it at least theoretically possible to delete storage based
             // on last used time.
-            time: Math.round(Date.now() / 1000),
+            time: Math.round(Scratch.vm.runtime.pmDateNow() / 1000),
             data: namespaceValues,
           })
         );
@@ -110,7 +112,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     const soup = "0123456789abcdef";
     let id = "";
     for (let i = 0; i < 16; i++) {
-      id += soup[Math.floor(Math.random() * soup.length)];
+      id += soup[Math.floor(Scratch.vm.runtime.pmRandom() * soup.length)];
     }
     return id;
   };
@@ -137,13 +139,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let lastNamespaceWarning = 0;
   const validNamespace = () => {
     const valid = !!getNamespace();
-    if (!valid && Date.now() - lastNamespaceWarning > 3000) {
+    if (!valid && Scratch.vm.runtime.pmDateNow() - lastNamespaceWarning > 3000) {
       alert(
         Scratch.translate(
           'Local Storage extension: project must run the "set storage namespace ID" block before it can use other blocks'
         )
       );
-      lastNamespaceWarning = Date.now();
+      lastNamespaceWarning = Scratch.vm.runtime.pmDateNow();
     }
     return valid;
   };

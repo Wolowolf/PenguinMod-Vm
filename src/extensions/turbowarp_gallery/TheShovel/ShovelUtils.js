@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): RUNTIME_STEP_END instead of wrapping runtime._step; (section 125, step 5e) its list blocks use Variable.pmGetValue / pmSetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: ShovelUtils
 // ID: ShovelUtils
@@ -24,7 +26,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   let fps = vm.runtime.frameLoop.framerate;
   // Desktop fork (section 119): after each frame
   vm.runtime.on("RUNTIME_STEP_END", () => {
-    const now = performance.now();
+    const now = Scratch.vm.runtime.pmPerfNow();
     while (times.length > 0 && times[0] <= now - 1000) {
       times.shift();
     }

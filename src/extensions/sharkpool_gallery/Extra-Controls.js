@@ -9,6 +9,8 @@
 // Section 152: the branch IDs of "if" / "else" readable by the compiler's inline code; marked "Desktop fork (section 152)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Extra Controls
 // ID: SPadvControl
@@ -767,7 +769,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const ID = this.getThisBlock(util)?.id;
       if (typeof util.thread.SPloopReader === "undefined") util.thread.SPloopReader = {};
       if (util.thread.SPloopReader[ID] === undefined) util.thread.SPloopReader[ID] = util.sequencer.timer.startTime;
-      return (Date.now() - util.thread.SPloopReader[ID]) / 1000;
+      return (Scratch.vm.runtime.pmDateNow() - util.thread.SPloopReader[ID]) / 1000;
     }
 
     continueLoop(_, util) { this.blockLoop("continue", util) }
@@ -822,7 +824,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         block = container.getBlock(block).next;
       }
       if (args.TYPE === "reversed") stack = stack.reverse();
-      else if (args.TYPE === "randomized") stack = stack.sort(() => Math.random() - 0.5);
+      else if (args.TYPE === "randomized") stack = stack.sort(() => Scratch.vm.runtime.pmRandom() - 0.5);
       else stack = [...stack, ...stack.reverse()];
 
       // TODO forces interpretor version of blocks, which might not exist

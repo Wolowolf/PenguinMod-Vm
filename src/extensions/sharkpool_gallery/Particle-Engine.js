@@ -4,6 +4,8 @@
 // Section 123 (step 5d): its block gradient goes into the block library's own gradient table (ScratchBlocks.BlockSvg.pmGradients) instead of replacing BlockSvg.prototype.render; marked "Desktop fork (section 123)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Particle Engine
 // ID: SPpartEngine
@@ -170,7 +172,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const fastSin = (rads) => sinTable[Math.floor(rads * INV_TWO_PI) & 8191];
   const fastCos = (rads) => cosTable[Math.floor(rads * INV_TWO_PI) & 8191];
 
-  const rng = (val, inf) => val + (Math.random() * 2 - 1) * inf;
+  const rng = (val, inf) => val + (Scratch.vm.runtime.pmRandom() * 2 - 1) * inf;
 
   const newTexture = (url, callback) => {
     Scratch.canFetch(url).then((canFetch) => {

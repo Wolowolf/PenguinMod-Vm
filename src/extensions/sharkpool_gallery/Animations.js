@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Animations.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Animations
 // ID: SPanimations
@@ -18,7 +20,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const vm = Scratch.vm;
   const runtime = vm.runtime;
   const render = vm.renderer;
-  const specialID = `SPspecialID${Math.random()}`;
+  const specialID = `SPspecialID${Scratch.vm.runtime.pmRandom()}`;
   const playTypes = {
     "normally": 1,
     "in reverse": 2,
@@ -415,8 +417,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     keyframeUpdate(data, anim, init) {
       const target = anim.target;
       let { type, start, end, x1, x2, y1, y2 } = data;
-      if (data.startStamp === undefined) data.startStamp = Date.now();
-      const elapsedTime = Date.now() - data.startStamp;
+      if (data.startStamp === undefined) data.startStamp = Scratch.vm.runtime.pmDateNow();
+      const elapsedTime = Scratch.vm.runtime.pmDateNow() - data.startStamp;
       const progress = Math.min(elapsedTime / (anim.fps * 20), 1);
       let delta1, delta2;
       switch (type) {

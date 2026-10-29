@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (round: no endless loop).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function (Scratch) {
   "use strict";
@@ -184,7 +186,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           per = a.len;
         aa = this.maxMinFunc('min', temp1, temp2);
         bb = this.maxMinFunc('max', temp1, temp2);
-        let random_ = String(Math.random());
+        let random_ = String(Scratch.vm.runtime.pmRandom());
         random_ = this.roundFunc(random_, 10);
         let nums = this.toSamePer(aa, random_),
           nums2 = this.toSamePer(bb, random_);

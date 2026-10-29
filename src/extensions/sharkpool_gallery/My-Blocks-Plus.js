@@ -7,6 +7,8 @@
 // library's hook lists instead of replacing its Xml, Toolbox, Gesture, Procedures and ProcedureUtils functions.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: My Blocks+
 // ID: SPmbpCST
@@ -78,7 +80,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   }
 
   const inputTypes = {
-    col: { opcode: "colour_picker", fieldName: "COLOUR", defaultValue: (() => `#${Math.floor(Math.random() * Math.pow(2, 24)).toString(16).padStart(6, "0")}`) },
+    col: { opcode: "colour_picker", fieldName: "COLOUR", defaultValue: (() => `#${Math.floor(Scratch.vm.runtime.pmRandom() * Math.pow(2, 24)).toString(16).padStart(6, "0")}`) },
     note: { opcode: "note", fieldName: "NOTE", defaultValue: "60" },
     mat: { opcode: "matrix", fieldName: "MATRIX", defaultValue: isPM ? "1111001010011100100011000" : "1111110101001000010001110" },
     ang: { opcode: "math_angle", fieldName: "NUM", defaultValue: "90" },

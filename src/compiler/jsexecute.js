@@ -1146,7 +1146,7 @@ runtimeFunctions.pmxSpriteSize = `const pmxSpriteSize = (runtime, target, what) 
     return Math.ceil(what === "costume width" ? costume.size[0] : costume.size[1]);
 }`;
 runtimeFunctions.pmxDeltaTime = `const pmxDeltaTime = ext => {
-    const now = Date.now();
+    const now = ext.runtime.pmDateNow();
     const dt = now - ext.lastUpdate;
     ext.lastUpdate = now;
     return dt;
@@ -1160,7 +1160,7 @@ runtimeFunctions.pmxCurrentKey = `const pmxCurrentKey = runtime => {
 runtimeFunctions.pmxKeyHeld = `const pmxKeyHeld = (runtime, key) => {
     const keyTimestamp = runtime.ioDevices.keyboard.getKeyTimestamp(key);
     if (keyTimestamp === 0) return 0;
-    return (Date.now() - keyTimestamp) / 1000;
+    return (runtime.pmDateNow() - keyTimestamp) / 1000;
 }`;
 runtimeFunctions.pmxFence = `const pmxFence = (runtime, target) => {
     const newpos = runtime.renderer.getFencedPositionOfDrawable(target.drawableID, [target.x, target.y]);
@@ -1409,7 +1409,7 @@ runtimeFunctions.pmlItemIndex = `const pmlItemIndex = (target, site, index, item
     case "last":
         return globalState.Cast.toNumber(indexes[indexes.length - 1] + 1);
     case "random":
-        return globalState.Cast.toNumber(indexes[Math.floor(Math.random() * indexes.length)] + 1);
+        return globalState.Cast.toNumber(indexes[Math.floor(target.runtime.pmRandom() * indexes.length)] + 1);
     default:
         return globalState.Cast.toNumber(indexes[globalState.Cast.toNumber(index) - 1] + 1);
     }
@@ -1444,7 +1444,7 @@ runtimeFunctions.pmlOrder = `const pmlOrder = (target, site, name, order) => {
         list.pmGetValue().reverse();
     } else if (order === "randomised") {
         const randomised = list.pmGetValue()
-            .map(value => ({value, sort: Math.random()}))
+            .map(value => ({value, sort: target.runtime.pmRandom()}))
             .sort((a, b) => a.sort - b.sort)
             .map(({value}) => value);
         list.pmSetValue(randomised);

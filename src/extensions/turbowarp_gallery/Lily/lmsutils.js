@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its two edge-activated hats say when their answer can change (`pmEdgeHat`), so the engine checks them only then (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Lily's Toolbox
 // ID: lmsutilsblocks
@@ -734,7 +736,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     trueFalseBoolean(args) {
-      if (args.TRUEFALSE === "random") return Math.random() > 0.5;
+      if (args.TRUEFALSE === "random") return Scratch.vm.runtime.pmRandom() > 0.5;
       if (args.TRUEFALSE === "true") return true;
       return false;
     }

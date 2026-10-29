@@ -3,6 +3,8 @@
 // is exactly that list, so a new contact cannot come in unnoticed (and a removed one is struck off).
 // - random: Math.random, crypto.getRandomValues / randomUUID (deterministic mode, replays)
 // - clock: Date.now, new Date(), performance, timers and animation frames (rewind, fixed-step runs)
+//   Not contacts: the runtime's shared entry points for them (section 154: runtime.pmRandom, pmDateNow, pmPerfNow);
+//   --report counts their uses.
 // - page: what only the page has (document, window, storage, dialogs, page types and events, navigator's page parts)
 //   and the stage canvas or its WebGL context (engine in a worker)
 // - internals: members named with "_" that the VM or renderer define, used on something other than `this`, and writes
@@ -24,6 +26,7 @@ const CATEGORIES = ['random', 'clock', 'page', 'internals'];
 
 const RANDOM_MEMBERS = new Map([['Math', ['random']], ['crypto', ['getRandomValues', 'randomUUID']]]);
 const CLOCK_GLOBALS = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback']);
+const ENTRY_POINTS = new Set(['pmRandom', 'pmDateNow', 'pmPerfNow']);
 const PAGE_GLOBALS = new Set([
     'document', 'window', 'localStorage', 'sessionStorage', 'alert', 'confirm', 'prompt', 'Image', 'Audio',
     'AudioContext', 'webkitAudioContext', 'OfflineAudioContext', 'AudioWorkletNode', 'MediaRecorder', 'MediaStream',
@@ -213,6 +216,7 @@ const contactsOfFile = (ast, add, ownPrivate) => {
         }
         if (isMember(node)) {
             const name = propertyName(node);
+            if (ENTRY_POINTS.has(name)) add('entry points', name);
             if (name && !node.computed && name.startsWith('_') && node.object.type !== 'ThisExpression' &&
                 enginePrivate.has(name) && !ownPrivate.has(name)) {
                 add('internals', `.${name}`);
@@ -263,6 +267,7 @@ const ownRequires = (file, ast) => {
 const problems = [];
 const scanned = {};
 const computed = {};
+const entryPointUses = {};
 for (const [id, main] of Object.entries(mainFiles)) {
     if (!main) {
         problems.push(`${id}: main file not found`);
@@ -307,12 +312,21 @@ for (const [id, main] of Object.entries(mainFiles)) {
         for (const token of Object.keys(counts[category]).sort()) sorted[category][token] = counts[category][token];
     }
     computed[id] = sorted;
+    if (counts['entry points']) entryPointUses[id] = counts['entry points'];
 }
 
 if (process.argv.includes('--write')) {
     fs.writeFileSync(CONTACTS_FILE, `${JSON.stringify(computed, null, 4)}\n`);
 }
 if (process.argv.includes('--report')) {
+    const entryTotals = {};
+    for (const uses of Object.values(entryPointUses)) {
+        for (const [name, n] of Object.entries(uses)) entryTotals[name] = (entryTotals[name] || 0) + n;
+    }
+    // eslint-disable-next-line no-console
+    const totals = Object.entries(entryTotals).map(([name, n]) => `${name} ${n}`);
+    // eslint-disable-next-line no-console
+    console.log(`entry points (not contacts): ${Object.keys(entryPointUses).length} extensions, ${totals.join(', ')}`);
     for (const category of CATEGORIES) {
         const tokens = {};
         let extensions = 0;

@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged instead of its `value`, so the list keeps its lookup table (section 125, step 5e); the "index # of item" block has its first / last / random menu (section 126) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: List Tools
 // ID: lmsListTools
@@ -498,7 +500,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           return Scratch.Cast.toNumber(indexes[indexes.length - 1] + 1);
         case "random":
           return Scratch.Cast.toNumber(
-            indexes[Math.floor(Math.random() * indexes.length)] + 1
+            indexes[Math.floor(Scratch.vm.runtime.pmRandom() * indexes.length)] + 1
           );
         default:
           return Scratch.Cast.toNumber(indexes[Scratch.Cast.toNumber(args.INDEX) - 1] + 1);
@@ -559,7 +561,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         list.pmGetValue().reverse();
       } else if (args.ORDER === "randomised") {
         const randomised = list.pmGetValue()
-          .map((value) => ({ value, sort: Math.random() }))
+          .map((value) => ({ value, sort: Scratch.vm.runtime.pmRandom() }))
           .sort((a, b) => a.sort - b.sort)
           .map(({ value }) => value);
         list.pmSetValue(randomised);

@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: "when [timer] > []" is checked only while a timer runs or after a timer was paused, restarted or changed (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /**
  * @overview
@@ -23,7 +25,7 @@ const selfid = "steve0greatnesstimers";
 function uid_clone() {
   const soup = "!#%()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   var id;
-  for (id = ""; id.length < 20; id += soup.charAt(Math.random() * soup.length));
+  for (id = ""; id.length < 20; id += soup.charAt(Scratch.vm.runtime.pmRandom() * soup.length));
   return id;
 }
 
@@ -76,7 +78,7 @@ class Timer {
      * The start time of the timer.
      * @type {number}
      */
-    this.startTime = Date.now();
+    this.startTime = Scratch.vm.runtime.pmDateNow();
 
     /**
      * Indicates if, and when, the timer was paused
@@ -124,7 +126,7 @@ class Timer {
    */
   get elapsed() {
     return !this.is_paused 
-        ? Date.now() - this.startTime       // If not paused, return time since starting
+        ? Scratch.vm.runtime.pmDateNow() - this.startTime       // If not paused, return time since starting
         : this.pausedTime - this.startTime; // If paused, return time since being paused
   }
 
@@ -133,7 +135,7 @@ class Timer {
    */
   restart() {
     timersChanged(this.runtime); // Desktop fork (section 127)
-    this.startTime = Date.now();
+    this.startTime = Scratch.vm.runtime.pmDateNow();
 
     if (this.is_paused)
       this.pausedTime = this.startTime;
@@ -159,7 +161,7 @@ class Timer {
       return;
 
     this.tempPaused = false;
-    this.pausedTime = Date.now();
+    this.pausedTime = Scratch.vm.runtime.pmDateNow();
     runningTimers.delete(this); // Desktop fork (section 127)
     timersChanged(this.runtime);
   }
@@ -170,7 +172,7 @@ class Timer {
     this.tempPaused = false;
     runningTimers.add(this); // Desktop fork (section 127)
     timersChanged(this.runtime);
-    this.startTime += Date.now() - this.pausedTime;
+    this.startTime += Scratch.vm.runtime.pmDateNow() - this.pausedTime;
     this.pausedTime = null;
   }
 

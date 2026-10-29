@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its note hats are checked only after a MIDI message or after one of them used up its note (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /* global Scratch */
 // added patch reporter, is a drum? and a thingy velocity 0 thingy whatever the hell
@@ -192,7 +194,7 @@ class MIDI {
             this.lastNotePressed = note;
             this.notePressedFlag = true;
             this.specificNotePressedFlags[note] = true;
-            this.notePressTimes.set(note, Date.now());
+            this.notePressTimes.set(note, Scratch.vm.runtime.pmDateNow());
             this.lastNNotes.push(note);
             if (this.lastNNotes.length > 50) this.lastNNotes.shift();
 
@@ -271,12 +273,12 @@ class MIDI {
 
     noteHeldTime(args) {
         const n = args.NOTE;
-        return this.notePressTimes.has(n) ? ((Date.now() - this.notePressTimes.get(n))/1000).toFixed(2) : 0;
+        return this.notePressTimes.has(n) ? ((Scratch.vm.runtime.pmDateNow() - this.notePressTimes.get(n))/1000).toFixed(2) : 0;
     }
 
     anyNoteHeldTime() {
         return this.lastNotePressed && this.notePressTimes.has(this.lastNotePressed) ?
-            ((Date.now() - this.notePressTimes.get(this.lastNotePressed))/1000).toFixed(2) : 0;
+            ((Scratch.vm.runtime.pmDateNow() - this.notePressTimes.get(this.lastNotePressed))/1000).toFixed(2) : 0;
     }
 
     deviceName(args) { return this.inputs[args.INDEX]?.name || ""; }

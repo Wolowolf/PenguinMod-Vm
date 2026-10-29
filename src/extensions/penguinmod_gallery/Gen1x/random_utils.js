@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/random_utils.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function(Scratch) {
 // Dado (https://icons8.com/icon/qAN1P79CQdvH/dado) icon by Icons8 (https://icons8.com/)
@@ -17,14 +19,14 @@ function randomStr(dataset, length) {
   const datasetLength = dataset.length;
 
   for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * datasetLength);
+    const randomIndex = Math.floor(Scratch.vm.runtime.pmRandom() * datasetLength);
     randomString += dataset[randomIndex];
   }
 
   return randomString;
 }
 
-let seed = (Math.random() * Number.MAX_SAFE_INTEGER) | 0;
+let seed = (Scratch.vm.runtime.pmRandom() * Number.MAX_SAFE_INTEGER) | 0;
 let icon = "data:image/png;base64,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"
 
 function randomChance(percentageChance) {
@@ -34,12 +36,12 @@ function randomChance(percentageChance) {
 
   const probabilityOfOne = percentageChance / 100;
 
-  if (Math.random() < probabilityOfOne) {
+  if (Scratch.vm.runtime.pmRandom() < probabilityOfOne) {
     // Return 1
     return 1;
   } else {
     // Return a random number between 2 and 10
-    return Math.floor(Math.random() * 9) + 2;
+    return Math.floor(Scratch.vm.runtime.pmRandom() * 9) + 2;
   }
 }
 
@@ -199,7 +201,7 @@ class RandomUtils {
   }
 
   rndtext(args) {
-    if (Math.random() < 0.5) {
+    if (Scratch.vm.runtime.pmRandom() < 0.5) {
       return args.TXT; // 50% chance
     } else {
       return args.TXT2 // 50% chance
@@ -215,13 +217,13 @@ class RandomUtils {
   }
 
   rndseed() {
-    seed = (Math.random() * Number.MAX_SAFE_INTEGER) | 0;
+    seed = (Scratch.vm.runtime.pmRandom() * Number.MAX_SAFE_INTEGER) | 0;
   }
 
   rndcolor(args) {
     if (args.COLOR == "hex") {
     // Generate a random number between 0 and 16777215 (0xFFFFFF in hexadecimal)
-    const randomColor = Math.floor(Math.random() * 16777215);
+    const randomColor = Math.floor(Scratch.vm.runtime.pmRandom() * 16777215);
 
     // Convert the number to a 6-digit hexadecimal string and pad with zeros if needed
     const hexCode = "#" + randomColor.toString(16).padStart(6, '0');
@@ -229,9 +231,9 @@ class RandomUtils {
     return hexCode;
     } else {
       // Generate random values for the red, green, and blue components (0-255).
-      const red = Math.floor(Math.random() * 256);
-      const green = Math.floor(Math.random() * 256);
-      const blue = Math.floor(Math.random() * 256);
+      const red = Math.floor(Scratch.vm.runtime.pmRandom() * 256);
+      const green = Math.floor(Scratch.vm.runtime.pmRandom() * 256);
+      const blue = Math.floor(Scratch.vm.runtime.pmRandom() * 256);
 
       // Return the RGB color in format.
       return `[${red}, ${green}, ${blue}]`;

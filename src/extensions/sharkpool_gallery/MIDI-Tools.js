@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (section 125, step 5e; marked "Desktop fork"); its note hats are checked only after the set of played notes changed (`pmEdgeHat`; section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Obscuras MIDI Tools v5
 // ID: ObscurasMIDITools
@@ -492,7 +494,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
       this._isPlaying = true;
       this._isPaused = false;
-      this._startTime = performance.now() / 1000;
+      this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
       this._elapsedBeforePause = 0;
       this._triggeredNotes.clear();
 
@@ -538,7 +540,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (!this._isPlaying || this._isPaused) return;
       this._isPaused = true;
       this._justPaused = true;
-      this._elapsedBeforePause += ((performance.now() / 1000) - this._startTime) * this._playbackRate;
+      this._elapsedBeforePause += ((Scratch.vm.runtime.pmPerfNow() / 1000) - this._startTime) * this._playbackRate;
       for (const t of this._timers) clearTimeout(t);
       this._timers = [];
       if (this._playbackEndTimer) {
@@ -555,7 +557,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (!this._isPlaying || !this._isPaused) return;
       this._isPaused = false;
       this._justResumed = true;
-      this._startTime = performance.now() / 1000;
+      this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
       this._scheduleNotes(this._elapsedBeforePause);
       this._schedulePlaybackEnd(this._elapsedBeforePause);
       if (this.runtime) {
@@ -585,7 +587,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (this._isPlaying && !this._isPaused) {
         const current = this.getCurrentTime();
         this._elapsedBeforePause = current;
-        this._startTime = performance.now() / 1000;
+        this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
         for (const t of this._timers) clearTimeout(t);
         this._timers = [];
         this._scheduleNotes(current);
@@ -598,7 +600,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (this._isPlaying && !this._isPaused) {
         const current = this.getCurrentTime();
         this._elapsedBeforePause = current;
-        this._startTime = performance.now() / 1000;
+        this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
         for (const t of this._timers) clearTimeout(t);
         this._timers = [];
         this._triggeredNotes.clear();
@@ -661,7 +663,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       this._isPlaying = true;
       this._isPaused = false;
       this._elapsedBeforePause = Math.min(time, this.getDuration());
-      this._startTime = performance.now() / 1000;
+      this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
       this._triggeredNotes.clear();
       this._scheduleNotes(this._elapsedBeforePause);
       this._schedulePlaybackEnd(this._elapsedBeforePause);
@@ -678,7 +680,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (this._isPlaying && !this._isPaused) {
         const current = this.getCurrentTime();
         this._elapsedBeforePause = current;
-        this._startTime = performance.now() / 1000;
+        this._startTime = Scratch.vm.runtime.pmPerfNow() / 1000;
         for (const t of this._timers) clearTimeout(t);
         this._timers = [];
         this._triggeredNotes.clear();
@@ -735,7 +737,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     getCurrentTime() {
       if (!this._isPlaying) return 0;
       if (this._isPaused) return Math.round(this._elapsedBeforePause * 100) / 100;
-      const current = this._elapsedBeforePause + (((performance.now() / 1000) - this._startTime) * this._playbackRate);
+      const current = this._elapsedBeforePause + (((Scratch.vm.runtime.pmPerfNow() / 1000) - this._startTime) * this._playbackRate);
       return Math.round(current * 100) / 100;
     }
 

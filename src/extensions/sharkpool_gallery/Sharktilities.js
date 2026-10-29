@@ -6,6 +6,8 @@
 // when what its input reads changed (`pmEdgeHat`; section 128, roadmap step 6b; marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sharktilities
 // ID: SharkPoolSharktilities
@@ -324,7 +326,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return con;
     }
 
-    randomSingleInteger() { return Math.random() < 0.5 ? -1 : 1 }
+    randomSingleInteger() { return Scratch.vm.runtime.pmRandom() < 0.5 ? -1 : 1 }
 
     setSpriteEffect(args, util) {
       let target = args.SPRITE;
@@ -356,7 +358,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         case "least common": return JSON.stringify(sortFreq(words, false));
         default:
           for (let i = words.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(Scratch.vm.runtime.pmRandom() * (i + 1));
             [words[i], words[j]] = [words[j], words[i]];
           }
           return JSON.stringify(words);

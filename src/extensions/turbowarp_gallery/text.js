@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (count regex: an invalid pattern counts 0).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
+// performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Text
 // ID: strings
@@ -815,7 +817,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           return workingText;
         case CaseParam.RANDOMCASE:
           for (let i = 0; i < string.length; i++) {
-            if (Math.random() > 0.5) {
+            if (Scratch.vm.runtime.pmRandom() > 0.5) {
               workingText += string[i].toUpperCase();
             } else {
               workingText += string[i].toLowerCase();
