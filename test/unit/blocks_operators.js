@@ -1,7 +1,9 @@
 const test = require('tap').test;
 const Operators = require('../../src/blocks/scratch3_operators');
+const Runtime = require('../../src/engine/runtime');
 
-const blocks = new Operators(null);
+// Desktop fork (section 155): random numbers come from the runtime
+const blocks = new Operators(new Runtime());
 
 test('getPrimitives', t => {
     t.type(blocks.getPrimitives(), 'object');

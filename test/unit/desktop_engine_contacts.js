@@ -1,7 +1,8 @@
 // Desktop fork (docs/EXTENSION-INTEGRATION.md "Engine contacts"): lists where each inventoried extension touches what a
 // future engine change would have to give it in another way, and checks that src/extension-support/engine-contacts.json
 // is exactly that list, so a new contact cannot come in unnoticed (and a removed one is struck off).
-// - random: Math.random, crypto.getRandomValues / randomUUID (deterministic mode, replays)
+// - random: Math.random, crypto.getRandomValues / randomUUID, Cast.toListIndex / MathUtil.inclusiveRandIntWithout
+//   called without the runtime (deterministic mode, replays)
 // - clock: Date.now, new Date(), performance, timers and animation frames (rewind, fixed-step runs)
 //   Not contacts: the runtime's shared entry points for them (section 154: runtime.pmRandom, pmDateNow, pmPerfNow);
 //   --report counts their uses.
@@ -27,6 +28,7 @@ const CATEGORIES = ['random', 'clock', 'page', 'internals'];
 const RANDOM_MEMBERS = new Map([['Math', ['random']], ['crypto', ['getRandomValues', 'randomUUID']]]);
 const CLOCK_GLOBALS = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback']);
 const ENTRY_POINTS = new Set(['pmRandom', 'pmDateNow', 'pmPerfNow']);
+const RUNTIME_RANDOM_HELPERS = new Set(['toListIndex', 'inclusiveRandIntWithout']);
 const PAGE_GLOBALS = new Set([
     'document', 'window', 'localStorage', 'sessionStorage', 'alert', 'confirm', 'prompt', 'Image', 'Audio',
     'AudioContext', 'webkitAudioContext', 'OfflineAudioContext', 'AudioWorkletNode', 'MediaRecorder', 'MediaStream',
@@ -213,6 +215,11 @@ const contactsOfFile = (ast, add, ownPrivate) => {
             } else if (PAGE_GLOBALS.has(name) || PAGE_TYPE.test(name)) {
                 add('page', member ? `${name}.${member}` : name);
             }
+        }
+        // section 155: without a runtime as 4th argument these fall back to Math.random
+        if (node.type === 'CallExpression' && isMember(node.callee) && node.arguments.length < 4 &&
+            RUNTIME_RANDOM_HELPERS.has(propertyName(node.callee))) {
+            add('random', `${propertyName(node.callee)} without runtime`);
         }
         if (isMember(node)) {
             const name = propertyName(node);

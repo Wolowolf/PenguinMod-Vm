@@ -169,8 +169,9 @@ class Scratch3MotionBlocks {
         } else if (targetName === '_random_') {
             const stageWidth = this.runtime.stageWidth;
             const stageHeight = this.runtime.stageHeight;
-            targetX = Math.round(stageWidth * (Math.random() - 0.5));
-            targetY = Math.round(stageHeight * (Math.random() - 0.5));
+            // Desktop fork (section 155): random numbers come from the runtime, here and below
+            targetX = Math.round(stageWidth * (this.runtime.pmRandom() - 0.5));
+            targetY = Math.round(stageHeight * (this.runtime.pmRandom() - 0.5));
         } else {
             targetName = Cast.toString(targetName);
             const goToTarget = this.runtime.getSpriteTargetByName(targetName);
@@ -247,7 +248,7 @@ class Scratch3MotionBlocks {
             targetX = util.ioQuery('mouse', 'getScratchX');
             targetY = util.ioQuery('mouse', 'getScratchY');
         } else if (args.TOWARDS === '_random_') {
-            util.target.setDirection(Math.round(Math.random() * 360) - 180);
+            util.target.setDirection(Math.round(this.runtime.pmRandom() * 360) - 180);
             return;
         } else {
             args.TOWARDS = Cast.toString(args.TOWARDS);
@@ -282,7 +283,8 @@ class Scratch3MotionBlocks {
             }
         } else {
             // First time: save data for future use.
-            util.stackFrame.timer = new Timer();
+            // Desktop fork (section 155): the runtime's clock (a plain Timer reads Date.now)
+            util.stackFrame.timer = new Timer({now: () => this.runtime.pmDateNow()});
             util.stackFrame.timer.start();
             util.stackFrame.duration = Cast.toNumber(args.SECS);
             util.stackFrame.startX = util.target.x;
@@ -432,8 +434,8 @@ class Scratch3MotionBlocks {
         } else if (args.SPRITE === '_random_') {
             const stageWidth = this.runtime.stageWidth;
             const stageHeight = this.runtime.stageHeight;
-            const x = Math.round(stageWidth * (Math.random() - 0.5));
-            const y = Math.round(stageHeight * (Math.random() - 0.5));
+            const x = Math.round(stageWidth * (this.runtime.pmRandom() - 0.5));
+            const y = Math.round(stageHeight * (this.runtime.pmRandom() - 0.5));
             return this.ifOnXYBounce({ X: x, Y: y }, util);
         } 
         const spriteName = Cast.toString(args.SPRITE);

@@ -88,15 +88,17 @@ class MathUtil {
      * @param {number} lower - The lower bound (inlcusive)
      * @param {number} upper - The upper bound (inclusive), such that lower <= upper
      * @param {number} excluded - The number to exclude (MUST be in the range)
+     * @param {Runtime=} runtime - Desktop fork (section 155): gives the random number (runtime.pmRandom);
+     *     without it, Math.random
      * @return {number} A random integer in the range [lower, upper] that is not "excluded"
      */
-    static inclusiveRandIntWithout (lower, upper, excluded) {
+    static inclusiveRandIntWithout (lower, upper, excluded, runtime) {
         // Note that subtraction is the number of items in the
         // inclusive range [lower, upper] minus 1 already
         // (e.g. in the set {3, 4, 5}, 5 - 3 = 2).
         const possibleOptions = upper - lower;
 
-        const randInt = lower + Math.floor(Math.random() * possibleOptions);
+        const randInt = lower + Math.floor((runtime ? runtime.pmRandom() : Math.random()) * possibleOptions);
         if (randInt >= excluded) {
             return randInt + 1;
         }

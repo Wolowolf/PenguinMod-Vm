@@ -543,7 +543,8 @@ class Scratch3SensingBlocks {
 
     current (args) {
         const menuOption = Cast.toString(args.CURRENTMENU).toLowerCase();
-        const date = new Date();
+        // Desktop fork (section 155): the runtime's clock (runtime.pmDateNow), here and in daysSince2000
+        const date = new Date(this.runtime.pmDateNow());
         switch (menuOption) {
         case 'year': return date.getFullYear();
         case 'month': return date.getMonth() + 1; // getMonth is zero-based
@@ -552,7 +553,7 @@ class Scratch3SensingBlocks {
         case 'hour': return date.getHours();
         case 'minute': return date.getMinutes();
         case 'second': return date.getSeconds();
-        case 'timestamp': return Date.now();
+        case 'timestamp': return this.runtime.pmDateNow();
         }
         return 0;
     }
@@ -564,7 +565,7 @@ class Scratch3SensingBlocks {
     daysSince2000 () {
         const msPerDay = 24 * 60 * 60 * 1000;
         const start = new Date(2000, 0, 1); // Months are 0-indexed.
-        const today = new Date();
+        const today = new Date(this.runtime.pmDateNow());
         const dstAdjust = today.getTimezoneOffset() - start.getTimezoneOffset();
         let mSecsSinceStart = today.valueOf() - start.valueOf();
         mSecsSinceStart += ((today.getTimezoneOffset() - dstAdjust) * 60 * 1000);

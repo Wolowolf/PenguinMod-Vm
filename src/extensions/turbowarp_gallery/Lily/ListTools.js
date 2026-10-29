@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 155): "random" list indexes use the runtime's random numbers (Scratch.Cast.toListIndex gets Scratch.vm.runtime).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: List Tools
 // ID: lmsListTools
@@ -528,7 +529,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const listIndex = Scratch.Cast.toListIndex(
         args.NUM,
         list.pmGetValue().length,
-        false
+        false,
+        Scratch.vm.runtime
       );
       if (listIndex === Scratch.Cast.LIST_INVALID) return false;
       return true;

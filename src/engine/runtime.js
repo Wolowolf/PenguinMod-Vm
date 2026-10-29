@@ -2780,8 +2780,9 @@ class Runtime extends EventEmitter {
     }
 
     // Desktop fork (section 154): the one source of random numbers and the one clock of the shipped extensions
-    // (docs/EXTENSION-INTEGRATION.md "Engine contacts"), so a deterministic mode, replays or rewind need to change
-    // only these. Each returns exactly what the browser call it stands for returns.
+    // (docs/EXTENSION-INTEGRATION.md "Engine contacts") and, since section 155, of the built-in blocks, so a
+    // deterministic mode, replays or rewind need to change only these. Each returns exactly what the browser
+    // call it stands for returns.
 
     /**
      * @returns {number} A random number from 0 up to (not including) 1, like Math.random().
@@ -4206,7 +4207,9 @@ class Runtime extends EventEmitter {
      * which sometimes uses a `currentMSecs` timestamp value in Interpreter.as
      */
     updateCurrentMSecs () {
-        this.currentMSecs = Date.now();
+        // Desktop fork (section 155): the shared clock; the project timer and the waits of
+        // "wait", "glide", "say for" and so on read currentMSecs
+        this.currentMSecs = this.pmDateNow();
     }
 
     updatePrivacy () {

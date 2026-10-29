@@ -146,7 +146,8 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length, true);
+        // Desktop fork (section 155): "random" uses the runtime's random numbers, here and below
+        const index = Cast.toListIndex(args.INDEX, items.length, true, util.runtime);
         if (index === Cast.LIST_INVALID) {
             return;
         } else if (index === Cast.LIST_ALL) {
@@ -170,7 +171,7 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length + 1, false);
+        const index = Cast.toListIndex(args.INDEX, items.length + 1, false, util.runtime);
         if (index === Cast.LIST_INVALID) {
             return;
         }
@@ -184,7 +185,7 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length, false);
+        const index = Cast.toListIndex(args.INDEX, items.length, false, util.runtime);
         if (index === Cast.LIST_INVALID) {
             return;
         }
@@ -197,7 +198,7 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
         const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length, false);
+        const index = Cast.toListIndex(args.INDEX, items.length, false, util.runtime);
         if (index === Cast.LIST_INVALID) {
             return '';
         }
@@ -282,7 +283,7 @@ class Scratch3DataBlocks {
     data_itemexistslist (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, listLookup.items(list).length, false);
+        const index = Cast.toListIndex(args.INDEX, listLookup.items(list).length, false, util.runtime);
         if (index === Cast.LIST_INVALID) {
             return false;
         }

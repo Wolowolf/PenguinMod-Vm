@@ -886,7 +886,9 @@ class JSGenerator {
         case 'op.false':
             return new TypedInput('(false)', TYPE_BOOLEAN);
         case 'op.randbool':
-            return new TypedInput('(Boolean(Math.round(Math.random())))', TYPE_BOOLEAN);
+            // Desktop fork (section 155): random numbers and the clock come from the runtime (runtime.pmRandom,
+            // runtime.pmDateNow) in every core block below too
+            return new TypedInput('(Boolean(Math.round(runtime.pmRandom())))', TYPE_BOOLEAN);
 
         case 'pmEventsExpansion.broadcastFunction':
             // we need to do function otherwise this block would be stupidly long
@@ -1295,10 +1297,10 @@ class JSGenerator {
         case 'op.random':
             if (node.useInts) {
                 // Both inputs are ints, so we know neither are NaN
-                return new TypedInput(`randomInt(${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER);
+                return new TypedInput(`randomInt(runtime, ${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER);
             }
             if (node.useFloats) {
-                return new TypedInput(`randomFloat(${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER_NAN);
+                return new TypedInput(`randomFloat(runtime, ${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER_NAN);
             }
             return new TypedInput(`runtime.ext_scratch3_operators._random(${this.descendInput(node.low).asUnknown()}, ${this.descendInput(node.high).asUnknown()})`, TYPE_NUMBER_NAN);
         case 'op.round':
@@ -1392,20 +1394,20 @@ class JSGenerator {
         case 'sensing.colorTouchingColor':
             return new TypedInput(`target.colorIsTouchingColor(colorToList(${this.descendInput(node.target).asColor()}), colorToList(${this.descendInput(node.mask).asColor()}))`, TYPE_BOOLEAN);
         case 'sensing.date':
-            return new TypedInput(`(new Date().getDate())`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getDate())`, TYPE_NUMBER);
         case 'sensing.dayofweek':
-            return new TypedInput(`(new Date().getDay() + 1)`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getDay() + 1)`, TYPE_NUMBER);
         case 'sensing.daysSince2000':
-            return new TypedInput('daysSince2000()', TYPE_NUMBER);
+            return new TypedInput('daysSince2000(runtime)', TYPE_NUMBER);
         case 'sensing.distance':
             // TODO: on stages, this can be computed at compile time
             return new TypedInput(`distance(${this.descendInput(node.target).asString()})`, TYPE_NUMBER);
         case 'sensing.hour':
-            return new TypedInput(`(new Date().getHours())`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getHours())`, TYPE_NUMBER);
         case 'sensing.minute':
-            return new TypedInput(`(new Date().getMinutes())`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getMinutes())`, TYPE_NUMBER);
         case 'sensing.month':
-            return new TypedInput(`(new Date().getMonth() + 1)`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getMonth() + 1)`, TYPE_NUMBER);
         case 'sensing.of': {
             const object = this.descendInput(node.object).asString();
             const property = node.property;
@@ -1449,9 +1451,9 @@ class JSGenerator {
             return new TypedInput(`runtime.ext_scratch3_sensing.getAttributeOf({OBJECT: ${object}, PROPERTY: "${sanitize(property)}" })`, TYPE_UNKNOWN);
         }
         case 'sensing.second':
-            return new TypedInput(`(new Date().getSeconds())`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getSeconds())`, TYPE_NUMBER);
         case 'sensing.timestamp':
-            return new TypedInput(`(Date.now())`, TYPE_NUMBER);
+            return new TypedInput(`(runtime.pmDateNow())`, TYPE_NUMBER);
         case 'sensing.touching':
             return new TypedInput(`target.isTouchingObject(${this.descendInput(node.object).asUnknown()})`, TYPE_BOOLEAN);
         case 'sensing.touchingColor':
@@ -1461,7 +1463,7 @@ class JSGenerator {
         case 'sensing.loggedin':
             return new TypedInput('runtime.ioDevices.userData.getLoggedIn()', TYPE_BOOLEAN);
         case 'sensing.year':
-            return new TypedInput(`(new Date().getFullYear())`, TYPE_NUMBER);
+            return new TypedInput(`(new Date(runtime.pmDateNow()).getFullYear())`, TYPE_NUMBER);
 
         case 'timer.get':
             return new TypedInput('runtime.ioDevices.clock.projectTimer()', TYPE_NUMBER);

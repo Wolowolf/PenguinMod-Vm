@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 155): "random" list indexes use the runtime's random numbers (Scratch.Cast.toListIndex gets Scratch.vm.runtime).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Variable and list
 // ID: qxsckvarandlist
@@ -345,7 +346,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const index = Scratch.Cast.toListIndex(
         args.INDEX,
         variable.pmGetValue().length,
-        false
+        false,
+        Scratch.vm.runtime
       );
       if (index === "INVALID") return "";
       return variable.pmGetValue()[index - 1];
@@ -387,7 +389,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         const index = Scratch.Cast.toListIndex(
           args.INDEX,
           variable.pmGetValue().length,
-          true
+          true,
+          Scratch.vm.runtime
         );
         if (index === "ALL") {
           variable.pmSetValue([]);
@@ -418,7 +421,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         const index = Scratch.Cast.toListIndex(
           args.INDEX,
           variable.pmGetValue().length,
-          false
+          false,
+          Scratch.vm.runtime
         );
         if (index !== "INVALID") {
           variable.pmGetValue()[index - 1] = args.VALUE;

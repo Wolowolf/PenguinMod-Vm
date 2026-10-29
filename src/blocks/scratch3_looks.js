@@ -670,10 +670,12 @@ class Scratch3LooksBlocks {
             // Pure whitespace should not be treated as a number
             // Note: isNaN will cast the string to a number before checking if it's NaN
             } else if (requestedCostume === 'random costume') {
+                // Desktop fork (section 155): the runtime's random numbers, here and below
                 let randomIndex = MathUtil.inclusiveRandIntWithout(
                     0,
                     target.sprite.costumes_.length - 1,
-                    target.currentCostume
+                    target.currentCostume,
+                    this.runtime
                 )
                 if (randomIndex >= target.sprite.costumes_.length) {
                     randomIndex = 0;
@@ -730,7 +732,8 @@ class Scratch3LooksBlocks {
                     costumeIndex = MathUtil.inclusiveRandIntWithout(
                         0,
                         target.sprite.costumes_.length - 1,
-                        target.currentCostume
+                        target.currentCostume,
+                        this.runtime
                     )
                     if (costumeIndex >= target.sprite.costumes_.length) {
                         costumeIndex = 0;
@@ -794,7 +797,8 @@ class Scratch3LooksBlocks {
                     const upperBound = numCostumes - 1;
                     const costumeToExclude = stage.currentCostume;
 
-                    const nextCostume = MathUtil.inclusiveRandIntWithout(lowerBound, upperBound, costumeToExclude);
+                    const nextCostume = MathUtil.inclusiveRandIntWithout(
+                        lowerBound, upperBound, costumeToExclude, this.runtime);
 
                     stage.setCostume(nextCostume);
                 }

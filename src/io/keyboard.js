@@ -188,7 +188,7 @@ class Keyboard {
                 // pm: key isnt present? we hit it for the first time
                 this.runtime.emit('KEY_HIT', scratchKey);
                 this._keysPressed.push(scratchKey);
-                this._keyTimestamps[scratchKey] = Date.now();
+                this._keyTimestamps[scratchKey] = this.runtime.pmDateNow(); // Desktop fork (section 155)
                 // pm: keep track of hit keys
                 this._keysHit.push(scratchKey);
                 this._keysHitOnStep[scratchKey] = this.runtime.frameLoop._stepCounter;

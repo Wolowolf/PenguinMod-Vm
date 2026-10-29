@@ -145,7 +145,8 @@ class Scratch3OperatorsBlocks {
 
     true () { return true; }
     false () { return false; }
-    randomBoolean () { return Boolean(Math.round(Math.random())); }
+    // Desktop fork (section 155): random numbers come from the runtime (runtime.pmRandom), here and in random
+    randomBoolean () { return Boolean(Math.round(this.runtime.pmRandom())); }
 
     constrainnumber (args) {
         return Math.min(Math.max(args.min, args.inp), args.max);
@@ -290,9 +291,9 @@ class Scratch3OperatorsBlocks {
         if (low === high) return low;
         // If both arguments are ints, truncate the result to an int.
         if (Cast.isInt(from) && Cast.isInt(to)) {
-            return low + Math.floor(Math.random() * ((high + 1) - low));
+            return low + Math.floor(this.runtime.pmRandom() * ((high + 1) - low));
         }
-        return (Math.random() * (high - low)) + low;
+        return (this.runtime.pmRandom() * (high - low)) + low;
     }
 
     join (args) {

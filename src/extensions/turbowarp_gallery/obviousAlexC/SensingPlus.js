@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file, except: list values through Variable.pmGetValue / pmIndexOf instead of its `value`, so the list keeps its lookup table (section 125, step 5e) (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 155): "random" list indexes use the runtime's random numbers (Scratch.Cast.toListIndex gets Scratch.vm.runtime).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sensing Plus
 // ID: obviousalexsensing
@@ -1092,7 +1093,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const casted = Scratch.Cast.toListIndex(
         index,
         variable.pmGetValue().length,
-        false
+        false,
+        Scratch.vm.runtime
       );
       if (casted === "INVALID") {
         return "";

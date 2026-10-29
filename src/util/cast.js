@@ -210,9 +210,11 @@ class Cast {
      * @param {*} index Scratch arg, including 1-based numbers or special cases.
      * @param {number} length Length of the list.
      * @param {boolean} acceptAll Whether it should accept "all" or not.
+     * @param {Runtime=} runtime Desktop fork (section 155): gives the random number for "random" (runtime.pmRandom);
+     *     without it, Math.random.
      * @return {(number|string)} 1-based index for list, LIST_ALL, or LIST_INVALID.
      */
-    static toListIndex (index, length, acceptAll) {
+    static toListIndex (index, length, acceptAll, runtime) {
         if (typeof index !== 'number') {
             if (index === 'all') {
                 return acceptAll ? Cast.LIST_ALL : Cast.LIST_INVALID;
@@ -224,7 +226,7 @@ class Cast {
                 return Cast.LIST_INVALID;
             } else if (index === 'random' || index === 'any') {
                 if (length > 0) {
-                    return 1 + Math.floor(Math.random() * length);
+                    return 1 + Math.floor((runtime ? runtime.pmRandom() : Math.random()) * length);
                 }
                 return Cast.LIST_INVALID;
             }

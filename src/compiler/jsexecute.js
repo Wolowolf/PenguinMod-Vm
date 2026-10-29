@@ -583,7 +583,7 @@ runtimeFunctions.coreItemExists = `const coreItemExists = (index, length) => {
         if (index === 'last') return length > 0;
         if (index === 'random' || index === 'any') {
             if (length > 0) {
-                Math.random();
+                globalState.thread.target.runtime.pmRandom(); // section 155
                 return true;
             }
             return false;
@@ -688,7 +688,9 @@ const compareLessThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'num
  * @param {number} high Upper bound
  * @returns {number} A random integer between low and high, inclusive.
  */
-runtimeFunctions.randomInt = `const randomInt = (low, high) => low + Math.floor(Math.random() * ((high + 1) - low))`;
+// Desktop fork (section 155): random numbers and the clock come from the runtime (runtime.pmRandom,
+// runtime.pmDateNow) in the core block helpers here and below
+runtimeFunctions.randomInt = `const randomInt = (runtime, low, high) => low + Math.floor(runtime.pmRandom() * ((high + 1) - low))`;
 
 /**
  * Generate a random float.
@@ -696,7 +698,7 @@ runtimeFunctions.randomInt = `const randomInt = (low, high) => low + Math.floor(
  * @param {number} high Upper bound
  * @returns {number} A random floating point number between low and high.
  */
-runtimeFunctions.randomFloat = `const randomFloat = (low, high) => (Math.random() * (high - low)) + low`;
+runtimeFunctions.randomFloat = `const randomFloat = (runtime, low, high) => (runtime.pmRandom() * (high - low)) + low`;
 
 /**
  * Create and start a timer.
@@ -716,7 +718,7 @@ runtimeFunctions.timer = `const timer = () => {
  */
 // Date.UTC(2000, 0, 1) === 946684800000
 // Hardcoding it is marginally faster
-runtimeFunctions.daysSince2000 = `const daysSince2000 = () => (Date.now() - 946684800000) / (24 * 60 * 60 * 1000)`;
+runtimeFunctions.daysSince2000 = `const daysSince2000 = runtime => (runtime.pmDateNow() - 946684800000) / (24 * 60 * 60 * 1000)`;
 
 /**
  * Determine distance to a sprite or point.
@@ -765,7 +767,7 @@ baseRuntime += `const listIndexSlow = (index, length) => {
         return length - 1;
     } else if (index === 'random' || index === 'any') {
         if (length > 0) {
-            return (Math.random() * length) | 0;
+            return (globalState.thread.target.runtime.pmRandom() * length) | 0; // section 155
         }
         return -1;
     }
@@ -1259,7 +1261,7 @@ runtimeFunctions.pmdGetList = `const pmdGetList = (target, site, name) => {
 runtimeFunctions.pmdItemOf = `const pmdItemOf = (target, site, index, name) => {
     const variable = site.get(target, name);
     if (!variable) return 0;
-    const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false);
+    const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false, target.runtime);
     if (position === "INVALID") return "";
     return variable.pmGetValue()[position - 1];
 }`;
@@ -1272,7 +1274,7 @@ runtimeFunctions.pmdClear = `const pmdClear = (target, site, name) => {
 runtimeFunctions.pmdDeleteOf = `const pmdDeleteOf = (target, site, index, name) => {
     const variable = site.get(target, name);
     if (variable) {
-        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, true);
+        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, true, target.runtime);
         if (position === "ALL") {
             variable.pmSetValue([]);
         } else if (position !== "INVALID") {
@@ -1291,7 +1293,7 @@ runtimeFunctions.pmdAdd = `const pmdAdd = (target, site, value, name) => {
 runtimeFunctions.pmdReplace = `const pmdReplace = (target, site, index, name, value) => {
     const variable = site.get(target, name);
     if (variable) {
-        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false);
+        const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false, target.runtime);
         if (position !== "INVALID") {
             variable.pmGetValue()[position - 1] = value;
             variable.pmItemsChanged();
@@ -1423,7 +1425,7 @@ runtimeFunctions.pmlIsEmpty = `const pmlIsEmpty = (target, site, name) => {
 runtimeFunctions.pmlItemExists = `const pmlItemExists = (target, site, num, name) => {
     const list = site.get(target, name);
     if (!list) return false;
-    const listIndex = globalState.Cast.toListIndex(num, list.pmGetValue().length, false);
+    const listIndex = globalState.Cast.toListIndex(num, list.pmGetValue().length, false, target.runtime);
     if (listIndex === "INVALID") return false;
     return true;
 }`;
