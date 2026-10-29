@@ -233,6 +233,14 @@ class Scratch3SoundBlocks {
         if (!soundBank) return;
 
         const decayTime = Cast.toNumber(args.VALUE);
+        // Desktop fork (section 162): a sound not decoded yet gets the setting once it is
+        const pending = this.runtime.pmSounds.pending(soundBank, soundId);
+        if (pending) {
+            pending.ops.push({run: player => {
+                if (player) player.stopFadeDecay = decayTime <= 0 ? 0 : decayTime;
+            }});
+            return;
+        }
         if (decayTime <= 0) {
             soundBank.soundPlayers[soundId].stopFadeDecay = 0;
             return;
@@ -268,6 +276,9 @@ class Scratch3SoundBlocks {
         if (!soundBank) return false;
         const players = soundBank.soundPlayers;
         if (!players) return false;
+        // Desktop fork (section 162): a sound not decoded yet plays once a play waits for its decoding
+        const pending = this.runtime.pmSounds.pending(soundBank, soundId);
+        if (pending) return pending.playing;
         if (!players.hasOwnProperty(soundId)) return false;
 
         return players[soundId].isPlaying == true;
@@ -287,6 +298,9 @@ class Scratch3SoundBlocks {
         if (!soundBank) return 0;
         const players = soundBank.soundPlayers;
         if (!players) return 0;
+        // Desktop fork (section 162): the length is known once the sound is decoded; the script waits for it
+        const decoding = this.runtime.pmSounds.ensure(soundBank, soundId);
+        if (decoding) return decoding.then(() => this.getLength(args, util));
         if (!players.hasOwnProperty(soundId)) return 0;
         const buffer = players[soundId].buffer;
         if (!buffer) return 0;

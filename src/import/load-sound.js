@@ -17,6 +17,13 @@ const loadSoundFromAsset = function (sound, soundAsset, runtime, soundBank) {
         log.warn('No audio engine present; cannot load sound asset: ', sound.md5);
         return Promise.resolve(sound);
     }
+    // Desktop fork (section 162): decoded when first needed (src/engine/lazy-sounds.js)
+    if (runtime.pmSounds && runtime.pmSounds.register(sound, soundAsset.data, soundBank)) {
+        if (runtime.isPackaged) {
+            sound.asset = null;
+        }
+        return Promise.resolve(sound);
+    }
     return runtime.audioEngine.decodeSoundPlayer(Object.assign(
         {},
         sound,

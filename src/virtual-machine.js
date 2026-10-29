@@ -895,7 +895,10 @@ class VirtualMachine extends EventEmitter {
 
         targets = targets.filter(target => !!target);
 
-        return this._loadExtensions(extensions.extensionIDs).then(() => {
+        return this._loadExtensions(extensions.extensionIDs)
+            // Desktop fork (section 162): an extension that reads decoded sounds gets them all decoded
+            .then(() => this.runtime.pmSounds.eager && this.runtime.pmSounds.prepareAll(targets))
+            .then(() => {
             const deprecated_extensionStorage = {};
             for (const extension of extensions.extensionIDs) {
                 if (!extensions.extensionData[extension]) continue;
@@ -969,6 +972,7 @@ class VirtualMachine extends EventEmitter {
             this.emitWorkspaceUpdate();
             this.runtime.setEditingTarget(this.editingTarget);
             this.runtime.ioDevices.cloud.setStage(this.runtime.getTargetForStage());
+            this.runtime.pmSounds.warmUp(targets);
         });
     }
 
@@ -1226,6 +1230,9 @@ class VirtualMachine extends EventEmitter {
     getSoundBuffer (soundIndex) {
         const id = this.editingTarget.sprite.sounds[soundIndex]?.soundId;
         if (id && this.runtime && this.runtime.audioEngine) {
+            // Desktop fork (section 162): a sound not decoded yet is decoded now, the editor gets it with the
+            // targets update that follows
+            if (this.runtime.pmSounds.request(this.editingTarget.sprite.soundBank, id)) return null;
             return this.editingTarget.sprite.soundBank.getSoundPlayer(id).buffer;
         }
         return null;
@@ -1242,7 +1249,16 @@ class VirtualMachine extends EventEmitter {
         if (sound && sound.broken) delete sound.broken;
         const id = sound ? sound.soundId : null;
         if (id && this.runtime && this.runtime.audioEngine) {
-            this.editingTarget.sprite.soundBank.getSoundPlayer(id).buffer = newBuffer;
+            const soundBank = this.editingTarget.sprite.soundBank;
+            // Desktop fork (section 162): a sound not decoded yet gets the new audio once it is
+            const decoding = this.runtime.pmSounds.ensure(soundBank, id);
+            if (decoding) {
+                decoding.then(() => {
+                    soundBank.getSoundPlayer(id).buffer = newBuffer;
+                    sound.sampleCount = newBuffer.length;
+                    sound.rate = newBuffer.sampleRate;
+                });
+            } else soundBank.getSoundPlayer(id).buffer = newBuffer;
         }
         // Update sound in runtime
         if (soundEncoding) {

@@ -67,6 +67,7 @@ const FrameLoop = require('./tw-frame-loop');
 // PMDESKTOP_EDGEHATS (section 63)
 const edgeHats = require('./edge-hats');
 const PageDoor = require('./page-door');
+const LazySounds = require('./lazy-sounds');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -368,6 +369,12 @@ class Runtime extends EventEmitter {
          * @type {PageDoor}
          */
         this.pmPage = new PageDoor();
+
+        /**
+         * Desktop fork (section 162): sounds are decoded the first time they are needed (src/engine/lazy-sounds.js).
+         * @type {LazySounds}
+         */
+        this.pmSounds = new LazySounds(this);
 
         /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions
