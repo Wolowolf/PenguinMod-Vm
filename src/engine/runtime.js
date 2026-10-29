@@ -355,6 +355,13 @@ class Runtime extends EventEmitter {
         this.pmEveryFrameHats = false;
 
         /**
+         * Desktop fork (section 158): the hidden state that extensions and the engine keep for themselves
+         * (pmRegisterState).
+         * @type {Map.<string, {save: Function, restore: Function, notRestored: (Array.<string>|undefined)}>}
+         */
+        this._pmStates = new Map();
+
+        /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions
          * (docs/EXTENSION-ROADMAP.md step 5). Broadcasts and other started hats: the HATS_STARTED event.
          * pmRestartThreadHooks: (thread) => a thread to use instead of restarting it, or nothing.
@@ -484,6 +491,12 @@ class Runtime extends EventEmitter {
             video: new Video(this),
             touch: new Touch(this)
         };
+
+        // Desktop fork (section 158): the project timer
+        this.pmRegisterState('clock', {
+            save: () => this.ioDevices.clock.pmSaveState(),
+            restore: (state, time) => this.ioDevices.clock.pmRestoreState(state, time)
+        });
 
         /**
          * A list of extensions, used to manage hardware connection.
@@ -2858,6 +2871,56 @@ class Runtime extends EventEmitter {
      */
     pmCancelAnimationFrame (id) {
         cancelAnimationFrame(id);
+    }
+
+    // Desktop fork (section 158): saving and restoring the hidden state of extensions and the engine (state that is
+    // not in sprites, variables or lists: timers, animations, physics, ...), for a later rewind, save-state or undo
+    // while running. Nothing calls these during normal running. A snapshot is plain data (structuredClone), shares no
+    // objects with the live state, and can be restored any number of times. What cannot be copied (GPU objects,
+    // sprites, audio, page elements) is rebuilt or looked up from the saved data by restore; what cannot be rebuilt
+    // (running threads and their waits, open connections, sounds playing) is left as it is and named in notRestored.
+
+    /**
+     * @param {string} id The extension's ID (or an engine part's name).
+     * @param {object} handlers save() returns the state as plain data (it may share objects with the live state:
+     *     the engine copies it); restore(state, time) puts a copy of it back. time.dateShift / time.perfShift: how far
+     *     pmDateNow() / pmPerfNow() moved since the save, to add to saved clock readings, so that durations continue
+     *     as if no time had passed. notRestored: optional list of what restore leaves as it is.
+     */
+    pmRegisterState (id, handlers) {
+        this._pmStates.set(id, handlers);
+    }
+
+    /**
+     * @returns {object} A snapshot of every registered state.
+     */
+    pmSaveStates () {
+        const states = {};
+        for (const [id, handlers] of this._pmStates) states[id] = handlers.save();
+        // one copy of everything: objects shared between states stay shared in the snapshot
+        // eslint-disable-next-line no-undef
+        return structuredClone({dateNow: this.pmDateNow(), perfNow: this.pmPerfNow(), states});
+    }
+
+    /**
+     * Puts back every registered state that the snapshot has (others are left as they are).
+     * @param {object} snapshot From pmSaveStates.
+     */
+    pmRestoreStates (snapshot) {
+        const copy = structuredClone(snapshot); // eslint-disable-line no-undef
+        const time = {dateShift: this.pmDateNow() - copy.dateNow, perfShift: this.pmPerfNow() - copy.perfNow};
+        for (const [id, handlers] of this._pmStates) {
+            if (Object.prototype.hasOwnProperty.call(copy.states, id)) handlers.restore(copy.states[id], time);
+        }
+    }
+
+    /**
+     * @returns {object} For each registered state's ID, the list of what restore leaves as it is.
+     */
+    pmStateInfo () {
+        const info = {};
+        for (const [id, handlers] of this._pmStates) info[id] = (handlers.notRestored || []).slice();
+        return info;
     }
 
     /**

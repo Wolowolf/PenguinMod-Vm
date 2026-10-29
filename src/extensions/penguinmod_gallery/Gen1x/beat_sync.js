@@ -6,6 +6,8 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 158): the beat clock's state is saved and restored through runtime.pmRegisterState (marked by
+// the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // pluey
 (function(Scratch) {
@@ -597,6 +599,36 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     const runtime = Scratch.vm.runtime;
 
     extensionInstance.setupVMEvents();
+
+    // Desktop fork (section 158): the beat clock runs on the audio clock, so how long ago it was started on that clock
+    // is saved, and the start is set that far before the audio clock's reading on restore
+    runtime.pmRegisterState('beatSync', {
+        save: () => ({
+            bpm: extensionInstance.bpm,
+            isRunning: extensionInstance.isRunning,
+            autoStart: extensionInstance.autoStart,
+            beatsPerMeasure: extensionInstance.beatsPerMeasure,
+            totalBeats: extensionInstance.totalBeats,
+            beatPosition: extensionInstance.beatPosition,
+            pausedElapsed: extensionInstance.pausedElapsed,
+            audioAge: extensionInstance.isRunning ? extensionInstance.getAudioCtx().currentTime - extensionInstance.startAudioTime : 0,
+            _wasRunning: extensionInstance._wasRunning,
+            _wasStopped: extensionInstance._wasStopped,
+            _pmWasRunning: extensionInstance._pmWasRunning
+        }),
+        restore: (state) => {
+            const autoStartChanged = extensionInstance.autoStart !== state.autoStart;
+            const { audioAge, ...fields } = state;
+            Object.assign(extensionInstance, fields);
+            if (state.isRunning) extensionInstance.startAudioTime = extensionInstance.getAudioCtx().currentTime - audioAge;
+            if (autoStartChanged) {
+                extensionInstance.saveAutoStart();
+                Scratch.vm.extensionManager.refreshBlocks('beatSync');
+            }
+            runtime.pmEdgeHatsChanged('beatSync');
+        },
+        notRestored: ['waits in progress (they are promises of the running scripts)']
+    });
 
     runtime.on('PROJECT_START', () => {
         extensionInstance.onGreenFlag();

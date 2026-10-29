@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file, except: "when [timer] > []" is checked only while a timer runs or after a timer was paused, restarted or changed (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 158): the timers' state is saved and restored through runtime.pmRegisterState (marked by the name).
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -202,6 +203,39 @@ class SteveZeroGreatnessExtraTimersExt {
     this.runtime = runtime;
 
     this.runtime.registerVariable(Timer.customId, Timer);
+    // Desktop fork (section 158): each timer's times, by sprite ID and variable ID (the timers themselves are variables)
+    this.runtime.pmRegisterState(selfid, {
+      save: () => {
+        const state = {};
+        for (const target of this.runtime.targets) {
+          for (const variable of Object.values(target.variables)) {
+            if (variable.type !== Timer.customId) continue;
+            if (!state[target.id]) state[target.id] = {};
+            state[target.id][variable.id] = {
+              startTime: variable.startTime, pausedTime: variable.pausedTime, tempPaused: variable.tempPaused
+            };
+          }
+        }
+        return state;
+      },
+      restore: (state, time) => {
+        for (const targetId in state) {
+          const target = this.runtime.getTargetById(targetId);
+          if (!target) continue;
+          for (const id in state[targetId]) {
+            const timer = target.variables[id];
+            if (!timer || timer.type !== Timer.customId) continue;
+            const saved = state[targetId][id];
+            timer.startTime = saved.startTime + time.dateShift;
+            timer.pausedTime = saved.pausedTime === null ? null : saved.pausedTime + time.dateShift;
+            timer.tempPaused = saved.tempPaused;
+            if (timer.is_paused) runningTimers.delete(timer);
+            else runningTimers.add(timer);
+          }
+        }
+        timersChanged(this.runtime);
+      }
+    });
     // Desktop fork (section 127): a running timer can change the hat's answer in any frame
     this.runtime.on("RUNTIME_STEP_START", () => {
       if (runningTimers.size) timersChanged(this.runtime);

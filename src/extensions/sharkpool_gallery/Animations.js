@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 158): the animations are saved and restored through runtime.pmRegisterState (marked by the
+// name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Animations
 // ID: SPanimations
@@ -108,6 +110,43 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
       runtime.on("PROJECT_STOP_ALL", cleanupAnimations);
       runtime.on("TARGETS_UPDATE", cleanupAnimations);
+
+      // Desktop fork (section 158): every animation without its sprite (found again by the sprite ID it is kept
+      // under); the engine's copy keeps the frame lists that a clone shares with its original shared
+      runtime.pmRegisterState("SPanimations", {
+        save: () => {
+          const state = {};
+          for (const id in allAnimations) {
+            state[id] = {};
+            for (const name in allAnimations[id]) {
+              const { target, ...anim } = allAnimations[id][name];
+              state[id][name] = anim;
+            }
+          }
+          return state;
+        },
+        restore: (state, time) => {
+          allAnimations = {};
+          const shifted = new Set();
+          const shift = (data) => {
+            if (shifted.has(data)) return;
+            shifted.add(data);
+            if (data.startStamp !== undefined) data.startStamp += time.dateShift;
+          };
+          for (const id in state) {
+            const target = runtime.getTargetById(id);
+            if (!target) continue;
+            allAnimations[id] = {};
+            for (const name in state[id]) {
+              const anim = state[id][name];
+              anim.target = target;
+              Object.values(anim.specialFrames).forEach(shift);
+              anim.keyBuffers.forEach(shift);
+              allAnimations[id][name] = anim;
+            }
+          }
+        }
+      });
 
     }
     getInfo() {
