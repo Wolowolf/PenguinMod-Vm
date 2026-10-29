@@ -31,7 +31,8 @@ class JgPrismBlocks {
         this.isCameraScreenshotEnabled = false;
 
         this.mouseScrollDelta = { x: 0, y: 0, z: 0 };
-        addEventListener("wheel", e => {
+        // Desktop fork (section 159): the runtime's door to the page
+        this.runtime.pmPage.addEventListener("window", "wheel", e => {
             this.mouseScrollDelta.x = e.deltaX;
             this.mouseScrollDelta.y = e.deltaY;
             this.mouseScrollDelta.z = e.deltaZ;

@@ -5,6 +5,8 @@
 // section 115 the set accuracy block (Parakeet).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Dictation
 // id: pooiod7Dictation
@@ -622,7 +624,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 end("");
             };
             (async () => {
-                if (!allowed) allowed = window.confirm("This project wants to use your microphone to turn speech into text.\nThe speech is recognized on this computer and not sent anywhere. Allow?");
+                if (!allowed) allowed = Scratch.vm.runtime.pmPage.confirm("This project wants to use your microphone to turn speech into text.\nThe speech is recognized on this computer and not sent anywhere. Allow?");
                 if (!allowed || !(await ensurePacks(packsFor(job.engine))) || job.stopped) return end("");
                 handlers.set(job.id, (message) => {
                     if (message.type === "heard") closeMic();

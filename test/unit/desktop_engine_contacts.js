@@ -10,6 +10,8 @@
 //   pmCancelAnimationFrame); --report counts their uses.
 // - page: what only the page has (document, window, storage, dialogs, page types and events, navigator's page parts)
 //   and the stage canvas or its WebGL context (engine in a worker)
+//   Not contacts: the runtime's door to the page (section 159: runtime.pmPage, src/engine/page-door.js); --report
+//   counts the uses of each of its functions.
 // - internals: members named with "_" that the VM or renderer define, used on something other than `this`, and writes
 //   to members of the vm, runtime, renderer, block library or a prototype (engine updates, hooks)
 // Found by reading the code, not running it: an extension's main file and the files of its own that it requires. A name
@@ -232,6 +234,7 @@ const contactsOfFile = (ast, add, ownPrivate) => {
         if (isMember(node)) {
             const name = propertyName(node);
             if (ENTRY_POINTS.has(name)) add('entry points', name);
+            if (isMember(node.object) && propertyName(node.object) === 'pmPage') add('entry points', `pmPage.${name}`);
             if (name && !node.computed && name.startsWith('_') && node.object.type !== 'ThisExpression' &&
                 enginePrivate.has(name) && !ownPrivate.has(name)) {
                 add('internals', `.${name}`);

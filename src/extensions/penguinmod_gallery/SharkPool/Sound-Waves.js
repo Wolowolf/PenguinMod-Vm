@@ -6,6 +6,8 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sound Waves
 // ID: SPsoundWaves
@@ -361,14 +363,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     registerKeyEvents() {
-      document.addEventListener("keydown", (event) => {
+      Scratch.vm.runtime.pmPage.addEventListener("document", "keydown", (event) => {
         if (!this.keyPressed) {
           this.keyPressed = true;
           this.keyPressedTime = this.audioContext.currentTime;
           this.convertAndReportNoteFromKeyPressed(event.key);
         }
       });
-      document.addEventListener("keyup", () => {
+      Scratch.vm.runtime.pmPage.addEventListener("document", "keyup", () => {
         this.keyPressed = false;
         this.keyPressedTime = 0;
       });

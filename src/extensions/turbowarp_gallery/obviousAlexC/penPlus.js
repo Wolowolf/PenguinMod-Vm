@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Pen Plus V7
 // ID: penP
@@ -34,7 +36,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
   if (!Scratch.extensions.unsandboxed) {
     //for those who use the version from pen-group's site
-    alert("Pen+ must be ran unsandboxed!");
+    Scratch.vm.runtime.pmPage.alert("Pen+ must be ran unsandboxed!");
     throw new Error("Pen+ must run unsandboxed");
   }
 
@@ -100,7 +102,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     updateCanvasSize();
 
     vm.renderer.on("UseHighQualityRenderChanged", updateCanvasSize);
-    window.addEventListener("resize", updateCanvasSize);
+    Scratch.vm.runtime.pmPage.addEventListener("window", "resize", updateCanvasSize);
     canvas.addEventListener("resize", updateCanvasSize);
     vm.runtime.on("STAGE_SIZE_CHANGED", updateCanvasSize);
 
@@ -1041,7 +1043,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     };
 
     constructor() {
-      window.addEventListener("message", (event) => {
+      Scratch.vm.runtime.pmPage.addEventListener("window", "message", (event) => {
         let eventType = event.data.type;
 
         if (!eventType) return;

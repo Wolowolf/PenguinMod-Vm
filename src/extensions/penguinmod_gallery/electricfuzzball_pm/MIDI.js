@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /* global Scratch */
 // added patch reporter, is a drum? and a thingy velocity 0 thingy whatever the hell
@@ -138,7 +140,7 @@ class MIDI {
 
     startListening() {
         if (!this.inputs || this.inputs.length === 0) {
-            alert("MIDI device not detected!");
+            Scratch.vm.runtime.pmPage.alert("MIDI device not detected!");
             throw new Error("MIDI device not detected!");
         }
         this.inputs.forEach(input => input.onmidimessage = e => this._onMIDIMessage(e));
@@ -308,7 +310,7 @@ class MIDI {
 
     setNote(args){ console.log(`Map note ${args.NOTE} → ${args.EVENT}`); }
 
-    showVisualizer(){ if(this.visualizerEl)return; this.visualizerEl=document.createElement("div"); this.visualizerEl.style.position="fixed"; this.visualizerEl.style.top="50px"; this.visualizerEl.style.left="50px"; this.visualizerEl.style.background="#222"; this.visualizerEl.style.color="#fff"; this.visualizerEl.style.padding="10px"; this.visualizerEl.style.borderRadius="8px"; this.visualizerEl.style.fontFamily="monospace"; this.visualizerEl.style.zIndex=9999; this.visualizerEl.style.cursor="move"; this.visualizerEl.innerText="Notes: []"; document.body.appendChild(this.visualizerEl); let dragging=false; let offsetX=0; let offsetY=0; this.visualizerEl.addEventListener("mousedown",(e)=>{dragging=true; offsetX=e.clientX-this.visualizerEl.offsetLeft; offsetY=e.clientY-this.visualizerEl.offsetTop;}); document.addEventListener("mousemove",(e)=>{if(!dragging)return; this.visualizerEl.style.left=e.clientX-offsetX+"px"; this.visualizerEl.style.top=e.clientY-offsetY+"px";}); document.addEventListener("mouseup",()=>dragging=false); this.updateVisualizer(); }
+    showVisualizer(){ if(this.visualizerEl)return; this.visualizerEl=document.createElement("div"); this.visualizerEl.style.position="fixed"; this.visualizerEl.style.top="50px"; this.visualizerEl.style.left="50px"; this.visualizerEl.style.background="#222"; this.visualizerEl.style.color="#fff"; this.visualizerEl.style.padding="10px"; this.visualizerEl.style.borderRadius="8px"; this.visualizerEl.style.fontFamily="monospace"; this.visualizerEl.style.zIndex=9999; this.visualizerEl.style.cursor="move"; this.visualizerEl.innerText="Notes: []"; document.body.appendChild(this.visualizerEl); let dragging=false; let offsetX=0; let offsetY=0; this.visualizerEl.addEventListener("mousedown",(e)=>{dragging=true; offsetX=e.clientX-this.visualizerEl.offsetLeft; offsetY=e.clientY-this.visualizerEl.offsetTop;}); Scratch.vm.runtime.pmPage.addEventListener("document", "mousemove",(e)=>{if(!dragging)return; this.visualizerEl.style.left=e.clientX-offsetX+"px"; this.visualizerEl.style.top=e.clientY-offsetY+"px";}); Scratch.vm.runtime.pmPage.addEventListener("document", "mouseup",()=>dragging=false); this.updateVisualizer(); }
     hideVisualizer(){ if(this.visualizerEl){document.body.removeChild(this.visualizerEl); this.visualizerEl=null;} }
     updateVisualizer(){ if(!this.visualizerEl) return; const arr=[]; for(const [ch,notes] of this.activeNotes.entries()) for(const note of notes.keys()) arr.push(`N Ch${ch}:${note} v${notes.get(note)}`); for(const [ch,pads] of this.activePads.entries()) for(const pad of pads.keys()) arr.push(`P Ch${ch}:${pad} v${pads.get(pad)}`); this.visualizerEl.innerText=`Notes: [${arr.join(", ")}]`; }
 }

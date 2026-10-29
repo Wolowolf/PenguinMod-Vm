@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Video sharing (v2.5.2) by pooiod7
 
@@ -52,7 +54,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       try {
         accent = "#e01f1f";
         backColor = "rgba(0, 0, 0, 0.7)";
-        var themeSetting = localStorage.getItem('tw:theme');
+        var themeSetting = Scratch.vm.runtime.pmPage.storageGet('tw:theme');
         var parsed = JSON.parse(themeSetting);
         if (parsed.accent === 'purple') {
           accent = '#855cd6';

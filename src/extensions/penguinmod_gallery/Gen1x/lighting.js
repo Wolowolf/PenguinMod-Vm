@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function(Scratch) {
     'use strict';
@@ -466,8 +468,8 @@ self.onmessage = ({ data: msg }) => {
 
             this._setupResizeObserver();
 
-            window.addEventListener('resize', this._boundSyncPos);
-            document.addEventListener('fullscreenchange', this._boundSyncPos);
+            Scratch.vm.runtime.pmPage.addEventListener('window', 'resize', this._boundSyncPos);
+            Scratch.vm.runtime.pmPage.addEventListener('document', 'fullscreenchange', this._boundSyncPos);
 
             Scratch.vm.runtime.on('AFTER_EXECUTE', this._boundRender);
             Scratch.vm.runtime.on('PROJECT_START', () => {
@@ -489,9 +491,9 @@ self.onmessage = ({ data: msg }) => {
         async openRenderSettings() {
             const ScratchBlocks = window.ScratchBlocks;
             if (!ScratchBlocks || !ScratchBlocks.customPrompt) {
-                const op = parseFloat(prompt('Overlay Opacity (0-1):', this.shadowOpacity));
+                const op = parseFloat(Scratch.vm.runtime.pmPage.prompt('Overlay Opacity (0-1):', this.shadowOpacity));
                 if (!isNaN(op)) this.shadowOpacity = Math.max(0, Math.min(1, op));
-                const amb = prompt('Ambient color (hex):', this.ambient);
+                const amb = Scratch.vm.runtime.pmPage.prompt('Ambient color (hex):', this.ambient);
                 if (amb) {
                     this.ambient = amb;
                     this._ambientRGB = this.hexToRgb(amb);
@@ -2866,7 +2868,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         allLightsHint() {
-            alert('set the light ID field to "ALL" to apply any change to every light on the scene at once!');
+            Scratch.vm.runtime.pmPage.alert('set the light ID field to "ALL" to apply any change to every light on the scene at once!');
         }
 
         lightExists(args) {

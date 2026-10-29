@@ -221,8 +221,9 @@ class pmEventsExpansion {
                 const full = Cast.toBoolean(document.fullscreenElement || document.webkitFullscreenElement);
                 runtime.startHats('pmEventsExpansion_whenScreenChanges', {SCREEN: full ? 'windowFull' : 'windowDefault'});
             };
-            document.addEventListener('fullscreenchange', fullscreenChanged);
-            document.addEventListener('webkitfullscreenchange', fullscreenChanged);
+            // Desktop fork (section 159): the runtime's door to the page
+            runtime.pmPage.addEventListener('document', 'fullscreenchange', fullscreenChanged);
+            runtime.pmPage.addEventListener('document', 'webkitfullscreenchange', fullscreenChanged);
         }
 
         // sprites dragged and dropped by the player

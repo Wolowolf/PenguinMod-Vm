@@ -8,6 +8,8 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Obscuras MIDI Tools v5
 // ID: ObscurasMIDITools
@@ -428,7 +430,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 this.midiData = new Midi(reader.result);
                 resolve();
               } catch (err) {
-                alert('Failed to parse MIDI: ' + err.message);
+                Scratch.vm.runtime.pmPage.alert('Failed to parse MIDI: ' + err.message);
                 reject(err);
               }
             };

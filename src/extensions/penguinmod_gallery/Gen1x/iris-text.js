@@ -8,6 +8,8 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -4168,7 +4170,7 @@ Enjoy!! :D
 
     function hasSeenDisclaimer(flagKey) {
         try {
-            return typeof localStorage !== 'undefined' && localStorage.getItem(flagKey) === '1';
+            return Scratch.vm.runtime.pmPage.storageGet(flagKey) === '1';
         } catch (e) {
             return false;
         }
@@ -4176,7 +4178,7 @@ Enjoy!! :D
 
     function markDisclaimerSeen(flagKey) {
         try {
-            if (typeof localStorage !== 'undefined') localStorage.setItem(flagKey, '1');
+            Scratch.vm.runtime.pmPage.storageSet(flagKey, '1');
         } catch (e) {
             // ...
         }
@@ -4272,7 +4274,7 @@ Enjoy!! :D
                 p.innerHTML = disclaimerText.replace(/\n/g, "<br>");
                 modal.appendChild(p);
             } else {
-                alert(disclaimerText);
+                Scratch.vm.runtime.pmPage.alert(disclaimerText);
             }
             markDisclaimerSeen(BROWSER_DISCLAIMER_FLAG_KEY);
         }

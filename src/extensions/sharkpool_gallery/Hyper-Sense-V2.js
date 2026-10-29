@@ -5,6 +5,8 @@
 // marked "Desktop fork (section 128)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Hyper Sense V2
 // ID: HyperSense2SP
@@ -99,7 +101,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         mouseData.scrollVelocity[1] += (0 - scrollVelocity[1]) / 4;
       });
 
-      window.addEventListener("keydown", (e) => {
+      Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (e) => {
         runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
         const key = this.toProperKey(e, false);
         keyData.curKey = key;
@@ -114,7 +116,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           e.preventDefault();
         }
       });
-      window.addEventListener("keyup", (e) => {
+      Scratch.vm.runtime.pmPage.addEventListener("window", "keyup", (e) => {
         runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
         const key = this.toProperKey(e, false);
         const index = keyData.keys.indexOf(key);
@@ -124,7 +126,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         keyData.curKey = keyData.keys[0] || "";
       });
 
-      document.addEventListener("wheel", (e) => {
+      Scratch.vm.runtime.pmPage.addEventListener("document", "wheel", (e) => {
         const oldScroll = mouseData.scroll;
         mouseData.scroll = [oldScroll[0] + e.deltaX, oldScroll[1] + e.deltaY];
         mouseData.scrollVelocity = [e.deltaX, e.deltaY];
@@ -135,7 +137,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         if (e.deltaY > 1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "up" });
         else if (e.deltaY < -1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "down" });
       });
-      document.addEventListener("mousemove", (e) => {
+      Scratch.vm.runtime.pmPage.addEventListener("document", "mousemove", (e) => {
         mouseData.client = [e.clientX, e.clientY];
         mouseData.velocity = [
           runtime.ioDevices.mouse.getScratchX(),

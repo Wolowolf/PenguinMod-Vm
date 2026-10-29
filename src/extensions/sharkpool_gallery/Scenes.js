@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the pen layer's effects are restored with Drawable.setEffectUniforms instead of writing its _uniforms; (section 125, step 5e) variables saved and restored with Variable.pmGetValue / pmSetValue, so lists keep their lookup tables, and a saved scene keeps a copy of each list (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Scenes
 // ID: SPscenes
@@ -577,13 +579,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     switchScene(args) {
       const name = Scratch.Cast.toString(args.NAME);
-      if (scenes[name] === undefined) alert(`SPscenes -- Scene named: ${name} does not exist!`);
+      if (scenes[name] === undefined) Scratch.vm.runtime.pmPage.alert(`SPscenes -- Scene named: ${name} does not exist!`);
       else this._switchScene(name, scenes[name]);
     }
 
     updateScene(args) {
       const name = Scratch.Cast.toString(args.NAME);
-      if (scenes[name] === undefined) alert(`SPscenes -- Scene named: ${name} does not exist!`);
+      if (scenes[name] === undefined) Scratch.vm.runtime.pmPage.alert(`SPscenes -- Scene named: ${name} does not exist!`);
       else {
         scenes[name] = this._stageToScene();
         if (isEditor) {

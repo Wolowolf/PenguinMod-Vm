@@ -4,6 +4,8 @@
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 155): "random" list indexes use the runtime's random numbers (Scratch.Cast.toListIndex gets Scratch.vm.runtime).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sensing Plus
 // ID: obviousalexsensing
@@ -148,7 +150,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     if (status === "denied") {
       // Requesting permission again will be ignored no matter what.
       // The flow for resetting this is awful, so let's at least tell the user how to do that.
-      alert(
+      Scratch.vm.runtime.pmPage.alert(
         Scratch.translate(
           "To allow accelerometer and gyroscope access, open iOS settings > Apps > Safari > Advanced > Website Data > press Edit > Clear data for {domain}, then refresh this page.",
           {
@@ -188,7 +190,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     return initializingSensorsPromise.then(callback);
   };
 
-  window.addEventListener("devicemotion", (event) => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "devicemotion", (event) => {
     // On desktops, this event is fired with nulls.
     if (
       event.accelerationIncludingGravity.x !== null &&
@@ -203,7 +205,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
   });
 
-  window.addEventListener("deviceorientation", (event) => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "deviceorientation", (event) => {
     // On desktops, this event is fired with nulls.
     if (event.alpha !== null && event.beta !== null && event.gamma !== null) {
       askedForSensorPermission = true;

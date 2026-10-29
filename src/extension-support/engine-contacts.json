@@ -36,10 +36,8 @@
             "setTimeout": 1
         },
         "page": {
-            "document.addEventListener": 2,
             "document.createElement": 2,
-            "document.querySelector": 4,
-            "window.addEventListener": 2
+            "document.querySelector": 4
         },
         "internals": {
             "._answer": 1,
@@ -69,7 +67,6 @@
     },
     "ObscurasMIDITools": {
         "page": {
-            "alert": 1,
             "document.body": 1,
             "document.createElement": 1,
             "window.Midi": 2
@@ -146,15 +143,10 @@
             "setTimeout": 3
         },
         "page": {
-            "alert": 2,
-            "confirm": 1,
             "document.body": 1,
             "document.createElement": 18,
             "document.querySelector": 3,
-            "document.querySelectorAll": 1,
-            "prompt": 1,
-            "window.addEventListener": 1,
-            "window.removeEventListener": 1
+            "document.querySelectorAll": 1
         },
         "internals": {
             "._blocks": 10,
@@ -242,7 +234,6 @@
     },
     "SPscenes": {
         "page": {
-            "alert": 2,
             "document.createElement": 5,
             "document.documentElement": 3,
             "document.querySelector": 1,
@@ -259,16 +250,11 @@
             "write runtime.extensionStorage": 4
         }
     },
-    "SPsoundWaves": {
-        "page": {
-            "document.addEventListener": 2
-        }
-    },
+    "SPsoundWaves": {},
     "SPspriteEffectsV2": {
         "page": {
             "DOMParser": 1,
             "Image": 3,
-            "alert": 2,
             "document.body": 1,
             "document.createElement": 3,
             "document.createElementNS": 1
@@ -300,7 +286,6 @@
             "window.setTimeout": 1
         },
         "page": {
-            "alert": 3,
             "navigator.getUserMedia": 4,
             "navigator.mediaDevices": 4,
             "navigator.mozGetUserMedia": 1,
@@ -330,7 +315,6 @@
     "SharkPoolSharktilities": {
         "page": {
             "Image": 1,
-            "alert": 1,
             "document.createElement": 2
         },
         "internals": {
@@ -342,11 +326,7 @@
             "._syncEffectsForTarget": 2
         }
     },
-    "ShovelUtils": {
-        "page": {
-            "confirm": 2
-        }
-    },
+    "ShovelUtils": {},
     "battery": {
         "page": {
             "navigator.getBattery": 2
@@ -354,7 +334,6 @@
     },
     "beatSync": {
         "page": {
-            "document.addEventListener": 1,
             "document.hidden": 3,
             "window.AudioContext": 1,
             "window.webkitAudioContext": 1
@@ -367,7 +346,6 @@
     "clipboard": {
         "page": {
             "navigator.clipboard": 5,
-            "window.addEventListener": 2,
             "window.clipboardData": 1
         }
     },
@@ -377,7 +355,6 @@
             "window.setTimeout": 1
         },
         "page": {
-            "confirm": 1,
             "window.clearTimeout": 3,
             "window.setTimeout": 1
         }
@@ -396,7 +373,6 @@
     },
     "cubesterWindowControls": {
         "page": {
-            "confirm": 1,
             "document.documentElement": 4,
             "document.exitFullscreen": 2,
             "document.fullscreenElement": 2,
@@ -450,14 +426,12 @@
     },
     "dninwakelock": {
         "page": {
-            "document.addEventListener": 1,
             "document.visibilityState": 3,
             "navigator.wakeLock": 2
         }
     },
     "dogeiscutResolution": {
         "page": {
-            "window.addEventListener": 1,
             "window.devicePixelRatio": 1,
             "window.innerHeight": 4,
             "window.innerWidth": 4,
@@ -476,11 +450,7 @@
             "navigator.userLanguage": 2
         }
     },
-    "enderKeysPlusV2": {
-        "page": {
-            "window.addEventListener": 6
-        }
-    },
+    "enderKeysPlusV2": {},
     "faceSensing": {
         "page": {
             "window.faceDetection": 1
@@ -512,12 +482,8 @@
         },
         "page": {
             "Image": 1,
-            "alert": 1,
             "document.createElement": 13,
             "document.fonts": 5,
-            "localStorage": 2,
-            "localStorage.getItem": 1,
-            "localStorage.setItem": 1,
             "navigator": 1
         },
         "internals": {
@@ -540,15 +506,11 @@
         "page": {
             "MutationObserver": 1,
             "ResizeObserver": 1,
-            "alert": 1,
-            "document.addEventListener": 1,
             "document.body": 1,
             "document.createElement": 36,
             "document.querySelector": 1,
-            "prompt": 2,
             "renderer.canvas": 7,
             "window.ScratchBlocks": 1,
-            "window.addEventListener": 1,
             "window.devicePixelRatio": 3
         },
         "internals": {
@@ -562,11 +524,7 @@
             "crypto.randomUUID": 2
         }
     },
-    "gaimeriDeviceMotionExtension": {
-        "page": {
-            "window.addEventListener": 2
-        }
-    },
+    "gaimeriDeviceMotionExtension": {},
     "googleAuth": {
         "random": {
             "crypto.getRandomValues": 1
@@ -604,7 +562,6 @@
     "jgPrism": {
         "page": {
             "Audio": 1,
-            "addEventListener": 1,
             "window": 2,
             "window.FileReader": 1,
             "window.fetch": 1
@@ -627,9 +584,6 @@
         }
     },
     "lmsLooksPlus": {
-        "page": {
-            "alert": 1
-        },
         "internals": {
             "._allSkins": 4,
             "._svgImage": 4,
@@ -646,7 +600,6 @@
     },
     "lmsVideo": {
         "page": {
-            "alert": 1,
             "document.body": 1,
             "document.createElement": 4
         },
@@ -678,14 +631,6 @@
         }
     },
     "localstorage": {
-        "page": {
-            "alert": 1,
-            "localStorage": 1,
-            "localStorage.getItem": 1,
-            "localStorage.removeItem": 1,
-            "localStorage.setItem": 1,
-            "window.addEventListener": 1
-        },
         "internals": {
             "write runtime.extensionStorage": 1
         }
@@ -699,8 +644,6 @@
     "medericodertextcase": {},
     "midi": {
         "page": {
-            "alert": 1,
-            "document.addEventListener": 2,
             "document.body": 2,
             "document.createElement": 1,
             "navigator.requestMIDIAccess": 2
@@ -724,7 +667,6 @@
     "obviousAlexCMath3d": {},
     "obviousalexsensing": {
         "page": {
-            "alert": 1,
             "document.createElement": 2,
             "location.hostname": 1,
             "navigator.clipboard": 6,
@@ -732,7 +674,6 @@
             "renderer.canvas": 1,
             "webkitSpeechRecognition": 1,
             "window.SpeechRecognition": 2,
-            "window.addEventListener": 2,
             "window.webkitSpeechRecognition": 1
         },
         "internals": {
@@ -746,7 +687,6 @@
             "document.createElement": 11,
             "document.getElementById": 1,
             "document.querySelector": 2,
-            "localStorage.getItem": 1,
             "navigator.mediaDevices": 4,
             "window.getComputedStyle": 1,
             "window.resolve8932902095902": 2
@@ -777,11 +717,9 @@
         },
         "page": {
             "Image": 2,
-            "alert": 1,
             "document.body": 14,
             "document.createElement": 35,
             "renderer.canvas": 1,
-            "window.addEventListener": 2,
             "window.location": 2
         },
         "internals": {
@@ -814,7 +752,6 @@
         "page": {
             "ResizeObserver": 2,
             "document": 1,
-            "document.addEventListener": 2,
             "document.fullscreenElement": 1,
             "document.webkitFullscreenElement": 1,
             "renderer.canvas": 1
@@ -890,11 +827,9 @@
     },
     "pointerlock": {
         "page": {
-            "document.addEventListener": 5,
             "document.exitPointerLock": 2,
             "document.pointerLockElement": 1,
-            "renderer.canvas": 1,
-            "window.addEventListener": 1
+            "renderer.canvas": 1
         },
         "internals": {
             "._clientX": 3,
@@ -911,8 +846,7 @@
             "AudioContext": 1,
             "AudioWorkletNode": 2,
             "location.href": 1,
-            "navigator.mediaDevices": 3,
-            "window.confirm": 1
+            "navigator.mediaDevices": 3
         },
         "internals": {
             "._blocks": 1,
@@ -1037,7 +971,6 @@
             "HTMLCanvasElement": 1,
             "HTMLImageElement": 1,
             "Image": 3,
-            "alert": 4,
             "document.createElement": 5,
             "location.href": 1,
             "renderer.canvas": 4,

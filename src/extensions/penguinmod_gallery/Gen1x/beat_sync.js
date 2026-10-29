@@ -8,6 +8,8 @@
 // pmCancelAnimationFrame (marked by the name).
 // Desktop fork (section 158): the beat clock's state is saved and restored through runtime.pmRegisterState (marked by
 // the name).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // pluey
 (function(Scratch) {
@@ -43,7 +45,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             this.loadAutoStart();
 
             this._startBgTick();
-            document.addEventListener('visibilitychange', () => {
+            Scratch.vm.runtime.pmPage.addEventListener('document', 'visibilitychange', () => {
                 if (document.hidden) {
                     this._startBgTick();
                 }

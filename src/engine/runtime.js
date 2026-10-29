@@ -66,6 +66,7 @@ const PM_ALWAYS_ON = {maxClones: Infinity, miscLimits: false, fencing: false, da
 const FrameLoop = require('./tw-frame-loop');
 // PMDESKTOP_EDGEHATS (section 63)
 const edgeHats = require('./edge-hats');
+const PageDoor = require('./page-door');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -360,6 +361,13 @@ class Runtime extends EventEmitter {
          * @type {Map.<string, {save: Function, restore: Function, notRestored: (Array.<string>|undefined)}>}
          */
         this._pmStates = new Map();
+
+        /**
+         * Desktop fork (section 159): the one door through which extensions reach the page (dialogs, storage, page
+         * events; src/engine/page-door.js).
+         * @type {PageDoor}
+         */
+        this.pmPage = new PageDoor();
 
         /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions

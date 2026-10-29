@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5); lists read and written with Variable.pmGetValue / pmSetValue / pmItemsChanged instead of their `value`, so they keep their lookup tables (section 125, step 5e).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Simple 3D
 // ID: xeltallivSimple3D
@@ -1551,7 +1553,7 @@ void main() {
   // requireNonPackagedRuntime by LilyMakesThings
   function requireNonPackagedRuntime(blockName) {
     if (runtime.isPackaged) {
-      alert(
+      Scratch.vm.runtime.pmPage.alert(
         `To use the Simple3D ${blockName} block, the creator of the packaged project must uncheck "Remove raw asset data after loading to save RAM" under advanced settings in the packager.`
       );
       return false;
@@ -1675,7 +1677,7 @@ void main() {
     }
     let restartIndex, typedArray;
     if (maxNum > 4294967294) {
-      alert(
+      Scratch.vm.runtime.pmPage.alert(
         `Simple3D error: Found vertex index ${maxNum}. The maximum supported value is 4294967295.`
       );
     }
@@ -1742,7 +1744,7 @@ void main() {
     canvas.id = "simple3d-canvas";
     gl = canvas.getContext("webgl2", options);
     if (!gl)
-      alert(
+      Scratch.vm.runtime.pmPage.alert(
         "Simple 3D extension failed to get WebGL2 context. If it worked before, try restarting your browser or rebooting your device. If not, your GPU might not support WebGL2"
       );
     ext_af =
@@ -5525,7 +5527,7 @@ void main() {
           "https://extensions.turbowarp.org/Xeltalliv/simple3D.js"
         )
       ) {
-        alert(
+        Scratch.vm.runtime.pmPage.alert(
           "WARNING: You are accessing Simple3D internals. Expect them to change frequently with no regard to backwards compatibility. If you are making a project, please load Simple3D from a file or from text to prevent it from auto-updating. To do it, load correct version of Simple3D first, then open sb3 file."
         );
       }

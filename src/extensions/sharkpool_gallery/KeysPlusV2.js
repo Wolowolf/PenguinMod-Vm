@@ -7,6 +7,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Keys+ V2
 // ID: enderKeysPlusV2
@@ -119,7 +121,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 startKeyEvents("while");
             });
             // Keys
-            window.addEventListener("keydown", (event) => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 const key = format(event);
                 this._lastKeyPressed = key;
@@ -128,14 +130,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     startKeyEvents("when");
                 };
             });
-            window.addEventListener("keyup", (event) => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "keyup", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 const key = format(event);
                 startKeyEvents("after");
                 delete this._keysPressed[key];
                 this._filter();
             });
-            window.addEventListener("blur", () => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "blur", () => {
                 hatsChanged(); // Desktop fork (section 128)
                 if (this._settings["clearOnBlur"]) {
                     this._keysPressed = {};
@@ -143,19 +145,19 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 };
             });
             // Mouse
-            window.addEventListener("mousedown", (event) => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "mousedown", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 if (!this._mouseDown[event.button]) {
                     this._mouseDown[event.button] = { time: Scratch.vm.runtime.pmDateNow() };
                     runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "when" });
                 }
             });
-            window.addEventListener("mouseup", (event) => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "mouseup", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "after" });
                 delete this._mouseDown[event.button];
             })
-            window.addEventListener("wheel", (event) => {
+            Scratch.vm.runtime.pmPage.addEventListener("window", "wheel", (event) => {
                 this._scrollDeltaY = event.deltaY;
                 this._lastScrollTime = Scratch.vm.runtime.pmDateNow()
                 runtime.startHats("enderKeysPlusV2_eventScroll")

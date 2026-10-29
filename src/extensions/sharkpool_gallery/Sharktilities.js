@@ -8,6 +8,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sharktilities
 // ID: SharkPoolSharktilities
@@ -35,7 +37,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   // This function was taken from Looks+ by LilyMakesThings
   const packageTest = (blockName) => {
     if (runtime.isPackaged) {
-      alert(`For SharkTilities to work, the creator of the packaged project must uncheck "Remove raw asset data after loading to save RAM" under advanced settings in the packager.`);
+      Scratch.vm.runtime.pmPage.alert(`For SharkTilities to work, the creator of the packaged project must uncheck "Remove raw asset data after loading to save RAM" under advanced settings in the packager.`);
       return true;
     }
     return false;

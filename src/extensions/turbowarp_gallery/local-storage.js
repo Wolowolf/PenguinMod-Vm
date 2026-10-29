@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Local Storage
 // ID: localstorage
@@ -52,7 +54,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     try {
       // localStorage could throw if unsupported
-      const data = localStorage.getItem(getStorageKey());
+      const data = Scratch.vm.runtime.pmPage.storageGet(getStorageKey());
       if (data) {
         // JSON.parse could throw if data is invalid
         const parsed = JSON.parse(data);
@@ -77,7 +79,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const saveToLocalStorage = () => {
     try {
       if (Object.keys(namespaceValues).length > 0) {
-        localStorage.setItem(
+        Scratch.vm.runtime.pmPage.storageSet(
           getStorageKey(),
           JSON.stringify({
             // If we find that turbowarp.org is commonly running out of shared space in local storage,
@@ -88,18 +90,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           })
         );
       } else {
-        localStorage.removeItem(getStorageKey());
+        Scratch.vm.runtime.pmPage.storageRemove(getStorageKey());
       }
     } catch (error) {
       console.error("Error saving to local storage", error);
     }
   };
 
-  window.addEventListener("storage", (event) => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "storage", (event) => {
     if (
       getNamespace() &&
       event.key === getStorageKey() &&
-      event.storageArea === localStorage
+      Scratch.vm.runtime.pmPage.isLocalStorage(event.storageArea)
     ) {
       readFromStorage();
       Scratch.vm.runtime.startHats("localstorage_whenChanged");
@@ -140,7 +142,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const validNamespace = () => {
     const valid = !!getNamespace();
     if (!valid && Scratch.vm.runtime.pmDateNow() - lastNamespaceWarning > 3000) {
-      alert(
+      Scratch.vm.runtime.pmPage.alert(
         Scratch.translate(
           'Local Storage extension: project must run the "set storage namespace ID" block before it can use other blocks'
         )

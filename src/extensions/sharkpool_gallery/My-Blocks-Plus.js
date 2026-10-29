@@ -9,6 +9,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: My Blocks+
 // ID: SPmbpCST
@@ -192,7 +194,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }
       }
       if ((protoExists && (!isEditing || oldProc !== newProc))) {
-        alert("A custom block with this text already exists!");
+        Scratch.vm.runtime.pmPage.alert("A custom block with this text already exists!");
         e.stopImmediatePropagation();
         return;
       }
@@ -254,8 +256,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
 
       if (isPM) {
-        window.removeEventListener("error", returnTypeError, { once: true });
-        window.addEventListener("error", returnTypeError, { once: true });
+        Scratch.vm.runtime.pmPage.removeEventListener("window", "error", returnTypeError, { once: true });
+        Scratch.vm.runtime.pmPage.addEventListener("window", "error", returnTypeError, { once: true });
       }
     });
   }
@@ -617,7 +619,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
         dropDiv.appendChild(dropItem);
         dropItem.addEventListener("click", () => {
-          const src = prompt("Enter the URL or Data.URI of your image:");
+          const src = Scratch.vm.runtime.pmPage.prompt("Enter the URL or Data.URI of your image:");
           if (src) {
             modalStorage.value = src;
             selectBtn(dropDiv, dropItem);
@@ -1546,7 +1548,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     for (const key in tempStore) delete tempStore[key];
     runtime.SPmbpCSTOldStorage = storage;
     vm.refreshWorkspace();
-    alert("Save and reload the project for the extension to fully be removed.");
+    Scratch.vm.runtime.pmPage.alert("Save and reload the project for the extension to fully be removed.");
   }
 
   function deleteBlock(target, blockId) {
@@ -1754,7 +1756,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     removeExt() {
-      if (confirm("Remove this extension? This will remove all new features attributed to My Blocks+"))
+      if (Scratch.vm.runtime.pmPage.confirm("Remove this extension? This will remove all new features attributed to My Blocks+"))
         removeExtension();
     }
 

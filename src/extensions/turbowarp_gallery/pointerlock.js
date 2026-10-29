@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the mouse's pointerLocked hook instead of replacing its postData / getScratchX / getScratchY, and RUNTIME_STEP_END instead of wrapping runtime._step (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Pointerlock
 // ID: pointerlock
@@ -25,7 +27,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let isPointerLockEnabled = false;
 
   let rect = canvas.getBoundingClientRect();
-  window.addEventListener("resize", () => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "resize", () => {
     rect = canvas.getBoundingClientRect();
   });
 
@@ -57,7 +59,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     mouseDevice.pointerLocked = enabled;
   };
 
-  document.addEventListener(
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
     "mousedown",
     (e) => {
       // @ts-expect-error
@@ -71,7 +74,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     },
     true
   );
-  document.addEventListener(
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
     "mouseup",
     (e) => {
       if (isLocked) {
@@ -83,7 +87,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     },
     true
   );
-  document.addEventListener(
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
     "mousemove",
     (e) => {
       if (isLocked) {
@@ -93,10 +98,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     true
   );
 
-  document.addEventListener("pointerlockchange", () => {
+  Scratch.vm.runtime.pmPage.addEventListener("document", "pointerlockchange", () => {
     isLocked = document.pointerLockElement === canvas;
   });
-  document.addEventListener("pointerlockerror", (e) => {
+  Scratch.vm.runtime.pmPage.addEventListener("document", "pointerlockerror", (e) => {
     console.error("Pointer lock error", e);
   });
 

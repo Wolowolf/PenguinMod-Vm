@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Clipboard
 // ID: clipboard
@@ -40,10 +42,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   let lastPastedText = "";
 
-  window.addEventListener("copy", (event) => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "copy", (event) => {
     Scratch.vm.runtime.startHats("clipboard_whenCopied");
   });
-  window.addEventListener("paste", (event) => {
+  Scratch.vm.runtime.pmPage.addEventListener("window", "paste", (event) => {
     Scratch.vm.runtime.startHats("clipboard_whenPasted");
     const clipboardData = event.clipboardData || window.clipboardData;
     const pastedText = clipboardData.getData("Text");

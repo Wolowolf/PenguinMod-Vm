@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its three message hats are checked only while a connection is open or being made, and in the frame after (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: CloudLink V4
 // ID: cloudlink
@@ -448,7 +450,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     // Ask user if they wish to stay connected if the server is unsupported
     if (
       clVars.linkState.identifiedProtocol < 4 &&
-      !confirm(
+      !Scratch.vm.runtime.pmPage.confirm(
         `You have connected to an old CloudLink server, running version ${clVars.server_version}.\n\nFor your security and privacy, we recommend you disconnect from this server and connect to an up-to-date server.\n\nClick/tap "OK" to stay connected.`
       )
     ) {

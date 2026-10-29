@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: ShovelUtils
 // ID: ShovelUtils
@@ -229,7 +231,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
       if (typeof ScratchBlocks !== "undefined") {
         if (
-          !confirm(
+          !Scratch.vm.runtime.pmPage.confirm(
             `Do you want to delete the sprite "${SPRITE}"? This cannot be undone.`
           )
         ) {
@@ -263,7 +265,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (typeof ScratchBlocks !== "undefined") {
         // We are in the editor. Ask before loading a new project to avoid unrecoverable data loss.
         if (
-          !confirm(
+          !Scratch.vm.runtime.pmPage.confirm(
             `Do you want to import a project from "${TEXT}"? Everything in the current project will be permanently deleted.`
           )
         ) {

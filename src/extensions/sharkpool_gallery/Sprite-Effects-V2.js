@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
+// Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sprite Effects V2
 // ID: SPspriteEffectsV2
@@ -627,7 +629,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Helper Funcs
     applierTutorial() {
-      alert(Scratch.translate([
+      Scratch.vm.runtime.pmPage.alert(Scratch.translate([
         "To apply a filter, first input the targets SVG content into an 'add filter' block.",
         "Then, with the block's output, use a graphics extension (such as Skins or Pen+) to display the SVG.",
         "If you want to apply the effect onto the canvas, use the blocks in the 'Canvas Effects' section of this extension. Always use the 'canvas' option in the 'as svg' block.",
@@ -636,7 +638,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     compatWarning() {
-      alert(Scratch.translate([
+      Scratch.vm.runtime.pmPage.alert(Scratch.translate([
         "Certain extensions, such as Canvas Effects (by TheShovel), will prevent extensions like this to apply filters on the Canvas",
         "If you are using these extensions, please keep compatibility mode 'on'. It will cause visual differences, but allows extensions to work together.",
         "If not, you can freely turn compatibility mode 'off', preventhing these visual differences."
