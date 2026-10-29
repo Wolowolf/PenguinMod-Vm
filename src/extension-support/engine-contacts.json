@@ -68,9 +68,6 @@
         }
     },
     "ObscurasMIDITools": {
-        "clock": {
-            "setTimeout": 3
-        },
         "page": {
             "alert": 1,
             "document.body": 1,
@@ -81,9 +78,6 @@
     "P7BoxPhys": {
         "random": {
             "Math.random": 2
-        },
-        "clock": {
-            "setTimeout": 1
         },
         "page": {
             "Image": 1,
@@ -97,10 +91,6 @@
     },
     "SPASfontManager": {},
     "SPadvControl": {
-        "clock": {
-            "setInterval": 1,
-            "setTimeout": 1
-        },
         "internals": {
             "._blocks": 2,
             "._hats": 5,
@@ -131,8 +121,9 @@
     },
     "SPgifManager": {
         "clock": {
+            "clearTimeout": 6,
             "new Date()": 5,
-            "setTimeout": 8
+            "setTimeout": 7
         },
         "page": {
             "Image": 2,
@@ -180,9 +171,6 @@
         }
     },
     "SPpartEngine": {
-        "clock": {
-            "requestAnimationFrame": 4
-        },
         "page": {
             "Image": 1,
             "document.body": 1,
@@ -236,9 +224,6 @@
         }
     },
     "SPrecording2": {
-        "clock": {
-            "setTimeout": 2
-        },
         "page": {
             "MediaRecorder": 1,
             "navigator.mediaDevices": 1,
@@ -275,9 +260,6 @@
         }
     },
     "SPsoundWaves": {
-        "clock": {
-            "setTimeout": 1
-        },
         "page": {
             "document.addEventListener": 2
         }
@@ -371,10 +353,6 @@
         }
     },
     "beatSync": {
-        "clock": {
-            "requestAnimationFrame": 1,
-            "setTimeout": 3
-        },
         "page": {
             "document.addEventListener": 1,
             "document.hidden": 3,
@@ -395,6 +373,7 @@
     },
     "cloudlink": {
         "clock": {
+            "window.clearTimeout": 3,
             "window.setTimeout": 1
         },
         "page": {
@@ -409,9 +388,6 @@
         }
     },
     "cubesterKeySimulation": {
-        "clock": {
-            "setTimeout": 2
-        },
         "page": {
             "ResizeObserver": 1,
             "renderer.canvas": 2,
@@ -450,6 +426,7 @@
             "crypto.getRandomValues": 1
         },
         "clock": {
+            "clearInterval": 3,
             "setInterval": 1
         },
         "page": {
@@ -505,9 +482,6 @@
         }
     },
     "faceSensing": {
-        "clock": {
-            "setTimeout": 1
-        },
         "page": {
             "window.faceDetection": 1
         },
@@ -534,7 +508,6 @@
     },
     "g1nxIrisText": {
         "clock": {
-            "requestAnimationFrame": 4,
             "setTimeout": 1
         },
         "page": {
@@ -599,6 +572,7 @@
             "crypto.getRandomValues": 1
         },
         "clock": {
+            "clearInterval": 3,
             "setInterval": 1
         },
         "page": {
@@ -628,9 +602,6 @@
     },
     "iygPerlin": {},
     "jgPrism": {
-        "clock": {
-            "setInterval": 1
-        },
         "page": {
             "Audio": 1,
             "addEventListener": 1,
@@ -840,9 +811,6 @@
         }
     },
     "pmEventsExpansion": {
-        "clock": {
-            "requestAnimationFrame": 3
-        },
         "page": {
             "ResizeObserver": 2,
             "document": 1,
@@ -886,10 +854,6 @@
         }
     },
     "pmSensingExpansion": {
-        "clock": {
-            "setInterval": 1,
-            "setTimeout": 1
-        },
         "page": {
             "history.replaceState": 1,
             "location": 1,
@@ -1032,9 +996,6 @@
     },
     "utilities": {},
     "videoSensing": {
-        "clock": {
-            "setTimeout": 1
-        },
         "internals": {
             "._allDrawables": 1,
             "write runtime.ioDevices": 1
@@ -1069,6 +1030,7 @@
     },
     "xeltallivSimple3D": {
         "clock": {
+            "clearTimeout": 1,
             "setTimeout": 1
         },
         "page": {

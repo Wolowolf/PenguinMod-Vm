@@ -527,7 +527,7 @@ class pmSensingExpansion {
             // set interval here because why create an interval
             // on extension register if we never use the block
             console.log('created average loudness loop');
-            setInterval(() => {
+            this.runtime.pmSetInterval(() => { // Desktop fork (section 156): the runtime's timer
                 if (!this.canGetLoudness) return;
                 const loudness = this.runtime.audioEngine.getLoudness();
                 if (typeof loudness !== 'number') return;
@@ -586,7 +586,7 @@ class pmSensingExpansion {
         if ('vibrate' in navigator) {
             this.canVibrate = false;
             navigator.vibrate(250);
-            setTimeout(() => {
+            this.runtime.pmSetTimeout(() => { // Desktop fork (section 156): the runtime's timer
                 this.canVibrate = true;
             }, 1000);
         }

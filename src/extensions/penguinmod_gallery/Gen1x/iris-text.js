@@ -5,6 +5,9 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -2495,12 +2498,12 @@ Enjoy!! :D
 
     function ensureAnimationTicker() {
         if (animationFrameId !== null || !charAnimations.size) return;
-        animationFrameId = requestAnimationFrame(stepCharAnimations);
+        animationFrameId = Scratch.vm.runtime.pmRequestAnimationFrame(stepCharAnimations);
     }
 
     function releaseAnimationTicker() {
         if (animationFrameId !== null) {
-            cancelAnimationFrame(animationFrameId);
+            Scratch.vm.runtime.pmCancelAnimationFrame(animationFrameId);
             animationFrameId = null;
         }
     }
@@ -2510,7 +2513,7 @@ Enjoy!! :D
         if (!charAnimations.size) return;
         computeCharAnimationsFrame();
         if (charAnimations.size && animationFrameId === null) {
-            animationFrameId = requestAnimationFrame(stepCharAnimations);
+            animationFrameId = Scratch.vm.runtime.pmRequestAnimationFrame(stepCharAnimations);
         }
     }
 
@@ -2549,7 +2552,7 @@ Enjoy!! :D
     function renderFlushLoop() {
         flushPendingRenders();
         if (pendingRenderTargets.size) {
-            requestAnimationFrame(renderFlushLoop);
+            Scratch.vm.runtime.pmRequestAnimationFrame(renderFlushLoop);
         } else {
             renderFlushLoopRunning = false;
         }
@@ -2558,7 +2561,7 @@ Enjoy!! :D
     function ensureRenderFlushTicker() {
         if (renderFlushLoopRunning) return;
         renderFlushLoopRunning = true;
-        requestAnimationFrame(renderFlushLoop);
+        Scratch.vm.runtime.pmRequestAnimationFrame(renderFlushLoop);
     }
 
     function requestRenderFlush() {

@@ -3,6 +3,9 @@
 // the VM as a built-in extension. The code is the gallery file unchanged except for `/* webpackIgnore: true */` in the import() of its 4 bundled libraries, so the build leaves it to the browser, and its hats are checked only while a face is detected and in the frame after (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`; section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Face Sensing
 // ID: faceSensing
@@ -188,7 +191,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     let timeoutFinished = false;
     let estimationFinished = false;
-    setTimeout(() => {
+    Scratch.vm.runtime.pmSetTimeout(() => {
       timeoutFinished = true;
       if (estimationFinished) {
         estimationLoop();

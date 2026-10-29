@@ -11,6 +11,9 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Extra Controls
 // ID: SPadvControl
@@ -949,7 +952,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               thread.stopThisScript();
               resolve();
             }
-            else setTimeout(checkThread, 1);
+            else runtime.pmSetTimeout(checkThread, 1);
           };
           checkThread();
         });
@@ -979,9 +982,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       // Branch is the same, no need to wait for all threads to finish when they are the same
       if (args.TYPE === "wait" && thread) {
         await new Promise(resolve => {
-          const interval = setInterval(() => {
+          const interval = runtime.pmSetInterval(() => {
             if (!runtime.isActiveThread(thread)) {
-              clearInterval(interval);
+              runtime.pmClearInterval(interval);
               resolve();
             }
           }, 1);

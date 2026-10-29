@@ -36,7 +36,7 @@ class JgPrismBlocks {
             this.mouseScrollDelta.y = e.deltaY;
             this.mouseScrollDelta.z = e.deltaZ;
         });
-        setInterval(() => {
+        this.runtime.pmSetInterval(() => { // Desktop fork (section 156): the runtime's timer
             this.mouseScrollDelta = { x: 0, y: 0, z: 0 };
         }, 65);
 

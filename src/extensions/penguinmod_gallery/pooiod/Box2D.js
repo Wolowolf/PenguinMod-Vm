@@ -3,6 +3,9 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Boxed Physics
 // ID: P7BoxPhys
@@ -1901,7 +1904,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 			b2Dworld.Step(1 / secondsimspeed, veliterations, positerations);
 			b2Dworld.ClearForces();
 
-			setTimeout(()=>{
+			Scratch.vm.runtime.pmSetTimeout(()=>{
 				this.lastimpacts = this.impacts;
 			}, 10);
 		}

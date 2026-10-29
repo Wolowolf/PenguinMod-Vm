@@ -2807,6 +2807,59 @@ class Runtime extends EventEmitter {
         return performance.now();
     }
 
+    // Desktop fork (section 156): the timers of the shipped extensions and the built-in blocks, the same way. Each
+    // calls the browser function it stands for with the same arguments and returns what it returns; a timer started
+    // here is stopped here.
+
+    /**
+     * @param {Function} callback Called once after the delay.
+     * @param {number} [delay] Milliseconds.
+     * @param {...*} args Passed to the callback.
+     * @returns {*} The timer's ID, like setTimeout().
+     */
+    pmSetTimeout (callback, delay, ...args) {
+        return setTimeout(callback, delay, ...args);
+    }
+
+    /**
+     * @param {*} id An ID from pmSetTimeout, like clearTimeout().
+     */
+    pmClearTimeout (id) {
+        clearTimeout(id);
+    }
+
+    /**
+     * @param {Function} callback Called every delay.
+     * @param {number} [delay] Milliseconds.
+     * @param {...*} args Passed to the callback.
+     * @returns {*} The timer's ID, like setInterval().
+     */
+    pmSetInterval (callback, delay, ...args) {
+        return setInterval(callback, delay, ...args);
+    }
+
+    /**
+     * @param {*} id An ID from pmSetInterval, like clearInterval().
+     */
+    pmClearInterval (id) {
+        clearInterval(id);
+    }
+
+    /**
+     * @param {Function} callback Called before the next repaint with its time, like requestAnimationFrame().
+     * @returns {number} The request's ID.
+     */
+    pmRequestAnimationFrame (callback) {
+        return requestAnimationFrame(callback);
+    }
+
+    /**
+     * @param {number} id An ID from pmRequestAnimationFrame, like cancelAnimationFrame().
+     */
+    pmCancelAnimationFrame (id) {
+        cancelAnimationFrame(id);
+    }
+
     /**
      * Start all relevant hats.
      * @param {!string} requestedHatOpcode Opcode of hats to start.

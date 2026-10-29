@@ -3,9 +3,11 @@
 // is exactly that list, so a new contact cannot come in unnoticed (and a removed one is struck off).
 // - random: Math.random, crypto.getRandomValues / randomUUID, Cast.toListIndex / MathUtil.inclusiveRandIntWithout
 //   called without the runtime (deterministic mode, replays)
-// - clock: Date.now, new Date(), performance, timers and animation frames (rewind, fixed-step runs)
-//   Not contacts: the runtime's shared entry points for them (section 154: runtime.pmRandom, pmDateNow, pmPerfNow);
-//   --report counts their uses.
+// - clock: Date.now, new Date(), performance, timers and animation frames, starting or stopping them (rewind,
+//   fixed-step runs); `typeof setTimeout` and the like only ask whether the page has them
+//   Not contacts: the runtime's shared entry points for them (section 154: runtime.pmRandom, pmDateNow, pmPerfNow;
+//   section 156: pmSetTimeout, pmClearTimeout, pmSetInterval, pmClearInterval, pmRequestAnimationFrame,
+//   pmCancelAnimationFrame); --report counts their uses.
 // - page: what only the page has (document, window, storage, dialogs, page types and events, navigator's page parts)
 //   and the stage canvas or its WebGL context (engine in a worker)
 // - internals: members named with "_" that the VM or renderer define, used on something other than `this`, and writes
@@ -26,8 +28,14 @@ const EXTENSIONS_DIR = path.join(VM_ROOT, 'src/extensions');
 const CATEGORIES = ['random', 'clock', 'page', 'internals'];
 
 const RANDOM_MEMBERS = new Map([['Math', ['random']], ['crypto', ['getRandomValues', 'randomUUID']]]);
-const CLOCK_GLOBALS = new Set(['setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback']);
-const ENTRY_POINTS = new Set(['pmRandom', 'pmDateNow', 'pmPerfNow']);
+const CLOCK_GLOBALS = new Set([
+    'setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback',
+    'clearTimeout', 'clearInterval', 'cancelAnimationFrame', 'cancelIdleCallback'
+]);
+const ENTRY_POINTS = new Set([
+    'pmRandom', 'pmDateNow', 'pmPerfNow', 'pmSetTimeout', 'pmClearTimeout', 'pmSetInterval', 'pmClearInterval',
+    'pmRequestAnimationFrame', 'pmCancelAnimationFrame'
+]);
 const RUNTIME_RANDOM_HELPERS = new Set(['toListIndex', 'inclusiveRandIntWithout']);
 const PAGE_GLOBALS = new Set([
     'document', 'window', 'localStorage', 'sessionStorage', 'alert', 'confirm', 'prompt', 'Image', 'Audio',
@@ -209,7 +217,7 @@ const contactsOfFile = (ast, add, ownPrivate) => {
             } else if (name === 'performance') {
                 add('clock', member ? `performance.${member}` : 'performance');
             } else if (CLOCK_GLOBALS.has(name)) {
-                add('clock', name);
+                if (parent.type !== 'UnaryExpression' || parent.operator !== 'typeof') add('clock', name);
             } else if (name === 'navigator') {
                 if (!WORKER_NAVIGATOR.has(member)) add('page', member ? `navigator.${member}` : 'navigator');
             } else if (PAGE_GLOBALS.has(name) || PAGE_TYPE.test(name)) {

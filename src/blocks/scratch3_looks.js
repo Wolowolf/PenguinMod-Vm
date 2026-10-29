@@ -195,7 +195,7 @@ class Scratch3LooksBlocks {
             bubbleState.text = '';
             this._onTargetWillExit(this.runtime.targets[n]);
         }
-        clearTimeout(this._bubbleTimeout);
+        this.runtime.pmClearTimeout(this._bubbleTimeout); // Desktop fork (section 156): the runtime's timer
     }
 
     /**
@@ -541,7 +541,8 @@ class Scratch3LooksBlocks {
         const target = util.target;
         const usageId = this._getBubbleState(target).usageId;
         return new Promise(resolve => {
-            this._bubbleTimeout = setTimeout(() => {
+            // Desktop fork (section 156): the runtime's timer
+            this._bubbleTimeout = this.runtime.pmSetTimeout(() => {
                 this._bubbleTimeout = null;
                 // Clear say bubble if it hasn't been changed and proceed.
                 if (this._getBubbleState(target).usageId === usageId) {
@@ -561,7 +562,8 @@ class Scratch3LooksBlocks {
         const target = util.target;
         const usageId = this._getBubbleState(target).usageId;
         return new Promise(resolve => {
-            this._bubbleTimeout = setTimeout(() => {
+            // Desktop fork (section 156): the runtime's timer
+            this._bubbleTimeout = this.runtime.pmSetTimeout(() => {
                 this._bubbleTimeout = null;
                 // Clear think bubble if it hasn't been changed and proceed.
                 if (this._getBubbleState(target).usageId === usageId) {

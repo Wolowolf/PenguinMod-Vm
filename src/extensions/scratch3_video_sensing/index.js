@@ -240,7 +240,8 @@ class Scratch3VideoSensingBlocks {
      * @private
      */
     _loop () {
-        setTimeout(this._loop.bind(this), Math.max(this.runtime.currentStepTime, Scratch3VideoSensingBlocks.INTERVAL));
+        // Desktop fork (section 156): the runtime's timer
+        this.runtime.pmSetTimeout(this._loop.bind(this), Math.max(this.runtime.currentStepTime, Scratch3VideoSensingBlocks.INTERVAL));
 
         // Add frame to detector
         const time = this.runtime.pmDateNow(); // Desktop fork (section 154): the runtime's clock

@@ -3,6 +3,9 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Recording V2
 // ID: SPrecording2
@@ -219,8 +222,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       // redraw to Allow Time to Setup Mic/Save Recording Data/etc
       runtime.requestRedraw();
       return new Promise((resolve) => {
-        setTimeout(() => {
-          setTimeout(
+        runtime.pmSetTimeout(() => {
+          runtime.pmSetTimeout(
             () => {
               this.stopRecording();
               resolve();

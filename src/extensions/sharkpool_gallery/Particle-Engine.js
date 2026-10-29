@@ -6,6 +6,9 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Particle Engine
 // ID: SPpartEngine
@@ -602,7 +605,7 @@ void main() {
   // update interpolated engines
   function interpolateEngines(deltaFrame) {
     if (runtime.ioDevices.clock._paused) {
-      requestAnimationFrame(interpolateEngines);
+      runtime.pmRequestAnimationFrame(interpolateEngines);
       return;
     }
 
@@ -620,9 +623,9 @@ void main() {
       render.dirty = true;
     }
 
-    requestAnimationFrame(interpolateEngines);
+    runtime.pmRequestAnimationFrame(interpolateEngines);
   }
-  requestAnimationFrame(interpolateEngines);
+  runtime.pmRequestAnimationFrame(interpolateEngines);
 
   const color1 = "#2474ff";
 
@@ -1225,7 +1228,7 @@ void main() {
         if (target[engineTag].interpolate) {
           callback = () => {
             if (emitter.data.size > 0) {
-              requestAnimationFrame(callback);
+              runtime.pmRequestAnimationFrame(callback);
             } else {
               delete target[engineTag].emitters[args.NAME];
               resolve();

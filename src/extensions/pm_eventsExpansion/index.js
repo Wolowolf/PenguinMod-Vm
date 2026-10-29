@@ -199,9 +199,9 @@ class pmEventsExpansion {
                 this._tickType = 'animation';
                 runtime.startHats('pmEventsExpansion_everyDuration');
                 this._tickType = 'project';
-                requestAnimationFrame(animate);
+                runtime.pmRequestAnimationFrame(animate); // Desktop fork (section 156): the runtime's timer
             };
-            requestAnimationFrame(animate);
+            runtime.pmRequestAnimationFrame(animate); // Desktop fork (section 156): the runtime's timer
         }
 
         // when I receive any message / dynamic messages, "message" reporter: look at every started broadcast hat

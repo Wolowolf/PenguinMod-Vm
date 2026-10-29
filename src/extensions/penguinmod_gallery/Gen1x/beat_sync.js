@@ -3,6 +3,9 @@
 // the VM as a built-in extension. The code is the gallery file, except: its hats are checked only while syncing runs and in the frame after it stopped (`pmEdgeHat`, `runtime.pmEdgeHatsChanged`) (section 127, roadmap step 6a; marked "Desktop fork (section 127)").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 156): its timers and animation frames that change what blocks do go through
+// Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
+// pmCancelAnimationFrame (marked by the name).
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // pluey
 (function(Scratch) {
@@ -12,9 +15,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     function scheduleFrame(cb) {
         if (document.hidden) {
-            return setTimeout(cb, 16);
+            return Scratch.vm.runtime.pmSetTimeout(cb, 16);
         } else {
-            return requestAnimationFrame(cb);
+            return Scratch.vm.runtime.pmRequestAnimationFrame(cb);
         }
     }
 
@@ -51,10 +54,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 this._bgTickHandle = null;
                 this.tick();
                 if (document.hidden) {
-                    this._bgTickHandle = setTimeout(loop, 16);
+                    this._bgTickHandle = Scratch.vm.runtime.pmSetTimeout(loop, 16);
                 }
             };
-            this._bgTickHandle = setTimeout(loop, 16);
+            this._bgTickHandle = Scratch.vm.runtime.pmSetTimeout(loop, 16);
         }
 
         loadAutoStart() {
