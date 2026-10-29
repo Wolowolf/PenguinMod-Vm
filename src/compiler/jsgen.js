@@ -2922,7 +2922,22 @@ class JSGenerator {
         const {object, directName} = this.generateDirectExtensionArguments(node);
         const call = `${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}"`;
         // Desktop fork (section 132): a block known never to wait (direct-blocks.json) is called without the check
-        if (node.plain) return `directExtensionCall(${call})`;
+        if (node.plain) {
+            const runtime = this.target.runtime;
+            if (runtime.pmNoCheapCall) return `directExtensionCall(${call})`;
+            // Desktop fork (section 160): the block's method is called here, at the block's own place, instead of
+            // through the shared directExtensionCall and pmDirect.call, so that the JS engine sees one known function
+            // at each call (it can inline it and leave out the arguments object); the same object, method, `this`
+            // and arguments as pmDirect.call, the method looked up when the block runs, after its setup (the same
+            // as directExtensionCall's, done after the arguments were worked out). Switch (tests only):
+            // runtime.pmNoCheapCall.
+            const direct = runtime.getOpcodeFunction(node.opcode).pmDirect;
+            const objectName = this.evaluateOnce(`${directName}.object`);
+            const infoName = this.evaluateOnce(`${directName}.blockInfo`);
+            this.usesExtensionInputs = true;
+            return `(extensionInputs = directExtensionSetup(${object}, ${this.isWarp}, "${sanitize(node.id)}"), ` +
+                `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`;
+        }
         if (isStatement) {
             return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
         }
@@ -3115,6 +3130,8 @@ class JSGenerator {
 
         // create new var with target so we can define target as the current one
         script += `let target = __target;\n`;
+        // Desktop fork (section 160): a plain extension call's arguments object, held in this function
+        if (this.usesExtensionInputs) script += 'let extensionInputs;\n';
         script += `if (thread.spoofing) {\n`;
         script += `target = thread.spoofTarget;\n`;
         script += `};\n`;

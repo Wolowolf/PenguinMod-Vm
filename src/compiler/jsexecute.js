@@ -303,6 +303,18 @@ runtimeFunctions.directExtensionCall = `const directExtensionCall = (inputs, dir
 }`;
 
 /**
+ * Desktop fork (section 160): the setup of a plain call (section 132) whose block function jsgen.js calls at the
+ * block's own place in the compiled script (generateDirectExtensionCall): the same stack frame reset and block utility
+ * as directExtensionCall, after the arguments were worked out; gives the arguments object back for the call.
+ */
+runtimeFunctions.directExtensionSetup = `const directExtensionSetup = (inputs, isWarp, blockId) => {
+    const thread = globalState.thread;
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    globalState.blockUtility.init(thread, blockId, {}, null);
+    return inputs;
+}`;
+
+/**
  * Desktop fork (section 152): an extension branch or loop block (CONDITIONAL, LOOP) called without the
  * compatibility layer's generator (jsgen.js, irgen.js getBranchCallKind 'direct'), like guardedExtensionCall: the
  * first call does what executeInCompatibilityLayer does before and for its first call with the branch info (stack

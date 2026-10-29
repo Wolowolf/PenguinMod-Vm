@@ -828,7 +828,12 @@ class ExtensionManager {
                 blockInfo.func.pmDirect = {
                     call: (args, util) => callBlockFunc(args, util, blockInfo),
                     argumentTypes: () => types || (types = argumentTypes(blockInfo)),
-                    normalize: (value, type) => (typeof value === type ? value : this._normalize(value, type))
+                    normalize: (value, type) => (typeof value === type ? value : this._normalize(value, type)),
+                    // Desktop fork (section 160): what `call` calls, so that jsgen.js can call the block's method
+                    // at the block's own place in the compiled script
+                    object: extensionObject,
+                    funcName,
+                    blockInfo
                 };
             }
             break;
