@@ -898,6 +898,8 @@ class VirtualMachine extends EventEmitter {
         return this._loadExtensions(extensions.extensionIDs)
             // Desktop fork (section 162): an extension that reads decoded sounds gets them all decoded
             .then(() => this.runtime.pmSounds.eager && this.runtime.pmSounds.prepareAll(targets))
+            // Desktop fork (section 164): the costumes shown at the start are ready when the project starts
+            .then(() => this.runtime.pmCostumes.prepareForStart(targets))
             .then(() => {
             const deprecated_extensionStorage = {};
             for (const extension of extensions.extensionIDs) {
@@ -973,6 +975,7 @@ class VirtualMachine extends EventEmitter {
             this.runtime.setEditingTarget(this.editingTarget);
             this.runtime.ioDevices.cloud.setStage(this.runtime.getTargetForStage());
             this.runtime.pmSounds.warmUp(targets);
+            this.runtime.pmCostumes.warmUp(targets, wholeProject);
         });
     }
 

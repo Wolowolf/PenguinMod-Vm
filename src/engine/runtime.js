@@ -68,6 +68,7 @@ const FrameLoop = require('./tw-frame-loop');
 const edgeHats = require('./edge-hats');
 const PageDoor = require('./page-door');
 const LazySounds = require('./lazy-sounds');
+const LazyCostumes = require('./lazy-costumes');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -375,6 +376,8 @@ class Runtime extends EventEmitter {
          * @type {LazySounds}
          */
         this.pmSounds = new LazySounds(this);
+        // Desktop fork (section 164): costumes' skins are made when first needed
+        this.pmCostumes = new LazyCostumes(this);
 
         /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions

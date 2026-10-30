@@ -5,6 +5,15 @@ const {parseVectorMetadata} = require('../serialization/tw-costume-import-export
 
 const loadVector_ = function (costume, runtime, rotationCenter) {
     return new Promise(resolve => {
+        // Desktop fork (section 164): the skin is made when it is first needed
+        if (rotationCenter && runtime.pmCostumes && runtime.pmCostumes.deferVector(costume, rotationCenter)) {
+            if (runtime.isPackaged) {
+                costume.asset = null;
+            }
+            resolve(costume);
+            return;
+        }
+
         let svgString = costume.asset.decodeText();
 
         // TW: We allow SVGs to specify their rotation center using a special comment.
@@ -217,6 +226,14 @@ const toDataURL = imageOrCanvas => {
 };
 
 const loadBitmap_ = function (costume, runtime, _rotationCenter) {
+    // Desktop fork (section 164): the skin is made when it is first needed
+    if (_rotationCenter && runtime.pmCostumes && runtime.pmCostumes.deferBitmap(costume, _rotationCenter)) {
+        if (runtime.isPackaged) {
+            costume.asset = null;
+        }
+        return Promise.resolve(costume);
+    }
+
     return fetchBitmapCanvas_(costume, runtime, _rotationCenter)
         .then(fetched => {
             const updateCostumeAsset = function (dataURI) {
