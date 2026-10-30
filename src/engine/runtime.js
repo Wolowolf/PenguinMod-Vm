@@ -3077,6 +3077,8 @@ class Runtime extends EventEmitter {
             if (target.isOriginal) target.deleteMonitors();
         });
 
+        // Desktop fork (section 167): their costumes' skins are destroyed below
+        const disposedSprites = this.targets.filter(target => target.isOriginal && target.getCostumes);
         this.targets.map(this.disposeTarget, this);
         // tw: explicitly emit a MONITORS_UPDATE instead of relying on implicit behavior of _step()
         const emptyMonitorState = OrderedMap({});
@@ -3085,6 +3087,7 @@ class Runtime extends EventEmitter {
             this.emit(Runtime.MONITORS_UPDATE, this._monitorState);
         }
         this.emit(Runtime.RUNTIME_DISPOSED);
+        this.pmCostumes.destroySkins(disposedSprites);
         this.ioDevices.clock.resetProjectTimer();
         this.fontManager.clear();
         // @todo clear out extensions? turboMode? etc.

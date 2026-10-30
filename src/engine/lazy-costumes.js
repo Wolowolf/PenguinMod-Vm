@@ -181,6 +181,9 @@ const scanBlocks = target => {
     return {names, allCostumes, allBackdrops};
 };
 
+// a costume's fields that deferVector makes read from the skin, and what they become when the skin is destroyed
+const PARSED_WHEN_READ = [['size', [0, 0]], ['rotationCenterX', 0], ['rotationCenterY', 0]];
+
 class LazyCostumes {
     constructor (runtime) {
         this.runtime = runtime;
@@ -288,6 +291,33 @@ class LazyCostumes {
 
     _targetsWith (targets) {
         return new Set(targets.concat(this.runtime.targets));
+    }
+
+    /**
+     * Desktop fork (section 167): a project was replaced: destroy its costumes' skins, which would otherwise stay for as
+     * long as the app runs. A skin something else still shows stays. Skins of sprites and costumes deleted earlier aren't
+     * among them: the memory budget frees those.
+     * @param {Array.<Target>} targets - the targets that were disposed
+     */
+    destroySkins (targets) {
+        const renderer = this.runtime.renderer;
+        if (!renderer || !renderer.destroySkin) return;
+        const shown = new Set();
+        for (const drawable of renderer._allDrawables) {
+            if (drawable && drawable.skin) shown.add(drawable.skin.id);
+        }
+        for (const target of targets) {
+            for (const costume of target.getCostumes()) {
+                // nothing to parse any more if someone still holds the costume
+                for (const [name, value] of PARSED_WHEN_READ) {
+                    const descriptor = Object.getOwnPropertyDescriptor(costume, name);
+                    if (descriptor && descriptor.get) costume[name] = value;
+                }
+                if (renderer._allSkins[costume.skinId] && !shown.has(costume.skinId)) {
+                    renderer.destroySkin(costume.skinId);
+                }
+            }
+        }
     }
 
     /**
