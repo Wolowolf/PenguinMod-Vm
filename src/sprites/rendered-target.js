@@ -3,6 +3,8 @@ const StringUtil = require('../util/string-util');
 const Cast = require('../util/cast');
 const Clone = require('../util/clone');
 const { translateForCamera } = require('../util/pos-math');
+
+const __xy = [0, 0];
 const Target = require('../engine/target');
 const StageLayering = require('../engine/stage-layering');
 const getCostumeUrl = require('../util/get-costume-url');
@@ -342,13 +344,16 @@ class RenderedTarget extends Target {
         const oldX = this.x;
         const oldY = this.y;
         if (this.renderer) {
+            // Desktop fork (section 169): one array reused for every move; the renderer only reads it.
+            __xy[0] = x;
+            __xy[1] = y;
             const position = this.runtime.runtimeOptions.fencing && !ignoreFencing ?
-                this.renderer.getFencedPositionOfDrawable(this.drawableID, [x, y]) :
-                [x, y];
+                this.renderer.getFencedPositionOfDrawable(this.drawableID, __xy, __xy) :
+                __xy;
             this.x = position[0];
             this.y = position[1];
 
-            this.renderer.updateDrawablePosition(this.drawableID, this._translatePossitionToCamera());
+            this.renderer.updateDrawablePosition(this.drawableID, this.cameraBound ? this._translatePossitionToCamera() : position);
             if (this.visible) {
                 this.emitVisualChange();
                 this.runtime.requestRedraw();
