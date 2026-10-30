@@ -7,8 +7,8 @@ const AsyncLimiter = require('../util/async-limiter');
  * (image decoded, texture uploaded, SVG parsed) the first time something reads it; the renderer does that on the spot
  * (Skin._pmDefer). The current costumes are decoded before the project starts; costumes that blocks can reach are made
  * in idle time right after, one at a time, so they are usually ready when first shown.
- * Only costumes whose size and rotation center are known without decoding them are put off: SVGs and simple PNGs with
- * a rotation center. Everything else loads as before. Extensions that read costume skins' fields themselves
+ * Only costumes whose size and rotation center are known without decoding them, or can wait to be read, are put off:
+ * SVGs and simple PNGs. Everything else loads as before. Extensions that read costume skins' fields themselves
  * (EAGER_EXTENSIONS) switch back to making every skin at once.
  */
 
@@ -28,19 +28,23 @@ const chunkName = (data, at) => String.fromCharCode(data[at + 4], data[at + 5], 
 // chunks after which the browser's decoder may give other pixels than a plain decoding of the file
 const UNPLAIN_CHUNKS = new Set(['gAMA', 'iCCP', 'cHRM', 'cICP', 'mDCV', 'cLLI', 'eXIf', 'acTL']);
 const CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4};
+// the passes of an interlaced PNG: first column, first row, column step, row step
+const ADAM7 = [[0, 0, 8, 8], [4, 0, 8, 8], [0, 4, 4, 8], [2, 0, 4, 4], [0, 2, 2, 4], [1, 0, 2, 2], [0, 1, 1, 2]];
+const WHOLE = [[0, 0, 1, 1]];
 
 /**
  * @param {Uint8Array} data - a file
- * @returns {?object} what decodePng needs when it is an 8-bit, not interlaced PNG without color profile
+ * @returns {?object} what decodePng needs when it is an 8-bit PNG without color profile
  */
 const readPng = data => {
     if (data.length < 33 || !PNG_SIGNATURE.every((byte, i) => data[i] === byte)) return null;
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     if (chunkName(data, 8) !== 'IHDR') return null;
     const info = {
-        width: view.getUint32(16), height: view.getUint32(20), colorType: data[25], palette: null, alpha: null, idat: []
+        width: view.getUint32(16), height: view.getUint32(20), colorType: data[25], interlaced: data[28] === 1,
+        palette: null, alpha: null, idat: []
     };
-    if (!info.width || !info.height || data[24] !== 8 || data[28] !== 0 || !CHANNELS[info.colorType]) return null;
+    if (!info.width || !info.height || data[24] !== 8 || data[28] > 1 || !CHANNELS[info.colorType]) return null;
     for (let at = 8; at + 12 <= data.length;) {
         const length = view.getUint32(at);
         const name = chunkName(data, at);
@@ -49,7 +53,13 @@ const readPng = data => {
         if (name === 'IDAT') info.idat.push(data.subarray(start, start + length));
         else if (name === 'PLTE') info.palette = data.subarray(start, start + length);
         else if (name === 'tRNS') {
-            if (info.colorType !== 3) return null;
+            // gray and RGB: the color that is transparent, 2 bytes per channel; a first byte in an 8-bit file is odd
+            const channels = info.colorType === 0 ? 1 : 3;
+            if (info.colorType === 4 || info.colorType === 6) return null;
+            if (info.colorType !== 3) {
+                if (length !== channels * 2) return null;
+                for (let i = 0; i < channels; i++) if (data[start + (i * 2)]) return null;
+            }
             info.alpha = data.subarray(start, start + length);
         } else if (name === 'IEND') return info.idat.length && (info.colorType !== 3 || info.palette) ? info : null;
         at = start + length + 4;
@@ -80,45 +90,56 @@ const decodePng = info => {
     }
     const raw = inflate(joined);
     const channels = CHANNELS[colorType];
-    const rowBytes = width * channels;
-    if (raw.length < (rowBytes + 1) * height) throw new Error('PNG data too short');
 
     const rgba = new Uint8ClampedArray(width * height * 4);
-    let previous = new Uint8Array(rowBytes);
-    let row = new Uint8Array(rowBytes);
-    for (let y = 0, at = 0, out = 0; y < height; y++) {
-        const filter = raw[at++];
-        for (let x = 0; x < rowBytes; x++) {
-            const left = x >= channels ? row[x - channels] : 0;
-            const up = previous[x];
-            const upLeft = x >= channels ? previous[x - channels] : 0;
-            let predicted = 0;
-            if (filter === 1) predicted = left;
-            else if (filter === 2) predicted = up;
-            else if (filter === 3) predicted = (left + up) >> 1;
-            else if (filter === 4) predicted = paeth(left, up, upLeft);
-            row[x] = raw[at++] + predicted;
-        }
-        for (let x = 0; x < rowBytes; x += channels, out += 4) {
-            if (colorType === 6 || colorType === 2) {
-                rgba[out] = row[x];
-                rgba[out + 1] = row[x + 1];
-                rgba[out + 2] = row[x + 2];
-                rgba[out + 3] = colorType === 6 ? row[x + 3] : 255;
-            } else if (colorType === 3) {
-                const index = row[x];
-                rgba[out] = palette[index * 3];
-                rgba[out + 1] = palette[(index * 3) + 1];
-                rgba[out + 2] = palette[(index * 3) + 2];
-                rgba[out + 3] = alpha && index < alpha.length ? alpha[index] : 255;
-            } else {
-                rgba[out] = rgba[out + 1] = rgba[out + 2] = row[x];
-                rgba[out + 3] = colorType === 4 ? row[x + 1] : 255;
+    let at = 0;
+    for (const [firstX, firstY, stepX, stepY] of info.interlaced ? ADAM7 : WHOLE) {
+        const columns = Math.ceil((width - firstX) / stepX);
+        const rows = Math.ceil((height - firstY) / stepY);
+        // a pass without pixels has no data at all
+        if (columns <= 0 || rows <= 0) continue;
+        const rowBytes = columns * channels;
+        if (raw.length < at + ((rowBytes + 1) * rows)) throw new Error('PNG data too short');
+        let previous = new Uint8Array(rowBytes);
+        let row = new Uint8Array(rowBytes);
+        for (let y = 0; y < rows; y++) {
+            const filter = raw[at++];
+            for (let x = 0; x < rowBytes; x++) {
+                const left = x >= channels ? row[x - channels] : 0;
+                const up = previous[x];
+                const upLeft = x >= channels ? previous[x - channels] : 0;
+                let predicted = 0;
+                if (filter === 1) predicted = left;
+                else if (filter === 2) predicted = up;
+                else if (filter === 3) predicted = (left + up) >> 1;
+                else if (filter === 4) predicted = paeth(left, up, upLeft);
+                row[x] = raw[at++] + predicted;
             }
+            let out = ((firstY + (y * stepY)) * width + firstX) * 4;
+            for (let x = 0; x < rowBytes; x += channels, out += stepX * 4) {
+                if (colorType === 6 || colorType === 2) {
+                    rgba[out] = row[x];
+                    rgba[out + 1] = row[x + 1];
+                    rgba[out + 2] = row[x + 2];
+                    rgba[out + 3] = colorType === 6 ? row[x + 3] : 255;
+                    if (colorType === 2 && alpha && row[x] === alpha[1] && row[x + 1] === alpha[3] &&
+                            row[x + 2] === alpha[5]) rgba[out + 3] = 0;
+                } else if (colorType === 3) {
+                    const index = row[x];
+                    rgba[out] = palette[index * 3];
+                    rgba[out + 1] = palette[(index * 3) + 1];
+                    rgba[out + 2] = palette[(index * 3) + 2];
+                    rgba[out + 3] = alpha && index < alpha.length ? alpha[index] : 255;
+                } else {
+                    rgba[out] = rgba[out + 1] = rgba[out + 2] = row[x];
+                    rgba[out + 3] = colorType === 4 ? row[x + 1] : 255;
+                    if (colorType === 0 && alpha && row[x] === alpha[1]) rgba[out + 3] = 0;
+                }
+            }
+            const swap = previous;
+            previous = row;
+            row = swap;
         }
-        const swap = previous;
-        previous = row;
-        row = swap;
     }
     // through a canvas, as an image is: the silhouette then reads the same values
     const canvas = document.createElement('canvas');
@@ -180,7 +201,7 @@ class LazyCostumes {
     /**
      * Put off an SVG costume's skin.
      * @param {object} costume - the costume
-     * @param {!Array.<number>} rotationCenter - its rotation center
+     * @param {Array.<number>} [rotationCenter] - its rotation center; without one, the middle of the SVG
      * @returns {boolean} false when it must be made now instead
      */
     deferVector (costume, rotationCenter) {
@@ -188,24 +209,32 @@ class LazyCostumes {
         if (this.eager || !renderer.createDeferredSVGSkin) return false;
         const asset = costume.asset;
         costume.skinId = renderer.createDeferredSVGSkin(() => asset.decodeText(), rotationCenter, asset);
-        // the size comes from parsing the file, so it is parsed when the size is first read
-        Object.defineProperty(costume, 'size', {
-            configurable: true,
-            enumerable: true,
-            get: () => renderer.getSkinSize(costume.skinId),
-            set: value => {
-                Object.defineProperty(costume, 'size', {
-                    configurable: true, enumerable: true, writable: true, value
-                });
-            }
-        });
+        // these come from parsing the file, so it is parsed when they are first read
+        const parsedWhenRead = (name, get) => {
+            Object.defineProperty(costume, name, {
+                configurable: true,
+                enumerable: true,
+                get,
+                set: value => {
+                    Object.defineProperty(costume, name, {
+                        configurable: true, enumerable: true, writable: true, value
+                    });
+                }
+            });
+        };
+        parsedWhenRead('size', () => renderer.getSkinSize(costume.skinId));
+        if (!rotationCenter) {
+            parsedWhenRead('rotationCenterX', () => renderer.getSkinRotationCenter(costume.skinId)[0]);
+            parsedWhenRead('rotationCenterY', () => renderer.getSkinRotationCenter(costume.skinId)[1]);
+            costume.bitmapResolution = 1;
+        }
         return true;
     }
 
     /**
      * Put off a bitmap costume's skin.
      * @param {object} costume - the costume
-     * @param {!Array.<number>} rotationCenter - its rotation center
+     * @param {Array.<number>} [rotationCenter] - its rotation center; without one, the middle of the image
      * @returns {boolean} false when it must be made now instead
      */
     deferBitmap (costume, rotationCenter) {
@@ -215,8 +244,13 @@ class LazyCostumes {
         const info = readPng(asset.data);
         if (!info) return false;
         costume.bitmapResolution = 2;
+        if (!rotationCenter) {
+            costume.rotationCenterX = info.width / 2;
+            costume.rotationCenterY = info.height / 2;
+        }
+        const center = rotationCenter ? [rotationCenter[0] / 2, rotationCenter[1] / 2] : [info.width / 4, info.height / 4];
         costume.skinId = renderer.createDeferredBitmapSkin(
-            info.width, info.height, 2, [rotationCenter[0] / 2, rotationCenter[1] / 2],
+            info.width, info.height, 2, center,
             () => {
                 this.madeOnTheSpot++;
                 return decodePng(info);
