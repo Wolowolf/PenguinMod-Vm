@@ -28,10 +28,16 @@ const cancelPlays = entry => {
 const patchBank = (bank, lazy) => {
     if (bank.pmPending) return;
     bank.pmPending = new Map();
+    // Desktop fork (section 165): the decoded sounds that can go back to waiting, with their compressed file
+    bank.pmDecoded = new Map();
     const {playSound, stop, stopAllSounds, dispose} = bank;
     bank.playSound = function (target, soundId, seconds) {
         const entry = this.pmPending.get(soundId);
-        if (!entry) return playSound.call(this, target, soundId, seconds);
+        if (!entry) {
+            const decoded = this.pmDecoded.get(soundId);
+            if (decoded) decoded.lastUsed = Date.now();
+            return playSound.call(this, target, soundId, seconds);
+        }
         entry.playing = true;
         entry.lastTarget = target;
         const finished = new Promise(resolve => {
@@ -59,6 +65,7 @@ const patchBank = (bank, lazy) => {
     bank.dispose = function () {
         for (const entry of this.pmPending.values()) cancelPlays(entry);
         this.pmPending.clear();
+        this.pmDecoded.clear();
         return dispose.call(this);
     };
 };
@@ -149,9 +156,74 @@ class LazySounds {
                     sound.rate = player.buffer.sampleRate;
                     sound.sampleCount = player.buffer.length;
                     soundBank.addSoundPlayer(player);
+                    entry.lastUsed = Date.now();
+                    soundBank.pmDecoded.set(soundId, entry);
                 }
                 for (const op of entry.ops) op.run(player);
             });
+    }
+
+    /**
+     * Desktop fork (section 165): the decoded sounds that could be freed. A playing sound counts as used just now.
+     * @param {number} now - the time
+     * @returns {Array.<{bytes: number, lastUsed: number, free: Function}>} those sounds
+     */
+    freeable (now) {
+        const items = [];
+        if (this.eager) return items;
+        for (const bank of this._banksOf()) {
+            for (const entry of bank.pmDecoded.values()) {
+                const player = bank.soundPlayers[entry.soundId];
+                if (!player) continue;
+                if (player.isPlaying) entry.lastUsed = now;
+                const {length, numberOfChannels} = player.buffer;
+                items.push({
+                    bytes: length * numberOfChannels * 4,
+                    lastUsed: entry.lastUsed,
+                    free: () => this._free(entry)
+                });
+            }
+        }
+        return items;
+    }
+
+    /**
+     * @returns {number} about how many bytes the decoded sounds that could be freed use
+     */
+    decodedBytes () {
+        return this.freeable(Date.now()).reduce((sum, item) => sum + item.bytes, 0);
+    }
+
+    // back to waiting with the same id; its fade-out setting comes back when it is decoded again
+    _free (entry) {
+        const {sound, data, soundBank, soundId} = entry;
+        const player = soundBank.soundPlayers[soundId];
+        const {stopFadeDecay} = player;
+        const {duration} = player.buffer;
+        soundBank.pmDecoded.delete(soundId);
+        soundBank.playerTargets.delete(soundId);
+        delete soundBank.soundPlayers[soundId];
+        player.dispose();
+        const effects = soundBank.soundEffects.get(soundId);
+        if (effects) {
+            effects.dispose();
+            soundBank.soundEffects.delete(soundId);
+        }
+        soundBank.pmPending.set(soundId, {
+            sound, data, soundBank, soundId, playing: false, lastTarget: null, promise: null, duration,
+            ops: [{run: decoded => {
+                if (decoded) decoded.stopFadeDecay = stopFadeDecay;
+            }}]
+        });
+    }
+
+    /**
+     * Desktop fork (section 165): this sound's audio no longer comes from its file (edited): it stays decoded.
+     * @param {?SoundBank} soundBank - its bank
+     * @param {string} soundId - its id
+     */
+    keepDecoded (soundBank, soundId) {
+        if (soundBank && soundBank.pmDecoded) soundBank.pmDecoded.delete(soundId);
     }
 
     // the sound banks of these targets and the project's (the engine never disposes an old project's banks, so
@@ -220,6 +292,11 @@ class LazySounds {
     _warmNext () {
         const banks = this._banksOf();
         while (this._warmQueue.length) {
+            // Desktop fork (section 165): the rest is decoded when first needed
+            if (!this.runtime.pmMemory.hasRoom()) {
+                this._warmQueue.length = 0;
+                break;
+            }
             const [bank, soundId] = this._warmQueue.shift();
             // not for a project that was replaced meanwhile
             const promise = banks.has(bank) && this.ensure(bank, soundId);

@@ -69,6 +69,7 @@ const edgeHats = require('./edge-hats');
 const PageDoor = require('./page-door');
 const LazySounds = require('./lazy-sounds');
 const LazyCostumes = require('./lazy-costumes');
+const MemoryBudget = require('./memory-budget');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -378,6 +379,8 @@ class Runtime extends EventEmitter {
         this.pmSounds = new LazySounds(this);
         // Desktop fork (section 164): costumes' skins are made when first needed
         this.pmCostumes = new LazyCostumes(this);
+        // Desktop fork (section 165): frees sounds and skins not used for a while when there are too many
+        this.pmMemory = new MemoryBudget(this);
 
         /**
          * PMDESKTOP_HOOKS (section 119): hooks for extensions, used instead of replacing engine functions
@@ -3336,6 +3339,7 @@ class Runtime extends EventEmitter {
         // pm: RUNTIME_STEP_START runs before BEFORE_EXECUTE
         // this runs before any processing of this new step
         this.frameLoop._stepCounter++;
+        this.pmMemory.tick();
         this.emit(Runtime.RUNTIME_STEP_START);
 
         if (this.profiler !== null) {

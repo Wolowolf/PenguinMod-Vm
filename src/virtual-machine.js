@@ -1257,11 +1257,15 @@ class VirtualMachine extends EventEmitter {
             const decoding = this.runtime.pmSounds.ensure(soundBank, id);
             if (decoding) {
                 decoding.then(() => {
+                    this.runtime.pmSounds.keepDecoded(soundBank, id);
                     soundBank.getSoundPlayer(id).buffer = newBuffer;
                     sound.sampleCount = newBuffer.length;
                     sound.rate = newBuffer.sampleRate;
                 });
-            } else soundBank.getSoundPlayer(id).buffer = newBuffer;
+            } else {
+                this.runtime.pmSounds.keepDecoded(soundBank, id);
+                soundBank.getSoundPlayer(id).buffer = newBuffer;
+            }
         }
         // Update sound in runtime
         if (soundEncoding) {

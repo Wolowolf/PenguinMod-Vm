@@ -231,7 +231,11 @@ class LazyCostumes {
     _make (skinId) {
         const renderer = this.runtime.renderer;
         const asset = renderer.pmDeferredSource && renderer.pmDeferredSource(skinId);
-        if (!asset) return null;
+        if (!asset) {
+            // a freed SVG has no source to read, and is drawn again at once (section 165)
+            if (renderer.pmPrepareSkin) renderer.pmPrepareSkin(skinId);
+            return null;
+        }
         if (asset.assetType.runtimeFormat === this.runtime.storage.AssetType.ImageVector.runtimeFormat) {
             renderer.pmPrepareSkin(skinId);
             return null;
@@ -308,6 +312,12 @@ class LazyCostumes {
 
     _warmNext () {
         if (!this._warmQueue.length) {
+            this._warming = false;
+            return;
+        }
+        // Desktop fork (section 165): the rest is made when first needed
+        if (!this.runtime.pmMemory.hasRoom()) {
+            this._warmQueue.length = 0;
             this._warming = false;
             return;
         }

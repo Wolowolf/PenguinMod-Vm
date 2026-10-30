@@ -298,6 +298,9 @@ class Scratch3SoundBlocks {
         if (!soundBank) return 0;
         const players = soundBank.soundPlayers;
         if (!players) return 0;
+        // Desktop fork (section 165): a sound freed by the memory budget still knows its length
+        const pending = this.runtime.pmSounds.pending(soundBank, soundId);
+        if (pending && typeof pending.duration === 'number') return pending.duration;
         // Desktop fork (section 162): the length is known once the sound is decoded; the script waits for it
         const decoding = this.runtime.pmSounds.ensure(soundBank, soundId);
         if (decoding) return decoding.then(() => this.getLength(args, util));
