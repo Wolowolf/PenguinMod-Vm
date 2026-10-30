@@ -256,6 +256,26 @@ let rendererDrawProfilerId = -1;
  * Manages targets, scripts, and the sequencer.
  * @constructor
  */
+// PMDESKTOP (section 168): remembers that someone wrote to the thread map, so _pmCleanThreads knows it must rebuild it.
+class ThreadMap extends Map {
+    constructor () {
+        super();
+        this.pmChanged = false;
+    }
+    set (key, value) {
+        this.pmChanged = true;
+        return super.set(key, value);
+    }
+    delete (key) {
+        this.pmChanged = true;
+        return super.delete(key);
+    }
+    clear () {
+        this.pmChanged = true;
+        super.clear();
+    }
+}
+
 class Runtime extends EventEmitter {
     constructor () {
         super();
@@ -279,7 +299,11 @@ class Runtime extends EventEmitter {
          */
         this.threads = [];
 
-        this.threadMap = new Map();
+        this.threadMap = new ThreadMap();
+        // PMDESKTOP (section 168): what updateThreadMap last read from each thread (null ids = not in the map)
+        this._pmMapThreads = [];
+        this._pmMapTargetIds = [];
+        this._pmMapTopBlocks = [];
 
         /** @type {!Sequencer} */
         this.sequencer = new Sequencer(this);
@@ -3327,11 +3351,54 @@ class Runtime extends EventEmitter {
 
     updateThreadMap () {
         this.threadMap.clear();
-        for (const thread of this.threads) {
+        const threads = this.threads;
+        const mapThreads = this._pmMapThreads;
+        const targetIds = this._pmMapTargetIds;
+        const topBlocks = this._pmMapTopBlocks;
+        mapThreads.length = targetIds.length = topBlocks.length = threads.length;
+        for (let i = 0; i < threads.length; i++) {
+            const thread = threads[i];
+            mapThreads[i] = thread;
             if (!thread.stackClick && !thread.updateMonitor) {
                 this.threadMap.set(thread.getId(), thread);
+                targetIds[i] = thread.target.id;
+                topBlocks[i] = thread.topBlock;
+            } else {
+                targetIds[i] = null;
+                topBlocks[i] = null;
             }
         }
+        this.threadMap.pmChanged = false;
+    }
+
+    /**
+     * PMDESKTOP (section 168): removes stopped threads and brings the thread map up to date, like filtering the list
+     * and calling updateThreadMap, but only does that work when a thread stopped, the list or a thread's
+     * target, top block or kind changed, or someone wrote to the map.
+     */
+    _pmCleanThreads () {
+        const threads = this.threads;
+        const mapThreads = this._pmMapThreads;
+        const targetIds = this._pmMapTargetIds;
+        const topBlocks = this._pmMapTopBlocks;
+        let same = !this.threadMap.pmChanged && threads.length === mapThreads.length;
+        let killed = false;
+        for (let i = 0; i < threads.length; i++) {
+            const thread = threads[i];
+            if (thread.isKilled) {
+                killed = true;
+                break;
+            }
+            if (same) {
+                if (thread.stackClick || thread.updateMonitor) {
+                    same = thread === mapThreads[i] && targetIds[i] === null;
+                } else {
+                    same = thread === mapThreads[i] && thread.target.id === targetIds[i] && thread.topBlock === topBlocks[i];
+                }
+            }
+        }
+        if (killed) this.threads = threads.filter(thread => !thread.isKilled);
+        if (killed || !same) this.updateThreadMap();
     }
 
     /**
@@ -3353,8 +3420,7 @@ class Runtime extends EventEmitter {
         }
 
         // Clean up threads that were told to stop during or since the last step
-        this.threads = this.threads.filter(thread => !thread.isKilled);
-        this.updateThreadMap();
+        this._pmCleanThreads();
 
         // Find all edge-activated hats, and add them to threads to be evaluated.
         this._skippedEdgeHatChecks = 0;
