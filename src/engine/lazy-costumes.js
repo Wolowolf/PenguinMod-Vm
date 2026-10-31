@@ -8,15 +8,14 @@ const AsyncLimiter = require('../util/async-limiter');
  * (Skin._pmDefer). The current costumes are decoded before the project starts; costumes that blocks can reach are made
  * in idle time right after, one at a time, so they are usually ready when first shown.
  * Only costumes whose size and rotation center are known without decoding them, or can wait to be read, are put off:
- * SVGs and simple PNGs. Everything else loads as before. Extensions that read costume skins' fields themselves
- * (EAGER_EXTENSIONS) switch back to making every skin at once.
+ * SVGs and simple PNGs. Everything else loads as before. An extension that keeps a costume's texture for later
+ * (EAGER_EXTENSIONS) switches back to making every skin at once.
  */
 
-// read a costume's skin fields directly: Iris Text, Sprite Effects V2, Turbo Skins, Mouse Cursor, Looks Plus, Pen+,
-// Video Sprites
-const EAGER_EXTENSIONS = new Set([
-    'g1nxIrisText', 'SPspriteEffectsV2', 'SPturboSkins', 'MouseCursor', 'lmsLooksPlus', 'penP', 'videoSprites'
-]);
+// Pen+ keeps a costume's GL texture in its shaders' uniforms, which neither an SVG still loading nor freeing can allow.
+// Desktop fork (section 178): the others that read skin fields (Iris Text, Sprite Effects V2, Turbo Skins, Mouse Cursor,
+// Looks Plus, Video Sprites) read them at once or copy them: reading a put-off field makes the skin (Skin._pmDefer).
+const EAGER_EXTENSIONS = new Set(['penP']);
 // blocks that can reach any of the target's costumes (or the stage's backdrops), not only those they name
 const ANY_COSTUME = {looks_switchcostumeto: 'COSTUME', looks_nextcostume: ''};
 const ANY_BACKDROP = {looks_switchbackdropto: 'BACKDROP', looks_switchbackdroptoandwait: 'BACKDROP', looks_nextbackdrop: ''};
@@ -174,6 +173,12 @@ const scanBlocks = target => {
             return !table[opcode] || (input && input.block !== input.shadow);
         };
         if (reaches(ANY_COSTUME)) allCostumes = true;
+        // Desktop fork (section 178): an extension block given its costume by a reporter
+        if (!allCostumes && opcode.includes('_') && !opcode.startsWith('looks_')) {
+            for (const name in inputs) {
+                if (/costume/i.test(name) && inputs[name].block !== inputs[name].shadow) allCostumes = true;
+            }
+        }
         if (reaches(ANY_BACKDROP)) allBackdrops = true;
     }
     if (COSTUME_WORDS.some(word => names.has(word))) allCostumes = true;

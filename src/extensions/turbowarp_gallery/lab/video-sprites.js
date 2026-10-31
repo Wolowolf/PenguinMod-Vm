@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's lab/video-sprites.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): runtime.pmCloneCreatedHooks instead of replacing RenderedTarget.prototype.makeClone, and renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 178): its parent skin counts as in use; (section 120, step 5): runtime.pmCloneCreatedHooks instead of replacing RenderedTarget.prototype.makeClone, and renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -212,7 +212,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!costume || typeof costume.skinId !== "number") {
         return null;
       }
-      return renderer._allSkins[costume.skinId] || null;
+      const skin = renderer._allSkins[costume.skinId] || null;
+      // Desktop fork (section 178): no drawable shows the costume's skin itself, so tell the memory budget it is in use
+      if (skin) skin.pmLastUsed = renderer.pmClock;
+      return skin;
     }
 
     get size() {
