@@ -311,6 +311,12 @@ class Scratch3MotionBlocks {
         this._ifOnEdgeBounce(util.target);
     }
     _ifOnEdgeBounce (target) { // used by compiler
+        const stageWidth = this.runtime.stageWidth;
+        const stageHeight = this.runtime.stageHeight;
+        // Desktop fork (section 172): far from every edge the exact outline is not needed
+        if (target.renderer && this.runtime.renderer.pmIsWellInside(target.drawableID, stageWidth / 2, stageHeight / 2)) {
+            return;
+        }
         const bounds = target.getBounds();
         if (!bounds) {
             return;
@@ -318,8 +324,6 @@ class Scratch3MotionBlocks {
         // Measure distance to edges.
         // Values are positive when the sprite is far away,
         // and clamped to zero when the sprite is beyond.
-        const stageWidth = this.runtime.stageWidth;
-        const stageHeight = this.runtime.stageHeight;
         const distLeft = Math.max(0, (stageWidth / 2) + bounds.left);
         const distTop = Math.max(0, (stageHeight / 2) - bounds.top);
         const distRight = Math.max(0, (stageWidth / 2) - bounds.right);
