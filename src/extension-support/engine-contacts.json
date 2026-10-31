@@ -488,12 +488,12 @@
         },
         "internals": {
             "._allDrawables": 1,
-            "._allSkins": 4,
+            "._allSkins": 6,
             "._canvas": 2,
             "._height": 1,
             "._lazyData": 2,
             "._silhouette": 7,
-            "._svgImage": 2,
+            "._svgImage": 3,
             "._svgImageLoaded": 1,
             "._width": 5,
             "write runtime.ext_irisText": 1

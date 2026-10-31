@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/iris-text.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 180): its mask fallback waits for a costume's SVG; (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -1661,11 +1661,28 @@ Enjoy!! :D
         return { canvas, width: canvasW, height: canvasH };
     }
 
+    // Desktop fork (section 180): reading the skin of a costume not made yet starts loading its SVG; wait for that, or
+    // the mask would be copied from the empty canvas and kept
+    function rasterizeCostumeFromLoadedSkin(costume, targetName) {
+        const skin = runtime.renderer && runtime.renderer._allSkins && runtime.renderer._allSkins[costume.skinId];
+        const image = skin && skin._svgImage;
+        if (!image || !skin.pmLoading) return rasterizeCostumeFromSkin(costume, targetName);
+        return new Promise((resolve) => {
+            const finished = () => {
+                image.removeEventListener('load', finished);
+                image.removeEventListener('error', finished);
+                resolve(rasterizeCostumeFromSkin(costume, targetName));
+            };
+            image.addEventListener('load', finished);
+            image.addEventListener('error', finished);
+        });
+    }
+
     function rasterizeCostumeToCanvas(costume, targetName) {
         return new Promise((resolve) => {
             const asset = costume.asset;
             if (!asset) {
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromLoadedSkin(costume, targetName);
                 resolve(fromSkin);
                 return;
             }
@@ -1679,7 +1696,7 @@ Enjoy!! :D
                     url = asset.encodeDataURI();
                 }
             } catch (e) {
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromLoadedSkin(costume, targetName);
                 resolve(fromSkin);
                 return;
             }
@@ -1711,7 +1728,7 @@ Enjoy!! :D
             };
             img.onerror = () => {
                 if (revoke) URL.revokeObjectURL(url);
-                const fromSkin = rasterizeCostumeFromSkin(costume, targetName);
+                const fromSkin = rasterizeCostumeFromLoadedSkin(costume, targetName);
                 resolve(fromSkin);
             };
             img.src = url;
