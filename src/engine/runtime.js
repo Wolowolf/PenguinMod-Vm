@@ -3466,7 +3466,8 @@ class Runtime extends EventEmitter {
         // flag will still indicate that a script ran.
         this._emitProjectRunStatus(
             this.threads.length + doneThreads.length + this._skippedEdgeHatChecks -
-                this._getMonitorThreadCount([...this.threads, ...doneThreads]));
+                // Desktop fork (section 173): counted list by list, not by copying every thread each frame
+                this._getMonitorThreadCount(this.threads) - this._getMonitorThreadCount(doneThreads));
         // Store threads that completed this iteration for testing and other
         // internal purposes.
         this._lastStepDoneThreads = doneThreads;
@@ -3869,18 +3870,17 @@ class Runtime extends EventEmitter {
      * @param {Array.<Thread>=} optExtraThreads Optional list of inactive threads.
      */
     _updateGlows (optExtraThreads) {
-        const searchThreads = [];
-        searchThreads.push.apply(searchThreads, this.threads);
-        if (optExtraThreads) {
-            searchThreads.push.apply(searchThreads, optExtraThreads);
-        }
+        // Desktop fork (section 173): both lists are walked as they are, not copied every frame
+        const threads = this.threads;
+        const numThreads = threads.length;
+        const numSearched = numThreads + (optExtraThreads ? optExtraThreads.length : 0);
         // Set of scripts that request a glow this frame.
         const requestedGlowsThisFrame = [];
         // Final set of scripts glowing during this frame.
         const finalScriptGlows = [];
         // Find all scripts that should be glowing.
-        for (let i = 0; i < searchThreads.length; i++) {
-            const thread = searchThreads[i];
+        for (let i = 0; i < numSearched; i++) {
+            const thread = i < numThreads ? threads[i] : optExtraThreads[i - numThreads];
             const target = thread.target;
             if (target === this._editingTarget) {
                 const blockForThread = thread.blockGlowInFrame;
