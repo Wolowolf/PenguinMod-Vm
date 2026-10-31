@@ -71,6 +71,7 @@ const PageDoor = require('./page-door');
 const LazySounds = require('./lazy-sounds');
 const LazyCostumes = require('./lazy-costumes');
 const MemoryBudget = require('./memory-budget');
+const {setupInitialState} = require('./pm-interpolate');
 
 const defaultExtensionColors = ['#0FBD8C', '#0DA57A', '#0B8E69'];
 
@@ -880,6 +881,10 @@ class Runtime extends EventEmitter {
      */
     static get FRAMERATE_CHANGED () {
         return 'FRAMERATE_CHANGED';
+    }
+
+    static get INTERPOLATION_CHANGED () {
+        return 'INTERPOLATION_CHANGED';
     }
 
     /**
@@ -3422,6 +3427,8 @@ class Runtime extends EventEmitter {
      * inactive threads after each iteration.
      */
     _step () {
+        // Desktop fork (section 177): before anything can read a sprite's drawable
+        if (this.interpolationEnabled) setupInitialState(this);
         // pm: RUNTIME_STEP_START runs before BEFORE_EXECUTE
         // this runs before any processing of this new step
         this.frameLoop._stepCounter++;
@@ -3471,21 +3478,8 @@ class Runtime extends EventEmitter {
         // Store threads that completed this iteration for testing and other
         // internal purposes.
         this._lastStepDoneThreads = doneThreads;
-        if (this.renderer) {
-            // @todo: Only render when this.redrawRequested or clones rendered.
-            if (this.profiler !== null) {
-                if (rendererDrawProfilerId === -1) {
-                    rendererDrawProfilerId = this.profiler.idByName('RenderWebGL.draw');
-                }
-                this.profiler.start(rendererDrawProfilerId);
-            }
-            // tw: do not draw if document is hidden
-            if (!document.hidden) {
-                this.renderer.draw();
-            }
-            if (this.profiler !== null) {
-                this.profiler.stop();
-            }
+        if (this.renderer && !this.frameLoop.takeDraw()) {
+            this._pmDraw();
         }
 
         if (this._refreshTargets) {
@@ -3519,6 +3513,23 @@ class Runtime extends EventEmitter {
 
         // pm: RUNTIME_STEP_END runs after AFTER_EXECUTE
         this.emit(Runtime.RUNTIME_STEP_END);
+    }
+
+    _pmDraw () {
+        // @todo: Only render when this.redrawRequested or clones rendered.
+        if (this.profiler !== null) {
+            if (rendererDrawProfilerId === -1) {
+                rendererDrawProfilerId = this.profiler.idByName('RenderWebGL.draw');
+            }
+            this.profiler.start(rendererDrawProfilerId);
+        }
+        // tw: do not draw if document is hidden
+        if (!document.hidden) {
+            this.renderer.draw();
+        }
+        if (this.profiler !== null) {
+            this.profiler.stop();
+        }
     }
 
     /**
@@ -3587,9 +3598,19 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.FRAMERATE_CHANGED, framerate);
     }
 
-    // PMDESKTOP_STAGE_PATCH: interpolation was removed (section 21); kept so extensions that call it
-    // (e.g. SharkPool Camera) don't fail while loading
-    setInterpolation () {}
+    // Desktop fork (section 177): "Smooth movement", see pm-interpolate.js
+    setInterpolation (enabled) {
+        enabled = !!enabled;
+        if (enabled === !!this.interpolationEnabled) return;
+        this.interpolationEnabled = enabled;
+        if (!enabled) {
+            for (const target of this.targets) {
+                if (target.pmInterpolation) target.updateAllDrawableProperties();
+                target.pmInterpolation = null;
+            }
+        }
+        this.emit(Runtime.INTERPOLATION_CHANGED, enabled);
+    }
 
     /**
      * tw: Update runtime options
@@ -3778,6 +3799,7 @@ class Runtime extends EventEmitter {
         if (typeof parsed.framerate === 'number') {
             this.setFramerate(parsed.framerate);
         }
+        this.setInterpolation(parsed.interpolation);
         if (parsed.turbo) {
             this.turboMode = true;
             this.emit(Runtime.TURBO_MODE_ON);
@@ -3798,6 +3820,7 @@ class Runtime extends EventEmitter {
     _generateAllProjectOptions () {
         return {
             framerate: this.frameLoop.framerate,
+            interpolation: !!this.interpolationEnabled,
             runtimeOptions: this.runtimeOptions,
             turbo: this.turboMode,
             hq: this.renderer ? this.renderer.useHighQualityRender : true,

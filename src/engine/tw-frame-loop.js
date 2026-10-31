@@ -43,6 +43,8 @@ const animationFrameWrapper = callback => {
     };
 };
 
+const {interpolate} = require('./pm-interpolate');
+
 class FrameLoop {
     constructor (runtime) {
         this.runtime = runtime;
@@ -50,9 +52,15 @@ class FrameLoop {
         this.setFramerate(30);
 
         this.stepCallback = this.stepCallback.bind(this);
+        this.drawCallback = this.drawCallback.bind(this);
 
         this._stepInterval = null; // PMDESKTOP_STAGE_PATCH: no interpolation (section 21)
         this._stepAnimation = null;
+        // Desktop fork (section 177): at a fixed frame rate, steps run on a timer and the picture is drawn on screen frames.
+        this._drawAnimation = null;
+        this._drawPending = false;
+        this._lastStepEnd = 0;
+        this._smoothing = false;
         this._stepCounter = 0;
     }
 
@@ -63,6 +71,33 @@ class FrameLoop {
 
     stepCallback () {
         this.runtime._step();
+    }
+
+    /**
+     * Called by a step instead of drawing, while frames are drawn here.
+     * @return {boolean} Whether the frame will be drawn here.
+     */
+    takeDraw () {
+        if (!this._drawAnimation || this.runtime.pmNoDrawSplit) return false;
+        this._drawPending = true;
+        this._lastStepEnd = performance.now();
+        return true;
+    }
+
+    drawCallback () {
+        const runtime = this.runtime;
+        if (!runtime.renderer || document.hidden) return;
+        if (!this._drawPending && !this._smoothing) return;
+        this._drawPending = false;
+        if (runtime.interpolationEnabled) {
+            const time = Math.min(1, (performance.now() - this._lastStepEnd) / runtime.currentStepTime);
+            interpolate(runtime, time);
+            // Keep drawing until the picture has caught up with the last step.
+            this._smoothing = time < 1;
+        } else {
+            this._smoothing = false;
+        }
+        runtime._pmDraw();
     }
 
     _restart () {
@@ -80,6 +115,7 @@ class FrameLoop {
         } else {
             this._stepInterval = setInterval(this.stepCallback, 1000 / this.framerate);
             this.runtime.currentStepTime = 1000 / this.framerate;
+            this._drawAnimation = animationFrameWrapper(this.drawCallback);
         }
     }
 
@@ -90,6 +126,13 @@ class FrameLoop {
             this._stepAnimation.cancel();
         }
         this._stepAnimation = null;
+        if (this._drawAnimation) {
+            this._drawAnimation.cancel();
+            if (this._drawPending && this.runtime.renderer) this.runtime._pmDraw();
+        }
+        this._drawAnimation = null;
+        this._drawPending = false;
+        this._smoothing = false;
     }
 }
 

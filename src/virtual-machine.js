@@ -230,6 +230,9 @@ class VirtualMachine extends EventEmitter {
         this.runtime.on(Runtime.FRAMERATE_CHANGED, framerate => {
             this.emit(Runtime.FRAMERATE_CHANGED, framerate);
         });
+        this.runtime.on(Runtime.INTERPOLATION_CHANGED, enabled => {
+            this.emit(Runtime.INTERPOLATION_CHANGED, enabled);
+        });
         this.runtime.on(Runtime.STAGE_SIZE_CHANGED, (width, height) => {
             this.emit(Runtime.STAGE_SIZE_CHANGED, width, height);
         });
@@ -357,8 +360,9 @@ class VirtualMachine extends EventEmitter {
         this.runtime.setFramerate(framerate);
     }
 
-    // PMDESKTOP_STAGE_PATCH: interpolation was removed (section 21); kept so extensions that call it don't fail
-    setInterpolation () {}
+    setInterpolation (enabled) {
+        this.runtime.setInterpolation(enabled);
+    }
 
     setRuntimeOptions (runtimeOptions) {
         this.runtime.setRuntimeOptions(runtimeOptions);
