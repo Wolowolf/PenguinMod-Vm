@@ -54,6 +54,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     keyBlockers: new Set()
   };
 
+  const scrollChecks = new WeakMap();
   const mouseData = {
     client: [0, 0],
     velocity: [0, 0],
@@ -713,13 +714,17 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const scrollDist = mouseData.scroll[isX ? 0 : 1];
       const stackName = `SPscrollCheck${isX ? "X" : "Y"}`;
 
-      if (util.thread.stackFrames[0][stackName] === undefined) util.thread.stackFrames[0][stackName] = 0;
-      const testerVal = util.thread.stackFrames[0][stackName];
+      // Desktop fork (section 179): per script in a table of its own, not on the thread's stack frame, which later
+      // goes to other scripts with these values still on it
+      let checks = scrollChecks.get(util.thread);
+      if (!checks) scrollChecks.set(util.thread, checks = {});
+      if (checks[stackName] === undefined) checks[stackName] = 0;
+      const testerVal = checks[stackName];
 
       const status = type === "down" || type === "left" ?
         scrollDist > testerVal : scrollDist < testerVal;
 
-      if (status) util.thread.stackFrames[0][stackName] = scrollDist;
+      if (status) checks[stackName] = scrollDist;
       return Cast.toBoolean(status);
     }
 

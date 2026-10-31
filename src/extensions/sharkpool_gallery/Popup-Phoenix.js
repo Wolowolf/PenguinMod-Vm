@@ -583,9 +583,17 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
   };
 
+  // Desktop fork (section 179): what "show popup and report" scripts wait for
+  const popupWaiters = new Map();
+
   const closeBox = (id, optForce) => {
     const boxInfo = elementStorage.popups[id];
     boxInfo.waiting = false;
+    const waiters = popupWaiters.get(id);
+    if (waiters) {
+      popupWaiters.delete(id);
+      waiters.forEach((resolve) => resolve());
+    }
 
     if (optForce || boxInfo.autoControl) {
       if (boxInfo.isWindowed) boxInfo.DOMelement?.remove();
@@ -1386,12 +1394,22 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         util.stackFrame.awaitingInput = true;
       }
 
-      if ((reportResponse ? true : args.TYPE === "wait") && popup?.waiting)
+      if (!reportResponse && args.TYPE === "wait" && popup?.waiting)
         util.yield();
-      if (reportResponse)
-        return typeof popup.value === "object"
+      if (reportResponse) {
+        const answer = () => typeof popup.value === "object"
           ? JSON.stringify(popup.value)
           : popup.value || "";
+        // Desktop fork (section 179): a promise instead of util.yield: the interpreter does not wait for a reporter
+        // that yields, it gave the block around it no answer
+        if (popup?.waiting) {
+          return new Promise((resolve) => {
+            if (!popupWaiters.has(id)) popupWaiters.set(id, []);
+            popupWaiters.get(id).push(() => resolve(answer()));
+          });
+        }
+        return answer();
+      }
     }
 
     // Block Funcs
