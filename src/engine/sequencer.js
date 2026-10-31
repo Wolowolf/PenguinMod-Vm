@@ -172,6 +172,7 @@ class Sequencer {
                         nextActiveThread++;
                     } else {
                         this.runtime.threadMap.delete(thread.getId());
+                        thread.pmLeaveTarget();
                         doneThreads.push(thread);
                     }
                 }

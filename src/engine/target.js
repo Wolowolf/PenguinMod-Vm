@@ -83,6 +83,12 @@ class Target extends EventEmitter {
          * @type {Object<string, Object>}
          */
         this.extensionStorage = ExtensionStorage();
+
+        /**
+         * Desktop fork (section 171): the threads acting on this target (see Thread's target setter), or null.
+         * @type {?Array.<Thread>}
+         */
+        this._pmThreads = null;
     }
 
     /**

@@ -7,6 +7,7 @@ const { translateForCamera } = require('../util/pos-math');
 const __xy = [0, 0];
 const Target = require('../engine/target');
 const StageLayering = require('../engine/stage-layering');
+const pmFindFromEnds = require('../util/pm-find-from-ends');
 const getCostumeUrl = require('../util/get-costume-url');
 const xmlEscape = require('../util/xml-escape');
 
@@ -1102,7 +1103,7 @@ class RenderedTarget extends Target {
             this.renderer.setDrawableOrder(this.drawableID, otherLayer, StageLayering.SPRITE_LAYER);
         }
 
-        const executionPosition = this.runtime.executableTargets.indexOf(other);
+        const executionPosition = pmFindFromEnds(this.runtime.executableTargets, other);
         this.runtime.setExecutablePosition(this, executionPosition);
     }
 

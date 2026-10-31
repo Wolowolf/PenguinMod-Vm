@@ -5,6 +5,7 @@ const {loadCostumeFromAsset} = require('../import/load-costume');
 const newBlockIds = require('../util/new-block-ids');
 const StringUtil = require('../util/string-util');
 const StageLayering = require('../engine/stage-layering');
+const pmFindFromEnds = require('../util/pm-find-from-ends');
 
 class Sprite {
     /**
@@ -137,9 +138,9 @@ class Sprite {
      */
     removeClone (clone) {
         this.runtime.fireTargetWasRemoved(clone);
-        const cloneIndex = this.clones.indexOf(clone);
+        const cloneIndex = pmFindFromEnds(this.clones, clone);
         if (cloneIndex >= 0) {
-            this.clones.splice(cloneIndex, 1);
+            pmFindFromEnds.pmRemoveAt(this.clones, cloneIndex);
         }
         this.clearTouchingCandidates();
     }

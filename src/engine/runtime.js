@@ -14,6 +14,7 @@ const compilerExecute = require('../compiler/jsexecute');
 const ScratchBlocksConstants = require('./scratch-blocks-constants');
 const TargetType = require('../extension-support/target-type');
 const Thread = require('./thread');
+const pmFindFromEnds = require('../util/pm-find-from-ends');
 const log = require('../util/log');
 const maybeFormatMessage = require('../util/maybe-format-message');
 const StageLayering = require('./stage-layering');
@@ -2702,9 +2703,12 @@ class Runtime extends EventEmitter {
         const i = this.threads.indexOf(thread);
         if (i > -1) {
             this.threads[i] = newThread;
+            thread.pmLeaveTarget();
             return newThread;
         }
+        newThread.pmLeaveTarget();
         this.threads.push(thread);
+        thread.pmRejoinTarget();
         return thread;
     }
 
@@ -2990,9 +2994,6 @@ class Runtime extends EventEmitter {
             optMatchFields[opts] = Cast.toString(optMatchFields[opts]).toUpperCase();
         }
 
-        // tw: By assuming that all new threads will not interfere with eachother, we can optimize the loops
-        // inside the allScriptsByOpcodeDo callback below.
-        const startingThreadListLength = this.threads.length;
 
         // PMDESKTOP_EDGEHATS (section 63): hats whose answer cannot have changed since their last check are
         // skipped (edge-hats.js). A skipped hat would not have started either way: its script is already
@@ -3044,14 +3045,18 @@ class Runtime extends EventEmitter {
             } else {
                 // If `restartExistingThreads` is false, we should
                 // give up if any threads with the top block are running.
-                for (let j = 0; j < startingThreadListLength; j++) {
-                    if (this.threads[j].target === target &&
-                        this.threads[j].topBlock === topBlockId &&
-                        // stack click threads and hat threads can coexist
-                        !this.threads[j].stackClick &&
-                        this.threads[j].status !== Thread.STATUS_DONE) {
-                        // Some thread is already running.
-                        return;
+                // Desktop fork (section 171): the target's own threads, not all threads. Threads this call starts
+                // have other top blocks, as each script comes here once.
+                const targetThreads = target._pmThreads;
+                if (targetThreads) {
+                    for (let j = 0; j < targetThreads.length; j++) {
+                        if (targetThreads[j].topBlock === topBlockId &&
+                            // stack click threads and hat threads can coexist
+                            !targetThreads[j].stackClick &&
+                            targetThreads[j].status !== Thread.STATUS_DONE) {
+                            // Some thread is already running.
+                            return;
+                        }
                     }
                 }
             }
@@ -3103,7 +3108,7 @@ class Runtime extends EventEmitter {
 
         // Desktop fork (section 167): their costumes' skins are destroyed below
         const disposedSprites = this.targets.filter(target => target.isOriginal && target.getCostumes);
-        this.targets.map(this.disposeTarget, this);
+        this.targets.slice().map(this.disposeTarget, this);
         // tw: explicitly emit a MONITORS_UPDATE instead of relying on implicit behavior of _step()
         const emptyMonitorState = OrderedMap({});
         if (!emptyMonitorState.equals(this._monitorState)) {
@@ -3176,7 +3181,7 @@ class Runtime extends EventEmitter {
      * @returns {number} new position in execution order
      */
     moveExecutable (executableTarget, delta) {
-        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        const oldIndex = pmFindFromEnds(this.executableTargets, executableTarget);
         this.executableTargets.splice(oldIndex, 1);
         let newIndex = oldIndex + delta;
         if (newIndex > this.executableTargets.length) {
@@ -3204,7 +3209,7 @@ class Runtime extends EventEmitter {
      * @returns {number} new position in the execution order
      */
     setExecutablePosition (executableTarget, newIndex) {
-        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        const oldIndex = pmFindFromEnds(this.executableTargets, executableTarget);
         return this.moveExecutable(executableTarget, newIndex - oldIndex);
     }
 
@@ -3213,9 +3218,9 @@ class Runtime extends EventEmitter {
      * @param {Target} executableTarget target to remove
      */
     removeExecutable (executableTarget) {
-        const oldIndex = this.executableTargets.indexOf(executableTarget);
+        const oldIndex = pmFindFromEnds(this.executableTargets, executableTarget);
         if (oldIndex > -1) {
-            this.executableTargets.splice(oldIndex, 1);
+            pmFindFromEnds.pmRemoveAt(this.executableTargets, oldIndex);
         }
     }
 
@@ -3224,13 +3229,15 @@ class Runtime extends EventEmitter {
      * @param {!Target} disposingTarget Target to dispose of.
      */
     disposeTarget (disposingTarget) {
-        this.targets = this.targets.filter(target => {
-            if (disposingTarget !== target) return true;
+        // Desktop fork (section 171): removed in place, no new list for every deleted clone
+        const index = pmFindFromEnds(this.targets, disposingTarget);
+        if (index !== -1) {
             // Allow target to do dispose actions.
-            target.dispose();
+            disposingTarget.dispose();
             // Remove from list of targets.
-            return false;
-        });
+            const stillAt = this.targets[index] === disposingTarget ? index : pmFindFromEnds(this.targets, disposingTarget);
+            if (stillAt !== -1) pmFindFromEnds.pmRemoveAt(this.targets, stillAt);
+        }
         if (this._stageTarget === disposingTarget) {
             this._stageTarget = null;
         }
@@ -3246,12 +3253,12 @@ class Runtime extends EventEmitter {
         this.emit(Runtime.STOP_FOR_TARGET, target, optThreadException);
 
         // Stop any threads on the target.
-        for (let i = 0; i < this.threads.length; i++) {
-            if (this.threads[i] === optThreadException) {
-                continue;
-            }
-            if (this.threads[i].target === target) {
-                this._stopThread(this.threads[i]);
+        // Desktop fork (section 171): the target's own list, not all threads
+        const threads = target._pmThreads;
+        if (!threads) return;
+        for (let i = 0; i < threads.length; i++) {
+            if (threads[i] !== optThreadException) {
+                this._stopThread(threads[i]);
             }
         }
     }
@@ -3344,7 +3351,10 @@ class Runtime extends EventEmitter {
             this._stopThread(this.sequencer.activeThread);
         }
         // Remove all remaining threads from executing in the next tick.
-        this.threads.forEach(v => v.status !== Thread.STATUS_DONE && this.emit(Runtime.THREAD_FINISHED, v))
+        this.threads.forEach(v => {
+            if (v.status !== Thread.STATUS_DONE) this.emit(Runtime.THREAD_FINISHED, v);
+            v.pmLeaveTarget();
+        });
         this.threads = [];
         this.threadMap.clear();
     }
@@ -3397,7 +3407,13 @@ class Runtime extends EventEmitter {
                 }
             }
         }
-        if (killed) this.threads = threads.filter(thread => !thread.isKilled);
+        if (killed) {
+            this.threads = threads.filter(thread => {
+                if (!thread.isKilled) return true;
+                thread.pmLeaveTarget();
+                return false;
+            });
+        }
         if (killed || !same) this.updateThreadMap();
     }
 
@@ -3836,6 +3852,8 @@ class Runtime extends EventEmitter {
                 thread.target = target;
                 thread.blockContainer = target.blocks;
                 thread.tryCompile();
+                // Desktop fork (section 171): it never runs, so it must not count as running on the target
+                thread.target = null;
             }
         });
     }

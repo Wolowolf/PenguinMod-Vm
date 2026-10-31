@@ -170,7 +170,9 @@ class Thread {
          * Target of this thread.
          * @type {?Target}
          */
-        this.target = null;
+        this._pmTarget = null;
+        // Desktop fork (section 171): true once the thread has left runtime.threads
+        this._pmLeft = false;
 
         /**
          * The Blocks this thread will execute.
@@ -289,6 +291,57 @@ class Thread {
     static getIdFromTargetAndBlock (target, topBlock) {
         // & should never appear in any IDs, so we can use it as a separator
         return `${target.id}&${topBlock}`;
+    }
+
+    /**
+     * Desktop fork (section 171): every target lists the threads in runtime.threads that act on it (target._pmThreads),
+     * so stopping a target or checking whether a script runs need not walk all threads. Setting the target
+     * keeps that list right, also for scripts that run as another sprite for a while.
+     */
+    get target () {
+        return this._pmTarget;
+    }
+
+    set target (target) {
+        const old = this._pmTarget;
+        if (old === target) return;
+        if (!this._pmLeft) {
+            this._pmUnlink(old);
+            this._pmLink(target);
+        }
+        this._pmTarget = target;
+    }
+
+    _pmLink (target) {
+        if (target && typeof target === 'object') {
+            if (target._pmThreads) target._pmThreads.push(this);
+            else target._pmThreads = [this];
+        }
+    }
+
+    _pmUnlink (target) {
+        const list = target && target._pmThreads;
+        if (!list) return;
+        const i = list.indexOf(this);
+        if (i !== -1) list.splice(i, 1);
+    }
+
+    /**
+     * The thread left runtime.threads. It keeps its target, for what still reads it this frame.
+     */
+    pmLeaveTarget () {
+        if (this._pmLeft) return;
+        this._pmLeft = true;
+        this._pmUnlink(this._pmTarget);
+    }
+
+    /**
+     * The thread came back to runtime.threads.
+     */
+    pmRejoinTarget () {
+        if (!this._pmLeft) return;
+        this._pmLeft = false;
+        this._pmLink(this._pmTarget);
     }
 
     getId () {
