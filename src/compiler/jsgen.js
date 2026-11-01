@@ -843,11 +843,8 @@ class JSGenerator {
             }
             return new TypedInput(`listContains(${this.referenceVariable(node.list)}, ${this.descendInput(node.item).asUnknown()})`, TYPE_BOOLEAN);
         case 'list.contents':
-            if (this.isOptimized) {
-                // pm: its more consistent to just return the list with spaces inbetween
-                return new TypedInput(`(${this.listItems(node.list)}.join(' '))`, TYPE_STRING);
-            }
-            return new TypedInput(`listContents(${this.referenceVariable(node.list)})`, TYPE_STRING);
+            // Desktop fork (section 187): as the block's function, single letters join without spaces
+            return new TypedInput(`coreListContents(${this.listItems(node.list)})`, TYPE_STRING);
         case 'list.get': {
             const index = this.descendInput(node.index);
             if (environment.supportsNullishCoalescing) {
@@ -858,10 +855,7 @@ class JSGenerator {
                     return new TypedInput(`(${this.listItems(node.list)}[${this.listItems(node.list)}.length - 1] ?? "")`, TYPE_UNKNOWN);
                 }
             }
-            if (this.isOptimized) {
-                // pm: we can just use this as an index ignoring the string input, the nullish coalescing operator will just make sure we dont return undefined
-                return new TypedInput(`(${this.listItems(node.list)}[${index.asUnknown()} - 1] ?? "")`, TYPE_UNKNOWN);
-            }
+            // Desktop fork (section 187): no shortcut here, it gave "" for 1.5, "random" and "any"
             return new TypedInput(`listGet(${this.listItems(node.list)}, ${index.asUnknown()})`, TYPE_UNKNOWN);
         }
         case 'list.indexOf':
@@ -1240,8 +1234,8 @@ class JSGenerator {
         case 'op.cos':
             // pm: optimizations allow us to use a premade list for sin values on integers
             if (this.isOptimized) {
-                const value = `${this.descendInput(node.value).asNumber()}`;
-                return new TypedInput(`(Number.isInteger(${value}) ? runtime.optimizationUtil.cos[((${value} % 360) + 360) % 360] : (Math.round(Math.cos(${value} * ${TO_RADIAN}) * 1e10) / 1e10))`, TYPE_NUMBER_NAN);
+                // Desktop fork (section 187): the input is worked out once
+                return new TypedInput(`coreCos(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
             return new TypedInput(`(Math.round(Math.cos(${this.descendInput(node.value).asNumber()} * ${TO_RADIAN}) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.divide':
@@ -1361,8 +1355,8 @@ class JSGenerator {
         case 'op.sin':
             // pm: optimizations allow us to use a premade list for sin values on integers
             if (this.isOptimized) {
-                const value = `${this.descendInput(node.value).asNumber()}`;
-                return new TypedInput(`(Number.isInteger(${value}) ? runtime.optimizationUtil.sin[((${value} % 360) + 360) % 360] : (Math.round(Math.sin(${value} * ${TO_RADIAN}) * 1e10) / 1e10))`, TYPE_NUMBER_NAN);
+                // Desktop fork (section 187): the input is worked out once
+                return new TypedInput(`coreSin(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
             return new TypedInput(`(Math.round(Math.sin(${this.descendInput(node.value).asNumber()} * ${TO_RADIAN}) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.sqrt':

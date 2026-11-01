@@ -690,6 +690,28 @@ runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
     return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
 }`;
 runtimeFunctions.coreIfReturn = `const coreIfReturn = (condition, yes, no) => (condition ? yes : no)`;
+// Desktop fork (section 187): sin and cos of whole numbers from the premade table, a 0 worked out (it may be -0)
+runtimeFunctions.coreSin = `const coreSin = (runtime, value) => {
+    if (Number.isInteger(value)) {
+        const known = runtime.optimizationUtil.sin[((value % 360) + 360) % 360];
+        if (known !== 0) return known;
+    }
+    return Math.round(Math.sin((Math.PI * value) / 180) * 1e10) / 1e10;
+}`;
+runtimeFunctions.coreCos = `const coreCos = (runtime, value) => {
+    if (Number.isInteger(value)) {
+        const known = runtime.optimizationUtil.cos[((value % 360) + 360) % 360];
+        if (known !== 0) return known;
+    }
+    return Math.round(Math.cos((Math.PI * value) / 180) * 1e10) / 1e10;
+}`;
+runtimeFunctions.coreListContents = `const coreListContents = items => {
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (!(typeof item === 'string' && item.length === 1)) return items.join(' ');
+    }
+    return items.join('');
+}`;
 // Desktop fork (section 185): the util of a block function called directly that asks an I/O device (BlockUtility.ioQuery)
 runtimeFunctions.coreIoUtil = `const coreIoUtil = (runtime, target) => ({
     target,
@@ -1603,6 +1625,8 @@ const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan",
     // section 138
     "coreNumber", "coreConstrain", "coreLerp", "coreRoot", "coreLog", "coreIndexOf", "coreLastIndexOf", "coreCountIn",
     "coreHasLetterFrom", "coreLetters", "coreLine", "coreRegexMatch", "coreRegexTest", "coreIsNumber", "coreDistanceTo",
+    // section 187
+    "coreSin", "coreCos",
     // section 140
     "pmxIsInteger", "pmxIsPrime", "pmxBetween", "pmxPartOfRatio", "pmxSimplifyRatio", "pmxTextAfter", "pmxTextBefore"];
 let pureEvaluator = null;
