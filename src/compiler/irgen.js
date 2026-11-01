@@ -2361,6 +2361,34 @@ class ScriptTreeGenerator {
             if (!list.isList) return null;
             return {kind: 'list.isEmpty', list};
         }
+        // Desktop fork (section 184): more blocks of the same kind, the ones used in busy loops
+        case 'looks_getOtherSpriteVisible':
+            return {kind: 'looks.otherVisible', option: input('VISIBLE_OPTION')};
+        case 'sensing_mouseclicked':
+            return {kind: 'sensing.mouseClicked'};
+        case 'sensing_keyhit':
+            return {kind: 'sensing.keyHit', key: input('KEY_OPTION')};
+        case 'sensing_mousescrolling':
+            return {kind: 'sensing.scrolling', option: input('SCROLL_OPTION')};
+        case 'sensing_fingerdown':
+            return {kind: 'sensing.finger', method: 'getIsDown', finger: input('FINGER_OPTION')};
+        case 'sensing_fingertapped':
+            return {kind: 'sensing.finger', method: 'getIsTapped', finger: input('FINGER_OPTION')};
+        case 'sensing_fingerx':
+            return {kind: 'sensing.finger', method: 'getScratchX', finger: input('FINGER_OPTION')};
+        case 'sensing_fingery':
+            return {kind: 'sensing.finger', method: 'getScratchY', finger: input('FINGER_OPTION')};
+        case 'sound_volume':
+            return {kind: 'sound.volume'};
+        case 'sound_isSoundPlaying':
+            return {kind: 'sound.isPlaying', sound: input('SOUND_MENU')};
+        case 'control_if_return_else_return':
+            return {kind: 'control.ifReturn', condition: input('boolean'), yes: input('TEXT1'), no: input('TEXT2')};
+        case 'data_listarray': {
+            const list = this.descendVariable(block, 'LIST', LIST_TYPE);
+            if (!list.isList) return null;
+            return {kind: 'list.asArray', list};
+        }
         }
         return null;
     }
@@ -2399,6 +2427,18 @@ class ScriptTreeGenerator {
             if (!list.isList) return null;
             return {kind: 'list.reverse', list};
         }
+        // Desktop fork (section 184): more blocks of the same kind, the ones used in busy loops
+        case 'motion_goto':
+            return {kind: 'motion.goTo', to: input('TO')};
+        case 'motion_pointtowards':
+            return {kind: 'motion.pointTowards', towards: input('TOWARDS')};
+        case 'motion_ifonxybounce':
+            return {kind: 'motion.xyBounce', x: input('X'), y: input('Y')};
+        case 'looks_layersSetLayer':
+            return {kind: 'looks.setLayer', layer: input('NUM')};
+        case 'looks_changeVisibilityOfSpriteShow':
+        case 'looks_changeVisibilityOfSpriteHide':
+            return {kind: 'looks.showOrHide', show: block.opcode === 'looks_changeVisibilityOfSpriteShow', option: input('VISIBLE_OPTION')};
         }
         return null;
     }

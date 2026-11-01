@@ -1064,6 +1064,25 @@ class JSGenerator {
             return new TypedInput(`coreItemExists(${this.rawValue(this.descendInput(node.index))}, ${this.listItems(node.list)}.length)`, TYPE_BOOLEAN);
         case 'list.isEmpty':
             return new TypedInput(`(${this.listItems(node.list)}.length < 1)`, TYPE_BOOLEAN);
+        // Desktop fork (section 184)
+        case 'looks.otherVisible':
+            return new TypedInput(`coreOtherVisible(runtime, target, ${this.rawValue(this.descendInput(node.option))})`, TYPE_UNKNOWN);
+        case 'sensing.mouseClicked':
+            return new TypedInput('runtime.ioDevices.mouse.getIsClicked()', TYPE_BOOLEAN);
+        case 'sensing.keyHit':
+            return new TypedInput(`runtime.ioDevices.keyboard.getKeyIsHit(${this.rawValue(this.descendInput(node.key))})`, TYPE_BOOLEAN);
+        case 'sensing.scrolling':
+            return new TypedInput(`coreScrolling(runtime, ${this.rawValue(this.descendInput(node.option))})`, TYPE_BOOLEAN);
+        case 'sensing.finger':
+            return new TypedInput(`runtime.ioDevices.touch.${node.method}(${this.exactNumber(this.descendInput(node.finger))} - 1)`, TYPE_UNKNOWN);
+        case 'sound.volume':
+            return new TypedInput('(target.volume)', TYPE_UNKNOWN);
+        case 'sound.isPlaying':
+            return new TypedInput(`runtime.ext_scratch3_sound.isSoundPlaying({SOUND_MENU: ${this.rawValue(this.descendInput(node.sound))}}, {target})`, TYPE_UNKNOWN);
+        case 'control.ifReturn':
+            return new TypedInput(`coreIfReturn(${this.exactBoolean(this.descendInput(node.condition))}, ${this.rawValue(this.descendInput(node.yes))}, ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
+        case 'list.asArray':
+            return new TypedInput(`JSON.stringify(${this.listItems(node.list)})`, TYPE_STRING);
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks (irgen.js
         // descendExpansionInlineInput). Each does what the extension's function does with the arguments the
@@ -2260,6 +2279,22 @@ class JSGenerator {
             this.source += `${list}._monitorUpToDate = false;\n`;
             break;
         }
+        // Desktop fork (section 184)
+        case 'motion.goTo':
+            this.source += `coreGoTo(runtime, target, ${this.rawValue(this.descendInput(node.to))});\n`;
+            break;
+        case 'motion.pointTowards':
+            this.source += `corePointTowards(runtime, target, ${this.rawValue(this.descendInput(node.towards))});\n`;
+            break;
+        case 'motion.xyBounce':
+            this.source += `runtime.ext_scratch3_motion.ifOnXYBounce({X: ${this.rawValue(this.descendInput(node.x))}, Y: ${this.rawValue(this.descendInput(node.y))}}, {target});\n`;
+            break;
+        case 'looks.setLayer':
+            this.source += `target.goForwardLayers(${this.exactNumber(this.descendInput(node.layer))} - target.getLayerOrder());\n`;
+            break;
+        case 'looks.showOrHide':
+            this.source += `coreShowOrHide(runtime, target, ${this.rawValue(this.descendInput(node.option))}, ${node.show});\n`;
+            break;
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion commands (irgen.js
         // descendExpansionInlineStack), as the extension's functions are.

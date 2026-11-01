@@ -637,6 +637,59 @@ runtimeFunctions.coreItemExists = `const coreItemExists = (index, length) => {
     index = Math.floor(globalState.Cast.toNumber(index));
     return !(index < 1 || index > length);
 }`;
+// Desktop fork (section 184): more blocks of section 138's kind, written as their functions in src/blocks are
+runtimeFunctions.coreGoTo = `const coreGoTo = (runtime, target, to) => {
+    let x;
+    let y;
+    if (to === '_mouse_') {
+        x = runtime.ioDevices.mouse.getScratchX();
+        y = runtime.ioDevices.mouse.getScratchY();
+    } else if (to === '_random_') {
+        x = Math.round(runtime.stageWidth * (runtime.pmRandom() - 0.5));
+        y = Math.round(runtime.stageHeight * (runtime.pmRandom() - 0.5));
+    } else {
+        const other = runtime.getSpriteTargetByName(String(to));
+        if (!other) return;
+        x = other.x;
+        y = other.y;
+    }
+    target.setXY(x, y);
+}`;
+runtimeFunctions.corePointTowards = `const corePointTowards = (runtime, target, towards) => {
+    let x;
+    let y;
+    if (towards === '_mouse_') {
+        x = runtime.ioDevices.mouse.getScratchX();
+        y = runtime.ioDevices.mouse.getScratchY();
+    } else if (towards === '_random_') {
+        target.setDirection(Math.round(runtime.pmRandom() * 360) - 180);
+        return;
+    } else {
+        const other = runtime.getSpriteTargetByName(String(towards));
+        if (!other) return;
+        x = other.x;
+        y = other.y;
+    }
+    const dx = x - target.x;
+    const dy = y - target.y;
+    target.setDirection(90 - (Math.atan2(dy, dx) * 180 / Math.PI));
+}`;
+runtimeFunctions.coreOtherVisible = `const coreOtherVisible = (runtime, target, option) => {
+    const other = option === '_myself_' ? target : option === '_stage_' ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(option);
+    if (!other) return;
+    return other.visible;
+}`;
+runtimeFunctions.coreShowOrHide = `const coreShowOrHide = (runtime, target, option, show) => {
+    const other = option === '_myself_' ? target : option === '_stage_' ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(option);
+    if (!other) return;
+    other.setVisible(show);
+    runtime.ext_scratch3_looks._renderBubble(other);
+}`;
+runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
+    const delta = runtime.ioDevices.mouseWheel.getScrollDelta();
+    return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
+}`;
+runtimeFunctions.coreIfReturn = `const coreIfReturn = (condition, yes, no) => (condition ? yes : no)`;
 
 /**
  * If a number is very close to a whole number, round to that whole number.
