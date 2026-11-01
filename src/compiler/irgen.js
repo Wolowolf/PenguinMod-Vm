@@ -2487,6 +2487,17 @@ class ScriptTreeGenerator {
             return this.coreDirectCall('scratch3_sound', 'stopAllSounds', input, []);
         case 'sound_cleareffects':
             return this.coreDirectCall('scratch3_sound', 'clearEffects', input, []);
+        // Desktop fork (section 188): these wait only with "misc limits", which runtime.js PM_ALWAYS_ON keeps off
+        case 'sound_setvolumeto':
+            return this.coreDirectCall('scratch3_sound', 'setVolume', input, ['VOLUME']);
+        case 'sound_changevolumeby':
+            return this.coreDirectCall('scratch3_sound', 'changeVolume', input, ['VOLUME']);
+        case 'sound_seteffectto':
+            if (!block.fields.EFFECT) return null;
+            return this.coreDirectCall('scratch3_sound', 'setEffect', input, ['VALUE'], {EFFECT: block.fields.EFFECT.value});
+        case 'sound_changeeffectby':
+            if (!block.fields.EFFECT) return null;
+            return this.coreDirectCall('scratch3_sound', 'changeEffect', input, ['VALUE'], {EFFECT: block.fields.EFFECT.value});
         case 'sound_set_stop_fadeout_to':
             return this.coreDirectCall('scratch3_sound', 'setStopFadeout', input, ['VALUE', 'SOUND_MENU']);
         case 'data_arraylist': {
