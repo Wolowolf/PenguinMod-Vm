@@ -259,6 +259,22 @@ let rendererDrawProfilerId = -1;
  * @constructor
  */
 // PMDESKTOP (section 168): remembers that someone wrote to the thread map, so _pmCleanThreads knows it must rebuild it.
+// Desktop fork (section 181): the scripts that have these hat fields; shared when none has, as that is the usual answer.
+const PM_NO_SCRIPTS = Object.freeze([]);
+const pmMatchingScripts = (scripts, matchFields) => {
+    if (!matchFields || scripts.length === 0) return scripts;
+    let matching = PM_NO_SCRIPTS;
+    nextScript: for (let i = 0; i < scripts.length; i++) {
+        const hatFields = scripts[i].fieldsOfInputs;
+        for (const matchField in matchFields) {
+            if (hatFields[matchField].value !== matchFields[matchField]) continue nextScript;
+        }
+        if (matching === PM_NO_SCRIPTS) matching = [];
+        matching.push(scripts[i]);
+    }
+    return matching;
+};
+
 class ThreadMap extends Map {
     constructor () {
         super();
@@ -302,6 +318,8 @@ class Runtime extends EventEmitter {
         this.threads = [];
 
         this.threadMap = new ThreadMap();
+        // Desktop fork (section 181): where _restartThread last found its thread
+        this._pmRestartIndex = -1;
         // PMDESKTOP (section 168): what updateThreadMap last read from each thread (null ids = not in the map)
         this._pmMapThreads = [];
         this._pmMapTargetIds = [];
@@ -2664,7 +2682,8 @@ class Runtime extends EventEmitter {
             thread.tryCompile();
         }
 
-        this.emit(Runtime.THREAD_STARTED, thread);
+        // Desktop fork (section 181): emit makes an array even with no listener.
+        if (this._events.THREAD_STARTED) this.emit(Runtime.THREAD_STARTED, thread);
         return thread;
     }
 
@@ -2705,7 +2724,11 @@ class Runtime extends EventEmitter {
         if (!newThread.stackClick && !newThread.updateMonitor) {
             this.threadMap.set(newThread.getId(), newThread);
         }
-        const i = this.threads.indexOf(thread);
+        // Desktop fork (section 181): hats restart their threads in list order, so usually it is the next one;
+        // searching from the start for each of thousands of clones costs more than all the rest.
+        let i = this._pmRestartIndex + 1;
+        if (this.threads[i] !== thread) i = this.threads.indexOf(thread);
+        this._pmRestartIndex = i;
         if (i > -1) {
             this.threads[i] = newThread;
             thread.pmLeaveTarget();
@@ -3014,24 +3037,8 @@ class Runtime extends EventEmitter {
                 !!hatMeta.pmEdgeHat)));
         const levelThreads = levelHats ? [] : null;
 
-        // Consider all scripts, looking for hats with opcode `requestedHatOpcode`.
-        this.allScriptsByOpcodeDo(requestedHatOpcode, (script, target) => {
-            const {
-                blockId: topBlockId,
-                fieldsOfInputs: hatFields
-            } = script;
-
-            // Match any requested fields.
-            // For example: ensures that broadcasts match.
-            // This needs to happen before the block is evaluated
-            // (i.e., before the predicate can be run) because "broadcast and wait"
-            // needs to have a precise collection of started threads.
-            for (const matchField in optMatchFields) {
-                if (hatFields[matchField].value !== optMatchFields[matchField]) {
-                    // Field mismatch.
-                    return;
-                }
-            }
+        const startScript = (script, target) => {
+            const topBlockId = script.blockId;
 
             const edgePlan = skipUnchanged ? edgeHats.getPlan(script, hatMeta) : false;
             if (edgePlan && edgeHats.isUnchanged(edgePlan, target, topBlockId, this)) {
@@ -3070,7 +3077,28 @@ class Runtime extends EventEmitter {
             const thread = this._pushThread(topBlockId, target);
             newThreads.push(thread);
             if (edgePlan && levelThreads) levelThreads.push(thread);
-        }, optTarget);
+        };
+
+        // Consider all scripts, looking for hats with opcode `requestedHatOpcode`.
+        // Match any requested fields.
+        // For example: ensures that broadcasts match.
+        // This needs to happen before the block is evaluated
+        // (i.e., before the predicate can be run) because "broadcast and wait"
+        // needs to have a precise collection of started threads.
+        // Desktop fork (section 181): clones share their blocks, so this is worked out once for all of them.
+        const targets = optTarget ? [optTarget] : this.executableTargets;
+        let lastBlocks = null;
+        let matching = PM_NO_SCRIPTS;
+        for (let t = targets.length - 1; t >= 0; t--) {
+            const target = targets[t];
+            if (target.blocks !== lastBlocks) {
+                lastBlocks = target.blocks;
+                matching = pmMatchingScripts(BlocksRuntimeCache.getScripts(lastBlocks, requestedHatOpcode), optMatchFields);
+            }
+            for (let j = 0; j < matching.length; j++) {
+                startScript(matching[j], target);
+            }
+        }
         // For compatibility with Scratch 2, edge triggered hats need to be processed before
         // threads are stepped. See ScratchRuntime.as for original implementation
         newThreads.forEach(thread => {

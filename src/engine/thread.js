@@ -225,7 +225,20 @@ class Thread {
          * LilyMakesThings Thread Variables extension
          * @type {Object}
          */
-        this.variables = Object.create(null);
+        // Desktop fork (section 181): made when first read, see the accessor below.
+        this._pmVariables = null;
+    }
+
+    /**
+     * Desktop fork (section 181): an object without a prototype is slow to make and few threads use this one.
+     */
+    get variables () {
+        if (this._pmVariables === null) this._pmVariables = Object.create(null);
+        return this._pmVariables;
+    }
+
+    set variables (variables) {
+        this._pmVariables = variables;
     }
 
     /**
@@ -289,8 +302,18 @@ class Thread {
      * @returns {string} A unique ID for this target and thread.
      */
     static getIdFromTargetAndBlock (target, topBlock) {
+        // Desktop fork (section 181): each target remembers its last ID, as joining and hashing a new string
+        // for every clone is a large part of starting a script on thousands of clones.
+        const targetId = target.id;
+        if (target._pmIdBlock === topBlock && target._pmIdTarget === targetId) return target._pmId;
         // & should never appear in any IDs, so we can use it as a separator
-        return `${target.id}&${topBlock}`;
+        const id = `${targetId}&${topBlock}`;
+        if (typeof target === 'object') {
+            target._pmIdBlock = topBlock;
+            target._pmIdTarget = targetId;
+            target._pmId = id;
+        }
+        return id;
     }
 
     /**
@@ -322,6 +345,11 @@ class Thread {
     _pmUnlink (target) {
         const list = target && target._pmThreads;
         if (!list) return;
+        // Desktop fork (section 181): usually the last one; pop makes no array, unlike splice.
+        if (list[list.length - 1] === this) {
+            list.pop();
+            return;
+        }
         const i = list.indexOf(this);
         if (i !== -1) list.splice(i, 1);
     }
@@ -353,6 +381,12 @@ class Thread {
      * @param {string} blockId Block ID to push to stack.
      */
     pushStack (blockId) {
+        // Desktop fork (section 181): a new thread's first push; an array grown by push reserves 17 places.
+        if (this.stack.length === 0 && this.stackFrames.length === 0) {
+            this.stack = [blockId];
+            this.stackFrames = [_StackFrame.create(false)];
+            return;
+        }
         this.stack.push(blockId);
         // Push an empty stack frame, if we need one.
         // Might not, if we just popped the stack.
@@ -611,7 +645,7 @@ class Thread {
         }
 
         this.procedures = {};
-        for (const procedureCode of Object.keys(result.procedures)) {
+        for (const procedureCode in result.procedures) {
             this.procedures[procedureCode] = result.procedures[procedureCode](this);
         }
         

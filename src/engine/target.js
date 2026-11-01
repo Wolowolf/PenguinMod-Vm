@@ -43,6 +43,10 @@ class Target extends EventEmitter {
          * @type {string}
          */
         this.id = uid();
+        // Desktop fork (section 181): Thread.getIdFromTargetAndBlock's last answer
+        this._pmIdBlock = null;
+        this._pmIdTarget = null;
+        this._pmId = null;
         /**
          * Blocks run as code for this target.
          * @type {!Blocks}
