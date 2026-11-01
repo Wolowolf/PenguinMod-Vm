@@ -1083,6 +1083,14 @@ class JSGenerator {
             return new TypedInput(`coreIfReturn(${this.exactBoolean(this.descendInput(node.condition))}, ${this.rawValue(this.descendInput(node.yes))}, ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
         case 'list.asArray':
             return new TypedInput(`JSON.stringify(${this.listItems(node.list)})`, TYPE_STRING);
+        // Desktop fork (section 185)
+        case 'sensing.dragMode':
+            return new TypedInput('(target.draggable)', TYPE_UNKNOWN);
+        case 'coreCall': {
+            const call = this.coreDirectCallSource(node);
+            this.resetVariableInputs();
+            return new TypedInput(call, TYPE_UNKNOWN);
+        }
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks (irgen.js
         // descendExpansionInlineInput). Each does what the extension's function does with the arguments the
@@ -2295,6 +2303,14 @@ class JSGenerator {
         case 'looks.showOrHide':
             this.source += `coreShowOrHide(runtime, target, ${this.rawValue(this.descendInput(node.option))}, ${node.show});\n`;
             break;
+        // Desktop fork (section 185)
+        case 'sensing.setDragMode':
+            this.source += `target.setDraggable(${node.draggable});\n`;
+            break;
+        case 'coreCall':
+            this.source += `${this.coreDirectCallSource(node)};\n`;
+            this.resetVariableInputs();
+            break;
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion commands (irgen.js
         // descendExpansionInlineStack), as the extension's functions are.
@@ -2847,6 +2863,19 @@ class JSGenerator {
         if (input.type === TYPE_NUMBER) return `(${input.source} !== 0)`;
         if (input.type === TYPE_NUMBER_NAN) return `(!!(${input.source}))`;
         return `toBoolean(${input.asUnknown()})`;
+    }
+
+    /**
+     * Desktop fork (section 185): JS of irgen.js coreDirectCall's node, inputs worked out in the block's order.
+     * @param {Node} node The node.
+     * @returns {string} The JS.
+     */
+    coreDirectCallSource (node) {
+        const args = node.args.map(([name, input]) => `${JSON.stringify(name)}: ${this.rawValue(this.descendInput(input))}`);
+        for (const name of Object.keys(node.fields)) args.push(`${JSON.stringify(name)}: "${sanitize(String(node.fields[name]))}"`);
+        if (node.list) args.push(`LIST: {id: "${sanitize(node.list.id)}", name: "${sanitize(node.list.name)}"}`);
+        const util = node.util === 'io' ? 'coreIoUtil(runtime, target)' : node.util === 'runtime' ? '{target, runtime}' : '{target}';
+        return `runtime.ext_${node.object}.${node.method}({${args.join(', ')}}, ${util})`;
     }
 
     /**

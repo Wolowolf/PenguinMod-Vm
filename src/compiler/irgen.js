@@ -2389,6 +2389,27 @@ class ScriptTreeGenerator {
             if (!list.isList) return null;
             return {kind: 'list.asArray', list};
         }
+        // Desktop fork (section 185): the rest that qualify, their own function called directly
+        case 'looks_sayWidth':
+            return this.coreDirectCall('scratch3_looks', 'getBubbleWidth', input, []);
+        case 'looks_sayHeight':
+            return this.coreDirectCall('scratch3_looks', 'getBubbleHeight', input, []);
+        case 'looks_getinputofcostume':
+            return this.coreDirectCall('scratch3_looks', 'getCostumeValue', input, ['INPUT', 'COSTUME']);
+        case 'sensing_getdragmode':
+            return {kind: 'sensing.dragMode'};
+        case 'sound_getEffectValue':
+            if (!block.fields.EFFECT) return null;
+            return this.coreDirectCall('scratch3_sound', 'getEffectValue', input, [], {EFFECT: field('EFFECT')});
+        case 'sensing_objecttouchingobject':
+            return this.coreDirectCall('scratch3_sensing', 'objectTouchingObject', input, ['FULLTOUCHINGOBJECTMENU', 'SPRITETOUCHINGOBJECTMENU']);
+        case 'sensing_objecttouchingclonesprite':
+            return this.coreDirectCall('scratch3_sensing', 'objectTouchingCloneOfSprite', input, ['FULLTOUCHINGOBJECTMENU', 'SPRITETOUCHINGOBJECTMENU']);
+        case 'sensing_getxyoftouchingsprite':
+            if (!block.fields.XY) return null;
+            return this.coreDirectCall('scratch3_sensing', 'getXYOfTouchingSprite', input, ['SPRITE'], {XY: field('XY')}, 'io');
+        case 'sensing_getspritewithattrib':
+            return this.coreDirectCall('scratch3_sensing', 'getspritewithattrib', input, ['var', 'val'], {}, 'runtime');
         }
         return null;
     }
@@ -2439,8 +2460,60 @@ class ScriptTreeGenerator {
         case 'looks_changeVisibilityOfSpriteShow':
         case 'looks_changeVisibilityOfSpriteHide':
             return {kind: 'looks.showOrHide', show: block.opcode === 'looks_changeVisibilityOfSpriteShow', option: input('VISIBLE_OPTION')};
+        // Desktop fork (section 185): the rest that qualify, their own function called directly
+        case 'looks_say':
+            return this.coreDirectCall('scratch3_looks', 'say', input, ['MESSAGE']);
+        case 'looks_think':
+            return this.coreDirectCall('scratch3_looks', 'think', input, ['MESSAGE']);
+        case 'looks_stoptalking':
+            return this.coreDirectCall('scratch3_looks', 'stopTalking', input, []);
+        case 'sensing_setdragmode':
+            if (!block.fields.DRAG_MODE) return null;
+            return {kind: 'sensing.setDragMode', draggable: block.fields.DRAG_MODE.value === 'draggable'};
+        case 'motion_ifonspritebounce':
+            return this.coreDirectCall('scratch3_motion', 'ifOnSpriteBounce', input, ['SPRITE'], {}, 'io');
+        case 'motion_move_sprite_to_scene_side':
+            if (!block.fields.ALIGNMENT) return null;
+            return this.coreDirectCall('scratch3_motion', 'moveToStageSide', input, [], {ALIGNMENT: block.fields.ALIGNMENT.value});
+        case 'sound_play':
+            return this.coreDirectCall('scratch3_sound', 'playSound', input, ['SOUND_MENU']);
+        case 'sound_playallsounds':
+            return this.coreDirectCall('scratch3_sound', 'playSoundAllLolOpAOIUHFoiubea87fge87iufwhef87wye87fn', input, []);
+        case 'sound_play_at_seconds':
+            return this.coreDirectCall('scratch3_sound', 'playAtSeconds', input, ['SOUND_MENU', 'VALUE']);
+        case 'sound_stop':
+            return this.coreDirectCall('scratch3_sound', 'stopSpecificSound', input, ['SOUND_MENU']);
+        case 'sound_stopallsounds':
+            return this.coreDirectCall('scratch3_sound', 'stopAllSounds', input, []);
+        case 'sound_cleareffects':
+            return this.coreDirectCall('scratch3_sound', 'clearEffects', input, []);
+        case 'sound_set_stop_fadeout_to':
+            return this.coreDirectCall('scratch3_sound', 'setStopFadeout', input, ['VALUE', 'SOUND_MENU']);
+        case 'data_arraylist': {
+            const list = this.descendVariable(block, 'LIST', LIST_TYPE);
+            if (!list.isList) return null;
+            const node = this.coreDirectCall('scratch3_data', 'data_arraylist', input, ['VALUE']);
+            node.list = list;
+            return node;
+        }
         }
         return null;
+    }
+
+    /**
+     * Desktop fork (section 185): a core block that never waits, starts or stops scripts or needs the page, its own
+     * function called directly: no generator and no thread status checks. Exact by construction: the function
+     * only reads the arguments and the util's fields given here (the block's function is checked to use no more).
+     * @param {string} object The block package, as in runtime.ext_<object>.
+     * @param {string} method The function's name in it.
+     * @param {Function} input Gives the node of the input with this name.
+     * @param {string[]} names The inputs, in the block's order.
+     * @param {object} fields Fixed arguments (fields).
+     * @param {string} util What the function reads from its util besides target: 'io' ioQuery, 'runtime' runtime.
+     * @returns {Node} The node.
+     */
+    coreDirectCall (object, method, input, names, fields = {}, util = 'target') {
+        return {kind: 'coreCall', object, method, args: names.map(name => [name, input(name)]), fields, util};
     }
 
     /**

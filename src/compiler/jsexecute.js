@@ -690,6 +690,14 @@ runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
     return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
 }`;
 runtimeFunctions.coreIfReturn = `const coreIfReturn = (condition, yes, no) => (condition ? yes : no)`;
+// Desktop fork (section 185): the util of a block function called directly that asks an I/O device (BlockUtility.ioQuery)
+runtimeFunctions.coreIoUtil = `const coreIoUtil = (runtime, target) => ({
+    target,
+    ioQuery: (device, func, args) => {
+        const object = runtime.ioDevices[device];
+        if (object && object[func]) return object[func].apply(object, args);
+    }
+})`;
 
 /**
  * If a number is very close to a whole number, round to that whole number.
