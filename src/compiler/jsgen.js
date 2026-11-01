@@ -1,4 +1,5 @@
 const log = require('../util/log');
+const setupStateBlocks = new Set(require('../extension-support/setup-state-blocks.json'));
 const Cast = require('../util/cast');
 const BlockType = require('../extension-support/block-type');
 const VariablePool = require('./variable-pool');
@@ -488,6 +489,34 @@ class Frame {
         Object.assign(this.importantData, obj);
     }
 }
+
+/**
+ * Desktop fork (section 183): the node kinds that cannot change what a plain call's setup wrote, cannot yield and
+ * always work out all their inputs, in addition to pure and plain extension calls. Everything else ends a run of
+ * plain calls. Table of who reads what the setup writes: docs/EXTENSION-INTEGRATION.md "Setup of plain calls".
+ */
+const KEEPS_PLAIN_SETUP = new Set([
+    'constant', 'var.get', 'var.set', 'args.boolean', 'args.stringNumber', 'list.get', 'list.length', 'list.add',
+    'control.if', 'motion.x', 'motion.y', 'op.add', 'op.subtract', 'op.multiply', 'op.divide', 'op.mod', 'op.equals',
+    'op.less', 'op.greater', 'op.not', 'op.join', 'op.round', 'op.abs', 'op.floor', 'op.ceiling', 'op.sqrt', 'op.sin',
+    'op.cos', 'op.tan', 'op.length'
+]);
+const keepsPlainSetup = node => {
+    if (Array.isArray(node)) return node.every(keepsPlainSetup);
+    if (!node || typeof node !== 'object') return true;
+    if (typeof node.kind === 'string') {
+        if (JSGenerator.hasExtensionJs(node.kind.split('.')[0])) return false;
+        if (node.kind === 'compat') {
+            if (node.substacks.length || !(node.pure || (node.plain && !setupStateBlocks.has(node.opcode)))) return false;
+            return keepsPlainSetup(Object.values(node.inputs));
+        }
+        if (!KEEPS_PLAIN_SETUP.has(node.kind) || (node.kind === 'var.set' && node.variable.isCloud)) return false;
+    }
+    for (const key of Object.keys(node)) {
+        if (key !== 'variable' && key !== 'list' && key !== 'compilerInfo' && !keepsPlainSetup(node[key])) return false;
+    }
+    return true;
+};
 
 class JSGenerator {
     /**
@@ -1733,17 +1762,28 @@ class JSGenerator {
             }
             break;
         }
-        case 'control.if':
+        case 'control.if': {
+            const keeps = this.plainSetupStatementKeeps;
             this.source += `if (${this.descendInput(node.condition).asBoolean()}) {\n`;
+            // Desktop fork (section 183): the condition always runs; whichever branch runs (or none) leaves the setup
+            // as the condition left it, when all of this "if" keeps it (keepsPlainSetup)
+            const kept = keeps && (this.plainSetupKept || this.plainSetupDone);
+            this.plainSetupKept = kept;
+            this.plainSetupInherit = keeps;
             this.descendStack(node.whenTrue, new Frame(false, 'control.if'));
             // only add the else branch if it won't be empty
             // this makes scripts have a bit less useless noise in them
             if (node.whenFalse.length) {
                 this.source += `} else {\n`;
+                this.plainSetupKept = kept;
+                this.plainSetupInherit = keeps;
                 this.descendStack(node.whenFalse, new Frame(false, 'control.if'));
             }
             this.source += `}\n`;
+            this.plainSetupKept = kept;
+            this.plainSetupDone = false;
             break;
+        }
         case 'control.expandableIf': {
             const branches = node.branches;
             for (let i = 0; i < branches.length; i++) {
@@ -2568,10 +2608,25 @@ class JSGenerator {
         frame.assignData(this.currentFrame);
         this.pushFrame(frame);
 
+        // Desktop fork (section 183): a run of statements that keep a plain call's setup needs it only once
+        // (keepsPlainSetup): plainSetupKept says the setup of this thread is in place when the statement starts.
+        // Anything else may yield or run other code, so it ends the run, as does entering or leaving a stack (only
+        // an "if" that keeps the setup hands it to its branches).
+        const inherit = this.plainSetupInherit;
+        this.plainSetupInherit = false;
+        if (!inherit) this.plainSetupKept = false;
+
         for (let i = 0; i < nodes.length; i++) {
             frame.isLastBlock = i === nodes.length - 1;
+            const keeps = keepsPlainSetup(nodes[i]);
+            if (!keeps) this.plainSetupKept = false;
+            this.plainSetupDone = false;
+            this.plainSetupStatementKeeps = keeps;
             this.descendStackedBlock(nodes[i]);
+            this.plainSetupKept = keeps && (this.plainSetupKept || this.plainSetupDone);
         }
+
+        if (!inherit) this.plainSetupKept = false;
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
         // TODO: in if/else this might create an extra unused object
@@ -2935,7 +2990,15 @@ class JSGenerator {
             const objectName = this.evaluateOnce(`${directName}.object`);
             const infoName = this.evaluateOnce(`${directName}.blockInfo`);
             this.usesExtensionInputs = true;
-            return `(extensionInputs = directExtensionSetup(${object}, ${this.isWarp}, "${sanitize(node.id)}"), ` +
+            // Desktop fork (section 183): a plain call right after another one in the same run (descendStack)
+            // finds the setup already done and only names its block. Switch (tests only): runtime.pmNoCheapSetup.
+            let setup = 'directExtensionSetup';
+            if (this.plainSetupKept && !runtime.pmNoCheapSetup) {
+                setup = runtime.pmSetupAudit ? 'directExtensionSetupAudit' : 'directExtensionSetupKept';
+            } else {
+                this.plainSetupDone = true;
+            }
+            return `(extensionInputs = ${setup}(${object}, ${this.isWarp}, "${sanitize(node.id)}"), ` +
                 `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`;
         }
         if (isStatement) {

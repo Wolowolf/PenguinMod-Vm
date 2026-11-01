@@ -21,6 +21,7 @@ const TargetType = require('../../src/extension-support/target-type');
 const inventory = require('../../src/extension-support/block-inventory.json');
 const pureBlocks = require('../../src/extension-support/pure-blocks.json');
 const directBlocks = require('../../src/extension-support/direct-blocks.json');
+const setupStateBlocks = require('../../src/extension-support/setup-state-blocks.json');
 
 test('pure-blocks.json matches the inventory', t => {
     const expected = {};
@@ -32,6 +33,13 @@ test('pure-blocks.json matches the inventory', t => {
         }
     }
     t.same(pureBlocks, expected);
+    t.end();
+});
+
+// section 183: blocks whose code can reach the setup's state always end a run of plain calls
+test('setup-state-blocks.json lists only plain blocks', t => {
+    t.same(setupStateBlocks.filter(id => !directBlocks.includes(id)), []);
+    t.same(setupStateBlocks, [...new Set(setupStateBlocks)]);
     t.end();
 });
 

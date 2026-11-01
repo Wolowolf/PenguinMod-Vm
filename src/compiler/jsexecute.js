@@ -312,6 +312,39 @@ runtimeFunctions.directExtensionSetup = `const directExtensionSetup = (inputs, i
     thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
     globalState.blockUtility.init(thread, blockId, {}, null);
     return inputs;
+};
+// Desktop fork (section 183): the setup of a plain call right after another one (jsgen.js descendStack): what the first
+// one wrote is still in place, only the block ID changes. Starting a hat can run another script at once
+// (Runtime.startHats, executableHat), which leaves the block utility pointing at that script's thread: then all of it.
+const directExtensionSetupKept = (inputs, isWarp, blockId) => {
+    const thread = globalState.thread;
+    if (globalState.blockUtility.thread !== thread) return directExtensionSetup(inputs, isWarp, blockId);
+    thread.stack[0] = blockId;
+    return inputs;
+};
+// (tests only, runtime.pmSetupAudit) the same, and records in runtime.pmSetupAuditFails anything the full setup would
+// have changed
+const directExtensionSetupAudit = (inputs, isWarp, blockId) => {
+    const thread = globalState.thread;
+    const blockUtility = globalState.blockUtility;
+    if (blockUtility.thread === thread) {
+        const frame = thread.stackFrames[thread.stackFrames.length - 1];
+        const wrong = [];
+        if (blockUtility._startedBranch !== null) wrong.push('_startedBranch');
+        if (blockUtility._branchInfo !== null) wrong.push('_branchInfo');
+        if (blockUtility.sequencer !== thread.target.runtime.sequencer) wrong.push('sequencer');
+        const stackFrame = thread.compatibilityStackFrame;
+        if (!stackFrame || Object.keys(stackFrame).length) wrong.push('compatibilityStackFrame');
+        if (frame.warpMode !== Boolean(isWarp)) wrong.push('warpMode');
+        for (const field of ['isLoop', 'justReported', 'reported', 'waitingReporter', 'params', 'executionContext', 'op']) {
+            if (frame[field] !== (field === 'isLoop' ? false : null)) wrong.push(field);
+        }
+        if (wrong.length) {
+            const runtime = thread.target.runtime;
+            (runtime.pmSetupAuditFails = runtime.pmSetupAuditFails || []).push(blockId + ': ' + wrong.join(' '));
+        }
+    }
+    return directExtensionSetupKept(inputs, isWarp, blockId);
 }`;
 
 /**
