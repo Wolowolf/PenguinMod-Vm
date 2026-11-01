@@ -892,15 +892,10 @@ class JSGenerator {
         case 'motion.direction':
             return new TypedInput('target.direction', TYPE_NUMBER);
 
+        // Desktop fork (section 186): rounded as the interpreter does, also with dangerous optimizations (always on here)
         case 'motion.x':
-            if (this.isOptimized) {
-                return new TypedInput('(target.x)', TYPE_NUMBER);
-            }
             return new TypedInput('limitPrecision(target.x)', TYPE_NUMBER);
         case 'motion.y':
-            if (this.isOptimized) {
-                return new TypedInput('(target.y)', TYPE_NUMBER);
-            }
             return new TypedInput('limitPrecision(target.y)', TYPE_NUMBER);
 
         case 'mouse.down':
