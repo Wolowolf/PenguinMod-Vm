@@ -10,6 +10,8 @@ const AsyncLimiter = require('../util/async-limiter');
  * Only costumes whose size and rotation center are known without decoding them, or can wait to be read, are put off:
  * SVGs and simple PNGs. Everything else loads as before. An extension that keeps a costume's texture for later
  * (EAGER_EXTENSIONS) switches back to making every skin at once.
+ * Desktop fork (section 182): a PNG at resolution 1 is doubled to resolution 2 when its skin is made, and its doubled file
+ * is only made when something reads the costume's asset, assetId or md5 (saving, the costume editor, an extension).
  */
 
 // Pen+ keeps a costume's GL texture in its shaders' uniforms, which neither an SVG still loading nor freeing can allow.
@@ -153,6 +155,9 @@ const readImage = new AsyncLimiter(asset => createImageBitmap(
     new Blob([asset.data.buffer], {type: asset.assetType.contentType})
 ), 25);
 
+// a costume's fields that name its file, which wait for the doubled file
+const ENCODED_WHEN_READ = ['asset', 'assetId', 'md5'];
+
 const idle = callback => {
     if (typeof requestIdleCallback === 'function') requestIdleCallback(callback, {timeout: 250});
     else setTimeout(() => callback({timeRemaining: () => 0}), 0);
@@ -196,6 +201,10 @@ class LazyCostumes {
         this.eager = false;
         /** How many skins were needed before the browser's decoder had made them. */
         this.madeOnTheSpot = 0;
+        /** How many doubled files were made because something read them. */
+        this.encodedOnRead = 0;
+        /** Skins whose file is at resolution 1, so their image is doubled when they are made. */
+        this._doubled = new Set();
         this._warmQueue = [];
         this._warming = false;
         runtime.on('EXTENSION_ADDED', info => {
@@ -247,26 +256,90 @@ class LazyCostumes {
      */
     deferBitmap (costume, rotationCenter) {
         const renderer = this.runtime.renderer;
-        if (this.eager || !renderer.createDeferredBitmapSkin || costume.bitmapResolution === 1) return false;
+        if (this.eager || !renderer.createDeferredBitmapSkin) return false;
+        const double = costume.bitmapResolution === 1;
+        if (double && !this.runtime.v2BitmapAdapter) return false;
         const asset = costume.asset;
         const info = readPng(asset.data);
         if (!info) return false;
+        const width = double ? info.width * 2 : info.width;
+        const height = double ? info.height * 2 : info.height;
         costume.bitmapResolution = 2;
         if (!rotationCenter) {
-            costume.rotationCenterX = info.width / 2;
-            costume.rotationCenterY = info.height / 2;
+            costume.rotationCenterX = width / 2;
+            costume.rotationCenterY = height / 2;
+        } else if (double) {
+            costume.rotationCenterX = rotationCenter[0] *= 2;
+            costume.rotationCenterY = rotationCenter[1] *= 2;
         }
-        const center = rotationCenter ? [rotationCenter[0] / 2, rotationCenter[1] / 2] : [info.width / 4, info.height / 4];
+        const center = rotationCenter ? [rotationCenter[0] / 2, rotationCenter[1] / 2] : [width / 4, height / 4];
         costume.skinId = renderer.createDeferredBitmapSkin(
-            info.width, info.height, 2, center,
+            width, height, 2, center,
             () => {
                 this.madeOnTheSpot++;
-                return decodePng(info);
+                return double ? this._doubleImage(decodePng(info)) : decodePng(info);
             },
             asset
         );
-        costume.size = [info.width, info.height];
+        costume.size = [width, height];
+        if (double) {
+            this._doubled.add(costume.skinId);
+            costume.dataFormat = this.runtime.storage.DataFormat.PNG;
+            // packaged projects drop the asset and never read these
+            if (!this.runtime.isPackaged) this._encodeWhenRead(costume, info);
+        }
         return true;
+    }
+
+    _doubleImage (image) {
+        const canvas = this.runtime.v2BitmapAdapter.resize(image, image.width * 2, image.height * 2);
+        canvas.reusable = false;
+        return canvas;
+    }
+
+    /**
+     * Whatever reads or sets the costume's file finds the doubled file, as if it was made when the costume loaded.
+     * @param {object} costume - a costume at resolution 1, its asset still the file it was loaded from
+     * @param {object} info - from readPng, of that file
+     */
+    _encodeWhenRead (costume, info) {
+        const loaded = {asset: costume.asset, assetId: costume.assetId, md5: costume.md5};
+        const encode = () => {
+            for (const name of ENCODED_WHEN_READ) {
+                Object.defineProperty(costume, name, {
+                    configurable: true, enumerable: true, writable: true, value: loaded[name]
+                });
+            }
+            this.encodedOnRead++;
+            const {storage, v2BitmapAdapter} = this.runtime;
+            try {
+                costume.asset = storage.createAsset(
+                    storage.AssetType.ImageBitmap,
+                    storage.DataFormat.PNG,
+                    v2BitmapAdapter.convertDataURIToBinary(this._doubleImage(decodePng(info)).toDataURL()),
+                    null,
+                    true // generate md5
+                );
+                costume.assetId = costume.asset.assetId;
+                costume.md5 = `${costume.assetId}.${costume.dataFormat}`;
+            } catch (e) {
+                log.warn('Doubling a costume failed, keeping its file', e);
+            }
+        };
+        for (const name of ENCODED_WHEN_READ) {
+            Object.defineProperty(costume, name, {
+                configurable: true,
+                enumerable: true,
+                get: () => {
+                    encode();
+                    return costume[name];
+                },
+                set: value => {
+                    encode();
+                    costume[name] = value;
+                }
+            });
+        }
     }
 
     // make a skin that was put off, with the browser's decoder when it is a bitmap
@@ -285,7 +358,7 @@ class LazyCostumes {
         return readImage.do(asset).then(
             image => {
                 if (!image) throw new Error('no image');
-                renderer.pmSetDeferredBitmap(skinId, image);
+                renderer.pmSetDeferredBitmap(skinId, this._doubled.has(skinId) ? this._doubleImage(image) : image);
             },
             e => {
                 log.warn('Decoding a costume failed, trying again', e);
