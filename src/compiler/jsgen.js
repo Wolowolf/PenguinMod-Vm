@@ -2974,7 +2974,18 @@ class JSGenerator {
         let object = '{';
         for (const [name, source] of args) object += `"${sanitize(name)}":${source},`;
         object += '}';
-        return new TypedInput(`${directName}.call(${object}, globalState.blockUtility)`, type);
+        if (this.target.runtime.pmNoCheapCall) {
+            return new TypedInput(`${directName}.call(${object}, globalState.blockUtility)`, type);
+        }
+        // Desktop fork (section 189): the block's method is called here, as in section 160's plain calls, so that the
+        // JS engine sees one known function at each call; the same object, method, `this` and arguments as
+        // pmDirect.call, the method looked up after the arguments were worked out. Switch (tests only):
+        // runtime.pmNoCheapCall.
+        const objectName = this.evaluateOnce(`${directName}.object`);
+        const infoName = this.evaluateOnce(`${directName}.blockInfo`);
+        this.usesExtensionInputs = true;
+        return new TypedInput(`(extensionInputs = ${object}, ` +
+            `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`, type);
     }
 
     /**
