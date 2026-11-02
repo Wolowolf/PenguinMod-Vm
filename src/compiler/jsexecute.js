@@ -1376,6 +1376,94 @@ class pmdNameAny {
         return pmdName.find(this.runtime, target, name, this.type, this.stageFirst);
     }
 }`;
+/**
+ * Desktop fork (section 195): helpers for blocks that search by a name fixed in the block (irgen.js
+ * descendNameSearchInline). pmsVariable (Variables Expanded) and pmsBroadcast (Events Expansion) ask what the
+ * extension asks once and keep the answer like pmdName, while the target is the same and
+ * runtime.pmVarNamesVersion has not changed. pmsList (Sensing+) parses the menu's text once; the sprite is still
+ * looked up on every call, nothing tells when sprites are renamed.
+ */
+runtimeFunctions.pmsVariable = `class pmsVariable {
+    constructor (runtime, name) {
+        this.runtime = runtime;
+        this.name = name;
+        this.target = null;
+        this.version = -1;
+        this.id = "";
+        this.variable = null;
+    }
+    find (target) {
+        this.id = this.runtime.ext_DICandSPmonitorsPlus.findVariable(this.name, {target});
+        this.variable = this.id ? target.lookupVariableById(this.id) : null;
+        this.target = target;
+        this.version = this.runtime.pmVarNamesVersion;
+    }
+}`;
+runtimeFunctions.pmsVarValue = `const pmsVarValue = (target, site) => {
+    if (target !== site.target || site.version !== site.runtime.pmVarNamesVersion) site.find(target);
+    return site.id ? site.variable.value : 0;
+}`;
+runtimeFunctions.pmsVarExists = `const pmsVarExists = (target, site) => {
+    if (target !== site.target || site.version !== site.runtime.pmVarNamesVersion) site.find(target);
+    return globalState.Cast.toBoolean(site.id);
+}`;
+runtimeFunctions.pmsBroadcast = `class pmsBroadcast {
+    constructor (runtime, name) {
+        this.runtime = runtime;
+        this.name = name;
+        this.version = -1;
+        this.broadcast = null;
+    }
+}`;
+runtimeFunctions.pmsReceived = `const pmsReceived = site => {
+    if (site.version !== site.runtime.pmVarNamesVersion) {
+        site.broadcast = site.runtime.getTargetForStage().lookupBroadcastMsg("", site.name);
+        site.version = site.runtime.pmVarNamesVersion;
+    }
+    return globalState.Cast.toBoolean(site.broadcast && site.broadcast.isSent);
+}`;
+runtimeFunctions.pmsList = `class pmsList {
+    constructor (runtime, text) {
+        this.runtime = runtime;
+        this.variableId = null;
+        this.targetName = null;
+        try {
+            const parsed = JSON.parse(text);
+            if (parsed && parsed.variableId && parsed.targetName) {
+                this.variableId = parsed.variableId;
+                this.targetName = parsed.targetName;
+            }
+        } catch (e) {
+            // as the extension: no list
+        }
+    }
+    get () {
+        if (this.targetName === null) return null;
+        const target = this.runtime.getSpriteTargetByName(this.targetName);
+        if (!target) return null;
+        const variable = target.variables[this.variableId];
+        return variable && variable.type === "list" ? variable : null;
+    }
+}`;
+runtimeFunctions.pmsListItem = `const pmsListItem = (runtime, index, site) => {
+    const variable = site.get();
+    if (!variable) return "";
+    const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false, runtime);
+    if (position === "INVALID") return "";
+    return variable.pmGetValue()[position - 1];
+}`;
+runtimeFunctions.pmsListLength = `const pmsListLength = site => {
+    const variable = site.get();
+    return variable ? variable.pmGetValue().length : "";
+}`;
+runtimeFunctions.pmsListContains = `const pmsListContains = (term, site) => {
+    const variable = site.get();
+    return variable ? variable.pmIndexOf(term) !== 0 : "";
+}`;
+runtimeFunctions.pmsListIndexOf = `const pmsListIndexOf = (term, site) => {
+    const variable = site.get();
+    return variable ? variable.pmIndexOf(term) : "";
+}`;
 runtimeFunctions.pmdGetVar = `const pmdGetVar = (target, site, name) => {
     const variable = site.get(target, name);
     return variable ? variable.value : "";

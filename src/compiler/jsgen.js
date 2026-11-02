@@ -1189,6 +1189,23 @@ class JSGenerator {
         case 'pmInline.buttonDown':
             return new TypedInput(`(runtime.ioDevices.mouse.getButtonIsDown(${this.exactNumber(this.descendInput(node.button))}))`, TYPE_BOOLEAN);
 
+        // Desktop fork (section 195): blocks that search by a name fixed in the block (irgen.js
+        // descendNameSearchInline; helpers in jsexecute.js).
+        case 'search.varValue':
+            return new TypedInput(`pmsVarValue(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_UNKNOWN);
+        case 'search.varExists':
+            return new TypedInput(`pmsVarExists(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
+        case 'search.broadcast':
+            return new TypedInput(`pmsReceived(${this.evaluateOnce(`new pmsBroadcast(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
+        case 'search.listItem':
+            return new TypedInput(`pmsListItem(runtime, ${this.exactNumber(this.descendInput(node.index))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
+        case 'search.listLength':
+            return new TypedInput(`pmsListLength(${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
+        case 'search.listContains':
+            return new TypedInput(`pmsListContains(${this.exactString(this.descendInput(node.term))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
+        case 'search.listIndexOf':
+            return new TypedInput(`pmsListIndexOf(${this.exactString(this.descendInput(node.term))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
+
         // Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks (irgen.js
         // descendDataInline). Each does what the extension's function does with the arguments the extension
         // manager's wrapper gives it (helpers in jsexecute.js; inputs in the block's order, the variable found

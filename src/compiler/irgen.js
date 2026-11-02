@@ -49,6 +49,13 @@ const DATA_INLINE_STACKS = new Set([
     'lmsData_deleteItems', 'lmsData_deleteAllOfItem', 'lmsData_replaceAllOfItem', 'lmsData_repeatList',
     'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists', 'lmsData_setListArray'
 ]);
+// Desktop fork (section 195): blocks that search by a name fixed in the block, compiled to inline code
+// (descendNameSearchInline).
+const NAME_SEARCH_INLINE = new Set([
+    'DICandSPmonitorsPlus_reportVal', 'DICandSPmonitorsPlus_exists', 'pmEventsExpansion_isBroadcastReceived',
+    'obviousalexsensing_listInSprite', 'obviousalexsensing_lengthOfListInSprite',
+    'obviousalexsensing_listContains', 'obviousalexsensing_itemNumberInList'
+]);
 // Desktop fork (section 152): Extra Controls branch and loop blocks compiled to inline code (jsexecute.js
 // pmBranchInline_<opcode>): the inputs they are given, in the order of the block's text, and whether they can loop.
 const BRANCH_INLINE = {
@@ -1040,6 +1047,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 149)
                 const data = this.descendDataInline(block, DATA_INLINE_INPUTS);
                 if (data) return data;
+                // Desktop fork (section 195)
+                const nameSearch = this.descendNameSearchInline(block);
+                if (nameSearch) return nameSearch;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2668,6 +2678,67 @@ class ScriptTreeGenerator {
             !this.runtime.getOpcodeFunction(block.opcode) ||
             !this.coreInputsInOrder(block, this.dataInlineNode)) return null;
         return this.dataInlineNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 195): Variables Expanded "value of" and "exists", Events Expansion "is message received"
+     * and Sensing+ list blocks search by name, or parse a menu's text, on every call. With the name fixed in the
+     * block they get their own nodes and remember that (jsexecute.js pms…); any other name keeps the direct call.
+     * runtime.pmNoNameSearchInline = true puts all of them back on the direct calls (tests only).
+     * @param {Block} block The block.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendNameSearchInline (block) {
+        if (this.runtime.pmNoNameSearchInline || !NAME_SEARCH_INLINE.has(block.opcode) ||
+            !this.runtime.getOpcodeFunction(block.opcode) ||
+            !this.coreInputsInOrder(block, this.nameSearchNode)) return null;
+        return this.nameSearchNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 195): the node of descendNameSearchInline.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when the name is not fixed in the block.
+     */
+    nameSearchNode (block, input) {
+        // (a menu without reporters is a field)
+        const fixed = name => {
+            if (block.fields[name]) return String(block.fields[name].value);
+            const node = input(name);
+            return node.kind === 'constant' ? String(node.value) : null;
+        };
+        switch (block.opcode) {
+        case 'DICandSPmonitorsPlus_reportVal':
+        case 'DICandSPmonitorsPlus_exists': {
+            const name = fixed('VARIABLE');
+            if (name === null) return null;
+            return {kind: block.opcode === 'DICandSPmonitorsPlus_exists' ? 'search.varExists' : 'search.varValue', name};
+        }
+        case 'pmEventsExpansion_isBroadcastReceived': {
+            const name = fixed('BROADCAST');
+            // (an empty name logs an error on every call)
+            if (name === null || name === '') return null;
+            return {kind: 'search.broadcast', name};
+        }
+        case 'obviousalexsensing_listInSprite': {
+            const index = input('index');
+            const list = fixed('List');
+            return list === null ? null : {kind: 'search.listItem', index, list};
+        }
+        case 'obviousalexsensing_lengthOfListInSprite': {
+            const list = fixed('List');
+            return list === null ? null : {kind: 'search.listLength', list};
+        }
+        case 'obviousalexsensing_listContains':
+        case 'obviousalexsensing_itemNumberInList': {
+            const term = input('term');
+            const list = fixed('List');
+            if (list === null) return null;
+            return {kind: block.opcode === 'obviousalexsensing_listContains' ? 'search.listContains' : 'search.listIndexOf', term, list};
+        }
+        }
+        return null;
     }
 
     /**
