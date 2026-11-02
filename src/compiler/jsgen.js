@@ -129,6 +129,22 @@ class TypedInput {
 }
 
 /**
+ * Desktop fork: the answer of a plain extension call (section 132), of unknown type. Most blocks used as a condition
+ * answer exactly true or false, so its true/false test is written out for those two and calls toBoolean only for
+ * anything else: in a long script the JS engine may stop inlining toBoolean. The same result for every value.
+ * @implements {Input}
+ */
+class PlainAnswerInput extends TypedInput {
+    constructor (source) {
+        super(source, TYPE_UNKNOWN);
+    }
+
+    asBoolean () {
+        return `((plainAnswer = ${this.source}) === true || (plainAnswer !== false && toBoolean(plainAnswer)))`;
+    }
+}
+
+/**
  * @implements {Input}
  */
 class ConstantInput {
@@ -825,6 +841,11 @@ class JSGenerator {
                 this.generateCompatibilityLayerCall(node, false, null, visualReport);
             // Desktop fork (section 151): the block may have set any variable
             this.resetVariableInputs();
+            // Desktop fork: the true/false test of a plain call's answer. Switch (tests only): runtime.pmNoPlainAnswerTest.
+            if (node.plain && !this.target.runtime.pmNoPlainAnswerTest) {
+                this.usesPlainAnswer = true;
+                return new PlainAnswerInput(`(${call})`);
+            }
             return new TypedInput(`(${call})`, TYPE_UNKNOWN);
         }
 
@@ -2971,7 +2992,8 @@ class JSGenerator {
             }
             fixed = false;
             const expected = types.get(inputName);
-            if (!expected || (input instanceof TypedInput && (
+            // Desktop fork: also a variable whose type is known from its last "set". Switch (tests only): runtime.pmNoTypedVariableArguments.
+            if (!expected || ((input instanceof TypedInput || (input instanceof VariableInput && !this.target.runtime.pmNoTypedVariableArguments)) && (
                 (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
                 (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
                 (expected === 'string' && input.type === TYPE_STRING)))) {
@@ -3175,7 +3197,8 @@ class JSGenerator {
                 continue;
             }
             const expected = types.get(inputName);
-            if (!expected || (input instanceof TypedInput && (
+            // Desktop fork: also a variable whose type is known from its last "set". Switch (tests only): runtime.pmNoTypedVariableArguments.
+            if (!expected || ((input instanceof TypedInput || (input instanceof VariableInput && !this.target.runtime.pmNoTypedVariableArguments)) && (
                 (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
                 (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
                 (expected === 'string' && input.type === TYPE_STRING)))) {
@@ -3329,6 +3352,7 @@ class JSGenerator {
         // Desktop fork (section 160): a plain extension call's arguments object, held in this function
         if (this.usesExtensionInputs) script += 'let extensionInputs;\n';
         if (this.usesExtensionFrame) script += 'let extensionFrame;\n';
+        if (this.usesPlainAnswer) script += 'let plainAnswer;\n';
         script += `if (thread.spoofing) {\n`;
         script += `target = thread.spoofTarget;\n`;
         script += `};\n`;
