@@ -1206,6 +1206,13 @@ class JSGenerator {
         case 'search.timerPaused':
             return new TypedInput(`pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).is_paused`, TYPE_BOOLEAN);
         // Desktop fork (section 195)
+        // Desktop fork (section 198)
+        case 'clones.mainGet':
+            return new TypedInput(`pmcMainGet(thread.target, "${sanitize(node.id)}")`, TYPE_UNKNOWN);
+        case 'clones.get':
+            return new TypedInput(`pmcValue(pmcFind(thread.target.sprite.clones, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))}), "${sanitize(node.id)}")`, TYPE_UNKNOWN);
+        case 'clones.exists':
+            return new TypedInput(`(pmcFind(thread.target.sprite.clones, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))}) !== null)`, TYPE_BOOLEAN);
         case 'search.varValue':
             return new TypedInput(`pmsVarValue(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_UNKNOWN);
         case 'search.varExists':
@@ -2490,6 +2497,13 @@ class JSGenerator {
             this.source += `pmlConcat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
             break;
         }
+        // Desktop fork (section 198)
+        case 'clones.mainSet':
+            this.source += `pmcMainSet(thread.target, "${sanitize(node.id)}", ${this.exactString(this.descendInput(node.value))});\n`;
+            break;
+        case 'clones.set':
+            this.source += `pmcSet(thread.target, "${sanitize(node.id)}", ${this.exactString(this.descendInput(node.value))}, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))});\n`;
+            break;
         // Desktop fork (section 196)
         case 'search.varSet':
             this.source += `pmsVarWrite(thread.target, ${this.searchWritable(node.name)}).value = ${this.searchArgument(node.opcode, node.valueName, node.value)};\n`;

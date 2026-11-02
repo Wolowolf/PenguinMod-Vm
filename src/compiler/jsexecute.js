@@ -1377,6 +1377,36 @@ class pmdNameAny {
     }
 }`;
 /**
+ * Desktop fork (section 198): what Clones+'s variable blocks do (irgen.js descendClonesVarInline). The same steps as
+ * the extension's functions: nothing is remembered, clone values change all the time.
+ */
+runtimeFunctions.pmcMainGet = `const pmcMainGet = (target, id) => {
+    const variable = target.sprite.clones[0].lookupVariableById(id);
+    return variable ? variable.value : "";
+}`;
+runtimeFunctions.pmcMainSet = `const pmcMainSet = (target, id, value) => {
+    const variable = target.sprite.clones[0].lookupVariableById(id);
+    if (variable) variable.value = value;
+}`;
+runtimeFunctions.pmcFind = `const pmcFind = (clones, check, expected) => {
+    for (let index = 1; index < clones.length; index++) {
+        const variable = clones[index].lookupVariableById(check);
+        if (variable && globalState.Cast.compare(variable.value, expected) === 0) return clones[index];
+    }
+    return null;
+}`;
+runtimeFunctions.pmcValue = `const pmcValue = (clone, id) => (clone ? clone.lookupVariableById(id).value : "")`;
+runtimeFunctions.pmcSet = `const pmcSet = (target, id, value, check, expected) => {
+    const clones = target.sprite.clones;
+    for (let index = 1; index < clones.length; index++) {
+        const variable = clones[index].lookupVariableById(check);
+        if (variable && globalState.Cast.compare(variable.value, expected) === 0) {
+            const edit = clones[index].lookupVariableById(id);
+            if (edit) edit.value = value;
+        }
+    }
+}`;
+/**
  * Desktop fork (section 195): helpers for blocks that search by a name fixed in the block (irgen.js
  * descendNameSearchInline). pmsVariable (Variables Expanded) and pmsBroadcast (Events Expansion) ask what the
  * extension asks once and keep the answer like pmdName, while the target is the same and

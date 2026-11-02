@@ -66,6 +66,13 @@ const SEARCH_PARSE_INLINE_STACKS = new Set([
     'steve0greatnesstimers_add', 'steve0greatnesstimers_pause', 'steve0greatnesstimers_unpause',
     'steve0greatnesstimers_toggle', 'steve0greatnesstimers_restart', 'steve0greatnesstimers_stop'
 ]);
+// Desktop fork (section 198): Clones+'s variable blocks, compiled to inline code (descendClonesVarInline).
+const CLONES_VAR_INLINE_INPUTS = new Set([
+    'lmsclonesplus_getVariableOfMainSprite', 'lmsclonesplus_getVariableOfClone', 'lmsclonesplus_cloneExists'
+]);
+const CLONES_VAR_INLINE_STACKS = new Set([
+    'lmsclonesplus_setVariableOfMainSprite', 'lmsclonesplus_setVariableOfClone'
+]);
 // Desktop fork (section 196): inputs a block parses as JSON on every call; fixed text is parsed once (fixedJsonInputs).
 // 'keys': Keys+ takes the array itself. 'flat': only an array without arrays or objects in it. 'any': any array or object.
 const FIXED_JSON_INPUTS = {
@@ -1086,6 +1093,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 196)
                 const searchParse = this.descendSearchParseInline(block, SEARCH_PARSE_INLINE_INPUTS);
                 if (searchParse) return searchParse;
+                // Desktop fork (section 198)
+                const clonesVar = this.descendClonesVarInline(block, CLONES_VAR_INLINE_INPUTS);
+                if (clonesVar) return clonesVar;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2086,6 +2096,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 196)
                 const searchParse = this.descendSearchParseInline(block, SEARCH_PARSE_INLINE_STACKS);
                 if (searchParse) return searchParse;
+                // Desktop fork (section 198)
+                const clonesVar = this.descendClonesVarInline(block, CLONES_VAR_INLINE_STACKS);
+                if (clonesVar) return clonesVar;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.statementBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2775,6 +2788,59 @@ class ScriptTreeGenerator {
             const list = fixed('List');
             if (list === null) return null;
             return {kind: block.opcode === 'obviousalexsensing_listContains' ? 'search.listContains' : 'search.listIndexOf', term, list};
+        }
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 198): Clones+'s variable blocks do what the extension's functions do, without the call
+     * (jsexecute.js pmc…). The variable IDs are fixed in the block (a menu without reporters); any other form keeps
+     * the direct call. runtime.pmNoClonesVarInline = true puts all of them back on the direct calls (tests only).
+     * @param {Block} block The block.
+     * @param {Set} opcodes CLONES_VAR_INLINE_INPUTS or CLONES_VAR_INLINE_STACKS.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendClonesVarInline (block, opcodes) {
+        if (this.runtime.pmNoClonesVarInline || !opcodes.has(block.opcode) ||
+            !this.runtime.getOpcodeFunction(block.opcode) ||
+            !this.coreInputsInOrder(block, this.clonesVarNode)) return null;
+        return this.clonesVarNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 198): the node of descendClonesVarInline.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when a variable ID is not fixed in the block.
+     */
+    clonesVarNode (block, input) {
+        const fixed = name => {
+            const field = block.fields[name];
+            return field ? String(field.value) : null;
+        };
+        switch (block.opcode) {
+        case 'lmsclonesplus_getVariableOfMainSprite': {
+            const id = fixed('INPUT');
+            return id === null ? null : {kind: 'clones.mainGet', id};
+        }
+        case 'lmsclonesplus_setVariableOfMainSprite': {
+            const id = fixed('INPUTA');
+            return id === null ? null : {kind: 'clones.mainSet', id, value: input('INPUTB')};
+        }
+        case 'lmsclonesplus_getVariableOfClone': {
+            const id = fixed('INPUTA');
+            const check = fixed('INPUTB');
+            return id === null || check === null ? null : {kind: 'clones.get', id, check, expected: input('INPUTC')};
+        }
+        case 'lmsclonesplus_setVariableOfClone': {
+            const id = fixed('INPUTA');
+            const check = fixed('INPUTC');
+            return id === null || check === null ? null : {kind: 'clones.set', id, check, value: input('INPUTB'), expected: input('INPUTD')};
+        }
+        case 'lmsclonesplus_cloneExists': {
+            const check = fixed('INPUTA');
+            return check === null ? null : {kind: 'clones.exists', check, expected: input('INPUTB')};
         }
         }
         return null;
