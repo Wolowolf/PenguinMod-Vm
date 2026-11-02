@@ -1202,7 +1202,7 @@ class JSGenerator {
         case 'search.varButton':
             return new TypedInput(`pmsVarButton(runtime, thread.target, ${this.searchVariable(node.name)}, ${this.searchArgument(node.opcode, 'TYPE', node.type)})`, TYPE_UNKNOWN);
         case 'search.timerElapsed':
-            return new TypedInput(`pmsTimerElapsed(pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}), ${node.units})`, TYPE_UNKNOWN);
+            return new TypedInput(`(pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).elapsed * ${node.units})`, TYPE_UNKNOWN);
         case 'search.timerPaused':
             return new TypedInput(`pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).is_paused`, TYPE_BOOLEAN);
         // Desktop fork (section 195)

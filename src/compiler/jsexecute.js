@@ -1521,15 +1521,11 @@ runtimeFunctions.pmsTimer = `class pmsTimer {
 runtimeFunctions.pmsTimerGet = `const pmsTimerGet = (target, site) => {
     if (target !== site.target || site.version !== site.runtime.pmVarNamesVersion) {
         site.timer = site.runtime.ext_steve0greatnesstimers.get_or_create(target, site.id, site.name);
-        // (a timer it just made is not answered, only found by the next call)
-        if (site.timer) {
-            site.target = target;
-            site.version = site.runtime.pmVarNamesVersion;
-        }
+        site.target = target;
+        site.version = site.runtime.pmVarNamesVersion;
     }
     return site.timer;
 }`;
-runtimeFunctions.pmsTimerElapsed = `const pmsTimerElapsed = (timer, units) => (timer ? timer.elapsed * units : NaN);`;
 runtimeFunctions.pmsTimerToggle = `const pmsTimerToggle = timer => {
     if (timer.is_paused) timer.unpause();
     else timer.pause();

@@ -509,7 +509,9 @@ class SteveZeroGreatnessExtraTimersExt {
       ?? attempt_find_by_name(stage.variables); 
     
     if (!variable) {
-      return target.createVariable(id, name, Timer.customId);
+      // Desktop fork (section 197): createVariable answers nothing, so the block got no timer on this call
+      target.createVariable(id, name, Timer.customId);
+      return target.variables[id];
     }
 
     if (variable.type != Timer.customId) {
