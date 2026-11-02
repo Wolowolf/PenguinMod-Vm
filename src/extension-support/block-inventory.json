@@ -112,7 +112,7 @@
       "setScrollDist": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "changeScrollDist": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "whenScrolled": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "isScrolled": {"type":"Boolean","pure":false,"reads":["input","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false},
+      "isScrolled": {"type":"Boolean","pure":false,"reads":["input","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"direct":true},
       "mouseClick": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "realMouse": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
       "mouseVelocity": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
@@ -539,7 +539,7 @@
     "note": "switchPaper sets the pen extension's _penSkinId, so all later pen drawing goes to that layer",
     "state": {"papers":"shared"},
     "blocks": {
-      "createPaper": {"type":"command","pure":false,"reads":[],"writes":["blocks","renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false},
+      "createPaper": {"type":"command","pure":false,"reads":[],"writes":["blocks","renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "removePaper": {"type":"command","pure":false,"reads":[],"writes":["blocks","renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "paperExists": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
       "allPapers": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
