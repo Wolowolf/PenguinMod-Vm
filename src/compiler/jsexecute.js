@@ -1464,6 +1464,80 @@ runtimeFunctions.pmsListIndexOf = `const pmsListIndexOf = (term, site) => {
     const variable = site.get();
     return variable ? variable.pmIndexOf(term) : "";
 }`;
+/**
+ * Desktop fork (section 196): more blocks that remember a search by a fixed name (irgen.js descendSearchParseInline).
+ * Like pmsVariable: asked again only for another target or when runtime.pmVarNamesVersion changed. pmsWritable asks
+ * what setString, setColor and swapVars ask (it creates a missing variable); pmsTimer asks the extension's own
+ * get_or_create. The extensions' blocks that parse fixed text take the parsed value as { pmFixedJson } (irgen.js
+ * fixedJsonInputs).
+ */
+runtimeFunctions.pmsWritable = `class pmsWritable {
+    constructor (runtime, name) {
+        this.runtime = runtime;
+        this.name = name;
+        this.target = null;
+        this.version = -1;
+        this.variable = null;
+    }
+}`;
+runtimeFunctions.pmsVarWrite = `const pmsVarWrite = (target, site) => {
+    if (target !== site.target || site.version !== site.runtime.pmVarNamesVersion) {
+        site.variable = target.lookupOrCreateVariable("", site.name);
+        site.target = target;
+        site.version = site.runtime.pmVarNamesVersion;
+    }
+    return site.variable;
+}`;
+runtimeFunctions.pmsVarSwap = `const pmsVarSwap = (var1, var2) => {
+    const temp = var1.value;
+    var1.value = var2.value;
+    var2.value = temp;
+}`;
+runtimeFunctions.pmsVarShowing = `const pmsVarShowing = (runtime, target, site) => {
+    if (target !== site.target || site.version !== runtime.pmVarNamesVersion) site.find(target);
+    const info = runtime.getMonitorState().get(site.id);
+    return info ? (info.get("visible") !== undefined && info.get("visible") !== false) : false;
+}`;
+runtimeFunctions.pmsVarSlider = `const pmsVarSlider = (runtime, target, site, which) => {
+    if (target !== site.target || site.version !== runtime.pmVarNamesVersion) site.find(target);
+    const info = runtime.getMonitorState().get(site.id);
+    if (info === undefined) return 0;
+    return info.get(which === "min" ? "sliderMin" : "sliderMax");
+}`;
+runtimeFunctions.pmsVarButton = `const pmsVarButton = (runtime, target, site, type) => {
+    if (target !== site.target || site.version !== runtime.pmVarNamesVersion) site.find(target);
+    return runtime.ext_DICandSPmonitorsPlus.pmButtonPressed(site.id, type);
+}`;
+runtimeFunctions.pmsTimer = `class pmsTimer {
+    constructor (runtime, id, name) {
+        this.runtime = runtime;
+        this.id = id;
+        this.name = name;
+        this.target = null;
+        this.version = -1;
+        this.timer = null;
+    }
+}`;
+runtimeFunctions.pmsTimerGet = `const pmsTimerGet = (target, site) => {
+    if (target !== site.target || site.version !== site.runtime.pmVarNamesVersion) {
+        site.timer = site.runtime.ext_steve0greatnesstimers.get_or_create(target, site.id, site.name);
+        // (a timer it just made is not answered, only found by the next call)
+        if (site.timer) {
+            site.target = target;
+            site.version = site.runtime.pmVarNamesVersion;
+        }
+    }
+    return site.timer;
+}`;
+runtimeFunctions.pmsTimerElapsed = `const pmsTimerElapsed = (timer, units) => (timer ? timer.elapsed * units : NaN);`;
+runtimeFunctions.pmsTimerToggle = `const pmsTimerToggle = timer => {
+    if (timer.is_paused) timer.unpause();
+    else timer.pause();
+}`;
+runtimeFunctions.pmsTimerStop = `const pmsTimerStop = timer => {
+    timer.pause();
+    timer.restart();
+}`;
 runtimeFunctions.pmdGetVar = `const pmdGetVar = (target, site, name) => {
     const variable = site.get(target, name);
     return variable ? variable.value : "";
@@ -1713,7 +1787,8 @@ runtimeFunctions.pmlSetArray = `const pmlSetArray = (target, site, name, array) 
     if (!list) return;
     let parsed;
     try {
-        parsed = JSON.parse(array);
+        // Desktop fork (section 196): fixed text comes parsed; the list gets its own copy
+        parsed = array.pmFixedJson ? array.pmFixedJson.slice() : JSON.parse(array);
     } catch (error) {
         return;
     }

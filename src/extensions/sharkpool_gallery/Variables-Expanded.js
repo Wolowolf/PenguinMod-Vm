@@ -706,9 +706,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     whenButtonPressed(args, util) { return this.isButtonPressed(args, util) }
 
     isButtonPressed(args, util) {
-      const varId = this.findVariable(args.VARIABLE, util);
+      return this.pmButtonPressed(this.findVariable(args.VARIABLE, util), args.TYPE);
+    }
+
+    // Desktop fork (section 196): the block after its search (jsexecute.js pmsVarButton)
+    pmButtonPressed(varId, type) {
       if (monitorButtons[varId] !== undefined) {
-        if (args.TYPE === "held") return true;
+        if (type === "held") return true;
         else {
           const date = monitorButtons[varId].timeClick;
           const now = Scratch.vm.runtime.pmDateNow();

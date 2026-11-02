@@ -340,7 +340,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     shuffleArray(args) {
       let words = args.WORDS;
       try {
-        words = JSON.parse(words);
+        // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs); the sorts change their copy
+        words = words.pmFixedJson ? words.pmFixedJson.slice() : JSON.parse(words);
       } catch { return "Invalid Array" }
       if (!Array.isArray(words)) return "Invalid Array";
       const sortFreq = (array, mostComm) => {

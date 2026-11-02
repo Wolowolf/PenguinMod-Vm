@@ -186,7 +186,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             let datas;
             let is_data_string = false;
             try {
-                datas = JSON.parse(args.data);
+                // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs)
+                datas = args.data.pmFixedJson || JSON.parse(args.data);
                 if (!Array.isArray(datas)) throw new Error("not array");
             } catch {
                 datas = Cast.toString(args.data);

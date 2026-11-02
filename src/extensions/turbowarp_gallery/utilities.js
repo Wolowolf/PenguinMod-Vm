@@ -372,7 +372,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         if (path[path.length - 1] === "") path.splice(-1, 1);
         let json;
         try {
-          json = JSON.parse(" " + JSON_STRING);
+          // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs)
+          json = JSON_STRING.pmFixedJson || JSON.parse(" " + JSON_STRING);
         } catch (e) {
           return e.message;
         }

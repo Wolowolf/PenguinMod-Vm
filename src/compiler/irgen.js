@@ -56,6 +56,39 @@ const NAME_SEARCH_INLINE = new Set([
     'obviousalexsensing_listInSprite', 'obviousalexsensing_lengthOfListInSprite',
     'obviousalexsensing_listContains', 'obviousalexsensing_itemNumberInList'
 ]);
+// Desktop fork (section 196): more blocks that search by a fixed name (descendSearchParseInline).
+const SEARCH_PARSE_INLINE_INPUTS = new Set([
+    'DICandSPmonitorsPlus_isShowing', 'DICandSPmonitorsPlus_sliderMinMaxOfVarible', 'DICandSPmonitorsPlus_isButtonPressed',
+    'steve0greatnesstimers_getter', 'steve0greatnesstimers_elapsed', 'steve0greatnesstimers_is_paused'
+]);
+const SEARCH_PARSE_INLINE_STACKS = new Set([
+    'DICandSPmonitorsPlus_setString', 'DICandSPmonitorsPlus_setColor', 'DICandSPmonitorsPlus_swapVars',
+    'steve0greatnesstimers_add', 'steve0greatnesstimers_pause', 'steve0greatnesstimers_unpause',
+    'steve0greatnesstimers_toggle', 'steve0greatnesstimers_restart', 'steve0greatnesstimers_stop'
+]);
+// Desktop fork (section 196): inputs a block parses as JSON on every call; fixed text is parsed once (fixedJsonInputs).
+// 'keys': Keys+ takes the array itself. 'flat': only an array without arrays or objects in it. 'any': any array or object.
+const FIXED_JSON_INPUTS = {
+    enderKeysPlusV2_isKeysPressed: {inputs: ['keys'], form: 'keys'},
+    enderKeysPlusV2_timeKeysPressed: {inputs: ['keys'], form: 'keys'},
+    enderKeysPlusV2_isKeysHit: {inputs: ['keys'], form: 'keys'},
+    utilities_parseJSON: {inputs: ['JSON_STRING'], form: 'any'},
+    embintranslation_get_translation_with_data: {inputs: ['data'], form: 'flat'},
+    SharkPoolSharktilities_shuffleArray: {inputs: ['WORDS'], form: 'flat'},
+    ShovelUtils_setlist: {inputs: ['TEXT'], form: 'flat'}
+};
+for (const [inputs, names] of [
+    [['a', 'b'], ['addV3', 'subV3', 'mulV3', 'divV3', 'dotProductOfV3', 'crossProductOfV3', 'distanceV3', 'angleV3', 'rotateAroundPointV3',
+        'addV2', 'subV2', 'mulV2', 'divV2', 'dotProductOfV2', 'crossProductOfV2', 'distanceV2', 'angleV2', 'rotateAroundPointV2', 'project2DFromPos']],
+    [['a'], ['magnitudeV3', 'magnitudeSqV3', 'normalizeV3', 'rotateAroundCenterV3', 'magnitudeV2', 'magnitudeSqV2', 'normalizeV2', 'rotateAroundCenterV2',
+        'project2DFromCam', 'project2DBehindCam', 'cam3DsetPosition', 'cam3DchangePosition', 'cam3DsetRotation', 'cam3DchangeRotation',
+        'spr3DsetPosition', 'spr3DsetPositionComponent', 'spr3DchangePosition']],
+    [['vector'], ['getAxisOfV3', 'getAxisOfV2']],
+    [['len', 'dir'], ['projectV3', 'projectV2']],
+    [['source', 'normal'], ['reflectionV3', 'reflectionV2']]
+]) {
+    for (const name of names) FIXED_JSON_INPUTS[`obviousAlexCMath3d_${name}`] = {inputs, form: 'flat'};
+}
 // Desktop fork (section 152): Extra Controls branch and loop blocks compiled to inline code (jsexecute.js
 // pmBranchInline_<opcode>): the inputs they are given, in the order of the block's text, and whether they can loop.
 const BRANCH_INLINE = {
@@ -1050,6 +1083,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 195)
                 const nameSearch = this.descendNameSearchInline(block);
                 if (nameSearch) return nameSearch;
+                // Desktop fork (section 196)
+                const searchParse = this.descendSearchParseInline(block, SEARCH_PARSE_INLINE_INPUTS);
+                if (searchParse) return searchParse;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.outputBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2047,6 +2083,9 @@ class ScriptTreeGenerator {
                 // Desktop fork (section 149)
                 const data = this.descendDataInline(block, DATA_INLINE_STACKS);
                 if (data) return data;
+                // Desktop fork (section 196)
+                const searchParse = this.descendSearchParseInline(block, SEARCH_PARSE_INLINE_STACKS);
+                if (searchParse) return searchParse;
                 // It might be a non-compiled primitive from a standard category
                 if (compatBlocks.statementBlocks.includes(block.opcode)) {
                     return this.descendCompatLayer(block);
@@ -2742,6 +2781,135 @@ class ScriptTreeGenerator {
     }
 
     /**
+     * Desktop fork (section 196): more Variables Expanded blocks and Extra Timers remember their search (jsexecute.js
+     * pms…); any other name, or a timer not given as a variable field, keeps the direct call.
+     * runtime.pmNoSearchParseInline = true puts all of them back on the direct calls (tests only).
+     * @param {Block} block The block.
+     * @param {Set} opcodes SEARCH_PARSE_INLINE_INPUTS or SEARCH_PARSE_INLINE_STACKS.
+     * @returns {Node|null} The node, or null when the block keeps the direct call.
+     */
+    descendSearchParseInline (block, opcodes) {
+        if (this.runtime.pmNoSearchParseInline || !opcodes.has(block.opcode) ||
+            !this.runtime.getOpcodeFunction(block.opcode) ||
+            !this.coreInputsInOrder(block, this.searchParseNode)) return null;
+        return this.searchParseNode(block, name => this.descendCoreInput(block, name));
+    }
+
+    /**
+     * Desktop fork (section 196): the node of descendSearchParseInline.
+     * @param {Block} block The block.
+     * @param {Function} input Gives the node of the input with this name.
+     * @returns {Node|null} The node, or null when the name is not fixed in the block.
+     */
+    searchParseNode (block, input) {
+        const opcode = block.opcode;
+        const fixed = name => {
+            if (block.fields[name]) return String(block.fields[name].value);
+            const node = input(name);
+            return node.kind === 'constant' ? String(node.value) : null;
+        };
+        // (a field keeps its text, as the direct call passes it)
+        const menu = name => (block.fields[name] ? {kind: 'constant', value: block.fields[name].value} : input(name));
+        if (opcode.startsWith('steve0greatnesstimers_')) {
+            const field = block.fields.TIMER;
+            if (!field || typeof field.variableType !== 'string') return null;
+            const timer = this.descendVariable(block, 'TIMER', field.variableType);
+            const units = () => (block.fields.UNITS ? block.fields.UNITS.value : null);
+            switch (opcode) {
+            case 'steve0greatnesstimers_getter':
+                return {kind: 'search.timerElapsed', timer, units: 0.001};
+            case 'steve0greatnesstimers_elapsed':
+                if (units() === null) return null;
+                return {kind: 'search.timerElapsed', timer, units: Cast.toNumber(units())};
+            case 'steve0greatnesstimers_is_paused':
+                return {kind: 'search.timerPaused', timer};
+            case 'steve0greatnesstimers_add':
+                if (units() === null) return null;
+                return {kind: 'search.timerAdd', timer, time: input('TIME'), units: Cast.toNumber(units())};
+            default:
+                return {kind: 'search.timerDo', timer, what: opcode.slice('steve0greatnesstimers_'.length)};
+            }
+        }
+        if (opcode === 'DICandSPmonitorsPlus_swapVars') {
+            const name1 = fixed('VAR1');
+            const name2 = fixed('VAR2');
+            if (name1 === null || name2 === null) return null;
+            return {kind: 'search.varSwap', name1, name2};
+        }
+        switch (opcode) {
+        case 'DICandSPmonitorsPlus_setString':
+        case 'DICandSPmonitorsPlus_setColor': {
+            const valueName = opcode === 'DICandSPmonitorsPlus_setString' ? 'STRING' : 'COLOR';
+            const name = fixed('VARIABLE');
+            const value = input(valueName);
+            return name === null ? null : {kind: 'search.varSet', opcode, valueName, value, name};
+        }
+        case 'DICandSPmonitorsPlus_isShowing': {
+            const name = fixed('VARIABLE');
+            return name === null ? null : {kind: 'search.varShowing', name};
+        }
+        case 'DICandSPmonitorsPlus_sliderMinMaxOfVarible': {
+            const which = menu('MINMAX');
+            const name = fixed('VARIABLE');
+            return name === null ? null : {kind: 'search.varSlider', opcode, which, name};
+        }
+        case 'DICandSPmonitorsPlus_isButtonPressed': {
+            const name = fixed('VARIABLE');
+            const type = menu('TYPE');
+            return name === null ? null : {kind: 'search.varButton', opcode, type, name};
+        }
+        }
+        return null;
+    }
+
+    /**
+     * Desktop fork (section 196): fixed text of List Tools' "set list to array", parsed once when it is an array
+     * without arrays or objects in it (fixedJsonInputs).
+     * @param {Node} node The input's node.
+     * @returns {Node} The node to use.
+     */
+    fixedJsonArray (node) {
+        if (node.kind !== 'constant' || this.runtime.pmNoSearchParseInline) return node;
+        let parsed;
+        try {
+            parsed = JSON.parse(String(node.value));
+        } catch (e) {
+            return node;
+        }
+        if (!Array.isArray(parsed) || parsed.some(item => item && typeof item === 'object')) return node;
+        return {kind: 'search.fixedJson', json: JSON.stringify(parsed), bare: false};
+    }
+
+    /**
+     * Desktop fork (section 196): text fixed in a block that parses it as JSON on every call is parsed here, and the
+     * block gets the parsed value (the extensions take it, FIXED_JSON_INPUTS). Text that does not parse to the expected
+     * form stays text, so what the block does with it does not change. A pure block whose inputs are all fixed is left
+     * to constant folding. runtime.pmNoSearchParseInline = true: always the text (tests only).
+     * @param {Block} block The block.
+     * @param {object} inputs The block's input nodes, by name.
+     * @param {*} pure Whether the block is called as a pure block.
+     */
+    fixedJsonInputs (block, inputs, pure) {
+        const info = FIXED_JSON_INPUTS[block.opcode];
+        if (pure && Object.values(inputs).every(node => node.kind === 'constant')) return;
+        for (const name of info.inputs) {
+            const node = inputs[name];
+            if (!node || node.kind !== 'constant') continue;
+            const text = String(node.value);
+            let parsed;
+            try {
+                parsed = JSON.parse(info.form === 'keys' && !/^\[.*\]$/.test(text) ? `[${text}]` : text);
+            } catch (e) {
+                continue;
+            }
+            if (!parsed || typeof parsed !== 'object') continue;
+            if (info.form !== 'any' && !Array.isArray(parsed)) continue;
+            if (info.form === 'flat' && parsed.some(item => item && typeof item === 'object')) continue;
+            inputs[name] = {kind: 'search.fixedJson', json: JSON.stringify(parsed), bare: info.form === 'keys'};
+        }
+    }
+
+    /**
      * Desktop fork (section 149): the node of descendDataInline. `name`, `name1` and `name2` are the inputs that
      * give a variable's or list's name.
      * @param {Block} block The block.
@@ -2809,7 +2977,7 @@ class ScriptTreeGenerator {
         case 'lmsData_joinLists':
             return {kind: 'lms.concat', name1: input('LIST1'), name2: input('LIST2')};
         case 'lmsData_setListArray':
-            return {kind: 'lms.setArray', name: input('LIST'), array: input('ARRAY')};
+            return {kind: 'lms.setArray', name: input('LIST'), array: this.fixedJsonArray(input('ARRAY'))};
         case 'lmsData_getListArray':
             return {kind: 'lms.asArray', name: input('LIST')};
         }
@@ -2851,6 +3019,11 @@ class ScriptTreeGenerator {
                 inputs[name] = this.descendInputOfBlock(block, name);
                 if (blockInfo && blockInfo.arguments[name]) inputs[name].compilerInfo = ScriptTreeGenerator.addCompilerInfo(inputs[name], blockInfo.arguments[name].compilerInfo)
             }
+        }
+
+        // Desktop fork (section 196)
+        if (FIXED_JSON_INPUTS[block.opcode] && (pure || direct) && !this.runtime.pmNoSearchParseInline) {
+            this.fixedJsonInputs(block, inputs, pure);
         }
 
         const fields = {};

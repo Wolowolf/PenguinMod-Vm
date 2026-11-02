@@ -515,7 +515,7 @@ const KEEPS_PLAIN_SETUP = new Set([
     'constant', 'var.get', 'var.set', 'args.boolean', 'args.stringNumber', 'list.get', 'list.length', 'list.add',
     'control.if', 'motion.x', 'motion.y', 'op.add', 'op.subtract', 'op.multiply', 'op.divide', 'op.mod', 'op.equals',
     'op.less', 'op.greater', 'op.not', 'op.join', 'op.round', 'op.abs', 'op.floor', 'op.ceiling', 'op.sqrt', 'op.sin',
-    'op.cos', 'op.tan', 'op.length'
+    'op.cos', 'op.tan', 'op.length', 'search.fixedJson'
 ]);
 // Desktop fork (section 192): the same, added after reading their generated code and helpers. Left out on purpose:
 // costumes and backdrops (a hook or the block starts hats), list.amountOf (its input runs inside a callback, maybe never).
@@ -1191,6 +1191,21 @@ class JSGenerator {
 
         // Desktop fork (section 195): blocks that search by a name fixed in the block (irgen.js
         // descendNameSearchInline; helpers in jsexecute.js).
+        // Desktop fork (section 196)
+        case 'search.fixedJson':
+            // (TYPE_STRING: passed to the block as it is, not converted to text)
+            return new TypedInput(this.evaluateOnce(node.bare ? `JSON.parse("${sanitize(node.json)}")` : `({pmFixedJson: JSON.parse("${sanitize(node.json)}")})`), TYPE_STRING);
+        case 'search.varShowing':
+            return new TypedInput(`pmsVarShowing(runtime, thread.target, ${this.searchVariable(node.name)})`, TYPE_BOOLEAN);
+        case 'search.varSlider':
+            return new TypedInput(`pmsVarSlider(runtime, thread.target, ${this.searchVariable(node.name)}, ${this.searchArgument(node.opcode, 'MINMAX', node.which)})`, TYPE_UNKNOWN);
+        case 'search.varButton':
+            return new TypedInput(`pmsVarButton(runtime, thread.target, ${this.searchVariable(node.name)}, ${this.searchArgument(node.opcode, 'TYPE', node.type)})`, TYPE_UNKNOWN);
+        case 'search.timerElapsed':
+            return new TypedInput(`pmsTimerElapsed(pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}), ${node.units})`, TYPE_UNKNOWN);
+        case 'search.timerPaused':
+            return new TypedInput(`pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).is_paused`, TYPE_BOOLEAN);
+        // Desktop fork (section 195)
         case 'search.varValue':
             return new TypedInput(`pmsVarValue(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_UNKNOWN);
         case 'search.varExists':
@@ -2475,9 +2490,26 @@ class JSGenerator {
             this.source += `pmlConcat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
             break;
         }
+        // Desktop fork (section 196)
+        case 'search.varSet':
+            this.source += `pmsVarWrite(thread.target, ${this.searchWritable(node.name)}).value = ${this.searchArgument(node.opcode, node.valueName, node.value)};\n`;
+            break;
+        case 'search.varSwap':
+            this.source += `pmsVarSwap(pmsVarWrite(thread.target, ${this.searchWritable(node.name1)}), pmsVarWrite(thread.target, ${this.searchWritable(node.name2)}));\n`;
+            break;
+        case 'search.timerAdd':
+            this.source += `pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).add(${this.exactNumber(this.descendInput(node.time))} * ${node.units});\n`;
+            break;
+        case 'search.timerDo': {
+            const timer = `pmsTimerGet(thread.target, ${this.searchTimer(node.timer)})`;
+            if (node.what === 'toggle') this.source += `pmsTimerToggle(${timer});\n`;
+            else if (node.what === 'stop') this.source += `pmsTimerStop(${timer});\n`;
+            else this.source += `${timer}.${node.what}();\n`;
+            break;
+        }
         case 'lms.setArray': {
             const v = this.dataName(node.name, 'list', true);
-            const array = this.exactString(this.descendInput(node.array));
+            const array = node.array.kind === 'search.fixedJson' ? this.descendInput(node.array).source : this.exactString(this.descendInput(node.array));
             this.source += `pmlSetArray(thread.target, ${v.site}, ${v.name}, ${array});\n`;
             break;
         }
@@ -3059,6 +3091,49 @@ class JSGenerator {
         this.usesExtensionInputs = true;
         return new TypedInput(`(extensionInputs = ${object}, ` +
             `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`, type);
+    }
+
+    /**
+     * Desktop fork (section 196): the site that remembers a Variables Expanded search for this name.
+     * @param {string} name The name.
+     * @returns {string} The JS.
+     */
+    searchVariable (name) {
+        return this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(name)}")`);
+    }
+
+    /**
+     * Desktop fork (section 196): the site that remembers "look up or create" for this name.
+     * @param {string} name The name.
+     * @returns {string} The JS.
+     */
+    searchWritable (name) {
+        return this.evaluateOnce(`new pmsWritable(runtime, "${sanitize(name)}")`);
+    }
+
+    /**
+     * Desktop fork (section 196): the site that remembers a timer.
+     * @param {*} timer The timer's variable data.
+     * @returns {string} The JS.
+     */
+    searchTimer (timer) {
+        return this.evaluateOnce(`new pmsTimer(runtime, "${sanitize(timer.id)}", "${sanitize(timer.name)}")`);
+    }
+
+    /**
+     * Desktop fork (section 196): an input as the block's wrapper would convert it.
+     * @param {string} opcode The block.
+     * @param {string} name The argument's name.
+     * @param {*} node The input's node.
+     * @returns {string} The JS.
+     */
+    searchArgument (opcode, name, node) {
+        const direct = this.target.runtime.getOpcodeFunction(opcode).pmDirect;
+        const expected = new Map(direct.argumentTypes()).get(name);
+        const source = this.descendInput(node).asUnknown();
+        if (!expected) return source;
+        const directName = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}").pmDirect`);
+        return `${directName}.normalize(${source}, "${expected}")`;
     }
 
     /**

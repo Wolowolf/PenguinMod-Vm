@@ -302,7 +302,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     setlist({ TEXT, NAME }) {
       let parsed;
       try {
-        parsed = JSON.parse(TEXT);
+        // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs); the list gets its own copy
+        parsed = TEXT.pmFixedJson ? TEXT.pmFixedJson.slice() : JSON.parse(TEXT);
       } catch (e) {
         return; // JSON was invalid
       }

@@ -1134,6 +1134,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return penPModule.costumeMenuFunction();
     }
     parse(str) {
+      // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs); blocks may change what they get
+      if (str && str.pmFixedJson) return str.pmFixedJson.slice();
       if (typeof str === "string") {
         try {
           return JSON.parse(str);
