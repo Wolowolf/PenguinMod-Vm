@@ -501,19 +501,47 @@ const KEEPS_PLAIN_SETUP = new Set([
     'op.less', 'op.greater', 'op.not', 'op.join', 'op.round', 'op.abs', 'op.floor', 'op.ceiling', 'op.sqrt', 'op.sin',
     'op.cos', 'op.tan', 'op.length'
 ]);
-const keepsPlainSetup = node => {
-    if (Array.isArray(node)) return node.every(keepsPlainSetup);
+// Desktop fork (section 192): the same, added after reading their generated code and helpers. Left out on purpose:
+// costumes and backdrops (a hook or the block starts hats), list.amountOf (its input runs inside a callback, maybe never).
+const KEEPS_PLAIN_SETUP_MORE = new Set([
+    'motion.setX', 'motion.setY', 'motion.setXY', 'motion.changeX', 'motion.changeY', 'motion.changeXY', 'motion.step',
+    'motion.setDirection', 'motion.setRotationStyle', 'motion.ifOnEdgeBounce', 'motion.pointTowardsXY', 'motion.turnAround',
+    'motion.goTo', 'motion.pointTowards', 'motion.direction',
+    'looks.setSize', 'looks.changeSize', 'looks.setEffect', 'looks.changeEffect', 'looks.clearEffects', 'looks.hide',
+    'looks.show', 'looks.showOrHide', 'looks.setStretch', 'looks.changeStretch', 'looks.size', 'looks.costumeNumber',
+    'looks.backdropNumber', 'looks.costumeName', 'looks.backdropName',
+    'pen.clear', 'pen.down', 'pen.up', 'pen.stamp', 'pen.setColor', 'pen.setParam', 'pen.changeParam', 'pen.setSize',
+    'pen.changeSize',
+    'list.delete', 'list.deleteAll', 'list.insert', 'list.replace', 'list.shift', 'list.reverse', 'list.contains',
+    'list.indexOf', 'list.contents',
+    'op.true', 'op.false', 'op.and', 'op.or', 'op.nand', 'op.nor', 'op.xor', 'op.xnor', 'op.asin', 'op.acos', 'op.atan',
+    'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^', 'op.power', 'op.sign', 'op.contains', 'op.letterOf', 'op.random',
+    'mouse.x', 'mouse.y', 'mouse.down', 'keyboard.pressed', 'sensing.touching', 'timer.get'
+]);
+// Whether a plain call is somewhere in a node (a pure call does no setup).
+const hasPlainCall = node => {
+    if (Array.isArray(node)) return node.some(hasPlainCall);
+    if (!node || typeof node !== 'object') return false;
+    if (node.kind === 'compat' && !node.pure) return true;
+    return Object.keys(node).some(key => key !== 'variable' && key !== 'list' && key !== 'compilerInfo' && hasPlainCall(node[key]));
+};
+// more: use KEEPS_PLAIN_SETUP_MORE too (off with the switch runtime.pmNoSetupKinds, tests only).
+const keepsPlainSetup = (node, more) => {
+    if (Array.isArray(node)) return node.every(item => keepsPlainSetup(item, more));
     if (!node || typeof node !== 'object') return true;
     if (typeof node.kind === 'string') {
         if (JSGenerator.hasExtensionJs(node.kind.split('.')[0])) return false;
         if (node.kind === 'compat') {
             if (node.substacks.length || !(node.pure || (node.plain && !setupStateBlocks.has(node.opcode)))) return false;
-            return keepsPlainSetup(Object.values(node.inputs));
+            return keepsPlainSetup(Object.values(node.inputs), more);
         }
-        if (!KEEPS_PLAIN_SETUP.has(node.kind) || (node.kind === 'var.set' && node.variable.isCloud)) return false;
+        if (!KEEPS_PLAIN_SETUP.has(node.kind) && !(more && KEEPS_PLAIN_SETUP_MORE.has(node.kind))) return false;
+        if (node.kind === 'var.set' && node.variable.isCloud) return false;
+        // "and" / "or" may skip their second input: the setup done there may not have happened
+        if ((node.kind === 'op.and' || node.kind === 'op.or') && hasPlainCall(node.right)) return false;
     }
     for (const key of Object.keys(node)) {
-        if (key !== 'variable' && key !== 'list' && key !== 'compilerInfo' && !keepsPlainSetup(node[key])) return false;
+        if (key !== 'variable' && key !== 'list' && key !== 'compilerInfo' && !keepsPlainSetup(node[key], more)) return false;
     }
     return true;
 };
@@ -2664,7 +2692,7 @@ class JSGenerator {
 
         for (let i = 0; i < nodes.length; i++) {
             frame.isLastBlock = i === nodes.length - 1;
-            const keeps = keepsPlainSetup(nodes[i]);
+            const keeps = keepsPlainSetup(nodes[i], !this.target.runtime.pmNoSetupKinds);
             if (!keeps) this.plainSetupKept = false;
             this.plainSetupDone = false;
             this.plainSetupStatementKeeps = keeps;
