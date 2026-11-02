@@ -1651,7 +1651,13 @@ class JSGenerator {
                     call = this.generateBranchInline(node, branchVariable);
                 } else if (node.branchCall === 'direct') {
                     const {object, directName} = this.generateDirectExtensionArguments(node);
-                    call = `extensionAnswer = guardedExtensionCallBranch(${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}", ${branchVariable}), extensionCallUnfinished ? (yield* finishExtensionCallBranch(${this.isWarp})) : extensionAnswer`;
+                    if (this.target.runtime.pmNoCheapCall || this.target.runtime.pmNoCheapGuarded) {
+                        call = `extensionAnswer = guardedExtensionCallBranch(${object}, ${directName}, ${this.isWarp}, "${sanitize(node.id)}", ${branchVariable}), extensionCallUnfinished ? (yield* finishExtensionCallBranch(${this.isWarp})) : extensionAnswer`;
+                    } else {
+                        // Desktop fork (section 191): the block's method is called here (generateGuardedCallHere)
+                        const setup = `guardedExtensionCallBranchSetup(${object}, ${this.isWarp}, "${sanitize(node.id)}", ${branchVariable})`;
+                        call = `${this.generateGuardedCallHere(node, directName, setup, branchVariable)} ? (yield* finishExtensionCallBranch(${this.isWarp})) : startedExtensionBranch(${branchVariable}, extensionAnswer)`;
+                    }
                 } else {
                     call = this.generateCompatibilityLayerCall(node, false, branchVariable);
                 }
@@ -3065,10 +3071,45 @@ class JSGenerator {
             return `(extensionInputs = ${setup}(${object}, ${this.isWarp}, "${sanitize(node.id)}"), ` +
                 `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`;
         }
-        if (isStatement) {
-            return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+        const runtime = this.target.runtime;
+        if (runtime.pmNoCheapCall || runtime.pmNoCheapGuarded) {
+            if (isStatement) {
+                return `guardedExtensionCall(${call});\nif (extensionCallUnfinished) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+            }
+            return `extensionAnswer = guardedExtensionCall(${call}), extensionCallUnfinished ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
         }
-        return `extensionAnswer = guardedExtensionCall(${call}), extensionCallUnfinished ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
+        // Desktop fork (section 191): the block's method is called here (generateGuardedCallHere)
+        this.usesExtensionFrame = true;
+        const setup = `guardedExtensionCallSetup(${object}, extensionFrame = {}, ${this.isWarp}, "${sanitize(node.id)}")`;
+        const check = this.generateGuardedCallHere(node, directName, setup, 'extensionFrame');
+        if (isStatement) {
+            return `if (${check}) yield* finishExtensionCall(${this.isWarp}, ${setFlags})`;
+        }
+        return `${check} ? (yield* finishExtensionCall(${this.isWarp}, ${setFlags})) : extensionAnswer`;
+    }
+
+    /**
+     * Desktop fork (section 191): a guarded or branch call (sections 130, 152) calls the block's method at the block's
+     * own place, as section 160's plain calls do, so that the JS engine sees one known function at each call; the same
+     * object, method, `this` and arguments as pmDirect.call, the method looked up after the arguments and the setup.
+     * The answer goes to extensionAnswer; the check says whether the block is unfinished, and hands finishExtensionCall
+     * what it needs (it calls pmDirect, so the same method again). The arguments and the stack frame are held in this
+     * function: starting a hat can run another script during the call. Switch (tests only): runtime.pmNoCheapGuarded
+     * (these calls only) or runtime.pmNoCheapCall.
+     * @param {*} node The "compat" node.
+     * @param {string} directName The variable holding `pmDirect`.
+     * @param {string} setup The JS of the setup, which answers the arguments object.
+     * @param {string} frame The JS of what finishExtensionCall takes as its stack frame or branch info.
+     * @returns {string} The JS of the call and check, in parentheses; true when the block is unfinished.
+     */
+    generateGuardedCallHere (node, directName, setup, frame) {
+        const direct = this.target.runtime.getOpcodeFunction(node.opcode).pmDirect;
+        const objectName = this.evaluateOnce(`${directName}.object`);
+        const infoName = this.evaluateOnce(`${directName}.blockInfo`);
+        this.usesExtensionInputs = true;
+        return `(extensionInputs = ${setup}, ` +
+            `extensionAnswer = ${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}), ` +
+            `guardedExtensionCallCheck(thread, extensionInputs, ${directName}, "${sanitize(node.id)}", ${frame}, extensionAnswer))`;
     }
 
     /**
@@ -3259,6 +3300,7 @@ class JSGenerator {
         script += `let target = __target;\n`;
         // Desktop fork (section 160): a plain extension call's arguments object, held in this function
         if (this.usesExtensionInputs) script += 'let extensionInputs;\n';
+        if (this.usesExtensionFrame) script += 'let extensionFrame;\n';
         script += `if (thread.spoofing) {\n`;
         script += `target = thread.spoofTarget;\n`;
         script += `};\n`;

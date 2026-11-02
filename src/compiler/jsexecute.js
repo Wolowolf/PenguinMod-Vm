@@ -249,6 +249,20 @@ const guardedExtensionCall = (inputs, direct, isWarp, blockId) => {
     if (extensionCallUnfinished) extensionCallState = [thread, inputs, direct, blockId, stackFrame, returnValue];
     return returnValue;
 };
+// Desktop fork (section 191): the two halves of guardedExtensionCall around a block function that jsgen.js calls at the
+// block's own place in the compiled script (generateDirectExtensionCall): the same setup, after the arguments were
+// worked out, and the same check, which answers true when the compiled code must continue with finishExtensionCall.
+const guardedExtensionCallSetup = (inputs, stackFrame, isWarp, blockId) => {
+    const thread = globalState.thread;
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    globalState.blockUtility.init(thread, blockId, stackFrame, null);
+    return inputs;
+};
+const guardedExtensionCallCheck = (thread, inputs, direct, blockId, frame, returnValue) => {
+    if (thread.status === 0 /* STATUS_RUNNING */ && !isPromise(returnValue)) return false;
+    extensionCallState = [thread, inputs, direct, blockId, frame, returnValue];
+    return true;
+};
 const finishExtensionCall = function*(isWarp, useFlags) {
     const [thread, inputs, direct, blockId, stackFrame, firstValue] = extensionCallState;
     extensionCallState = null;
@@ -378,6 +392,13 @@ const guardedExtensionCallBranch = (inputs, direct, isWarp, blockId, branchInfo)
         return;
     }
     return startedExtensionBranch(branchInfo, returnValue);
+};
+// Desktop fork (section 191): guardedExtensionCallBranch's setup, for a call at the block's own place (jsgen.js)
+const guardedExtensionCallBranchSetup = (inputs, isWarp, blockId, branchInfo) => {
+    const thread = globalState.thread;
+    thread.stackFrames[thread.stackFrames.length - 1].reuse(isWarp);
+    globalState.blockUtility.init(thread, blockId, branchInfo.stackFrame, branchInfo);
+    return inputs;
 };
 const finishExtensionCallBranch = function*(isWarp) {
     const [thread, inputs, direct, blockId, branchInfo, firstValue] = extensionCallState;
