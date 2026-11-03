@@ -1378,31 +1378,95 @@ class pmdNameAny {
 }`;
 /**
  * Desktop fork (section 198): what Clones+'s variable blocks do (irgen.js descendClonesVarInline). The same steps as
- * the extension's functions: nothing is remembered, clone values change all the time.
+ * the extension's functions. Values are always read again, they change all the time.
+ * Section 199: which variable object an ID gives is remembered, per target, while runtime.pmVarNamesVersion has not
+ * changed (section 149's counter). pmcOneSite keeps one target's, pmcManySite one per position in the clone list;
+ * another target at that position (a clone made or deleted) is looked up again. pmcPlainOne / pmcPlainMany look up
+ * on every call (runtime.pmNoClonesVarRemember, tests only).
  */
-runtimeFunctions.pmcMainGet = `const pmcMainGet = (target, id) => {
-    const variable = target.sprite.clones[0].lookupVariableById(id);
+runtimeFunctions.pmcOneSite = `class pmcOneSite {
+    constructor (runtime, id) {
+        this.runtime = runtime;
+        this.id = id;
+        this.target = null;
+        this.version = -1;
+        this.found = null;
+    }
+    variable (target) {
+        if (target !== this.target || this.version !== this.runtime.pmVarNamesVersion) {
+            this.found = target.lookupVariableById(this.id);
+            this.target = target;
+            this.version = this.runtime.pmVarNamesVersion;
+        }
+        return this.found;
+    }
+}`;
+runtimeFunctions.pmcManySite = `class pmcManySite {
+    constructor (runtime, id) {
+        this.runtime = runtime;
+        this.id = id;
+        this.version = -1;
+        this.targets = [];
+        this.found = [];
+    }
+    begin (clones) {
+        if (this.version !== this.runtime.pmVarNamesVersion || this.targets.length > clones.length) {
+            this.version = this.runtime.pmVarNamesVersion;
+            this.targets.length = 0;
+            this.found.length = 0;
+        }
+    }
+    variable (clone, index) {
+        if (this.targets[index] !== clone) {
+            this.targets[index] = clone;
+            this.found[index] = clone.lookupVariableById(this.id);
+        }
+        return this.found[index];
+    }
+}`;
+runtimeFunctions.pmcPlainOne = `class pmcPlainOne {
+    constructor (runtime, id) {
+        this.id = id;
+    }
+    variable (target) {
+        return target.lookupVariableById(this.id);
+    }
+}`;
+runtimeFunctions.pmcPlainMany = `class pmcPlainMany {
+    constructor (runtime, id) {
+        this.id = id;
+    }
+    begin () {}
+    variable (clone) {
+        return clone.lookupVariableById(this.id);
+    }
+}`;
+runtimeFunctions.pmcMainGet = `const pmcMainGet = (target, site) => {
+    const variable = site.variable(target.sprite.clones[0]);
     return variable ? variable.value : "";
 }`;
-runtimeFunctions.pmcMainSet = `const pmcMainSet = (target, id, value) => {
-    const variable = target.sprite.clones[0].lookupVariableById(id);
+runtimeFunctions.pmcMainSet = `const pmcMainSet = (target, site, value) => {
+    const variable = site.variable(target.sprite.clones[0]);
     if (variable) variable.value = value;
 }`;
 runtimeFunctions.pmcFind = `const pmcFind = (clones, check, expected) => {
+    check.begin(clones);
     for (let index = 1; index < clones.length; index++) {
-        const variable = clones[index].lookupVariableById(check);
+        const variable = check.variable(clones[index], index);
         if (variable && globalState.Cast.compare(variable.value, expected) === 0) return clones[index];
     }
     return null;
 }`;
-runtimeFunctions.pmcValue = `const pmcValue = (clone, id) => (clone ? clone.lookupVariableById(id).value : "")`;
-runtimeFunctions.pmcSet = `const pmcSet = (target, id, value, check, expected) => {
+runtimeFunctions.pmcValue = `const pmcValue = (clone, site) => (clone ? site.variable(clone).value : "")`;
+runtimeFunctions.pmcSet = `const pmcSet = (target, edit, value, check, expected) => {
     const clones = target.sprite.clones;
+    edit.begin(clones);
+    check.begin(clones);
     for (let index = 1; index < clones.length; index++) {
-        const variable = clones[index].lookupVariableById(check);
+        const variable = check.variable(clones[index], index);
         if (variable && globalState.Cast.compare(variable.value, expected) === 0) {
-            const edit = clones[index].lookupVariableById(id);
-            if (edit) edit.value = value;
+            const found = edit.variable(clones[index], index);
+            if (found) found.value = value;
         }
     }
 }`;

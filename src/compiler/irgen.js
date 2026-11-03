@@ -2805,7 +2805,10 @@ class ScriptTreeGenerator {
         if (this.runtime.pmNoClonesVarInline || !opcodes.has(block.opcode) ||
             !this.runtime.getOpcodeFunction(block.opcode) ||
             !this.coreInputsInOrder(block, this.clonesVarNode)) return null;
-        return this.clonesVarNode(block, name => this.descendCoreInput(block, name));
+        const node = this.clonesVarNode(block, name => this.descendCoreInput(block, name));
+        // Desktop fork (section 199): runtime.pmNoClonesVarRemember = true looks the variables up on every call (tests only)
+        if (node) node.forget = !!this.runtime.pmNoClonesVarRemember;
+        return node;
     }
 
     /**

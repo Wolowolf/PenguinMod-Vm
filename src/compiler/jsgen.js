@@ -1208,11 +1208,11 @@ class JSGenerator {
         // Desktop fork (section 195)
         // Desktop fork (section 198)
         case 'clones.mainGet':
-            return new TypedInput(`pmcMainGet(thread.target, "${sanitize(node.id)}")`, TYPE_UNKNOWN);
+            return new TypedInput(`pmcMainGet(thread.target, ${this.clonesOneSite(node)})`, TYPE_UNKNOWN);
         case 'clones.get':
-            return new TypedInput(`pmcValue(pmcFind(thread.target.sprite.clones, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))}), "${sanitize(node.id)}")`, TYPE_UNKNOWN);
+            return new TypedInput(`pmcValue(pmcFind(thread.target.sprite.clones, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))}), ${this.clonesOneSite(node)})`, TYPE_UNKNOWN);
         case 'clones.exists':
-            return new TypedInput(`(pmcFind(thread.target.sprite.clones, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))}) !== null)`, TYPE_BOOLEAN);
+            return new TypedInput(`(pmcFind(thread.target.sprite.clones, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))}) !== null)`, TYPE_BOOLEAN);
         case 'search.varValue':
             return new TypedInput(`pmsVarValue(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_UNKNOWN);
         case 'search.varExists':
@@ -2499,10 +2499,10 @@ class JSGenerator {
         }
         // Desktop fork (section 198)
         case 'clones.mainSet':
-            this.source += `pmcMainSet(thread.target, "${sanitize(node.id)}", ${this.exactString(this.descendInput(node.value))});\n`;
+            this.source += `pmcMainSet(thread.target, ${this.clonesOneSite(node)}, ${this.exactString(this.descendInput(node.value))});\n`;
             break;
         case 'clones.set':
-            this.source += `pmcSet(thread.target, "${sanitize(node.id)}", ${this.exactString(this.descendInput(node.value))}, "${sanitize(node.check)}", ${this.exactString(this.descendInput(node.expected))});\n`;
+            this.source += `pmcSet(thread.target, ${this.clonesManySite(node, node.id)}, ${this.exactString(this.descendInput(node.value))}, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))});\n`;
             break;
         // Desktop fork (section 196)
         case 'search.varSet':
@@ -3105,6 +3105,25 @@ class JSGenerator {
         this.usesExtensionInputs = true;
         return new TypedInput(`(extensionInputs = ${object}, ` +
             `${objectName}[${JSON.stringify(direct.funcName)}](extensionInputs, globalState.blockUtility, ${infoName}))`, type);
+    }
+
+    /**
+     * Desktop fork (section 199): the site that remembers one target's variable for node.id.
+     * @param {object} node A clones.* node.
+     * @returns {string} The JS.
+     */
+    clonesOneSite (node) {
+        return this.evaluateOnce(`new ${node.forget ? 'pmcPlainOne' : 'pmcOneSite'}(runtime, "${sanitize(node.id)}")`);
+    }
+
+    /**
+     * Desktop fork (section 199): the site that remembers each clone's variable for this ID.
+     * @param {object} node A clones.* node.
+     * @param {string} id The variable ID.
+     * @returns {string} The JS.
+     */
+    clonesManySite (node, id) {
+        return this.evaluateOnce(`new ${node.forget ? 'pmcPlainMany' : 'pmcManySite'}(runtime, "${sanitize(id)}")`);
     }
 
     /**
