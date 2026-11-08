@@ -237,7 +237,7 @@
             "document.createElement": 5,
             "document.documentElement": 3,
             "document.querySelector": 1,
-            "document.querySelectorAll": 1
+            "document.querySelectorAll": 2
         },
         "internals": {
             "._allDrawables": 2,

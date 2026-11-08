@@ -465,7 +465,7 @@ class PureInlineArgs {
     // for Cast.compare: a number turned into text by the wrapper compares like the number itself
     cmp (name) {
         const input = this.typedInput(name);
-        if (this.types.get(name) === 'string' && input && input.isAlwaysNumberOrNaN()) return `(${input.asSafe()})`;
+        if (this.types.get(name) === 'string' && input && (input.type === TYPE_NUMBER || input.type === TYPE_NUMBER_NAN)) return `(${input.asSafe()})`;
         return this.raw(name);
     }
 }
@@ -3126,8 +3126,10 @@ class JSGenerator {
             fixed = false;
             const expected = types.get(inputName);
             // Desktop fork: also a variable whose type is known from its last "set". Switch (tests only): runtime.pmNoTypedVariableArguments.
+            // (section 203) a number by its `type`, not isAlwaysNumberOrNaN: a variable set to text that reads as a number
+            // (" 7 ", "1e3") is "always a number" for that, but holds the text, which the wrapper would convert
             if (!expected || ((input instanceof TypedInput || (input instanceof VariableInput && !this.target.runtime.pmNoTypedVariableArguments)) && (
-                (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
+                (expected === 'number' && (input.type === TYPE_NUMBER || input.type === TYPE_NUMBER_NAN)) ||
                 (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
                 (expected === 'string' && input.type === TYPE_STRING)))) {
                 args.push([inputName, source]);
@@ -3434,8 +3436,10 @@ class JSGenerator {
             }
             const expected = types.get(inputName);
             // Desktop fork: also a variable whose type is known from its last "set". Switch (tests only): runtime.pmNoTypedVariableArguments.
+            // (section 203) a number by its `type`, not isAlwaysNumberOrNaN: a variable set to text that reads as a number
+            // (" 7 ", "1e3") is "always a number" for that, but holds the text, which the wrapper would convert
             if (!expected || ((input instanceof TypedInput || (input instanceof VariableInput && !this.target.runtime.pmNoTypedVariableArguments)) && (
-                (expected === 'number' && input.isAlwaysNumberOrNaN()) ||
+                (expected === 'number' && (input.type === TYPE_NUMBER || input.type === TYPE_NUMBER_NAN)) ||
                 (expected === 'boolean' && input.type === TYPE_BOOLEAN) ||
                 (expected === 'string' && input.type === TYPE_STRING)))) {
                 add(inputName, input.asSafe());
