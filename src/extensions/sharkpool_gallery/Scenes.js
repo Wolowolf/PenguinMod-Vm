@@ -50,30 +50,63 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     );
   }
 
-  function attachTab() {
-    const tabs = document.querySelectorAll(`li[class*="react-tabs_react-tabs__tab"]`);
-    const lastTab = tabs[tabs.length - 1];
-    const cloneTab = lastTab.cloneNode(true);
-    lastTab.insertAdjacentElement("afterend", cloneTab);
+  // Desktop fork: the Scenes tab is made like the editor's own tabs (a copy of an unselected tab;
+  // while the scene manager is open it gets the classes the editor gives its selected tab, so it
+  // shows its name and has the same height as the others; no own sizes or filters). It stays while
+  // the extension is loaded and is removed by dispose() when the extension is removed.
+  const TAB_SELECTOR = `li[class*="react-tabs_react-tabs__tab"]`;
+  let tabClasses = { base: [], selected: [] };
+  let unsubscribeStore = null;
+  let disposed = false;
 
-    const childs = isPM ? cloneTab.firstChild.children : cloneTab.children;
-    childs[0].src = constructTabIMG();
-    childs[1].textContent = "Scenes";
-    guiElements["cloneTab"] = { cloneTab, img: childs[0] };
-    cloneTab.setAttribute("style", "display: flex; justify-content: center; align-items: center;");
+  function learnSelectedClasses() {
+    const selected = [...document.querySelectorAll(TAB_SELECTOR)]
+      .find((tab) => tab !== guiElements["cloneTab"]?.cloneTab && tab.getAttribute("aria-selected") === "true");
+    if (selected) tabClasses.selected = [...selected.classList].filter((c) => !tabClasses.base.includes(c));
+  }
+
+  function attachTab() {
+    if (disposed || guiElements["cloneTab"]?.cloneTab.isConnected) return;
+    const tabs = [...document.querySelectorAll(TAB_SELECTOR)];
+    const unselected = tabs.find((tab) => tab.getAttribute("aria-selected") !== "true");
+    if (!unselected) return;
+    tabClasses.base = [...unselected.classList];
+    learnSelectedClasses();
+
+    const cloneTab = unselected.cloneNode(true);
+    cloneTab.removeAttribute("id");
+    cloneTab.removeAttribute("aria-controls");
+    tabs[tabs.length - 1].insertAdjacentElement("afterend", cloneTab);
+
+    const img = cloneTab.querySelector("img");
+    const label = cloneTab.querySelector("span");
+    if (img) img.src = constructTabIMG();
+    if (label) label.textContent = "Scenes";
+    guiElements["cloneTab"] = { cloneTab, img };
     cloneTab.addEventListener("click", (e) => {
       ReduxStore.dispatch({
         type: "scratch-gui/navigation/ACTIVATE_TAB", activeTabIndex: -1
       });
       e.stopPropagation();
     });
+    updateTab();
+  }
+
+  function updateTab() {
+    const el = guiElements["cloneTab"];
+    if (!el) return;
+    const open = ReduxStore.getState().scratchGui.editorTab.activeTabIndex === -1;
+    if (!open) learnSelectedClasses();
+    el.cloneTab.className = [...tabClasses.base, ...(open ? tabClasses.selected : [])].join(" ");
+    el.cloneTab.setAttribute("aria-selected", open ? "true" : "false");
+    if (el.img) el.img.src = constructTabIMG();
   }
 
   function startListenerWorker() {
     const checkInEditor = () => !ReduxStore.getState().scratchGui.mode.isPlayerOnly;
     let inEditor = checkInEditor();
     if (inEditor) attachTab();
-    ReduxStore.subscribe(() => {
+    unsubscribeStore = ReduxStore.subscribe(() => {
       const currentlyInEditor = checkInEditor();
       if (inEditor !== currentlyInEditor) {
         inEditor = currentlyInEditor;
@@ -82,22 +115,29 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (currentlyInEditor) {
         if (guiElements["cloneTab"]) {
           const thisTab = ReduxStore.getState().scratchGui.editorTab.activeTabIndex;
-          const tabImg = guiElements["cloneTab"].img;
-          tabImg.src = constructTabIMG();
+          updateTab();
           if (thisTab === -1) {
-            guiElements["cloneTab"].cloneTab.style.height = "calc(100% - 15%)";
-            tabImg.style.filter = "saturate(1)";
             guiElements["manager"]?.remove();
             openSceneTab();
           } else {
-            guiElements["cloneTab"].cloneTab.style.height = "calc(100% - 20%)";
-            tabImg.style.filter = "";
             guiElements["manager"]?.remove();
             delete guiElements["manager"];
           }
         }
       }
     });
+  }
+
+  function removeTab() {
+    disposed = true;
+    if (unsubscribeStore) unsubscribeStore();
+    unsubscribeStore = null;
+    guiElements["manager"]?.remove();
+    guiElements["cloneTab"]?.cloneTab.remove();
+    guiElements = {};
+    if (typeof ReduxStore !== "undefined" && ReduxStore.getState().scratchGui.editorTab.activeTabIndex === -1) {
+      ReduxStore.dispatch({ type: "scratch-gui/navigation/ACTIVATE_TAB", activeTabIndex: 0 });
+    }
   }
   if (isEditor) startListenerWorker();
 
@@ -178,6 +218,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   }
 
   class SPscenes {
+    // Desktop fork: removing the extension removes its editor tab
+    dispose() {
+      if (isEditor) removeTab();
+    }
+
     getInfo() {
       return {
         id: "SPscenes",
