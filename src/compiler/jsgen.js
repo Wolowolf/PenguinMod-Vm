@@ -5,6 +5,8 @@ const BlockType = require('../extension-support/block-type');
 const VariablePool = require('./variable-pool');
 const jsexecute = require('./jsexecute');
 const environment = require('./environment');
+// Desktop fork (section 202): inline code for small pure extension blocks
+const pureInline = require('./pure-inline');
 
 // Imported for JSDoc types, not to actually use
 // eslint-disable-next-line no-unused-vars
@@ -402,6 +404,71 @@ const knownValueSource = value => {
     if (value === undefined) return 'undefined';
     return null;
 };
+
+/**
+ * Desktop fork (section 202): the arguments of a pure extension block for its inline code (pure-inline.js), each
+ * as the block's function receives it after the extension manager's conversion (descendPureExtensionBlock's
+ * `args`: [name, source, value known now]).
+ */
+class PureInlineArgs {
+    constructor (args, inputs, types, typedVariables) {
+        this.args = args;
+        this.inputs = inputs;
+        this.types = types;
+        this.typedVariables = typedVariables;
+    }
+    fixed (name) {
+        const arg = this.args.get(name);
+        return arg.length > 2 ? {value: arg[2]} : null;
+    }
+    raw (name) {
+        return `(${this.args.get(name)[1]})`;
+    }
+    // the compiled input, when the call passes it on unconverted because its type is known (as descendPureExtensionBlock)
+    typedInput (name) {
+        const input = this.inputs[name];
+        if (!input || this.fixed(name)) return null;
+        if (input instanceof TypedInput || (input instanceof VariableInput && this.typedVariables)) return input;
+        return null;
+    }
+    // a number that is never NaN (`type`, not isAlwaysNumber: a variable set to the text " 7 " is "always a number"
+    // for that, but holds text, and the direct call passes it on unconverted)
+    knownNumber (name) {
+        const fixed = this.fixed(name);
+        if (fixed) return typeof fixed.value === 'number' && !Number.isNaN(fixed.value);
+        const input = this.typedInput(name);
+        return this.types.get(name) === 'number' && !!input && input.type === TYPE_NUMBER;
+    }
+    num (name) {
+        const fixed = this.fixed(name);
+        if (fixed) return knownValueSource(Cast.toNumber(fixed.value));
+        if (this.knownNumber(name)) return this.raw(name);
+        // (Cast.toNumber of the wrapper's number is Cast.toNumber of the input)
+        const input = this.inputs[name];
+        if (this.types.get(name) === 'number' && (input instanceof TypedInput || input instanceof VariableInput)) {
+            return `coreNumber(${input.asSafe()})`;
+        }
+        return `coreNumber(${this.raw(name)})`;
+    }
+    str (name) {
+        const fixed = this.fixed(name);
+        if (fixed) return knownValueSource(String(fixed.value));
+        if (this.types.get(name) === 'string') return this.raw(name);
+        return `String(${this.raw(name)})`;
+    }
+    bool (name) {
+        const fixed = this.fixed(name);
+        if (fixed) return `${Cast.toBoolean(fixed.value)}`;
+        if (this.types.get(name) === 'boolean') return this.raw(name);
+        return `toBoolean(${this.raw(name)})`;
+    }
+    // for Cast.compare: a number turned into text by the wrapper compares like the number itself
+    cmp (name) {
+        const input = this.typedInput(name);
+        if (this.types.get(name) === 'string' && input && input.isAlwaysNumberOrNaN()) return `(${input.asSafe()})`;
+        return this.raw(name);
+    }
+}
 
 /**
  * PMDESKTOP_FOLD (section 44): whether generated code is one unbroken term whose meaning cannot change with the
@@ -3031,9 +3098,12 @@ class JSGenerator {
             }
             args.push([name, source, value]);
         };
+        // (section 202) the compiled inputs, for inline code
+        const inputs = {};
         for (const inputName of Object.keys(node.inputs)) {
             const inputNode = node.inputs[inputName];
             const input = this.descendInput(inputNode);
+            inputs[inputName] = input;
             const source = input.asSafe();
             if (input instanceof ConstantInput || this.foldedNodes.has(inputNode)) {
                 // a fixed value: known now, so it is converted now
@@ -3088,6 +3158,13 @@ class JSGenerator {
                 this.foldedNodes.add(node);
                 return folded;
             }
+        }
+
+        // Desktop fork (section 202): small blocks become inline code (pure-inline.js); the direct call below stays
+        // for the rest. Switch (tests only): runtime.pmNoPureInline.
+        if (!this.target.runtime.pmNoPureInline && Object.prototype.hasOwnProperty.call(pureInline, opcode)) {
+            const inline = this.pureInlineCode(pureInline[opcode], node, args, inputs, types);
+            if (inline) return inline;
         }
 
         let object = '{';
@@ -3167,6 +3244,40 @@ class JSGenerator {
         if (!expected) return source;
         const directName = this.evaluateOnce(`runtime.getOpcodeFunction("${sanitize(opcode)}").pmDirect`);
         return `${directName}.normalize(${source}, "${expected}")`;
+    }
+
+    /**
+     * Desktop fork (section 202): the inline code of a small pure extension block (pure-inline.js), or null to keep
+     * the direct call: when an input is stored out of the order of the block's text (the direct call works inputs
+     * out in the order they are stored; that matters for inputs that change something, e.g. pick random), when the
+     * block has an input or field the entry does not know, or when the entry declines (e.g. a menu not fixed).
+     * @param {{order: string[], js: Function}} entry The block's entry.
+     * @param {*} node The "compat" node.
+     * @param {Array} args [name, source, value known now] of every argument, as for the direct call.
+     * @param {object} inputs The compiled inputs by name.
+     * @param {Map} types The type the extension manager converts each argument to.
+     * @returns {TypedInput|null} The answer.
+     */
+    pureInlineCode (entry, node, args, inputs, types) {
+        let next = 0;
+        for (const name of Object.keys(node.inputs)) {
+            const at = entry.order.indexOf(name);
+            if (at < next) return null;
+            next = at + 1;
+        }
+        for (const name of Object.keys(node.fields)) {
+            if (entry.order.indexOf(name) === -1) return null;
+        }
+        const byName = new Map();
+        for (const arg of args) byName.set(arg[0], arg);
+        for (const name of entry.order) {
+            if (!byName.has(name)) return null;
+        }
+        const typedVariables = !this.target.runtime.pmNoTypedVariableArguments;
+        const result = entry.js(new PureInlineArgs(byName, inputs, types, typedVariables));
+        if (!result) return null;
+        const type = {int: TYPE_NUMBER, number: TYPE_NUMBER_NAN, boolean: TYPE_BOOLEAN}[result[1]] || TYPE_UNKNOWN;
+        return new TypedInput(`(${result[0]})`, type);
     }
 
     /**

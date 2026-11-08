@@ -1286,6 +1286,148 @@ runtimeFunctions.pmxTextBefore = `const pmxTextBefore = (text, base) => {
     if (idx < 0) return "";
     return base.substring(0, idx);
 }`;
+/**
+ * Desktop fork (section 202): helpers of the inline code for small pure extension blocks (pure-inline.js). Each is
+ * the block function's own code with its inputs already converted as the extension manager converts them; the
+ * parameters are in the block's input order. A helper cannot call another one (compiled code gets only the helpers
+ * its source names), so the shared parts are written out in each.
+ */
+runtimeFunctions.pmiCompare = `const pmiCompare = globalState.Cast.compare`;
+runtimeFunctions.pmiBitsToNumber = `const pmiBitsToNumber = bits => (/^-?[01]+$/.test(bits) ? parseInt(bits, 2) || 0 : 0)`;
+runtimeFunctions.pmiRotateRight = `const pmiRotateRight = (number, k) => (number >>> k) | (number << (32 - k))`;
+runtimeFunctions.pmiRotateLeft = `const pmiRotateLeft = (number, k) => (number << k) | (number >>> (32 - k))`;
+runtimeFunctions.pmiRootOf = `const pmiRootOf = (a, b) => Math.pow(b, 1 / a)`;
+// True Fantom Math's exactlyCompare: Cast.compare without lower-casing the texts
+runtimeFunctions.pmiExactCompare = `const pmiExactCompare = (v1, v2) => {
+    const notZero = val => {
+        if (typeof val !== "string") return false;
+        for (let i = 0; i < val.length; i++) {
+            const code = val.charCodeAt(i);
+            if (code === 48 || code === 9) return false;
+        }
+        return true;
+    };
+    let n1 = Number(v1);
+    let n2 = Number(v2);
+    if (n1 === 0 && notZero(v1)) {
+        n1 = NaN;
+    } else if (n2 === 0 && notZero(v2)) {
+        n2 = NaN;
+    }
+    if (isNaN(n1) || isNaN(n2)) {
+        const s1 = String(v1);
+        const s2 = String(v2);
+        if (s1 < s2) return -1;
+        if (s1 > s2) return 1;
+        return 0;
+    }
+    if ((n1 === Infinity && n2 === Infinity) || (n1 === -Infinity && n2 === -Infinity)) return 0;
+    return n1 - n2;
+}`;
+runtimeFunctions.pmiAlmostEqual = `const pmiAlmostEqual = (a, b) => {
+    const c = globalState.Cast.compare(a, b);
+    return c <= 0.5 && c >= -0.5;
+}`;
+runtimeFunctions.pmiBetweenOrEqual = `const pmiBetweenOrEqual = (a, b, c) => globalState.Cast.compare(a, b) <= 0 && globalState.Cast.compare(b, c) <= 0`;
+runtimeFunctions.pmiBetweenOnly = `const pmiBetweenOnly = (a, b, c) => globalState.Cast.compare(a, b) < 0 && globalState.Cast.compare(b, c) < 0`;
+runtimeFunctions.pmiClampCompare = `const pmiClampCompare = (a, b, c) => {
+    if (globalState.Cast.compare(a, b) < 0) return b;
+    if (globalState.Cast.compare(a, c) > 0) return c;
+    return a;
+}`;
+runtimeFunctions.pmiScale = `const pmiScale = (a, m1, M1, m2, M2) => ((a - m1) * (M2 - m2)) / (M1 - m1) + m2`;
+runtimeFunctions.pmiTruncTo = `const pmiTruncTo = (a, b) => {
+    let n = Math.floor(b);
+    if (n >= 1) {
+        n = 10 ** n;
+        if (n !== Infinity) return Math.trunc(a * n) / n;
+        return a;
+    }
+    return Math.trunc(a);
+}`;
+// True Fantom Math's is integer / is float (isTrueInt and toNaNNumber; NaN is neither)
+runtimeFunctions.pmiIsWhole = `const pmiIsWhole = val => {
+    const n = Number(val);
+    if (Number.isNaN(n)) return false;
+    if (typeof val === "number" || typeof val === "string") return n === Math.floor(n);
+    return typeof val === "boolean";
+}`;
+runtimeFunctions.pmiIsFraction = `const pmiIsFraction = val => {
+    const n = Number(val);
+    if (Number.isNaN(n)) return false;
+    if (typeof val === "number" || typeof val === "string") return n !== Math.floor(n);
+    return typeof val !== "boolean";
+}`;
+runtimeFunctions.pmiChoose = `const pmiChoose = (condition, a, b) => (condition ? a : b)`;
+runtimeFunctions.pmiLettersClamped = `const pmiLettersClamped = (start, end, str) => str.slice(Math.max(1, start) - 1, Math.min(str.length, end))`;
+runtimeFunctions.pmiClampEitherWay = `const pmiClampEitherWay = (value, min, max) => {
+    if (min > max) return Math.min(Math.max(value, max), min);
+    return Math.min(Math.max(value, min), max);
+}`;
+runtimeFunctions.pmiSliceFromOne = `const pmiSliceFromOne = (from, to, string) => string.slice(from - 1, to)`;
+runtimeFunctions.pmiReplaceIn = `const pmiReplaceIn = (find, replace, string) => string.replace(find, replace)`;
+runtimeFunctions.pmiFindFromOne = `const pmiFindFromOne = (find, string) => (string.includes(find) ? string.indexOf(find) + 1 : "")`;
+runtimeFunctions.pmiItemOfSplit = `const pmiItemOfSplit = (index, string, separator) => string.split(separator)[index - 1] || ""`;
+runtimeFunctions.pmiIsUpper = `const pmiIsUpper = input => input == input.toUpperCase()`;
+runtimeFunctions.pmiIsLower = `const pmiIsLower = input => input == input.toLowerCase()`;
+runtimeFunctions.pmiUnitOrZeroText = `const pmiUnitOrZeroText = value => {
+    const output = value / Math.abs(value);
+    if (isNaN(output)) return "0";
+    return output;
+}`;
+runtimeFunctions.pmiRoundTo = `const pmiRoundTo = (number, multiple) => Math.round(number / multiple) * multiple`;
+runtimeFunctions.pmiClampSwapped = `const pmiClampSwapped = (num, min, max) => {
+    if (min > max) [min, max] = [max, min];
+    return Math.min(Math.max(num, min), max);
+}`;
+runtimeFunctions.pmiSegmentLength = `const pmiSegmentLength = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))`;
+runtimeFunctions.pmiRayDirection = `const pmiRayDirection = (x1, y1, x2, y2) => (Math.atan2(x2 - x1, y2 - y1) * 180) / Math.PI`;
+runtimeFunctions.pmiPerpendicular = `const pmiPerpendicular = (a, b) => {
+    if (isNaN(a) || isNaN(b)) return false;
+    return (a - (b - 90)) % 180 == 0;
+}`;
+// Graphics 2D's area (the shoelace sum in its loop's order) and perimeter
+runtimeFunctions.pmiTriangleArea = `const pmiTriangleArea = (x1, y1, x2, y2, x3, y3) => {
+    let area = 0;
+    area += x1 * y2;
+    area -= x2 * y1;
+    area += x2 * y3;
+    area -= x3 * y2;
+    area += x3 * y1;
+    area -= x1 * y3;
+    return Math.abs(area) / 2;
+}`;
+runtimeFunctions.pmiTrianglePerimeter = `const pmiTrianglePerimeter = (x1, y1, x2, y2, x3, y3) => {
+    let i = 0;
+    i += Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+    i += Math.sqrt(Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2));
+    i += Math.sqrt(Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2));
+    return i;
+}`;
+runtimeFunctions.pmiHeron = `const pmiHeron = (s1, s2, s3) => {
+    const s = (s1 + s2 + s3) / 2;
+    return Math.sqrt(s * (s - s1) * (s - s2) * (s - s3));
+}`;
+runtimeFunctions.pmiQuadArea = `const pmiQuadArea = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+    let area = 0;
+    area += x1 * y2;
+    area -= x2 * y1;
+    area += x2 * y3;
+    area -= x3 * y2;
+    area += x3 * y4;
+    area -= x4 * y3;
+    area += x4 * y1;
+    area -= x1 * y4;
+    return Math.abs(area) / 2;
+}`;
+runtimeFunctions.pmiQuadPerimeter = `const pmiQuadPerimeter = (x1, y1, x2, y2, x3, y3, x4, y4) => {
+    let i = 0;
+    i += Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+    i += Math.sqrt(Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2));
+    i += Math.sqrt(Math.pow(x3 - x4, 2) + Math.pow(y3 - y4, 2));
+    i += Math.sqrt(Math.pow(x4 - x1, 2) + Math.pow(y4 - y1, 2));
+    return i;
+}`;
 runtimeFunctions.pmxDirectionTo = `const pmxDirectionTo = (target, x, y) => (180 / Math.PI) * Math.atan2(x - target.x, y - target.y)`;
 runtimeFunctions.pmxDistanceTo = `const pmxDistanceTo = (target, x, y) => Math.sqrt((x - target.x) ** 2 + (y - target.y) ** 2)`;
 runtimeFunctions.pmxSpriteSize = `const pmxSpriteSize = (runtime, target, what) => {
