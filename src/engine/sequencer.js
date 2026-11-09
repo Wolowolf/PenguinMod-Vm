@@ -138,7 +138,11 @@ class Sequencer {
                         // Increment the number of times stepThread is called.
                         this.runtime.profiler.increment(stepThreadProfilerId);
                     }
-                    this.stepThread(activeThread);
+                    try {
+                        this.stepThread(activeThread);
+                    } catch (error) {
+                        this.pmThreadFailed(activeThread, error);
+                    }
                     activeThread.warpTimer = null;
                 }
                 if (activeThread.status === Thread.STATUS_RUNNING) {
@@ -387,6 +391,23 @@ class Sequencer {
      * Retire a thread in the middle, without considering further blocks.
      * @param {!Thread} thread Thread object to retire.
      */
+    /**
+     * Desktop fork (section 215): a block of this script threw. Like a compiled script (jsgen.js wraps each one): the
+     * error is logged and shown on the script (BLOCK_STACK_ERROR), and only this script stops. Before, the error left
+     * the whole step, so every frame ended at this script: the scripts after it barely ran and the stage wasn't drawn.
+     * @param {!Thread} thread The thread whose block threw.
+     * @param {*} error What it threw.
+     */
+    pmThreadFailed (thread, error) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+        this.runtime.emit('BLOCK_STACK_ERROR', {
+            id: thread.topBlock,
+            value: String(error)
+        });
+        this.retireThread(thread);
+    }
+
     retireThread (thread) {
         thread.stack = [];
         thread.stackFrame = [];
