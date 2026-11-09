@@ -333,45 +333,25 @@ class Scratch3DataBlocks {
         });
         listLookup.setItems(list, array);
     }
-    data_listforeachnum (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        if (typeof util.stackFrame.loopCounter === 'undefined') {
-            util.stackFrame.loopCounter = listLookup.items(list).length;
-        }
-        // Only execute once per frame.
-        // When the branch finishes, `repeat` will be executed again and
-        // the second branch will be taken, yielding for the rest of the frame.
-        // Decrease counter
-        util.stackFrame.loopCounter--;
-        // If we still have some left, start the branch.
-        if (util.stackFrame.loopCounter >= 0) {
-            this.setVariableTo({
-                VARIABLE: args.INDEX,
-                VALUE: util.stackFrame.loopCounter
-            }, util);
+    // Desktop fork (section 211): "for each index / value in list" interpreted like the compiled blocks: front to back,
+    // the item's number from 1 (or the item) in the block's VARIABLE field, the list read as it is at each round. They
+    // read a field that doesn't exist (INDEX), so they stopped interpreted scripts with an error, and went from the back
+    // with numbers from 0. Interpreted they pause after each round, like other loops (compiled: no pause).
+    _pmListForEach (args, util, num) {
+        const list = util.target.lookupOrCreateList(args.LIST.id, args.LIST.name);
+        const items = listLookup.items(list);
+        const index = util.stackFrame.pmIndex || 0;
+        if (index < items.length) {
+            util.stackFrame.pmIndex = index + 1;
+            this.setVariableTo({VARIABLE: args.VARIABLE, VALUE: num ? index + 1 : items[index]}, util);
             util.startBranch(1, true);
         }
     }
+    data_listforeachnum (args, util) {
+        this._pmListForEach(args, util, true);
+    }
     data_listforeachitem (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        if (typeof util.stackFrame.loopCounter === 'undefined') {
-            util.stackFrame.loopCounter = listLookup.items(list).length;
-        }
-        // Only execute once per frame.
-        // When the branch finishes, `repeat` will be executed again and
-        // the second branch will be taken, yielding for the rest of the frame.
-        // Decrease counter
-        util.stackFrame.loopCounter--;
-        // If we still have some left, start the branch.
-        if (util.stackFrame.loopCounter >= 0) {
-            this.setVariableTo({
-                VARIABLE: args.INDEX,
-                VALUE: listLookup.items(list)[util.stackFrame.loopCounter]
-            }, util);
-            util.startBranch(1, true);
-        }
+        this._pmListForEach(args, util, false);
     }
     
     _listFilterItem = [""]

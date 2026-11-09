@@ -202,7 +202,8 @@ class Scratch3OperatorsBlocks {
     regexmatch (args) {
         if (!validateRegex(args.reg, args.regrule)) return "[]";
         const regex = new RegExp(args.reg, args.regrule);
-        const matches = args.text.match(regex);
+        // Desktop fork (section 211): a number or other value is matched as text (it stopped the script with an error)
+        const matches = Cast.toString(args.text).match(regex);
         return JSON.stringify(matches ? matches : []);
     }
 
@@ -341,6 +342,8 @@ class Scratch3OperatorsBlocks {
         case 'abs': return Math.abs(n);
         case 'floor': return Math.floor(n);
         case 'ceiling': return Math.ceil(n);
+        // Desktop fork (section 211): the menu's "sign" had no case here, so interpreted scripts got 0 (compiled: Math.sign)
+        case 'sign': return Math.sign(n);
         case 'sqrt': return Math.sqrt(n);
         case 'sin': return Math.round(Math.sin((Math.PI * n) / 180) * 1e10) / 1e10;
         case 'cos': return Math.round(Math.cos((Math.PI * n) / 180) * 1e10) / 1e10;

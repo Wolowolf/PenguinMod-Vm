@@ -526,6 +526,10 @@ const skipStringLiteral = (source, start) => {
     return -1;
 };
 
+// Desktop fork (section 211): loops that pause at the end of each round (yieldLoop), see pmYieldBeforeContinue
+const PM_PAUSING_LOOPS = new Set(['control.for', 'control.repeat', 'control.repeatForSeconds', 'control.while',
+    'control.fromTo']);
+
 /**
  * A frame contains some information about the current substack being compiled.
  */
@@ -1139,7 +1143,7 @@ class JSGenerator {
         case 'op.readLine':
             return new TypedInput(`coreLine(${this.descendInput(node.line).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
         case 'op.regexMatch':
-            // (an object named args, so that a text that is not a string fails with the block's own error message)
+            // (an object named args, like the block's own function; section 211: a value that is not text is matched as text)
             return new TypedInput(`coreRegexMatch({text: ${this.rawValue(this.descendInput(node.text))}, reg: ${this.rawValue(this.descendInput(node.reg))}, regrule: ${this.rawValue(this.descendInput(node.regrule))}})`, TYPE_STRING);
         case 'sensing.isNumber':
             return new TypedInput(`coreIsNumber(${this.rawValue(this.descendInput(node.value))})`, TYPE_BOOLEAN);
@@ -1928,10 +1932,17 @@ class JSGenerator {
         }
         case 'control.continueLoop': {
             const inLoop = this.currentFrame.importantData.containedByLoop;
-            if (inLoop) this.source += `continue;\n`;
-            else {
+            // Desktop fork (section 211): "continue loop" ends the round early, so it pauses where the loop pauses at
+            // the end of each round (not in warp mode). Skipping that pause froze the app when it ran every round.
+            if (inLoop) {
+                this.pmYieldBeforeContinue();
+                this.source += `continue;\n`;
+            } else {
                 // this could be an uncompiled loop block
                 if (this.compatBranchInfo) {
+                    this.source += `if (${this.compatBranchInfo.branchVar}.isLoop) {\n`;
+                    this.yieldLoop();
+                    this.source += `}\n`;
                     this.source += `continue ${this.compatBranchInfo.label};\n`;
                 } else {
                     this.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("control_exitLoop"), false, false, "${node.id}", null);\n`;
@@ -2071,10 +2082,13 @@ class JSGenerator {
             this.source += 'thread.timer = null;\n';
             break;
         }
-        case 'control.while':
+        case 'control.while': {
             this.resetVariableInputs();
             this.source += `while (${this.descendInput(node.condition).asBoolean()}) {\n`;
-            this.descendStack(node.do, new Frame(true, 'control.while'));
+            const loopFrame = new Frame(true, 'control.while');
+            // Desktop fork (section 211): how this loop pauses at the end of a round, for "continue loop"
+            loopFrame.pmStuckCheck = !!node.warpTimer;
+            this.descendStack(node.do, loopFrame);
             if (node.warpTimer) {
                 this.yieldStuckOrNotWarp();
             } else {
@@ -2082,6 +2096,7 @@ class JSGenerator {
             }
             this.source += `}\n`;
             break;
+        }
         case 'control.fromTo': {
             this.resetVariableInputs();
             const from = this.localVariables.next();
@@ -2911,6 +2926,20 @@ class JSGenerator {
             this.source += 'retire(); yield;\n';
         } else {
             this.source += 'retire(); return;\n';
+        }
+    }
+
+    /**
+     * Desktop fork (section 211): before "continue loop", write the pause the innermost loop makes at the end of each
+     * round, if it makes one (list "for each" loops don't).
+     */
+    pmYieldBeforeContinue () {
+        for (let i = this.frames.length - 1; i >= 0; i--) {
+            const frame = this.frames[i];
+            if (!frame.isLoop) continue;
+            if (frame.pmStuckCheck) this.yieldStuckOrNotWarp();
+            else if (PM_PAUSING_LOOPS.has(frame.parent)) this.yieldLoop();
+            return;
         }
     }
 

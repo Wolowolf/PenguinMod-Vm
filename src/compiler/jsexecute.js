@@ -608,7 +608,8 @@ runtimeFunctions.coreRegexMatch = `const coreRegexMatch = args => {
     } catch (e) {
         return '[]';
     }
-    const matches = args.text.match(regex);
+    // Desktop fork (section 211): matched as text, like the interpreter's block now (both stopped with an error)
+    const matches = String(args.text).match(regex);
     return JSON.stringify(matches ? matches : []);
 }`;
 runtimeFunctions.coreRegexTest = `const coreRegexTest = (reg, regrule, text) => {

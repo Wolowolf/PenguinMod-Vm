@@ -187,7 +187,11 @@ class Scratch3ControlBlocks {
     }
     
     waitTick (_, util) {
-        util.yieldTick();
+        // Desktop fork (section 211): pause once, then go on, like the compiled block (a pause outside warp mode). It
+        // paused every time it ran, so an interpreted script never got past it.
+        if (util.stackFrame.pmPaused || util.thread.peekStackFrame().warpMode) return;
+        util.stackFrame.pmPaused = true;
+        util.yield();
     }
 
     waitOrUntil (args, util) {
@@ -326,8 +330,10 @@ class Scratch3ControlBlocks {
         this._counter--;
     }
 
-    allAtOnce (util) {
-        util.thread.peekStackFrame().warpMode = false;
+    allAtOnce (args, util) {
+        // Desktop fork (section 211): it took (util) as its first argument and so stopped interpreted scripts with an
+        // error; it also switched off warp mode for the blocks after it. Like the compiled block: only the branch runs
+        // in warp mode.
         util.startBranch(1, false);
         util.thread.peekStackFrame().warpMode = true;
     }
