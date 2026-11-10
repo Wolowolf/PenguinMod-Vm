@@ -203,7 +203,9 @@ class ConstantInput {
             return 'null';
         }
         const numberValue = +this.constantValue;
-        if (numberValue.toString() === this.constantValue) {
+        // Desktop fork (section 230): the text "NaN" stays text, as the interpreter keeps it (as the number NaN a
+        // variable set to it held a number, which an extension's number input passed on as NaN instead of 0)
+        if (numberValue.toString() === this.constantValue && !Number.isNaN(numberValue)) {
             return this.constantValue;
         }
         return this.asString();
