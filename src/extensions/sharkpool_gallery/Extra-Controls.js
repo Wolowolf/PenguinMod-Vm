@@ -938,26 +938,30 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return Cast.toBoolean(conditionStorage[Cast.toString(args.ID)]);
     }
 
-    async tryCatch(_, util) {
-      const branch = this.getThisBlock(util, true, 1);
-      if (branch) {
+    // Desktop fork (section 231): waits by yielding once per tick (its state in util.stackFrame, as "broadcast and
+    // wait" does) instead of awaiting a promise. After an awaited promise neither the interpreter nor the compiler
+    // looks at a branch started by the block, so the catch branch never ran. Yielding a tick (not util.yield) also
+    // lets the try branch run inside "run without screen refresh" with the warp timer off.
+    tryCatch(_, util) {
+      const state = util.stackFrame;
+      if (!state.pmTry) {
+        const branch = this.getThisBlock(util, true, 1);
+        if (!branch) return;
         // Desktop fork (section 121): an error is a BLOCK_STACK_ERROR of the branch's script (see erroredScripts)
         erroredScripts.delete(branch);
         const thread = this.pushThread(branch, util, { stackClick: false });
         this.addMissKeys(util.thread, thread);
-        await new Promise(resolve => {
-          const checkThread = () => {
-            if (!runtime.isActiveThread(thread)) resolve();
-            else if (erroredScripts.has(branch)) {
-              thread.stopThisScript();
-              resolve();
-            }
-            else runtime.pmSetTimeout(checkThread, 1);
-          };
-          checkThread();
-        });
-        if (erroredScripts.delete(branch)) util.startBranch(2, false);
+        state.pmTry = { branch, thread };
       }
+      const { branch, thread } = state.pmTry;
+      if (runtime.isActiveThread(thread)) {
+        if (!erroredScripts.has(branch)) {
+          util.yieldTick();
+          return;
+        }
+        thread.stopThisScript();
+      }
+      if (erroredScripts.delete(branch)) util.startBranch(2, false);
     }
 
     async runInSprite(args, util) {
