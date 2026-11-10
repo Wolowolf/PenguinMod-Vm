@@ -498,6 +498,19 @@ class VirtualMachine extends EventEmitter {
      * @return {!Promise} Promise that resolves after targets are installed.
      */
     loadProject (input) {
+        // Desktop fork (section 227): one load at a time. A load clears the project when it starts and adds its
+        // sprites only at its end, so two loads that overlapped (a file opened while the editor still loaded its start
+        // project) left both projects' sprites mixed, or the earlier one on top. A later load now waits until the
+        // earlier one has ended (loaded or failed), then replaces it.
+        const start = () => this._pmLoadProjectNow(input);
+        const load = this._pmProjectLoad.then(start, start);
+        this._pmProjectLoad = load.then(() => {}, () => {});
+        return load;
+    }
+
+    _pmProjectLoad = Promise.resolve();
+
+    _pmLoadProjectNow (input) {
         this.emit('DESERIALIZE', 'project');
         return new Promise(async (resolve, reject) => {
             try {
