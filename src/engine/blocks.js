@@ -525,7 +525,9 @@ class Blocks {
             // as well as force end the script (if in compiler)
             if (block.topLevel) {
                 this.runtime.quietGlow(e.blockId);
-                if (this.runtime.compilerOptions.enabled) setTimeout(() => {
+                // Desktop fork (section 228): not without an editing target (between a project's clearing and its new
+                // sprites, e.g. the palette rebuilt by an extension loading); no script of it can be running then
+                if (this.runtime.compilerOptions.enabled && editingTarget) setTimeout(() => {
                     // slighlty delay script end to handle tab switching vs real block deletion
                     if (!this._blocks[e.blockId]) {
                         const thread = this.runtime.threads.find(t => t.getId() === `${editingTarget.id}&${e.blockId}`);
