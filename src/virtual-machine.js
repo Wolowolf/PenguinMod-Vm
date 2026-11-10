@@ -848,7 +848,7 @@ class VirtualMachine extends EventEmitter {
             return sb3.deserialize(projectJSON, runtime, zip, false, this);
         };
         return deserializePromise()
-            .then(({targets, extensions}) => {
+            .then(({targets, extensions, layerOrder}) => {
                 if (typeof performance !== 'undefined') {
                     performance.mark('scratch-vm-deserialize-end');
                     try {
@@ -862,7 +862,7 @@ class VirtualMachine extends EventEmitter {
                         log.error(e);
                     }
                 }
-                return this.installTargets(targets, extensions, true);
+                return this.installTargets(targets, extensions, true, layerOrder);
             });
     }
 
@@ -893,9 +893,10 @@ class VirtualMachine extends EventEmitter {
      * @param {Array.<Target>} targets - the targets to be installed
      * @param {ImportedExtensionsInfo} extensions - metadata about extensions used by these targets
      * @param {boolean} wholeProject - set to true if installing a whole project, as opposed to a single sprite.
+     * @param {Map.<Target, number>} [layerOrder] - layer order of the targets (section 226)
      * @returns {Promise} resolved once targets have been installed
      */
-    async installTargets (targets, extensions, wholeProject) {
+    async installTargets (targets, extensions, wholeProject, layerOrder) {
 
         targets = targets.filter(target => !!target);
 
@@ -951,12 +952,12 @@ class VirtualMachine extends EventEmitter {
 
                 delete target["extensionData"]
             });
-            // Sort the executable targets by layerOrder.
-            // Remove layerOrder property after use.
-            this.runtime.executableTargets.sort((a, b) => a.layerOrder - b.layerOrder);
-            targets.forEach(target => {
-                delete target.layerOrder;
-            });
+            // Sort the executable targets by layer order.
+            // Desktop fork (section 226): the order comes from the map sb3.deserialize returns (no property to
+            // delete from the targets). Targets already in the project are not in it and compare as before (NaN).
+            if (layerOrder) {
+                this.runtime.executableTargets.sort((a, b) => layerOrder.get(a) - layerOrder.get(b));
+            }
 
             // Select the first target for editing, e.g., the first sprite.
             if (wholeProject && (targets.length > 1)) {
@@ -1026,7 +1027,7 @@ class VirtualMachine extends EventEmitter {
         for (const hook of this.pmAddSpriteHooks) hook(sprite); // section 121
         return sb3
             .deserialize(sprite, this.runtime, zip, true)
-            .then(({targets, extensions}) => this.installTargets(targets, extensions, false));
+            .then(({targets, extensions, layerOrder}) => this.installTargets(targets, extensions, false, layerOrder));
     }
 
     /**

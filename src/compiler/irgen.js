@@ -2255,7 +2255,8 @@ class ScriptTreeGenerator {
             // sprite.clones has all instances of this sprite including the original and all clones
             for (const clone of target.sprite.clones) {
                 if (!clone.variables.hasOwnProperty(id)) {
-                    clone.variables[id] = this.runtime.newVariableInstance(type, id, name, false);
+                    // Desktop fork (section 226): same class as the original's variable
+                    clone.variables[id] = this.runtime.newVariableCopy(newVariable, type, id, name, false);
                 }
             }
         }

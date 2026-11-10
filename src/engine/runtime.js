@@ -2590,6 +2590,22 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Desktop fork (section 226): a copy of a variable for a clone or duplicate of its sprite; a core variable
+     * keeps the original's class (Variable.createSibling), other types are made as by newVariableInstance.
+     * @param {Variable|object} original the variable being copied
+     * @param {string} type variable type
+     * @param  {...any} args the arguments to pass down to the variable
+     * @returns {Variable|InstanceType} the new variable instance
+     */
+    newVariableCopy (original, type, ...args) {
+        if (coreVariableTypes.includes(type)) {
+            args.splice(2, 0, type);
+            return Variable.createSibling(original, ...args);
+        }
+        return this.newVariableInstance(type, ...args);
+    }
+
+    /**
      * create a new variable instance
      * @param {string} type variable type
      * @param  {...any} args the arguments to pass down to the variable
@@ -2598,7 +2614,8 @@ class Runtime extends EventEmitter {
     newVariableInstance (type, ...args) {
         if (coreVariableTypes.includes(type)) {
             args.splice(2, 0, type);
-            return new Variable(...args);
+            // Desktop fork (section 226): a class of its own per variable (Variable.create)
+            return Variable.create(...args);
         }
         const variable = this._extensionVariables[type];
         // return a fake variable, this is because of loading variables from the sb3 parser

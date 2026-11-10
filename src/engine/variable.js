@@ -22,6 +22,7 @@ function setListValue (value) {
 
 class Variable {
     /**
+     * Desktop fork (section 226): don't call new Variable() directly; use Variable.create / Variable.createSibling.
      * @param {string} id Id of the variable.
      * @param {string} name Name of the variable.
      * @param {string} type Type of the variable, one of '' or 'list'
@@ -52,6 +53,44 @@ class Variable {
         default:
             console.warn(`Invalid variable type: ${this.type}`);
         }
+    }
+
+    // PMDESKTOP_VARCLASS (section 226, from TurboWarp/scratch-vm#378): every scalar variable gets a class of its
+    // own, so V8 can specialise compiled code per variable ("this one always holds a small integer") instead of
+    // one shared class forcing its slow generic paths. Lists share one class (no gain, saves memory).
+
+    /**
+     * Create a new variable, with a class of its own unless it is a list.
+     * @param {string | null} id Id of the variable.
+     * @param {string} name Name of the variable.
+     * @param {string} type Type of the variable, one of '' or 'list'
+     * @param {boolean} isCloud Whether the variable is stored in the cloud.
+     * @returns {Variable} The new variable.
+     */
+    static create (id, name, type, isCloud) {
+        if (type === Variable.LIST_TYPE) {
+            // eslint-disable-next-line no-use-before-define
+            return new ListVariable(id, name, type, isCloud);
+        }
+        const OwnVariable = class extends Variable {};
+        return new OwnVariable(id, name, type, isCloud);
+    }
+
+    /**
+     * Create a copy of a variable for a clone or duplicate of its sprite, with the same class as the original
+     * (compiled scripts are shared between clones, so a different class would send them down slower paths).
+     * @param {Variable} original The variable whose class to reuse.
+     * @param {string | null} id Id of the variable.
+     * @param {string} name Name of the variable.
+     * @param {string} type Type of the variable, one of '' or 'list'
+     * @param {boolean} isCloud Whether the variable is stored in the cloud.
+     * @returns {Variable} The new variable.
+     */
+    static createSibling (original, id, name, type, isCloud) {
+        const SameClass = (original instanceof Variable && original.type === type) ?
+            original.constructor : null;
+        if (!SameClass) return Variable.create(id, name, type, isCloud);
+        return new SameClass(id, name, type, isCloud);
     }
 
     toXML (isLocal) {
@@ -128,5 +167,8 @@ class Variable {
         return 'broadcast_msg';
     }
 }
+
+// Desktop fork (section 226): the one class all lists share (see Variable.create).
+class ListVariable extends Variable {}
 
 module.exports = Variable;

@@ -32,6 +32,7 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
  * @typedef {object} ImportedProject
  * @property {Array.<Target>} targets - the imported Scratch 3.0 target objects.
  * @property {ImportedExtensionsInfo} extensionsInfo - the ID of each extension actually used by this project.
+ * @property {Map.<Target, number>} layerOrder - the layer order of each target (section 226).
  */
 
 /**
@@ -1416,7 +1417,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
             // - the runtime can support another cloud variable
             const isCloud = (variable.length === 3) && variable[2] &&
                 object.isStage && runtime.canAddCloudVariable();
-            const newVariable = new Variable(
+            const newVariable = Variable.create(
                 varId, // var id is the index of the variable desc array in the variables obj
                 variable[0], // name of the variable
                 Variable.SCALAR_TYPE, // type of the variable
@@ -1430,7 +1431,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
     if (object.hasOwnProperty('lists')) {
         for (const listId in object.lists) {
             const list = object.lists[listId];
-            const newList = new Variable(
+            const newList = Variable.create(
                 listId,
                 list[0],
                 Variable.LIST_TYPE,
@@ -1443,7 +1444,7 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
     if (object.hasOwnProperty('broadcasts')) {
         for (const broadcastId in object.broadcasts) {
             const broadcast = object.broadcasts[broadcastId];
-            const newBroadcast = new Variable(
+            const newBroadcast = Variable.create(
                 broadcastId,
                 broadcast,
                 Variable.BROADCAST_MESSAGE_TYPE,
@@ -1517,12 +1518,6 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
     }
     if (object.hasOwnProperty('isStage')) {
         target.isStage = object.isStage;
-    }
-    if (object.hasOwnProperty('targetPaneOrder')) {
-        // Temporarily store the 'targetPaneOrder' property
-        // so that we can correctly order sprites in the target pane.
-        // This will be deleted after we are done parsing and ordering the targets list.
-        target.targetPaneOrder = object.targetPaneOrder;
     }
     if (object.hasOwnProperty('draggable')) {
         target.draggable = object.draggable;
@@ -1747,6 +1742,11 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
 
     const monitorObjects = json.monitors || [];
 
+    // Desktop fork (section 226, from TurboWarp/scratch-vm#385): the sprite-pane and layer order are kept beside
+    // the targets, not as temporary properties on them: deleting a property afterwards switched every target to
+    // V8's slow dictionary mode, which slowed each later read of target.x, target.variables, ...
+    const layerOrder = new Map();
+
     return fontPromise.then(() => targetObjects.map(target => parseScratchAssets(target, runtime, zip)))
         // Force this promise to wait for the next loop in the js tick. Let
         // storage have some time to send off asset requests.
@@ -1757,20 +1757,12 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
             ))
         ))
         .then(targets => targets // Re-sort targets back into original sprite-pane ordering
-            .map((t, i) => {
-                // Add layer order property to deserialized targets.
-                // This property is used to initialize executable targets in
-                // the correct order and is deleted in VM's installTargets function
-                t.layerOrder = i;
-                return t;
+            .map((target, index) => {
+                if (target) layerOrder.set(target, index);
+                return {target, paneOrder: targetObjects[index].targetPaneOrder};
             })
-            .sort((a, b) => a.targetPaneOrder - b.targetPaneOrder)
-            .map(t => {
-                // Delete the temporary properties used for
-                // sprite pane ordering and stage layer ordering
-                delete t.targetPaneOrder;
-                return t;
-            }))
+            .sort((a, b) => a.paneOrder - b.paneOrder)
+            .map(entry => entry.target))
         .then(targets => replaceUnsafeCharsInVariableIds(targets))
         .then(targets => {
             // comment styles saved by the old Better Comments extension: found by comment id, or (the
@@ -1812,7 +1804,8 @@ const deserialize = function (json, runtime, zip, isSingleSprite) {
         })
         .then(targets => ({
             targets,
-            extensions
+            extensions,
+            layerOrder
         }));
 };
 

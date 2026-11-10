@@ -149,7 +149,7 @@ class Target extends EventEmitter {
         if (variable) return variable;
 
         // No variable with this name exists - create it locally.
-        const newVariable = new Variable(id, name, Variable.SCALAR_TYPE, false);
+        const newVariable = Variable.create(id, name, Variable.SCALAR_TYPE, false);
         this.variables[id] = newVariable;
         this.pmVarNamesChanged();
         return newVariable;
@@ -268,7 +268,7 @@ class Target extends EventEmitter {
         if (list) return list;
 
         // No variable with this name exists - create it locally.
-        const newList = new Variable(id, name, Variable.LIST_TYPE, false);
+        const newList = Variable.create(id, name, Variable.LIST_TYPE, false);
         this.variables[id] = newList;
         this.pmVarNamesChanged();
         return newList;
@@ -441,7 +441,9 @@ class Target extends EventEmitter {
     duplicateVariable (id, optKeepOriginalId) {
         if (this.variables.hasOwnProperty(id)) {
             const originalVariable = this.variables[id];
-            const newVariable = this.runtime.newVariableInstance(
+            // Desktop fork (section 226): a copy keeps the original's class (Variable.createSibling)
+            const newVariable = this.runtime.newVariableCopy(
+                originalVariable,
                 originalVariable.type,
                 optKeepOriginalId ? id : null, // conditionally keep original id or generate a new one
                 originalVariable.name,
