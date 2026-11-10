@@ -238,14 +238,8 @@ class Scratch3SensingBlocks {
         }));
         // get the target with variable x set to y
         let res = "No sprites found";
-        for (
-            // define the index and the sprite
-            let idx = 1, sprite = sprites[0];
-            // standard for loop thing
-            idx < sprites.length;
-            // set sprite to a new item
-            sprite = sprites[idx++]
-        ) {
+        // Desktop fork (section 229): every target, the last one too (the loop stopped one early)
+        for (const sprite of sprites) {
             if (sprite.variables[args.var] === args.val) {
                 res = `{"id": "${sprite.id}", "name": "${sprite.name}"}`;
                 break;
