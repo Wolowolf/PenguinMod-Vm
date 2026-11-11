@@ -368,11 +368,13 @@ class Scratch3ControlBlocks {
             return;
         }
 
-        const afterLoop = thread.blockContainer.getBlock(outerLoop).next;
         if (type === 'escape') {
-            while(thread.stack.at(-1) !== outerLoop) thread.popStack();
-            thread.popStack();
-            if (afterLoop) thread.pushStack(afterLoop);
+            // Desktop fork (section 239): leave the loop as a finished loop is left, by going to the block after it.
+            // Upstream popped the loop and pushed the block after it: with no block after the loop, the block
+            // around the loop (an "if", an outer loop, the custom block call) was left on top and ran again.
+            // With no next block the sequencer finds the end of this stack and goes on as after any last block.
+            while (thread.stack.length && thread.stack.at(-1) !== outerLoop) thread.popStack();
+            if (thread.stack.length) thread.goToNextBlock();
         } else {
             while (thread.stack[0] && thread.stack.at(-1) !== outerLoop) thread.popStack();
             thread.status = thread.constructor.STATUS_YIELD;
