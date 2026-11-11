@@ -784,7 +784,7 @@ baseRuntime += `const compareEqualSlow = (v1, v2) => {
     if (isNaN(n2) || (n2 === 0 && isNotActuallyZero(v2))) return ('' + v1).toLowerCase() === ('' + v2).toLowerCase();
     return n1 === n2;
 };
-const compareEqual = (v1, v2) => (typeof v1 === 'number' && typeof v2 === 'number' && !isNaN(v1) && !isNaN(v2) || v1 === v2) ? v1 === v2 : compareEqualSlow(v1, v2);`;
+const compareEqual = (v1, v2) => (typeof v1 === 'number' && typeof v2 === 'number' && v1 === v1 && v2 === v2 || v1 === v2) ? v1 === v2 : compareEqualSlow(v1, v2);`;
 
 /**
  * Determine if one value is greater than another.
@@ -807,7 +807,7 @@ runtimeFunctions.compareGreaterThan = `const compareGreaterThanSlow = (v1, v2) =
     }
     return n1 > n2;
 };
-const compareGreaterThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && !isNaN(v1) ? v1 > v2 : compareGreaterThanSlow(v1, v2)`;
+const compareGreaterThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && v1 === v1 ? v1 > v2 : compareGreaterThanSlow(v1, v2)`;
 
 /**
  * Determine if one value is less than another.
@@ -830,7 +830,7 @@ runtimeFunctions.compareLessThan = `const compareLessThanSlow = (v1, v2) => {
     }
     return n1 < n2;
 };
-const compareLessThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && !isNaN(v2) ? v1 < v2 : compareLessThanSlow(v1, v2)`;
+const compareLessThan = (v1, v2) => typeof v1 === 'number' && typeof v2 === 'number' && v2 === v2 ? v1 < v2 : compareLessThanSlow(v1, v2)`;
 
 /**
  * Generate a random integer.
@@ -941,7 +941,17 @@ const listIndex = (index, length) => {
  * @param {*} idx The 1-indexed index in the list.
  * @returns {*} The list item, otherwise empty string if it does not exist.
  */
+// Desktop fork (section 236): x === x instead of isNaN(x) in the comparison fast paths (same answer for
+// numbers); listGet and listReplace handle number indexes in place with listIndex's own number steps, every other
+// index still goes through listIndex.
 runtimeFunctions.listGet = `const listGet = (list, idx) => {
+    if (typeof idx === 'number') {
+        const i = (idx | 0) - 1;
+        if (i >= 0) {
+            const item = list[i];
+            if (item !== undefined) return item;
+        }
+    }
     const index = listIndex(idx, list.length);
     if (index === -1) {
         return '';
@@ -957,6 +967,15 @@ runtimeFunctions.listGet = `const listGet = (list, idx) => {
  */
 runtimeFunctions.listReplace = `const listReplace = (list, idx, value) => {
     const items = listItems(list);
+    if (typeof idx === 'number') {
+        const i = (idx | 0) - 1;
+        if (i >= 0 && i < items.length) {
+            items[i] = value;
+            if (list._lookup) list._lookup = null;
+            list._monitorUpToDate = false;
+        }
+        return;
+    }
     const index = listIndex(idx, items.length);
     if (index === -1) {
         return;
