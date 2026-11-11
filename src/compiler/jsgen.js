@@ -74,6 +74,12 @@ const generatorNameVariablePool = new VariablePool('gen');
 /**
  * @implements {Input}
  */
+// Desktop fork (section 238): a value as a number, NaN as 0. Upstream wrote `(+x || 0)`, which also turns -0 into 0
+// (the interpreter's Cast.toNumber keeps -0, and 1 / -0 is -Infinity). pmNum is a local of the generated function
+// (createScriptFactory); it is read at once after being set, so nested conversions can share it.
+const pmNumberOf = source => `((pmNum = +${source}) === pmNum ? pmNum : 0)`;
+const pmNumberOfNaN = source => `((pmNum = ${source}) === pmNum ? pmNum : 0)`;
+
 class TypedInput {
     constructor (source, type) {
         this.source = source;
@@ -82,8 +88,8 @@ class TypedInput {
 
     asNumber () {
         if (this.type === TYPE_NUMBER) return this.source;
-        if (this.type === TYPE_NUMBER_NAN) return `(${this.source} || 0)`;
-        return `(+${this.source} || 0)`;
+        if (this.type === TYPE_NUMBER_NAN) return pmNumberOfNaN(this.source);
+        return pmNumberOf(this.source);
     }
 
     asNumberOrNaN () {
@@ -279,8 +285,8 @@ class VariableInput {
 
     asNumber () {
         if (this.type === TYPE_NUMBER) return this.source;
-        if (this.type === TYPE_NUMBER_NAN) return `(${this.source} || 0)`;
-        return `(+${this.source} || 0)`;
+        if (this.type === TYPE_NUMBER_NAN) return pmNumberOfNaN(this.source);
+        return pmNumberOf(this.source);
     }
 
     asNumberOrNaN () {
@@ -3606,6 +3612,8 @@ class JSGenerator {
         script += 'let target = __target; ';
         script += 'const runtime = __target.runtime; ';
         script += 'const stage = runtime.getTargetForStage();\n';
+        // Desktop fork (section 238): the number conversion's local, here only for a setup value that converts
+        if (Object.keys(this._setupVariables).some(value => value.includes('(pmNum = '))) script += 'let pmNum;\n';
         for (const varValue of Object.keys(this._setupVariables)) {
             const varName = this._setupVariables[varValue];
             script += `const ${varName} = ${varValue};\n`;
@@ -3641,6 +3649,8 @@ class JSGenerator {
         if (this.usesPlainAnswer) script += 'let plainAnswer;\n';
         // (section 234) the remainder of an in-place "mod" with a fixed modulus
         if (this.usesModTemp) script += 'let modTemp;\n';
+        // (section 238) the number conversion's local
+        if (this.source.includes('(pmNum = ')) script += 'let pmNum;\n';
         script += `if (thread.spoofing) {\n`;
         script += `target = thread.spoofTarget;\n`;
         script += `};\n`;
