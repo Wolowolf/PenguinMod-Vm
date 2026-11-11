@@ -347,7 +347,8 @@ class ScriptTreeGenerator {
             };
 
         case 'argument_reporter_string_number': {
-            const name = block.fields.VALUE.value;
+            // Desktop fork (section 237): a name saved as a number is text, as the interpreter's lookup sees it
+            const name = String(block.fields.VALUE.value);
             // lastIndexOf because multiple parameters with the same name will use the value of the last definition
             const index = this.script.arguments.lastIndexOf(name);
             if (index === -1) {
@@ -371,7 +372,8 @@ class ScriptTreeGenerator {
         }
         case 'argument_reporter_boolean': {
             // see argument_reporter_string_number above
-            const name = block.fields.VALUE.value;
+            // Desktop fork (section 237): a name saved as a number is text, as the interpreter's lookup sees it
+            const name = String(block.fields.VALUE.value);
             const index = this.script.arguments.lastIndexOf(name);
             if (index === -1) {
                 const nameCheck = name.toLowerCase();
@@ -1177,7 +1179,8 @@ class ScriptTreeGenerator {
             };
 
         case 'argument_reporter_command': {
-            const name = block.fields.VALUE.value;
+            // Desktop fork (section 237): a name saved as a number is text, as the interpreter's lookup sees it
+            const name = String(block.fields.VALUE.value);
             const index = this.script.arguments.lastIndexOf(name);
             this.script.yields = true;
             return {

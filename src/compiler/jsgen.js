@@ -993,7 +993,8 @@ class JSGenerator {
             return new TypedInput('(thread._listFilterIndex ?? [0])[(thread._listFilterIndex ?? [0]).length - 1]', TYPE_NUMBER);
 
         case 'looks.size':
-            return new TypedInput('target.size', TYPE_NUMBER);
+            // Desktop fork (section 237): rounded like the interpreter's getSize (TurboWarp does the same)
+            return new TypedInput('Math.round(target.size)', TYPE_NUMBER);
         case 'looks.tintColor':
             return new TypedInput('runtime.ext_scratch3_looks.getTintColor(null, { target: target })', TYPE_NUMBER);
         case 'looks.backdropName':
