@@ -58,6 +58,10 @@ class Target extends EventEmitter {
          * @type {Object.<string,*>}
          */
         this.variables = {};
+        // Desktop fork (section 235): broadcast name index (lookupBroadcastByInputValue)
+        this._pmBroadcasts = null;
+        this._pmBroadcastsOf = null;
+        this._pmBroadcastsVersion = -1;
         /**
          * Dictionary of comments for this target.
          * Key is the comment id.
@@ -192,6 +196,29 @@ class Target extends EventEmitter {
      * @return {?Variable} Variable object.
      */
     lookupBroadcastByInputValue(name) {
+        // Desktop fork (section 235): compiled broadcasts look their message up by name every time, and the scan
+        // below lowercases every variable's name (8.8 microseconds with 133 stage variables, most of a broadcast
+        // round). The same answer comes from a name index, made again whenever runtime.pmVarNamesVersion changes
+        // (a variable added, deleted or renamed) or `variables` is another object. The first broadcast with the
+        // name wins, as with `find`. Unusual names (not text) keep the scan, so errors stay the same too.
+        if (typeof name === 'string' && this.runtime) {
+            if (this._pmBroadcastsVersion !== this.runtime.pmVarNamesVersion || this._pmBroadcastsOf !== this.variables) {
+                this._pmBroadcastsVersion = this.runtime.pmVarNamesVersion;
+                this._pmBroadcastsOf = this.variables;
+                let index = Object.create(null);
+                for (const varData of Object.values(this.variables)) {
+                    if (varData.type !== Variable.BROADCAST_MESSAGE_TYPE) continue;
+                    if (typeof varData.name !== 'string') {
+                        index = null;
+                        break;
+                    }
+                    const key = varData.name.toLowerCase();
+                    if (!(key in index)) index[key] = varData;
+                }
+                this._pmBroadcasts = index;
+            }
+            if (this._pmBroadcasts) return this._pmBroadcasts[name.toLowerCase()];
+        }
         const variables = Object.values(this.variables);
         return variables.find(varData => {
             return (
