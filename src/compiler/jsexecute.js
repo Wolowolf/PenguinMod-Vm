@@ -2051,6 +2051,8 @@ const evalPure = (source, runtime) => {
     if (pureEvaluator === null) {
         let helpers = baseRuntime;
         for (const name of PURE_HELPER_NAMES) helpers += `${runtimeFunctions[name]};`;
+        // (section 234) the in-place "mod" with a fixed modulus keeps its remainder here
+        helpers += "let modTemp;";
         helpers += "return (runtime, source) => eval(source);";
         pureEvaluator = new Function("globalState", helpers)(globalState);
     }

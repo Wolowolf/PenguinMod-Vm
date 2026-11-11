@@ -1490,9 +1490,23 @@ class JSGenerator {
             // Needs to be marked as NaN because Math.log2(-1) == NaN
             return new TypedInput(`Math.log2(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
         case 'op.mod':
+        {
             this.descendedIntoModulo = true;
+            const left = this.descendInput(node.left).asNumber();
+            const right = this.descendInput(node.right);
+            // Desktop fork (section 234): a fixed, finite, non-zero modulus is worked out in place instead of calling
+            // mod(), with mod()'s own steps (r = n % m, then r + m when r / m < 0), so every answer is identical:
+            // -0, NaN, Infinity and tiny remainders included. Each place gets its own type feedback in the JS engine.
+            // "r < 0 &&" (r > 0 for a negative modulus) only skips the division in the common case: r / m < 0 implies it.
+            const m = right instanceof ConstantInput ? Number(right.asNumber()) : NaN;
+            if (Number.isFinite(m) && m !== 0) {
+                this.usesModTemp = true;
+                const ms = `(${m})`;
+                return new TypedInput(`((modTemp = (${left}) % ${ms}) ${m > 0 ? '<' : '>'} 0 && modTemp / ${ms} < 0 ? modTemp + ${ms} : modTemp)`, TYPE_NUMBER_NAN);
+            }
             // Needs to be marked as NaN because mod(0, 0) (and others) == NaN
-            return new TypedInput(`mod(${this.descendInput(node.left).asNumber()}, ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
+            return new TypedInput(`mod(${left}, ${right.asNumber()})`, TYPE_NUMBER_NAN);
+        }
         case 'op.multiply':
             // Needs to be marked as NaN because Infinity * 0 === NaN
             return new TypedInput(`(${this.descendInput(node.left).asNumber()} * ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
@@ -3624,6 +3638,8 @@ class JSGenerator {
         if (this.usesExtensionInputs) script += 'let extensionInputs;\n';
         if (this.usesExtensionFrame) script += 'let extensionFrame;\n';
         if (this.usesPlainAnswer) script += 'let plainAnswer;\n';
+        // (section 234) the remainder of an in-place "mod" with a fixed modulus
+        if (this.usesModTemp) script += 'let modTemp;\n';
         script += `if (thread.spoofing) {\n`;
         script += `target = thread.spoofTarget;\n`;
         script += `};\n`;
