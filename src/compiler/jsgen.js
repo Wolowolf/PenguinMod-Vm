@@ -338,6 +338,60 @@ class VariableInput {
     }
 }
 
+/**
+ * Desktop fork (section 241): what is known about a variable's value at one point of a script, as a value a
+ * VariableInput can be "set to": only the type and the three answers, no source.
+ * @implements {Input}
+ */
+class KnownTypeInput extends TypedInput {
+    constructor (known) {
+        super('', known.type);
+        this.known = known;
+    }
+
+    isAlwaysNumber () {
+        return this.known.alwaysNumber;
+    }
+
+    isAlwaysNumberOrNaN () {
+        return this.known.alwaysNumberOrNaN;
+    }
+
+    isNeverNumber () {
+        return this.known.neverNumber;
+    }
+}
+
+/**
+ * Desktop fork (section 241): what holds for a variable whichever of two paths ran. Missing on one path = nothing
+ * known there.
+ * @param {object} a What is known on one path (JSGenerator.knownVariables).
+ * @param {object} b What is known on the other.
+ * @returns {object} What both agree on.
+ */
+const joinKnownVariables = (a, b) => {
+    const isNumeric = type => type === TYPE_NUMBER || type === TYPE_NUMBER_NAN;
+    const result = {};
+    for (const id of Object.keys(a)) {
+        if (!Object.prototype.hasOwnProperty.call(b, id)) continue;
+        const x = a[id];
+        const y = b[id];
+        let type = TYPE_UNKNOWN;
+        if (x.type === y.type) type = x.type;
+        else if (isNumeric(x.type) && isNumeric(y.type)) type = TYPE_NUMBER_NAN;
+        const known = {
+            source: x.source,
+            type,
+            alwaysNumber: x.alwaysNumber && y.alwaysNumber,
+            alwaysNumberOrNaN: x.alwaysNumberOrNaN && y.alwaysNumberOrNaN,
+            neverNumber: x.neverNumber && y.neverNumber
+        };
+        if (type === TYPE_UNKNOWN && !known.alwaysNumber && !known.alwaysNumberOrNaN && !known.neverNumber) continue;
+        result[id] = known;
+    }
+    return result;
+};
+
 const getNamesOfCostumesAndSounds = runtime => {
     const result = new Set();
     for (const target of runtime.targets) {
@@ -1976,21 +2030,29 @@ class JSGenerator {
         case 'control.if': {
             const keeps = this.plainSetupStatementKeeps;
             this.source += `if (${this.descendInput(node.condition).asBoolean()}) {\n`;
+            // Desktop fork (section 241): each branch starts with what is known about the variables after the
+            // condition, and after the "if" what both branches agree on is kept (no "else": the branch and the
+            // state after the condition). Anything in a branch that makes the types unknown (a pause, a loop, a
+            // custom block, ...) empties what is known there as it does anywhere else.
+            // runtime.pmNoIfElseTypes = true switches it off (tests only): nothing known at both points, as before.
+            const known = this.target.runtime.pmNoIfElseTypes ? null : this.knownVariables();
             // Desktop fork (section 183): the condition always runs; whichever branch runs (or none) leaves the setup
             // as the condition left it, when all of this "if" keeps it (keepsPlainSetup)
             const kept = keeps && (this.plainSetupKept || this.plainSetupDone);
             this.plainSetupKept = kept;
             this.plainSetupInherit = keeps;
-            this.descendStack(node.whenTrue, new Frame(false, 'control.if'));
+            const knownTrue = this.descendStack(node.whenTrue, new Frame(false, 'control.if'), known);
+            let knownFalse = known;
             // only add the else branch if it won't be empty
             // this makes scripts have a bit less useless noise in them
             if (node.whenFalse.length) {
                 this.source += `} else {\n`;
                 this.plainSetupKept = kept;
                 this.plainSetupInherit = keeps;
-                this.descendStack(node.whenFalse, new Frame(false, 'control.if'));
+                knownFalse = this.descendStack(node.whenFalse, new Frame(false, 'control.if'), known);
             }
             this.source += `}\n`;
+            if (known) this.restoreKnownVariables(joinKnownVariables(knownTrue, knownFalse));
             this.plainSetupKept = kept;
             this.plainSetupDone = false;
             break;
@@ -2871,10 +2933,54 @@ class JSGenerator {
         this.variableInputs = {};
     }
 
-    descendStack (nodes, frame) {
-        // Entering a stack -- all bets are off.
-        // TODO: allow if/else to inherit values
-        this.resetVariableInputs();
+    /**
+     * Desktop fork (section 241): what is known now about the variables of this script, as plain data that stays
+     * as it is when the variables are set later. Variables nothing is known about are left out.
+     * @returns {object} Variable ID -> {source, type, alwaysNumber, alwaysNumberOrNaN, neverNumber}.
+     */
+    knownVariables () {
+        const result = {};
+        for (const id of Object.keys(this.variableInputs)) {
+            const input = this.variableInputs[id];
+            const known = {
+                source: input.source,
+                type: input.type,
+                alwaysNumber: input.isAlwaysNumber(),
+                alwaysNumberOrNaN: input.isAlwaysNumberOrNaN(),
+                neverNumber: input.isNeverNumber()
+            };
+            if (known.type === TYPE_UNKNOWN && !known.alwaysNumber && !known.alwaysNumberOrNaN &&
+                !known.neverNumber) continue;
+            result[id] = known;
+        }
+        return result;
+    }
+
+    /**
+     * Desktop fork (section 241): start again from what knownVariables() or joinKnownVariables() gave.
+     * @param {object} knownVariables What is known.
+     */
+    restoreKnownVariables (knownVariables) {
+        this.variableInputs = {};
+        for (const id of Object.keys(knownVariables)) {
+            const known = knownVariables[id];
+            const input = new VariableInput(known.source);
+            input.setInput(new KnownTypeInput(known));
+            this.variableInputs[id] = input;
+        }
+    }
+
+    /**
+     * @param {Array} nodes The stack's blocks.
+     * @param {Frame} frame Its frame.
+     * @param {object} [known] Desktop fork (section 241): what is known about the variables where this stack starts
+     * (knownVariables); only the branches of a plain "if" get it. Without it nothing is known, as before.
+     * @returns {object|null} With "known": what is known where the stack ends. Otherwise null.
+     */
+    descendStack (nodes, frame, known) {
+        // Entering a stack -- all bets are off (except in the branches of a plain "if", section 241).
+        if (known) this.restoreKnownVariables(known);
+        else this.resetVariableInputs();
         frame.assignData(this.currentFrame);
         this.pushFrame(frame);
 
@@ -2899,9 +3005,11 @@ class JSGenerator {
         if (!inherit) this.plainSetupKept = false;
 
         // Leaving a stack -- any assumptions made in the current stack do not apply outside of it
-        // TODO: in if/else this might create an extra unused object
+        // (a plain "if" puts back what both of its branches agree on, section 241)
+        const knownAtEnd = known ? this.knownVariables() : null;
         this.resetVariableInputs();
         this.popFrame();
+        return knownAtEnd;
     }
 
     descendVariable (variable) {
