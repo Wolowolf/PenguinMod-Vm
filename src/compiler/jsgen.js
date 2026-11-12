@@ -838,6 +838,13 @@ class JSGenerator {
         // How many trial writes of a loop round are running now (their code is thrown away).
         this.loopTypesTrials = 0;
 
+        /**
+         * Desktop fork (section 244): in a custom block, what is known about the variables at every place it can
+         * end, joined (recordProcedureExit). Null until the first such place is written.
+         * @type {?object}
+         */
+        this.exitKnown = null;
+
         this.debug = this.target.runtime.debug;
     }
 
@@ -1891,8 +1898,10 @@ class JSGenerator {
                 source += args.join(',');
             }
             source += `))`;
-            // Variable input types may have changes after a procedure call.
-            this.resetVariableInputs();
+            // Variable input types may have changes after a procedure call
+            // (section 244: only those the custom block can set, when it cannot pause).
+            if (yieldForHat) this.resetVariableInputs();
+            else this.keepTypesAfterCall(node, procedureData);
             return new TypedInput(source, TYPE_UNKNOWN);
         }
 
@@ -2234,6 +2243,7 @@ class JSGenerator {
         case 'control.stopScript':
             if (this.isProcedure) {
                 this.source += 'return;\n';
+                this.recordProcedureExit();
             } else {
                 this.retire();
             }
@@ -2874,6 +2884,7 @@ class JSGenerator {
         case 'procedures.return':
             if (node.isDefineClicked) this.retire();
             else this.source += `return ${this.descendInput(node.return).asUnknown()};\n`;
+            this.recordProcedureExit();
             break;
         case 'procedures.call': {
             // PMDESKTOP_HOOKS (section 121): an extension may write the call itself
@@ -2929,8 +2940,11 @@ class JSGenerator {
             if (node.type === 'hat') {
                 throw new Error('Custom hat blocks are not supported');
             }
-            // Variable input types may have changes after a procedure call.
-            this.resetVariableInputs();
+            // Variable input types may have changes after a procedure call
+            // (section 244: only those the custom block can set, when it cannot pause).
+            this.keepTypesAfterCall(node, procedureData);
+            // (section 244) the "return" written above ends this custom block here
+            this.recordProcedureExit();
             break;
         }
 
@@ -3152,6 +3166,127 @@ class JSGenerator {
         }
         result.exit = writeRound(result.head).exit;
         this.restoreKnownVariables(result.exit);
+    }
+
+    /**
+     * Desktop fork (section 244): this place ends the custom block being written: what is known about the variables
+     * here is joined into exitKnown. Trial writes of a loop round start from states that may not hold, and every
+     * block is written at least once outside a trial, so trials are left out.
+     */
+    recordProcedureExit () {
+        if (!this.isProcedure || this.loopTypesTrials) return;
+        const known = this.knownVariables();
+        this.exitKnown = this.exitKnown ? joinKnownVariables(this.exitKnown, known) : known;
+    }
+
+    /**
+     * Desktop fork (section 244): the variables this part of a custom block can set, the custom blocks it calls
+     * included. Among the block kinds of LOOP_TYPES_KINDS a variable is only set by a block that names it
+     * ("set variable", "for each"); every block naming a variable counts, except reading it.
+     * @param {*} value A node, a list of nodes, or anything found inside a node.
+     * @param {Set<string>} sets The variables' IDs are added here.
+     * @returns {boolean} False if it cannot be told (a call that takes blocks, recursion, a called custom block
+     * callTypes() knows nothing about).
+     */
+    collectSetVariables (value, sets) {
+        if (value === null || typeof value !== 'object') return true;
+        if (Array.isArray(value)) {
+            for (let i = 0; i < value.length; i++) {
+                if (!this.collectSetVariables(value[i], sets)) return false;
+            }
+            return true;
+        }
+        const proto = Object.getPrototypeOf(value);
+        if (proto !== Object.prototype && proto !== null) return true;
+        if (value.kind === 'procedures.call') {
+            const callee = this.ir.procedures[value.variant];
+            if (!callee) return false;
+            if (Array.isArray(value.arguments) && value.arguments.some(argument => Array.isArray(argument))) {
+                return false;
+            }
+            // an empty custom block: the call writes no code
+            if (callee.stack !== null) {
+                const types = this.callTypes(callee);
+                if (!types) return false;
+                for (const id of types.sets) sets.add(id);
+            }
+        } else if (typeof value.kind === 'string' && value.kind !== 'var.get' &&
+            value.variable && typeof value.variable === 'object') {
+            if (typeof value.variable.id !== 'string') return false;
+            sets.add(value.variable.id);
+        }
+        for (const key of Object.keys(value)) {
+            if (!this.collectSetVariables(value[key], sets)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Desktop fork (section 244): what a call to this custom block does to the remembered variable types, or null
+     * when all of them must be forgotten as before. It is known for a custom block that cannot pause, does not
+     * reach itself (recursion, directly or through others) and contains only block kinds of LOOP_TYPES_KINDS,
+     * down through every custom block it calls. The custom block is compiled now if it was not yet (compile.js
+     * finds the result later), because what is known where it ends comes from writing it.
+     * Remembered on the custom block's data, which lives as long as its compiled code.
+     * @param {object} procedureData The custom block (ir.procedures[variant]), not an empty one.
+     * @returns {?{sets: Set<string>, exit: object}} The IDs of the variables it can set, and what is known about
+     * those when it ends (knownVariables).
+     */
+    callTypes (procedureData) {
+        if (procedureData.pmCallTypes !== undefined) return procedureData.pmCallTypes;
+        // it is being written right now: the asking custom block is part of a recursion
+        if (procedureData.pmCompiling) return null;
+        // while this is worked out, and for every "return null" below: a custom block that reaches itself finds null
+        procedureData.pmCallTypes = null;
+        if (procedureData.yields || !hasOnlyLoopTypesKinds(procedureData.stack, true)) return null;
+        if (!procedureData.cachedCompileResult) {
+            // eslint-disable-next-line no-use-before-define
+            procedureData.cachedCompileResult = new JSGenerator(procedureData, this.ir, this.target).compile();
+        }
+        const exitKnown = procedureData.pmExitKnown;
+        if (!exitKnown) return null;
+        const sets = new Set();
+        if (!this.collectSetVariables(procedureData.stack, sets)) return null;
+        const exit = {};
+        for (const id of Object.keys(exitKnown)) {
+            if (sets.has(id)) exit[id] = exitKnown[id];
+        }
+        procedureData.pmCallTypes = {sets, exit};
+        return procedureData.pmCallTypes;
+    }
+
+    /**
+     * Desktop fork (section 244): the remembered variable types after a call to a custom block. When callTypes()
+     * knows the custom block, the variables it can set take the types it leaves them with and the others keep
+     * theirs; otherwise everything is forgotten, as before (also when an extension may write calls itself,
+     * section 121, and when the call hands blocks to the custom block: those run in between).
+     * runtime.pmNoCallTypes = true switches it off (tests only): everything is forgotten after every call.
+     * @param {object} node The call.
+     * @param {object} procedureData The called custom block.
+     */
+    keepTypesAfterCall (node, procedureData) {
+        const runtime = this.target.runtime;
+        let types = null;
+        if (!runtime.pmNoCallTypes && !runtime.pmProcedureCallJsHooks.length &&
+            !(Array.isArray(node.arguments) && node.arguments.some(argument => Array.isArray(argument)))) {
+            types = this.callTypes(procedureData);
+        }
+        if (!types) {
+            this.resetVariableInputs();
+            return;
+        }
+        const next = {};
+        for (const id of Object.keys(this.variableInputs)) {
+            if (!types.sets.has(id)) next[id] = this.variableInputs[id];
+        }
+        this.variableInputs = next;
+        for (const id of Object.keys(types.exit)) {
+            const known = types.exit[id];
+            const input = new VariableInput(`${this.referenceVariable(known.variable)}.value`);
+            input.variable = known.variable;
+            input.setInput(new KnownTypeInput(known));
+            this.variableInputs[id] = input;
+        }
     }
 
     /**
@@ -4023,7 +4158,20 @@ class JSGenerator {
      */
     compile () {
         if (this.script.stack) {
-            this.descendStack(this.script.stack, new Frame(false));
+            // (section 244) a custom block notes what is known about the variables where it ends, for its callers
+            // (callTypes); pmCompiling tells a custom block called from in here that this one is not finished.
+            this.script.pmCompiling = true;
+            try {
+                if (this.isProcedure) {
+                    // {}: nothing is known at the start, as without it; it makes descendStack return the end state
+                    const end = this.descendStack(this.script.stack, new Frame(false), {});
+                    this.script.pmExitKnown = this.exitKnown ? joinKnownVariables(this.exitKnown, end) : end;
+                } else {
+                    this.descendStack(this.script.stack, new Frame(false));
+                }
+            } finally {
+                this.script.pmCompiling = false;
+            }
         }
 
         const factory = this.createScriptFactory();
