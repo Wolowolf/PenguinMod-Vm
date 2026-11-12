@@ -15,6 +15,10 @@ const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
 // Desktop fork (section 132): extension blocks whose code was read and that never wait, yield, change a thread's
 // status or read stack frames (block-inventory.json: "direct"), so their direct call needs no check after it.
 const plainExtensionBlocks = new Set(require('../extension-support/direct-blocks.json'));
+// Desktop fork (section 247): of those, the blocks that change no variable and start or stop no script
+// (block-inventory.json: "direct", "writes" has none of variables, threads, script, events, blocks, project), so the
+// compiler keeps what it knows about the variables' types across them.
+const keepTypesExtensionBlocks = new Set(require('../extension-support/keep-types-blocks.json'));
 // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks compiled to inline code
 // (descendExpansionInlineInput / Stack).
 const EXPANSION_INLINE_INPUTS = new Set([
@@ -3077,6 +3081,11 @@ class ScriptTreeGenerator {
         const direct = !pure && this.isDirectExtensionCall(block.opcode, blockInfo);
         // Desktop fork (section 132): ...except the blocks known never to wait (plain call, no check)
         const plain = direct && plainExtensionBlocks.has(block.opcode) && !this.runtime.pmGuardedExtensionCalls;
+        // Desktop fork (section 247): the variable types are kept after such a plain call (jsgen.js), and loops and
+        // custom blocks containing it can still carry types (sections 242, 244). Switch (tests only):
+        // runtime.pmNoKeepTypesAfterExtensions.
+        const keepsTypes = plain && keepTypesExtensionBlocks.has(block.opcode) &&
+            !this.runtime.pmNoKeepTypesAfterExtensions;
         const blockType = (blockInfo && blockInfo.blockType) || BlockType.COMMAND;
         // Desktop fork (section 152): branch and loop blocks without compiler code of their own
         const branchCall = this.getBranchCallKind(block, blockType);
@@ -3128,6 +3137,7 @@ class ScriptTreeGenerator {
             pure,
             direct,
             plain,
+            keepsTypes,
             branchCall,
             branchInputs: branchCall === 'inline' ? BRANCH_INLINE[block.opcode].inputs : null
         };

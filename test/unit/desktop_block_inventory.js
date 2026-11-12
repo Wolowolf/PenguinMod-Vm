@@ -10,6 +10,8 @@
 //   pure reporters and Booleans without compiler code, with their answer type.
 // - src/extension-support/direct-blocks.json (section 132: blocks called without the check after a direct call) lists
 //   exactly the blocks marked "direct", each a command, reporter or Boolean that is not pure, not compiled, never waits.
+// - src/extension-support/keep-types-blocks.json (section 247: variable types kept after the block) lists exactly the
+//   "direct" blocks whose "writes" has none of variables, threads, script, events, blocks, project.
 // Run: node test/unit/desktop_block_inventory.js
 const test = require('tap').test;
 const fs = require('fs');
@@ -22,6 +24,7 @@ const inventory = require('../../src/extension-support/block-inventory.json');
 const pureBlocks = require('../../src/extension-support/pure-blocks.json');
 const directBlocks = require('../../src/extension-support/direct-blocks.json');
 const setupStateBlocks = require('../../src/extension-support/setup-state-blocks.json');
+const keepTypesBlocks = require('../../src/extension-support/keep-types-blocks.json');
 
 test('pure-blocks.json matches the inventory', t => {
     const expected = {};
@@ -56,6 +59,21 @@ test('direct-blocks.json matches the inventory', t => {
         }
     }
     t.same(directBlocks, expected);
+    t.end();
+});
+
+// section 247: the compiler keeps the variable types after these blocks
+test('keep-types-blocks.json matches the inventory', t => {
+    const changesVariables = ['variables', 'threads', 'script', 'events', 'blocks', 'project'];
+    const expected = [];
+    for (const [id, extension] of Object.entries(inventory)) {
+        for (const [opcode, block] of Object.entries(extension.blocks)) {
+            if (block.direct === true && !block.waits && !block.pure &&
+                !block.writes.some(area => changesVariables.includes(area))) expected.push(`${id}_${opcode}`);
+        }
+    }
+    t.same(keepTypesBlocks, expected);
+    t.same(keepTypesBlocks.filter(id => !directBlocks.includes(id)), []);
     t.end();
 });
 

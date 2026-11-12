@@ -494,13 +494,16 @@ const LOOP_TYPES_KINDS = new Set([
  * by this file (not by code an extension registered for that kind).
  * @param {*} value A node, a list of nodes, or anything found inside a node.
  * @param {boolean} ownCalls False when an extension may write custom block calls itself (section 121).
+ * @param {boolean} [keepsTypes] Section 247: also allow extension blocks that keep the variable types (irgen.js
+ * `keepsTypes`): they change no variable and never pause. Not for section 245's loop locals (such a block may read
+ * the variables' objects).
  * @returns {boolean} True if so.
  */
-const hasOnlyLoopTypesKinds = (value, ownCalls) => {
+const hasOnlyLoopTypesKinds = (value, ownCalls, keepsTypes) => {
     if (value === null || typeof value !== 'object') return true;
     if (Array.isArray(value)) {
         for (let i = 0; i < value.length; i++) {
-            if (!hasOnlyLoopTypesKinds(value[i], ownCalls)) return false;
+            if (!hasOnlyLoopTypesKinds(value[i], ownCalls, keepsTypes)) return false;
         }
         return true;
     }
@@ -508,7 +511,7 @@ const hasOnlyLoopTypesKinds = (value, ownCalls) => {
     if (proto !== Object.prototype && proto !== null) return true;
     const kind = value.kind;
     if (typeof kind === 'string') {
-        if (!LOOP_TYPES_KINDS.has(kind)) return false;
+        if (!LOOP_TYPES_KINDS.has(kind) && !(keepsTypes && kind === 'compat' && value.keepsTypes)) return false;
         if (kind === 'procedures.call' && !ownCalls) return false;
         const dot = kind.indexOf('.');
         const extensionId = dot === -1 ? kind : kind.slice(0, dot);
@@ -518,7 +521,7 @@ const hasOnlyLoopTypesKinds = (value, ownCalls) => {
             JSGenerator.getExtensionJs(extensionId)[kind.replace(`${extensionId}.`, '')]) return false;
     }
     for (const key of Object.keys(value)) {
-        if (!hasOnlyLoopTypesKinds(value[key], ownCalls)) return false;
+        if (!hasOnlyLoopTypesKinds(value[key], ownCalls, keepsTypes)) return false;
     }
     return true;
 };
@@ -1235,8 +1238,8 @@ class JSGenerator {
             const call = node.direct ?
                 this.generateDirectExtensionCall(node, false) :
                 this.generateCompatibilityLayerCall(node, false, null, visualReport);
-            // Desktop fork (section 151): the block may have set any variable
-            this.resetVariableInputs();
+            // Desktop fork (section 151): the block may have set any variable (section 247: unless it keeps the types)
+            if (!node.keepsTypes) this.resetVariableInputs();
             // Desktop fork: the true/false test of a plain call's answer. Switch (tests only): runtime.pmNoPlainAnswerTest.
             if (node.plain && !this.target.runtime.pmNoPlainAnswerTest) {
                 this.usesPlainAnswer = true;
@@ -2205,8 +2208,8 @@ class JSGenerator {
             if (isLastInLoop && !node.plain) {
                 this.source += 'if (hasResumedFromPromise) {hasResumedFromPromise = false;continue;}\n';
             }
-            // Desktop fork (section 151): the block may have set any variable
-            this.resetVariableInputs();
+            // Desktop fork (section 151): the block may have set any variable (section 247: unless it keeps the types)
+            if (!node.keepsTypes) this.resetVariableInputs();
             break;
         }
         case 'procedures.set':
@@ -3313,7 +3316,7 @@ class JSGenerator {
             const runtime = this.target.runtime;
             info = {
                 allowed: !runtime.pmNoLoopTypes && !this.warpTimer && !node.warpTimer &&
-                    hasOnlyLoopTypesKinds(node, !runtime.pmProcedureCallJsHooks.length),
+                    hasOnlyLoopTypesKinds(node, !runtime.pmProcedureCallJsHooks.length, true),
                 results: new Map()
             };
             this.loopTypes.set(node, info);
@@ -3437,7 +3440,7 @@ class JSGenerator {
         if (procedureData.pmCompiling) return null;
         // while this is worked out, and for every "return null" below: a custom block that reaches itself finds null
         procedureData.pmCallTypes = null;
-        if (procedureData.yields || !hasOnlyLoopTypesKinds(procedureData.stack, true)) return null;
+        if (procedureData.yields || !hasOnlyLoopTypesKinds(procedureData.stack, true, true)) return null;
         if (!procedureData.cachedCompileResult) {
             // eslint-disable-next-line no-use-before-define
             procedureData.cachedCompileResult = new JSGenerator(procedureData, this.ir, this.target).compile();
