@@ -380,7 +380,7 @@ const joinKnownVariables = (a, b) => {
         if (x.type === y.type) type = x.type;
         else if (isNumeric(x.type) && isNumeric(y.type)) type = TYPE_NUMBER_NAN;
         const known = {
-            source: x.source,
+            variable: x.variable,
             type,
             alwaysNumber: x.alwaysNumber && y.alwaysNumber,
             alwaysNumberOrNaN: x.alwaysNumberOrNaN && y.alwaysNumberOrNaN,
@@ -390,6 +390,89 @@ const joinKnownVariables = (a, b) => {
         result[id] = known;
     }
     return result;
+};
+
+/**
+ * Desktop fork (section 242): one line of text per state of knownVariables(), the same for equal states.
+ * @param {object} known What is known (JSGenerator.knownVariables).
+ * @returns {string} The text.
+ */
+const knownVariablesKey = known => {
+    let key = '';
+    for (const id of Object.keys(known).sort()) {
+        const k = known[id];
+        key += `${JSON.stringify(id)}${k.type}${k.alwaysNumber ? 1 : 0}${k.alwaysNumberOrNaN ? 1 : 0}${k.neverNumber ? 1 : 0}`;
+    }
+    return key;
+};
+
+// Desktop fork (section 242): the only block kinds a loop may contain (itself, its inputs, and everything inside it,
+// at any depth) for variable types to flow through it (JSGenerator.descendLoopWithTypes). Every one of them is written
+// by this file, in a way that either leaves the remembered variable types right or empties them. Never on the list:
+// extension blocks of any kind ('compat', 'coreCall', 'addons.call', the extensions' own inline kinds), "exit loop",
+// "continue loop" and "exit case" (they leave a round in the middle), and everything that waits.
+const LOOP_TYPES_KINDS = new Set([
+    // commands
+    'control.if', 'control.repeat', 'control.while', 'control.for', 'control.stopScript',
+    'procedures.call', 'procedures.return',
+    'var.set', 'var.show', 'var.hide',
+    'list.add', 'list.delete', 'list.deleteAll', 'list.insert', 'list.replace', 'list.show', 'list.hide',
+    'counter.clear', 'counter.increment', 'counter.decrement', 'counter.set',
+    'motion.changeX', 'motion.changeY', 'motion.setX', 'motion.setY', 'motion.setXY', 'motion.step',
+    'motion.setDirection', 'motion.setRotationStyle', 'motion.ifOnEdgeBounce',
+    'looks.show', 'looks.hide', 'looks.setSize', 'looks.changeSize', 'looks.setEffect', 'looks.changeEffect',
+    'looks.clearEffects', 'looks.switchCostume', 'looks.nextCostume', 'looks.goToFront', 'looks.goToBack',
+    'looks.forwardLayers', 'looks.backwardLayers',
+    'pen.clear', 'pen.down', 'pen.up', 'pen.stamp', 'pen.setColor', 'pen.setParam', 'pen.changeParam',
+    'pen.setSize', 'pen.changeSize',
+    'timer.reset', 'noop',
+    // values
+    'constant', 'var.get', 'args.boolean', 'args.stringNumber', 'counter.get', 'timer.get',
+    'list.contains', 'list.contents', 'list.get', 'list.indexOf', 'list.length',
+    'op.abs', 'op.acos', 'op.add', 'op.and', 'op.asin', 'op.atan', 'op.ceiling', 'op.contains', 'op.cos',
+    'op.divide', 'op.power', 'op.equals', 'op.e^', 'op.floor', 'op.greater', 'op.join', 'op.length', 'op.less',
+    'op.letterOf', 'op.ln', 'op.log', 'op.log2', 'op.mod', 'op.multiply', 'op.not', 'op.or', 'op.random',
+    'op.round', 'op.sign', 'op.sin', 'op.sqrt', 'op.subtract', 'op.tan', 'op.10^', 'op.true', 'op.false',
+    'motion.x', 'motion.y', 'motion.direction',
+    'looks.size', 'looks.costumeName', 'looks.costumeNumber', 'looks.backdropName', 'looks.backdropNumber',
+    'mouse.down', 'mouse.x', 'mouse.y', 'keyboard.pressed',
+    'sensing.answer', 'sensing.touching', 'sensing.touchingColor', 'sensing.colorTouchingColor',
+    'sensing.distance', 'sensing.of', 'sensing.username', 'sensing.daysSince2000', 'sensing.year',
+    'sensing.month', 'sensing.date', 'sensing.dayofweek', 'sensing.hour', 'sensing.minute', 'sensing.second'
+]);
+
+/**
+ * Desktop fork (section 242): whether every block kind in this part of a script is in LOOP_TYPES_KINDS and written
+ * by this file (not by code an extension registered for that kind).
+ * @param {*} value A node, a list of nodes, or anything found inside a node.
+ * @param {boolean} ownCalls False when an extension may write custom block calls itself (section 121).
+ * @returns {boolean} True if so.
+ */
+const hasOnlyLoopTypesKinds = (value, ownCalls) => {
+    if (value === null || typeof value !== 'object') return true;
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            if (!hasOnlyLoopTypesKinds(value[i], ownCalls)) return false;
+        }
+        return true;
+    }
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return true;
+    const kind = value.kind;
+    if (typeof kind === 'string') {
+        if (!LOOP_TYPES_KINDS.has(kind)) return false;
+        if (kind === 'procedures.call' && !ownCalls) return false;
+        const dot = kind.indexOf('.');
+        const extensionId = dot === -1 ? kind : kind.slice(0, dot);
+        // eslint-disable-next-line no-use-before-define
+        if (JSGenerator.hasExtensionJs(extensionId) &&
+            // eslint-disable-next-line no-use-before-define
+            JSGenerator.getExtensionJs(extensionId)[kind.replace(`${extensionId}.`, '')]) return false;
+    }
+    for (const key of Object.keys(value)) {
+        if (!hasOnlyLoopTypesKinds(value[key], ownCalls)) return false;
+    }
+    return true;
 };
 
 const getNamesOfCostumesAndSounds = runtime => {
@@ -744,6 +827,15 @@ class JSGenerator {
          * @type {WeakSet<object>}
          */
         this.foldedNodes = new WeakSet();
+
+        /**
+         * Desktop fork (section 242): per loop node, what descendLoopWithTypes found for each state the loop was
+         * entered with, and whether the loop qualifies.
+         * @type {Map<object, {allowed: boolean, results: Map<string, {head: object, exit: object}>}>}
+         */
+        this.loopTypes = new Map();
+        // How many trial writes of a loop round are running now (their code is thrown away).
+        this.loopTypesTrials = 0;
 
         this.debug = this.target.runtime.debug;
     }
@@ -1943,15 +2035,27 @@ class JSGenerator {
             this.source += '}\n';
             break;
         case 'control.for': {
-            this.resetVariableInputs();
             const index = this.localVariables.next();
             this.source += `var ${index} = 0; `;
-            this.source += `while (${index} < ${this.descendInput(node.count).asNumber()}) { `;
-            this.source += `${index}++; `;
-            this.source += `${this.referenceVariable(node.variable)}.value = ${index};\n`;
-            this.descendStack(node.do, new Frame(true, 'control.for'));
-            this.yieldLoop();
-            this.source += '}\n';
+            // (section 242: descendLoopWithTypes; without "head" as before)
+            this.descendLoopWithTypes(node, head => {
+                if (head) this.restoreKnownVariables(head);
+                else this.resetVariableInputs();
+                this.source += `while (${index} < ${this.descendInput(node.count).asNumber()}) { `;
+                const exit = head ? this.knownVariables() : null;
+                this.source += `${index}++; `;
+                this.source += `${this.referenceVariable(node.variable)}.value = ${index};\n`;
+                let start = null;
+                if (head) {
+                    // the loop writes its own variable: a number in every round
+                    this.descendVariable(node.variable).setInput(new TypedInput(index, TYPE_NUMBER));
+                    start = this.knownVariables();
+                }
+                const end = this.descendStack(node.do, new Frame(true, 'control.for'), start);
+                this.yieldLoop();
+                this.source += '}\n';
+                return {end, exit};
+            });
             break;
         }
         case 'control.switch':
@@ -2098,9 +2202,13 @@ class JSGenerator {
         case 'control.repeat': {
             const i = this.localVariables.next();
             this.source += `for (var ${i} = ${this.descendInput(node.times).asNumber()}; ${i} >= 0.5; ${i}--) {\n`;
-            this.descendStack(node.do, new Frame(true, 'control.repeat'));
-            this.yieldLoop();
-            this.source += `}\n`;
+            // (section 242: descendLoopWithTypes; without "head" as before)
+            this.descendLoopWithTypes(node, head => {
+                const end = this.descendStack(node.do, new Frame(true, 'control.repeat'), head);
+                this.yieldLoop();
+                this.source += `}\n`;
+                return {end, exit: head};
+            });
             break;
         }
         case 'control.repeatForSeconds': {
@@ -2168,18 +2276,25 @@ class JSGenerator {
             break;
         }
         case 'control.while': {
-            this.resetVariableInputs();
-            this.source += `while (${this.descendInput(node.condition).asBoolean()}) {\n`;
-            const loopFrame = new Frame(true, 'control.while');
-            // Desktop fork (section 211): how this loop pauses at the end of a round, for "continue loop"
-            loopFrame.pmStuckCheck = !!node.warpTimer;
-            this.descendStack(node.do, loopFrame);
-            if (node.warpTimer) {
-                this.yieldStuckOrNotWarp();
-            } else {
-                this.yieldLoop();
-            }
-            this.source += `}\n`;
+            // (section 242: descendLoopWithTypes; without "head" as before)
+            this.descendLoopWithTypes(node, head => {
+                if (head) this.restoreKnownVariables(head);
+                else this.resetVariableInputs();
+                this.source += `while (${this.descendInput(node.condition).asBoolean()}) {\n`;
+                // the condition runs before every round and once more when the loop ends
+                const exit = head ? this.knownVariables() : null;
+                const loopFrame = new Frame(true, 'control.while');
+                // Desktop fork (section 211): how this loop pauses at the end of a round, for "continue loop"
+                loopFrame.pmStuckCheck = !!node.warpTimer;
+                const end = this.descendStack(node.do, loopFrame, exit);
+                if (node.warpTimer) {
+                    this.yieldStuckOrNotWarp();
+                } else {
+                    this.yieldLoop();
+                }
+                this.source += `}\n`;
+                return {end, exit};
+            });
             break;
         }
         case 'control.fromTo': {
@@ -2936,14 +3051,14 @@ class JSGenerator {
     /**
      * Desktop fork (section 241): what is known now about the variables of this script, as plain data that stays
      * as it is when the variables are set later. Variables nothing is known about are left out.
-     * @returns {object} Variable ID -> {source, type, alwaysNumber, alwaysNumberOrNaN, neverNumber}.
+     * @returns {object} Variable ID -> {variable, type, alwaysNumber, alwaysNumberOrNaN, neverNumber}.
      */
     knownVariables () {
         const result = {};
         for (const id of Object.keys(this.variableInputs)) {
             const input = this.variableInputs[id];
             const known = {
-                source: input.source,
+                variable: input.variable,
                 type: input.type,
                 alwaysNumber: input.isAlwaysNumber(),
                 alwaysNumberOrNaN: input.isAlwaysNumberOrNaN(),
@@ -2964,10 +3079,117 @@ class JSGenerator {
         this.variableInputs = {};
         for (const id of Object.keys(knownVariables)) {
             const known = knownVariables[id];
-            const input = new VariableInput(known.source);
+            const input = new VariableInput(`${this.referenceVariable(known.variable)}.value`);
+            input.variable = known.variable;
             input.setInput(new KnownTypeInput(known));
             this.variableInputs[id] = input;
         }
+    }
+
+    /**
+     * Desktop fork (section 242): variable types flow through a loop that cannot pause ("repeat", "repeat until" /
+     * "while", "for each", inside "run without screen refresh" with the warp timer off) and contains only block
+     * kinds of LOOP_TYPES_KINDS. What is known where a round starts ("head") must hold on entry and after any
+     * number of rounds: it is found by writing a round as a trial, starting from what is known on entry, keeping
+     * only what is still true at the round's end, and repeating until nothing changes (at most 6 times, else
+     * nothing is known). The trials' code and everything else they changed in this generator is thrown away. The
+     * result is remembered per loop and entry state, and inside a trial of an outer loop a remembered loop is not
+     * written again at all, so nested loops do not multiply the work.
+     * runtime.pmNoLoopTypes = true switches it off (tests only): nothing is known in and after the loop, as before.
+     * @param {object} node The loop's node.
+     * @param {function(?object): {end: ?object, exit: ?object}} writeRound Writes the loop from where a round
+     * starts to the loop's end. With "head" (knownVariables) it starts from that and returns what is known at the
+     * round's end and where the loop ends; with null it writes the loop as before.
+     */
+    descendLoopWithTypes (node, writeRound) {
+        let info = this.loopTypes.get(node);
+        if (!info) {
+            const runtime = this.target.runtime;
+            info = {
+                allowed: !runtime.pmNoLoopTypes && !this.warpTimer && !node.warpTimer &&
+                    hasOnlyLoopTypesKinds(node, !runtime.pmProcedureCallJsHooks.length),
+                results: new Map()
+            };
+            this.loopTypes.set(node, info);
+        }
+        if (!info.allowed || !this.isWarp) {
+            writeRound(null);
+            return;
+        }
+        const key = knownVariablesKey(this.knownVariables());
+        let result = info.results.get(key);
+        if (!result) {
+            let head = this.knownVariables();
+            let exit = null;
+            let stable = false;
+            for (let i = 0; i < 6 && !stable; i++) {
+                const saved = this.saveForTrial();
+                this.loopTypesTrials++;
+                let round;
+                try {
+                    round = writeRound(head);
+                } finally {
+                    this.loopTypesTrials--;
+                    this.restoreAfterTrial(saved);
+                }
+                const joined = joinKnownVariables(head, round.end);
+                stable = knownVariablesKey(joined) === knownVariablesKey(head);
+                head = joined;
+                exit = round.exit;
+            }
+            if (!stable) {
+                head = {};
+                exit = null;
+            }
+            result = {head, exit};
+            info.results.set(key, result);
+        }
+        if (this.loopTypesTrials && result.exit) {
+            // inside an outer loop's trial: only what is known after this loop matters
+            this.restoreKnownVariables(result.exit);
+            return;
+        }
+        result.exit = writeRound(result.head).exit;
+        this.restoreKnownVariables(result.exit);
+    }
+
+    /**
+     * Desktop fork (section 242): everything a trial write may change in this generator (descendLoopWithTypes).
+     * @returns {object} For restoreAfterTrial.
+     */
+    saveForTrial () {
+        const plain = {};
+        for (const key of Object.keys(this)) {
+            const value = this[key];
+            if (value === null || typeof value !== 'object') plain[key] = value;
+        }
+        return {
+            plain,
+            variableInputs: this.variableInputs,
+            frames: this.frames.slice(),
+            setupVariables: Object.assign({}, this._setupVariables),
+            localCount: this.localVariables.count,
+            setupCount: this._setupVariablesPool.count
+        };
+    }
+
+    /**
+     * Desktop fork (section 242): put back what saveForTrial() saved.
+     * @param {object} saved From saveForTrial.
+     */
+    restoreAfterTrial (saved) {
+        for (const key of Object.keys(this)) {
+            const value = this[key];
+            if ((value === null || typeof value !== 'object') &&
+                !Object.prototype.hasOwnProperty.call(saved.plain, key)) delete this[key];
+        }
+        Object.assign(this, saved.plain);
+        this.variableInputs = saved.variableInputs;
+        this.frames = saved.frames;
+        this.currentFrame = saved.frames.length ? saved.frames[saved.frames.length - 1] : null;
+        this._setupVariables = saved.setupVariables;
+        this.localVariables.count = saved.localCount;
+        this._setupVariablesPool.count = saved.setupCount;
     }
 
     /**
@@ -3017,6 +3239,8 @@ class JSGenerator {
             return this.variableInputs[variable.id];
         }
         const input = new VariableInput(`${this.referenceVariable(variable)}.value`);
+        // (sections 241, 242) which variable this is, for knownVariables()
+        input.variable = variable;
         this.variableInputs[variable.id] = input;
         return input;
     }
