@@ -476,6 +476,62 @@ const hasOnlyLoopTypesKinds = (value, ownCalls) => {
     return true;
 };
 
+// Desktop fork (section 245): the loops whose variables can be kept in JavaScript locals (JSGenerator.findLoopLocals),
+// and the block kinds of LOOP_TYPES_KINDS such a loop must not contain: a custom block call runs code that reads the
+// variables' objects, and "(variable) of (sprite)" can name one of this sprite's or the stage's variables.
+const LOOP_LOCALS_LOOPS = new Set(['control.repeat', 'control.while', 'control.for']);
+const LOOP_LOCALS_NOT = new Set(['procedures.call', 'sensing.of']);
+// A variable the loop sets to the result of one of these stays in its object. Such a value is a whole number. The
+// JavaScript engine notes per variable object that it only ever held small whole numbers and then computes with it
+// as an integer (list positions, counting); in a local it sees the result of Math.floor, which it treats as a
+// fraction number, and converts it on every use. Measured on ScratchBench's app_raycast (the ray's map square,
+// floor of the position, then stepped by 1): everything in locals 7% slower than no locals, with this rule 32% faster.
+const LOOP_LOCALS_WHOLE = new Set(['op.floor', 'op.ceiling', 'op.round']);
+
+/**
+ * Desktop fork (section 245): the variables read or set in this part of a script, and the lists it names.
+ * @param {*} value A node, a list of nodes, or anything found inside a node.
+ * @param {Map<string, {variable: object, written: boolean, whole: boolean}>} variables Filled by variable ID (no
+ * cloud variables, no lists). written: this part can set it; whole: it sets it to the result of LOOP_LOCALS_WHOLE.
+ * @param {Set<string>} lists Filled with the IDs of what list blocks name as their list.
+ * @returns {boolean} False if a block kind of LOOP_LOCALS_NOT is in it, or a variable without a usable ID.
+ */
+const collectLoopLocals = (value, variables, lists) => {
+    if (value === null || typeof value !== 'object') return true;
+    if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+            if (!collectLoopLocals(value[i], variables, lists)) return false;
+        }
+        return true;
+    }
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return true;
+    const kind = value.kind;
+    if (typeof kind === 'string') {
+        if (LOOP_LOCALS_NOT.has(kind)) return false;
+        if (value.list && typeof value.list === 'object') lists.add(value.list.id);
+        if (kind === 'var.get' || kind === 'var.set' || kind === 'control.for') {
+            const variable = value.variable;
+            if (!variable || typeof variable !== 'object' || typeof variable.id !== 'string') return false;
+            // (a variable block naming a list keeps reading the list itself)
+            if (!variable.isCloud && !variable.isList) {
+                const old = variables.get(variable.id);
+                const whole = kind === 'var.set' && value.value && typeof value.value === 'object' &&
+                    LOOP_LOCALS_WHOLE.has(value.value.kind);
+                variables.set(variable.id, {
+                    variable,
+                    written: (old && old.written) || kind !== 'var.get',
+                    whole: (old && old.whole) || whole
+                });
+            }
+        }
+    }
+    for (const key of Object.keys(value)) {
+        if (!collectLoopLocals(value[key], variables, lists)) return false;
+    }
+    return true;
+};
+
 const getNamesOfCostumesAndSounds = runtime => {
     const result = new Set();
     for (const target of runtime.targets) {
@@ -844,6 +900,16 @@ class JSGenerator {
          * @type {?object}
          */
         this.exitKnown = null;
+
+        /**
+         * Desktop fork (section 245): while a loop is written whose variables are kept in JavaScript locals
+         * (descendLoopWithLocals): variable ID -> the local's name. Null outside such a loop.
+         * @type {?Map<string, string>}
+         */
+        this.loopLocals = null;
+        // The outermost such loop, and the code that writes the variables it sets back into their objects.
+        this.loopLocalsLoop = null;
+        this.loopLocalsStore = '';
 
         this.debug = this.target.runtime.debug;
     }
@@ -1922,6 +1988,14 @@ class JSGenerator {
      * @param {*} node Stacked node to compile.
      */
     descendStackedBlock (node) {
+        // Desktop fork (section 245): a loop that cannot pause keeps its variables in JavaScript locals
+        if (this.loopLocals === null && LOOP_LOCALS_LOOPS.has(node.kind)) {
+            const variables = this.findLoopLocals(node);
+            if (variables) {
+                this.descendLoopWithLocals(node, variables);
+                return;
+            }
+        }
         // check if we have extension js for this kind
         const extensionId = String(node.kind).split('.')[0];
         const blockId = String(node.kind).replace(extensionId + '.', '');
@@ -2054,7 +2128,7 @@ class JSGenerator {
                 this.source += `while (${index} < ${this.descendInput(node.count).asNumber()}) { `;
                 const exit = head ? this.knownVariables() : null;
                 this.source += `${index}++; `;
-                this.source += `${this.referenceVariable(node.variable)}.value = ${index};\n`;
+                this.source += `${this.variableSource(node.variable)} = ${index};\n`;
                 let start = null;
                 if (head) {
                     // the loop writes its own variable: a number in every round
@@ -2062,6 +2136,7 @@ class JSGenerator {
                     start = this.knownVariables();
                 }
                 const end = this.descendStack(node.do, new Frame(true, 'control.for'), start);
+                this.storeLoopLocals(node);
                 this.yieldLoop();
                 this.source += '}\n';
                 return {end, exit};
@@ -2215,6 +2290,7 @@ class JSGenerator {
             // (section 242: descendLoopWithTypes; without "head" as before)
             this.descendLoopWithTypes(node, head => {
                 const end = this.descendStack(node.do, new Frame(true, 'control.repeat'), head);
+                this.storeLoopLocals(node);
                 this.yieldLoop();
                 this.source += `}\n`;
                 return {end, exit: head};
@@ -2241,6 +2317,8 @@ class JSGenerator {
             this.source += 'runtime.stopForTarget(target, thread);\n';
             break;
         case 'control.stopScript':
+            // (section 245) the variables kept in locals go back first
+            this.source += this.loopLocalsStore;
             if (this.isProcedure) {
                 this.source += 'return;\n';
                 this.recordProcedureExit();
@@ -2298,6 +2376,7 @@ class JSGenerator {
                 // Desktop fork (section 211): how this loop pauses at the end of a round, for "continue loop"
                 loopFrame.pmStuckCheck = !!node.warpTimer;
                 const end = this.descendStack(node.do, loopFrame, exit);
+                this.storeLoopLocals(node);
                 if (node.warpTimer) {
                     this.yieldStuckOrNotWarp();
                 } else {
@@ -2882,6 +2961,8 @@ class JSGenerator {
             break;
 
         case 'procedures.return':
+            // (section 245) the variables kept in locals go back first (working out the value changes none)
+            this.source += this.loopLocalsStore;
             if (node.isDefineClicked) this.retire();
             else this.source += `return ${this.descendInput(node.return).asUnknown()};\n`;
             this.recordProcedureExit();
@@ -3094,7 +3175,7 @@ class JSGenerator {
         this.variableInputs = {};
         for (const id of Object.keys(knownVariables)) {
             const known = knownVariables[id];
-            const input = new VariableInput(`${this.referenceVariable(known.variable)}.value`);
+            const input = new VariableInput(this.variableSource(known.variable));
             input.variable = known.variable;
             input.setInput(new KnownTypeInput(known));
             this.variableInputs[id] = input;
@@ -3282,11 +3363,95 @@ class JSGenerator {
         this.variableInputs = next;
         for (const id of Object.keys(types.exit)) {
             const known = types.exit[id];
-            const input = new VariableInput(`${this.referenceVariable(known.variable)}.value`);
+            const input = new VariableInput(this.variableSource(known.variable));
             input.variable = known.variable;
             input.setInput(new KnownTypeInput(known));
             this.variableInputs[id] = input;
         }
+    }
+
+    /**
+     * Desktop fork (section 245): where a variable's value is read and written: its JavaScript local inside a loop
+     * that keeps it in one (descendLoopWithLocals), otherwise the variable's object.
+     * @param {object} variable The variable.
+     * @returns {string} The JavaScript.
+     */
+    variableSource (variable) {
+        const local = this.loopLocals && this.loopLocals.get(variable.id);
+        return local || `${this.referenceVariable(variable)}.value`;
+    }
+
+    /**
+     * Desktop fork (section 245): the variables a loop can keep in JavaScript locals, or null when it cannot. A
+     * variable is an object, so compiled code reads and writes a property on every use; a local can stay in a
+     * processor register. Nothing may be able to see the variable while its newest value is only in the local, so
+     * the loop must be one that cannot pause (the same test as descendLoopWithTypes: inside "run without screen
+     * refresh", warp timer off, only block kinds of LOOP_TYPES_KINDS, none written by an extension) and must not
+     * contain LOOP_LOCALS_NOT. Staying in their objects: cloud variables (setting one tells the server), a variable
+     * that a list block in the loop names as its list (broken projects), and a variable the loop sets to the result
+     * of LOOP_LOCALS_WHOLE (see there).
+     * runtime.pmNoLoopLocals = true switches it off (tests only).
+     * @param {object} node The loop's node.
+     * @returns {?Map<string, {variable: object, written: boolean, whole: boolean}>} By variable ID; written: the
+     * loop can set it.
+     */
+    findLoopLocals (node) {
+        const runtime = this.target.runtime;
+        if (runtime.pmNoLoopLocals || !this.isWarp || this.warpTimer || node.warpTimer) return null;
+        if (!hasOnlyLoopTypesKinds(node, false)) return null;
+        const variables = new Map();
+        const lists = new Set();
+        if (!collectLoopLocals(node, variables, lists)) return null;
+        for (const id of lists) variables.delete(id);
+        for (const [id, info] of variables) {
+            if (info.whole) variables.delete(id);
+        }
+        return variables.size ? variables : null;
+    }
+
+    /**
+     * Desktop fork (section 245): write a loop with its variables in JavaScript locals: read from the variables'
+     * objects before the loop, and the ones the loop can set written back at the end of every round of this
+     * (the outermost) loop and before "stop this script" / "return" in it. Not once after the loop: the JavaScript
+     * engine optimises a long loop while it runs, and code after it that has never run would make it throw the
+     * optimised code away on leaving (MistWarp 3d898e6c).
+     * @param {object} node The loop's node.
+     * @param {Map<string, {variable: object, written: boolean}>} variables From findLoopLocals.
+     */
+    descendLoopWithLocals (node, variables) {
+        const known = this.knownVariables();
+        this.loopLocals = new Map();
+        this.loopLocalsLoop = node;
+        this.loopLocalsStore = '';
+        this.source += '{\n';
+        for (const [id, info] of variables) {
+            const reference = this.referenceVariable(info.variable);
+            const local = this.localVariables.next();
+            this.loopLocals.set(id, local);
+            this.source += `let ${local} = ${reference}.value;\n`;
+            if (info.written) this.loopLocalsStore += `${reference}.value = ${local};\n`;
+        }
+        try {
+            // what is known about the variables stays; their values are now read from the locals
+            this.restoreKnownVariables(known);
+            this.descendStackedBlock(node);
+        } finally {
+            const after = this.knownVariables();
+            this.loopLocals = null;
+            this.loopLocalsLoop = null;
+            this.loopLocalsStore = '';
+            // and from the objects again
+            this.restoreKnownVariables(after);
+        }
+        this.source += '}\n';
+    }
+
+    /**
+     * Desktop fork (section 245): at the end of a round of the outermost loop that keeps variables in locals.
+     * @param {object} node The loop whose round ends here.
+     */
+    storeLoopLocals (node) {
+        if (node === this.loopLocalsLoop) this.source += this.loopLocalsStore;
     }
 
     /**
@@ -3374,7 +3539,7 @@ class JSGenerator {
         if (this.variableInputs.hasOwnProperty(variable.id)) {
             return this.variableInputs[variable.id];
         }
-        const input = new VariableInput(`${this.referenceVariable(variable)}.value`);
+        const input = new VariableInput(this.variableSource(variable));
         // (sections 241, 242) which variable this is, for knownVariables()
         input.variable = variable;
         this.variableInputs[variable.id] = input;
