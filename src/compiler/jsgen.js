@@ -2050,7 +2050,7 @@ class JSGenerator {
                     throw new Error('Script uses yielding procedure but is not marked as yielding.');
                 }
             }
-            source += `thread.procedures["${sanitize(procedureVariant)}"](`;
+            source += `${this.procedureCallee(procedureVariant)}(`;
             // Only include arguments if the procedure accepts any.
             if (procedureData.arguments.length) {
                 const args = [];
@@ -3100,7 +3100,7 @@ class JSGenerator {
                     throw new Error('Script uses yielding procedure but is not marked as yielding.');
                 }
             }
-            this.source += `thread.procedures["${sanitize(procedureVariant)}"](`;
+            this.source += `${this.procedureCallee(procedureVariant)}(`;
             // Only include arguments if the procedure accepts any.
             if (procedureData.arguments.length) {
                 const args = [];
@@ -4348,6 +4348,30 @@ class JSGenerator {
         return factoryNameVariablePool.next();
     }
 
+    /**
+     * Desktop fork (section 248): what a compiled custom block call calls. A custom block calling itself (same
+     * variant) calls its own function by name, which is the function thread.procedures holds for it in this
+     * thread; other calls look it up in thread.procedures as before. Off with runtime.pmNoSelfCallByName.
+     * @param {string} variant The called custom block's variant.
+     * @returns {string} JS for the function to call.
+     */
+    procedureCallee (variant) {
+        if (this.isProcedure && variant === this.script.procedureVariant && !this.target.runtime.pmNoSelfCallByName) {
+            return this.ownScriptName();
+        }
+        return `thread.procedures["${sanitize(variant)}"]`;
+    }
+
+    /**
+     * Desktop fork (section 248): this script's function name, chosen once (procedureCallee uses it before the
+     * function is written).
+     * @returns {string} The name.
+     */
+    ownScriptName () {
+        if (!this._ownScriptName) this._ownScriptName = this.getScriptName(this.script.yields);
+        return this._ownScriptName;
+    }
+
     getScriptName (yields) {
         let name = yields ? generatorNameVariablePool.next() : functionNameVariablePool.next();
         if (this.isProcedure) {
@@ -4387,7 +4411,7 @@ class JSGenerator {
         } else {
             script += `function `;
         }
-        script += this.getScriptName(this.script.yields);
+        script += this.ownScriptName();
         script += ' (';
         if (this.script.arguments.length) {
             const args = [];
