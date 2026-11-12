@@ -2771,6 +2771,13 @@ class JSGenerator {
             const variable = this.descendVariable(node.variable);
             const value = this.descendInput(node.value);
             variable.setInput(value);
+            // Desktop fork (section 240): a fixed value written into the script as a number literal (not NaN, not
+            // text in quotes) makes the variable hold a number until the next pause, loop or other script may change
+            // it (the same resets as any typed value). runtime.pmNoLiteralNumberType = true switches it off (tests only).
+            if (value instanceof ConstantInput && !this.target.runtime.pmNoLiteralNumberType &&
+                /^-?(\d+\.?\d*(e[+-]?\d+)?|Infinity)$/.test(String(value.asSafe()))) {
+                variable.type = TYPE_NUMBER;
+            }
             this.source += `${variable.source} = ${value.asSafe()};\n`;
             if (node.variable.isCloud) {
                 this.source += `runtime.ioDevices.cloud.requestUpdateVariable("${sanitize(node.variable.name)}", ${variable.source});\n`;
