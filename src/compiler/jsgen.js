@@ -7,6 +7,7 @@ const jsexecute = require('./jsexecute');
 const environment = require('./environment');
 // Desktop fork (section 202): inline code for small pure extension blocks
 const pureInline = require('./pure-inline');
+const numberFacts = require('./number-facts');
 
 // Imported for JSDoc types, not to actually use
 // eslint-disable-next-line no-unused-vars
@@ -81,10 +82,21 @@ const generatorNameVariablePool = new VariablePool('gen');
 const pmNumberOf = source => `((pmNum = +${source}) === pmNum ? pmNum : 0)`;
 const pmNumberOfNaN = source => `((pmNum = ${source}) === pmNum ? pmNum : 0)`;
 
+// Desktop fork (section 246): what a number-typed input can be (number-facts.js), from its type when nothing finer
+// was given. Null for the other types.
+const defaultKinds = type => (type === TYPE_NUMBER ? numberFacts.NOT_NAN : type === TYPE_NUMBER_NAN ? numberFacts.ANY : null);
+
 class TypedInput {
-    constructor (source, type) {
+    /**
+     * @param {string} source The JavaScript.
+     * @param {number} type One of the TYPE_ constants.
+     * @param {number} [kinds] Desktop fork (section 246): for the two number types, what the number can be
+     * (number-facts.js). Only JSGenerator.numberInput passes it; TYPE_NUMBER must not include NaN.
+     */
+    constructor (source, type, kinds) {
         this.source = source;
         this.type = type;
+        this.kinds = typeof kinds === 'number' ? kinds : defaultKinds(type);
     }
 
     asNumber () {
@@ -259,6 +271,8 @@ class VariableInput {
          * @private
          */
         this._value = null;
+        // Desktop fork (section 246): what the number can be while the type is one of the two number types
+        this.kinds = null;
     }
 
     /**
@@ -273,14 +287,17 @@ class VariableInput {
             } else {
                 this.type = TYPE_UNKNOWN;
                 this._value = null;
+                this.kinds = null;
                 return;
             }
         }
         this._value = input;
         if (input instanceof TypedInput) {
             this.type = input.type;
+            this.kinds = input.kinds;
         } else {
             this.type = TYPE_UNKNOWN;
+            this.kinds = null;
         }
     }
 
@@ -346,7 +363,7 @@ class VariableInput {
  */
 class KnownTypeInput extends TypedInput {
     constructor (known) {
-        super('', known.type);
+        super('', known.type, known.kinds);
         this.known = known;
     }
 
@@ -383,6 +400,8 @@ const joinKnownVariables = (a, b) => {
         const known = {
             variable: x.variable,
             type,
+            // (section 246) a number on both paths: it can be what it can be on either
+            kinds: isNumeric(type) ? x.kinds | y.kinds : null,
             alwaysNumber: x.alwaysNumber && y.alwaysNumber,
             alwaysNumberOrNaN: x.alwaysNumberOrNaN && y.alwaysNumberOrNaN,
             neverNumber: x.neverNumber && y.neverNumber
@@ -394,6 +413,34 @@ const joinKnownVariables = (a, b) => {
 };
 
 /**
+ * Desktop fork (section 246): what the value of a number-typed input can be (number-facts.js); null when the input
+ * is not of a number type. The type wins where the two disagree (an extension may have changed `type` by hand).
+ * @param {Input} input The input.
+ * @returns {?number} Kinds.
+ */
+const kindsOf = input => {
+    const type = input.type;
+    if (type !== TYPE_NUMBER && type !== TYPE_NUMBER_NAN) return null;
+    const kinds = typeof input.kinds === 'number' ? input.kinds : defaultKinds(type);
+    if (type === TYPE_NUMBER) return kinds & numberFacts.NOT_NAN;
+    return kinds & numberFacts.NAN ? kinds : numberFacts.ANY;
+};
+
+/**
+ * Desktop fork (section 246): what asNumber() of an input can be. Never NaN (asNumber turns it into 0).
+ * @param {Input} input The input.
+ * @returns {number} Kinds.
+ */
+const numberKinds = input => {
+    if (input instanceof ConstantInput) return numberFacts.kindOf(Number(input.asNumber()));
+    if (input instanceof TypedInput || input instanceof VariableInput) {
+        const kinds = kindsOf(input);
+        if (kinds !== null) return numberFacts.withoutNaN(kinds);
+    }
+    return numberFacts.NOT_NAN;
+};
+
+/**
  * Desktop fork (section 242): one line of text per state of knownVariables(), the same for equal states.
  * @param {object} known What is known (JSGenerator.knownVariables).
  * @returns {string} The text.
@@ -402,7 +449,7 @@ const knownVariablesKey = known => {
     let key = '';
     for (const id of Object.keys(known).sort()) {
         const k = known[id];
-        key += `${JSON.stringify(id)}${k.type}${k.alwaysNumber ? 1 : 0}${k.alwaysNumberOrNaN ? 1 : 0}${k.neverNumber ? 1 : 0}`;
+        key += `${JSON.stringify(id)}${k.type}${k.alwaysNumber ? 1 : 0}${k.alwaysNumberOrNaN ? 1 : 0}${k.neverNumber ? 1 : 0}k${k.kinds || 0}`;
     }
     return key;
 };
@@ -1097,7 +1144,57 @@ class JSGenerator {
             return input;
         }
         this.foldedNodes.add(node);
+        // (section 246) a fixed number is exactly one kind
+        if (typeof value === 'number' && (input.type === TYPE_NUMBER || input.type === TYPE_NUMBER_NAN)) {
+            return this.numberInput(source, input.type, numberFacts.kindOf(value));
+        }
         return new TypedInput(source, input.type);
+    }
+
+    /**
+     * Desktop fork (section 246): a number-typed input with what the number can be (number-facts.js). When that
+     * leaves out NaN the type is TYPE_NUMBER, so whatever uses the input writes no "NaN becomes 0" guard.
+     * runtime.pmNoNumberFacts = true switches it off (tests only): the type is the one given, as before.
+     * @param {string} source The JavaScript.
+     * @param {number} type The type without the finer facts: TYPE_NUMBER or TYPE_NUMBER_NAN.
+     * @param {number} kinds What the number can be.
+     * @returns {TypedInput} The input.
+     */
+    numberInput (source, type, kinds) {
+        if (this.target.runtime.pmNoNumberFacts) return new TypedInput(source, type);
+        if (type === TYPE_NUMBER) kinds &= numberFacts.NOT_NAN;
+        return new TypedInput(source, kinds & numberFacts.NAN ? TYPE_NUMBER_NAN : TYPE_NUMBER, kinds);
+    }
+
+    /**
+     * Desktop fork (section 246): a calculation with one number input, written as before, with the kinds its rule
+     * gives.
+     * @param {object} valueNode The input's node.
+     * @param {function(string): string} write The JavaScript from the input's JavaScript.
+     * @param {number} type The type without the finer facts.
+     * @param {function(number): number} rule Kinds of the input -> kinds of the result.
+     * @returns {TypedInput} The input.
+     */
+    unaryNumber (valueNode, write, type, rule) {
+        const value = this.descendInput(valueNode);
+        return this.numberInput(write(value.asNumber()), type, rule(numberKinds(value)));
+    }
+
+    /**
+     * Desktop fork (section 246): the same with two number inputs (left written before right is looked at, as
+     * before).
+     * @param {object} node The node (left, right).
+     * @param {string} operator The JavaScript operator.
+     * @param {function(number, number): number} rule Kinds of the inputs -> kinds of the result.
+     * @returns {TypedInput} The input.
+     */
+    binaryNumber (node, operator, rule) {
+        const left = this.descendInput(node.left);
+        const leftSource = left.asNumber();
+        const leftKinds = numberKinds(left);
+        const right = this.descendInput(node.right);
+        return this.numberInput(`(${leftSource} ${operator} ${right.asNumber()})`, TYPE_NUMBER_NAN,
+            rule(leftKinds, numberKinds(right)));
     }
 
     /**
@@ -1211,7 +1308,7 @@ class JSGenerator {
         case 'list.amountOf':
             return new TypedInput(`${this.listItems(node.list)}.filter((x) => x == ${this.descendInput(node.value).asUnknown()}).length`, TYPE_NUMBER);
         case 'list.length':
-            return new TypedInput(`${this.listItems(node.list)}.length`, TYPE_NUMBER);
+            return this.numberInput(`${this.listItems(node.list)}.length`, TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
 
         case 'list.filteritem':
             return new TypedInput('(thread._listFilterItem ?? [""])[(thread._listFilterItem ?? [""]).length - 1]', TYPE_UNKNOWN);
@@ -1601,13 +1698,13 @@ class JSGenerator {
         }
 
         case 'op.abs':
-            return new TypedInput(`Math.abs(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return this.unaryNumber(node.value, v => `Math.abs(${v})`, TYPE_NUMBER, numberFacts.abs);
         case 'op.acos':
             // Needs to be marked as NaN because Math.acos(1.0001) === NaN
             return new TypedInput(`((Math.acos(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER_NAN);
         case 'op.add':
-            // Needs to be marked as NaN because Infinity + -Infinity === NaN
-            return new TypedInput(`(${this.descendInput(node.left).asNumber()} + ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: Infinity + -Infinity (section 246: only when the inputs can be those)
+            return this.binaryNumber(node, '+', numberFacts.add);
         case 'op.and':
             return new TypedInput(`(${this.descendInput(node.left).asBoolean()} && ${this.descendInput(node.right).asBoolean()})`, TYPE_BOOLEAN);
         case 'op.asin':
@@ -1616,7 +1713,7 @@ class JSGenerator {
         case 'op.atan':
             return new TypedInput(`((Math.atan(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER);
         case 'op.ceiling':
-            return new TypedInput(`Math.ceil(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return this.unaryNumber(node.value, v => `Math.ceil(${v})`, TYPE_NUMBER, numberFacts.ceiling);
         case 'op.contains':
             return new TypedInput(`(${this.descendInput(node.string).asString()}.toLowerCase().indexOf(${this.descendInput(node.contains).asString()}.toLowerCase()) !== -1)`, TYPE_BOOLEAN);
         case 'op.cos':
@@ -1627,8 +1724,8 @@ class JSGenerator {
             }
             return new TypedInput(`(Math.round(Math.cos((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.divide':
-            // Needs to be marked as NaN because 0 / 0 === NaN
-            return new TypedInput(`(${this.descendInput(node.left).asNumber()} / ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: 0 / 0, Infinity / Infinity (section 246: only when the inputs can be those)
+            return this.binaryNumber(node, '/', numberFacts.divide);
         case 'op.power':
             // Needs to be marked as NaN because -1 ** 0.5 === NaN
             return new TypedInput(`(Math.pow(${this.descendInput(node.left).asNumber()}, ${this.descendInput(node.right).asNumber()}))`, TYPE_NUMBER_NAN);
@@ -1658,7 +1755,7 @@ class JSGenerator {
         case 'op.e^':
             return new TypedInput(`Math.exp(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.floor':
-            return new TypedInput(`Math.floor(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return this.unaryNumber(node.value, v => `Math.floor(${v})`, TYPE_NUMBER, numberFacts.floor);
         case 'op.greater': {
             const left = this.descendInput(node.left);
             const right = this.descendInput(node.right);
@@ -1686,7 +1783,7 @@ class JSGenerator {
             return new TypedInput('(' + node.strings.join('+') + ')', TYPE_STRING);
         }
         case 'op.length':
-            return new TypedInput(`${this.descendInput(node.string).asString()}.length`, TYPE_NUMBER);
+            return this.numberInput(`${this.descendInput(node.string).asString()}.length`, TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
         case 'op.less': {
             const left = this.descendInput(node.left);
             const right = this.descendInput(node.right);
@@ -1708,14 +1805,12 @@ class JSGenerator {
         case 'op.letterOf':
             return new TypedInput(`((${this.descendInput(node.string).asString()})[(${this.descendInput(node.letter).asNumber()} | 0) - 1] || "")`, TYPE_STRING);
         case 'op.ln':
-            // Needs to be marked as NaN because Math.log(-1) == NaN
-            return new TypedInput(`Math.log(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: Math.log(-1) (section 246: only when the input can be below 0)
+            return this.unaryNumber(node.value, v => `Math.log(${v})`, TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.log':
-            // Needs to be marked as NaN because Math.log(-1) == NaN
-            return new TypedInput(`(Math.log(${this.descendInput(node.value).asNumber()}) / Math.LN10)`, TYPE_NUMBER_NAN);
+            return this.unaryNumber(node.value, v => `(Math.log(${v}) / Math.LN10)`, TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.log2':
-            // Needs to be marked as NaN because Math.log2(-1) == NaN
-            return new TypedInput(`Math.log2(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
+            return this.unaryNumber(node.value, v => `Math.log2(${v})`, TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.mod':
         {
             this.descendedIntoModulo = true;
@@ -1735,8 +1830,8 @@ class JSGenerator {
             return new TypedInput(`mod(${left}, ${right.asNumber()})`, TYPE_NUMBER_NAN);
         }
         case 'op.multiply':
-            // Needs to be marked as NaN because Infinity * 0 === NaN
-            return new TypedInput(`(${this.descendInput(node.left).asNumber()} * ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: Infinity * 0 (section 246: only when the inputs can be those)
+            return this.binaryNumber(node, '*', numberFacts.multiply);
         case 'op.not':
             return new TypedInput(`!${this.descendInput(node.operand).asBoolean()}`, TYPE_BOOLEAN);
         case 'op.or':
@@ -1744,16 +1839,25 @@ class JSGenerator {
         case 'op.random':
             if (node.useInts) {
                 // Both inputs are ints, so we know neither are NaN
-                return new TypedInput(`randomInt(runtime, ${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER);
+                // (section 246: the text "Infinity" counts as an int there, and with an infinite bound the answer
+                // can be NaN; without the finer facts the type is TYPE_NUMBER as before)
+                const low = this.descendInput(node.low);
+                const lowSource = low.asNumber();
+                const high = this.descendInput(node.high);
+                const source = `randomInt(runtime, ${lowSource}, ${high.asNumber()})`;
+                if ((numberKinds(low) | numberKinds(high)) & numberFacts.INF && !this.target.runtime.pmNoNumberFacts) {
+                    return new TypedInput(source, TYPE_NUMBER_NAN);
+                }
+                return new TypedInput(source, TYPE_NUMBER);
             }
             if (node.useFloats) {
                 return new TypedInput(`randomFloat(runtime, ${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER_NAN);
             }
             return new TypedInput(`runtime.ext_scratch3_operators._random(${this.descendInput(node.low).asUnknown()}, ${this.descendInput(node.high).asUnknown()})`, TYPE_NUMBER_NAN);
         case 'op.round':
-            return new TypedInput(`Math.round(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return this.unaryNumber(node.value, v => `Math.round(${v})`, TYPE_NUMBER, numberFacts.round);
         case 'op.sign':
-            return new TypedInput(`Math.sign(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return this.unaryNumber(node.value, v => `Math.sign(${v})`, TYPE_NUMBER, numberFacts.sign);
         case 'op.sin':
             // pm: optimizations allow us to use a premade list for sin values on integers
             if (this.isOptimized) {
@@ -1762,13 +1866,15 @@ class JSGenerator {
             }
             return new TypedInput(`(Math.round(Math.sin((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.sqrt':
-            // Needs to be marked as NaN because Math.sqrt(-1) === NaN
-            return new TypedInput(`Math.sqrt(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: Math.sqrt(-1) (section 246: only when the input can be below 0)
+            return this.unaryNumber(node.value, v => `Math.sqrt(${v})`, TYPE_NUMBER_NAN, numberFacts.sqrt);
         case 'op.subtract':
-            // Needs to be marked as NaN because Infinity - Infinity === NaN
-            return new TypedInput(`(${this.descendInput(node.left).asNumber()} - ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
+            // Can be NaN: Infinity - Infinity (section 246: only when the inputs can be those)
+            return this.binaryNumber(node, '-', numberFacts.subtract);
         case 'op.tan':
-            return new TypedInput(`tan(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
+            // (section 246: the angle is reduced below 360 first, so only an infinite one gives NaN; sin and cos keep
+            // their type: PI * a huge number is Infinity, whose sine is NaN)
+            return this.unaryNumber(node.value, v => `tan(${v})`, TYPE_NUMBER_NAN, numberFacts.tan);
         case 'op.10^':
             return new TypedInput(`(10 ** ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.expandmath': {
@@ -2132,7 +2238,8 @@ class JSGenerator {
                 let start = null;
                 if (head) {
                     // the loop writes its own variable: a number in every round
-                    this.descendVariable(node.variable).setInput(new TypedInput(index, TYPE_NUMBER));
+                    // (section 246: counted up from 1)
+                    this.descendVariable(node.variable).setInput(this.numberInput(index, TYPE_NUMBER, numberFacts.PINT));
                     start = this.knownVariables();
                 }
                 const end = this.descendStack(node.do, new Frame(true, 'control.for'), start);
@@ -3050,6 +3157,8 @@ class JSGenerator {
             if (value instanceof ConstantInput && !this.target.runtime.pmNoLiteralNumberType &&
                 /^-?(\d+\.?\d*(e[+-]?\d+)?|Infinity)$/.test(String(value.asSafe()))) {
                 variable.type = TYPE_NUMBER;
+                // (section 246) and which kind of number
+                if (!this.target.runtime.pmNoNumberFacts) variable.kinds = numberFacts.kindOf(Number(value.asSafe()));
             }
             this.source += `${variable.source} = ${value.asSafe()};\n`;
             if (node.variable.isCloud) {
@@ -3156,6 +3265,7 @@ class JSGenerator {
             const known = {
                 variable: input.variable,
                 type: input.type,
+                kinds: kindsOf(input),
                 alwaysNumber: input.isAlwaysNumber(),
                 alwaysNumberOrNaN: input.isAlwaysNumberOrNaN(),
                 neverNumber: input.isNeverNumber()
@@ -3218,7 +3328,15 @@ class JSGenerator {
             let head = this.knownVariables();
             let exit = null;
             let stable = false;
-            for (let i = 0; i < 6 && !stable; i++) {
+            // (section 246: the finer number facts can take more trials to settle, e.g. 0, then 0 or a whole number,
+            // then also Infinity. From the fourth trial on they are given up for this loop's start (the type alone
+            // stays, which is what the six trials were for), so a loop never ends up knowing less than before.)
+            for (let i = 0; i < 9 && !stable; i++) {
+                if (i >= 3) {
+                    for (const id of Object.keys(head)) {
+                        if (head[id].kinds !== null) head[id] = Object.assign({}, head[id], {kinds: defaultKinds(head[id].type)});
+                    }
+                }
                 const saved = this.saveForTrial();
                 this.loopTypesTrials++;
                 let round;
