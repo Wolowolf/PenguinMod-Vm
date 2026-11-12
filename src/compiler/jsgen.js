@@ -39,8 +39,9 @@ const PEN_EXT = 'runtime.ext_pen';
 const PEN_STATE = `${PEN_EXT}._getPenState(target)`;
 
 // Math-related constants
-const TO_RADIAN = Math.PI / 180;
-const TO_DEGREE = 180 / Math.PI;
+// Desktop fork (section 243): no ready-made PI / 180 and 180 / PI. sin, cos, asin, acos and atan are written as the
+// interpreter computes them, (Math.PI * x) / 180 and (y * 180) / Math.PI: multiplying by the ready-made quotient
+// rounds differently in the last digit (asin, acos, atan showed it; sin and cos of huge numbers gave another answer).
 
 /**
  * Variable pool used for factory function names.
@@ -1530,7 +1531,7 @@ class JSGenerator {
             return new TypedInput(`Math.abs(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.acos':
             // Needs to be marked as NaN because Math.acos(1.0001) === NaN
-            return new TypedInput(`(Math.acos(${this.descendInput(node.value).asNumber()}) * ${TO_DEGREE})`, TYPE_NUMBER_NAN);
+            return new TypedInput(`((Math.acos(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER_NAN);
         case 'op.add':
             // Needs to be marked as NaN because Infinity + -Infinity === NaN
             return new TypedInput(`(${this.descendInput(node.left).asNumber()} + ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
@@ -1538,9 +1539,9 @@ class JSGenerator {
             return new TypedInput(`(${this.descendInput(node.left).asBoolean()} && ${this.descendInput(node.right).asBoolean()})`, TYPE_BOOLEAN);
         case 'op.asin':
             // Needs to be marked as NaN because Math.asin(1.0001) === NaN
-            return new TypedInput(`(Math.asin(${this.descendInput(node.value).asNumber()}) * ${TO_DEGREE})`, TYPE_NUMBER_NAN);
+            return new TypedInput(`((Math.asin(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER_NAN);
         case 'op.atan':
-            return new TypedInput(`(Math.atan(${this.descendInput(node.value).asNumber()}) * ${TO_DEGREE})`, TYPE_NUMBER);
+            return new TypedInput(`((Math.atan(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER);
         case 'op.ceiling':
             return new TypedInput(`Math.ceil(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
         case 'op.contains':
@@ -1551,7 +1552,7 @@ class JSGenerator {
                 // Desktop fork (section 187): the input is worked out once
                 return new TypedInput(`coreCos(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
-            return new TypedInput(`(Math.round(Math.cos(${this.descendInput(node.value).asNumber()} * ${TO_RADIAN}) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
+            return new TypedInput(`(Math.round(Math.cos((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.divide':
             // Needs to be marked as NaN because 0 / 0 === NaN
             return new TypedInput(`(${this.descendInput(node.left).asNumber()} / ${this.descendInput(node.right).asNumber()})`, TYPE_NUMBER_NAN);
@@ -1686,7 +1687,7 @@ class JSGenerator {
                 // Desktop fork (section 187): the input is worked out once
                 return new TypedInput(`coreSin(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
-            return new TypedInput(`(Math.round(Math.sin(${this.descendInput(node.value).asNumber()} * ${TO_RADIAN}) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
+            return new TypedInput(`(Math.round(Math.sin((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
         case 'op.sqrt':
             // Needs to be marked as NaN because Math.sqrt(-1) === NaN
             return new TypedInput(`Math.sqrt(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);

@@ -713,15 +713,18 @@ runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
 }`;
 runtimeFunctions.coreIfReturn = `const coreIfReturn = (condition, yes, no) => (condition ? yes : no)`;
 // Desktop fork (section 187): sin and cos of whole numbers from the premade table, a 0 worked out (it may be -0)
+// Desktop fork (section 243): the table only for whole numbers within 100 turns. The table reduces the angle exactly
+// (% 360), the interpreter's formula does not: from 66,021 on the two differ in the 10th decimal, and for huge
+// numbers (1e37) completely. Within 36,000 they are equal for every whole number (checked); beyond it the formula.
 runtimeFunctions.coreSin = `const coreSin = (runtime, value) => {
-    if (Number.isInteger(value)) {
+    if (value >= -36000 && value <= 36000 && Number.isInteger(value)) {
         const known = runtime.optimizationUtil.sin[((value % 360) + 360) % 360];
         if (known !== 0) return known;
     }
     return Math.round(Math.sin((Math.PI * value) / 180) * 1e10) / 1e10;
 }`;
 runtimeFunctions.coreCos = `const coreCos = (runtime, value) => {
-    if (Number.isInteger(value)) {
+    if (value >= -36000 && value <= 36000 && Number.isInteger(value)) {
         const known = runtime.optimizationUtil.cos[((value % 360) + 360) % 360];
         if (known !== 0) return known;
     }
