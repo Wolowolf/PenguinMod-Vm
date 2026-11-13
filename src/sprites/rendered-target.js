@@ -1170,7 +1170,7 @@ class RenderedTarget extends Target {
         newClone.stretch = this.stretch;
         newClone.currentCostume = this.currentCostume;
         newClone.rotationStyle = this.rotationStyle;
-        newClone.effects = Clone.simple(this.effects);
+        newClone.effects = Clone.flat(this.effects);
         newClone.variables = this.duplicateVariables();
         newClone.cameraBound = this.cameraBound;
         newClone._edgeActivatedHatValues = Clone.simple(this._edgeActivatedHatValues);

@@ -120,7 +120,7 @@ class Scratch3LooksBlocks {
     _getBubbleState (target) {
         let bubbleState = target.getCustomState(Scratch3LooksBlocks.STATE_KEY);
         if (!bubbleState) {
-            bubbleState = Clone.simple(Scratch3LooksBlocks.DEFAULT_BUBBLE_STATE);
+            bubbleState = Clone.flat(Scratch3LooksBlocks.DEFAULT_BUBBLE_STATE);
             target.setCustomState(Scratch3LooksBlocks.STATE_KEY, bubbleState);
         }
         return bubbleState;
