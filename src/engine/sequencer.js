@@ -55,6 +55,20 @@ class Sequencer {
 
         this.activeThreadIndex = null;
         this.activeThread = null;
+
+        // Desktop fork (section 250): false while none of the four per-thread events
+        // (BEFORE/AFTER_THREAD_CONSIDERED, BEFORE/AFTER_THREAD_STEP) has a listener, so the
+        // thread loop skips their lookups. Recomputed at the start of every pass over the
+        // threads; a listener added mid-pass turns it on at once through 'newListener'.
+        this.pmThreadEvents = false;
+        if (runtime && typeof runtime.on === 'function') {
+            runtime.on('newListener', name => {
+                if (name === 'BEFORE_THREAD_CONSIDERED' || name === 'AFTER_THREAD_CONSIDERED' ||
+                    name === 'BEFORE_THREAD_STEP' || name === 'AFTER_THREAD_STEP') {
+                    this.pmThreadEvents = true;
+                }
+            });
+        }
     }
 
     /**
@@ -103,12 +117,19 @@ class Sequencer {
             // Attempt to run each thread one time.
             const threads = this.runtime.threads;
             this.runtime.emit('BEFORE_TICK', threads);
+            // Desktop fork (section 250): decide once per pass whether the per-thread events have listeners.
+            const events = this.runtime._events;
+            this.pmThreadEvents = !!(events.BEFORE_THREAD_CONSIDERED || events.AFTER_THREAD_CONSIDERED ||
+                events.BEFORE_THREAD_STEP || events.AFTER_THREAD_STEP);
             for (this.activeThreadIndex = 0; this.activeThreadIndex < threads.length; this.activeThreadIndex++,
-                 this.runtime._events.AFTER_THREAD_CONSIDERED && this.runtime.emit('AFTER_THREAD_CONSIDERED', this.activeThread)) {
+                 this.pmThreadEvents && this.runtime._events.AFTER_THREAD_CONSIDERED &&
+                 this.runtime.emit('AFTER_THREAD_CONSIDERED', this.activeThread)) {
                 const i = this.activeThreadIndex;
                 const activeThread = this.activeThread = threads[i];
                 // Desktop fork (section 169): these four events fire per script per frame; emit makes an array even with no listener.
-                if (this.runtime._events.BEFORE_THREAD_CONSIDERED) this.runtime.emit('BEFORE_THREAD_CONSIDERED', activeThread);
+                if (this.pmThreadEvents && this.runtime._events.BEFORE_THREAD_CONSIDERED) {
+                    this.runtime.emit('BEFORE_THREAD_CONSIDERED', activeThread);
+                }
                 // Check if the thread is done so it is not executed.
                 if (activeThread.stack.length === 0 ||
                     activeThread.status === Thread.STATUS_DONE) {
@@ -195,11 +216,11 @@ class Sequencer {
      * @param {!Thread} thread Thread object to step.
      */
     stepThread (thread) {
-        if (this.runtime._events.BEFORE_THREAD_STEP) this.runtime.emit('BEFORE_THREAD_STEP', thread);
+        if (this.pmThreadEvents && this.runtime._events.BEFORE_THREAD_STEP) this.runtime.emit('BEFORE_THREAD_STEP', thread);
         
         if (thread.isCompiled) {
             compilerExecute(thread);
-            if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+            if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
             return;
         }
 
@@ -212,7 +233,7 @@ class Sequencer {
             if (thread.stack.length === 0) {
                 thread.status = Thread.STATUS_DONE;
                 this.runtime.emit('THREAD_FINISHED', thread);
-                if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                 return;
             }
         }
@@ -254,15 +275,15 @@ class Sequencer {
                 // A promise was returned by the primitive. Yield the thread
                 // until the promise resolves. Promise resolution should reset
                 // thread.status to Thread.STATUS_RUNNING.
-                if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                 return;
             } else if (thread.status === Thread.STATUS_YIELD_TICK) {
                 // stepThreads will reset the thread to Thread.STATUS_RUNNING
-                if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                 return;
             } else if (thread.status === Thread.STATUS_DONE) {
                 // Nothing more to execute.
-                if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                 return;
             }
             // If no control flow has happened, switch to next block.
@@ -277,7 +298,7 @@ class Sequencer {
                     // No more stack to run!
                     thread.status = Thread.STATUS_DONE;
                     this.runtime.emit('THREAD_FINISHED', thread);
-                    if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                    if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                     return;
                 }
 
@@ -293,19 +314,19 @@ class Sequencer {
                         thread.warpTimer.timeElapsed() > Sequencer.WARP_TIME) {
                         // Don't do anything to the stack, since loops need
                         // to be re-executed.
-                        if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                        if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                         return;
                     }
                     // Don't go to the next block for this level of the stack,
                     // since loops need to be re-executed.
-                    if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                    if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                     continue;
 
                 } else if (stackFrame.waitingReporter) {
                     // This level of the stack was waiting for a value.
                     // This means a reporter has just returned - so don't go
                     // to the next block for this level of the stack.
-                    if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+                    if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                     return;
                 }
                 // Get next block of existing block on the stack.
@@ -313,7 +334,7 @@ class Sequencer {
             }
         }
 
-        if (this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
+        if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
     }
 
     /**
