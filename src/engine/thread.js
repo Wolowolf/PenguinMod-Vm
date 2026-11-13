@@ -8,6 +8,14 @@ const Timer = require('../util/timer');
 const _stackFrameFreeList = [];
 
 /**
+ * The compiler's compile function, loaded on the first tryCompile() call.
+ * Loaded lazily to avoid a circular require; kept so Node's module loader
+ * is not asked again on every thread start.
+ * @type {Function|null}
+ */
+let _compile = null;
+
+/**
  * A frame used for each level of the stack. A general purpose
  * place to store a bunch of execution context and parameters
  * @param {boolean} warpMode Whether this level of the stack is warping
@@ -606,8 +614,9 @@ class Thread {
             return;
         }
 
-        // importing the compiler here avoids circular dependency issues
-        const compile = require('../compiler/compile');
+        // importing the compiler here avoids circular dependency issues; only the first call asks require()
+        if (!_compile) _compile = require('../compiler/compile');
+        const compile = _compile;
 
         this.triedToCompile = true;
 
