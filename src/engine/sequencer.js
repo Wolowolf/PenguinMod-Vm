@@ -80,6 +80,14 @@ class Sequencer {
     }
 
     /**
+     * Most ticks stepThreads runs between two reads of the clock (section 251).
+     * @type {number}
+     */
+    static get MAX_ITERATIONS_PER_TIME_CHECK () {
+        return 64;
+    }
+
+    /**
      * Step through all threads in `this.runtime.threads`, running them in order.
      * @return {Array.<!Thread>} List of inactive threads after stepping.
      */
@@ -97,13 +105,16 @@ class Sequencer {
         // Whether `stepThreads` has run through a full single tick.
         let ranFirstTick = false;
         const doneThreads = [];
+        // Desktop fork (section 251): the clock is read every few ticks, not after each one (as in TurboWarp).
+        let iterationsUntilTimeCheck = 1;
+        let iterationsSinceTimeCheck = 0;
+        let elapsedAtLastTimeCheck = 0;
         // Conditions for continuing to stepping threads:
         // 1. We must have threads in the list, and some must be active.
-        // 2. Time elapsed must be less than WORK_TIME.
+        // 2. Time elapsed must be less than WORK_TIME (checked at the end of a tick, adaptively).
         // 3. Either turbo mode, or no redraw has been requested by a primitive.
         while (this.runtime.threads.length > 0 &&
                numActiveThreads > 0 &&
-               this.timer.timeElapsed() < WORK_TIME &&
                (this.runtime.turboMode || !this.runtime.redrawRequested)) {
             if (this.runtime.profiler !== null) {
                 if (stepThreadsInnerProfilerId === -1) {
@@ -203,6 +214,24 @@ class Sequencer {
                 }
                 this.runtime.threads.length = nextActiveThread;
             }
+
+            // Read the clock only every few ticks: as many as fit in a quarter of the remaining
+            // work time at the measured time per tick, at most 64.
+            iterationsSinceTimeCheck++;
+            if (--iterationsUntilTimeCheck > 0) continue;
+            const elapsed = this.timer.timeElapsed();
+            // Written as !(<) so a WORK_TIME that is not a number stops at once, as before.
+            if (!(elapsed < WORK_TIME)) break;
+            const elapsedSinceLastTimeCheck = elapsed - elapsedAtLastTimeCheck;
+            if (elapsedSinceLastTimeCheck > 0) {
+                const perIteration = elapsedSinceLastTimeCheck / iterationsSinceTimeCheck;
+                const affordable = Math.floor((WORK_TIME - elapsed) / (perIteration * 4));
+                iterationsUntilTimeCheck = Math.min(Sequencer.MAX_ITERATIONS_PER_TIME_CHECK, Math.max(1, affordable));
+            } else {
+                iterationsUntilTimeCheck = Math.min(Sequencer.MAX_ITERATIONS_PER_TIME_CHECK, iterationsSinceTimeCheck * 2);
+            }
+            elapsedAtLastTimeCheck = elapsed;
+            iterationsSinceTimeCheck = 0;
         }
 
         this.activeThread = null;
