@@ -1,6 +1,9 @@
 const log = require('../util/log');
 const Timer = require('../util/timer');
 
+/** Desktop fork (section 252): the procedures of every compiled script that calls no custom blocks. */
+const NO_PROCEDURES = Object.freeze({});
+
 /**
  * Recycle bin for empty stackFrame objects
  * @type Array<_StackFrame>
@@ -450,7 +453,7 @@ class Thread {
             // Clean up!
             this.requestScriptGlowInFrame = false;
             this.status = Thread.STATUS_DONE;
-            this.target.runtime.emit('THREAD_FINISHED', this);
+            if (this.target.runtime._events.THREAD_FINISHED) this.target.runtime.emit('THREAD_FINISHED', this);
         }
     }
 
@@ -653,9 +656,15 @@ class Thread {
             }
         }
 
-        this.procedures = {};
-        for (const procedureCode in result.procedures) {
-            this.procedures[procedureCode] = result.procedures[procedureCode](this);
+        // Desktop fork (section 252): a script that calls no custom blocks shares one frozen empty object.
+        if (result.procedureCodes.length === 0) {
+            this.procedures = NO_PROCEDURES;
+        } else {
+            this.procedures = {};
+            for (let i = 0; i < result.procedureCodes.length; i++) {
+                const procedureCode = result.procedureCodes[i];
+                this.procedures[procedureCode] = result.procedures[procedureCode](this);
+            }
         }
         
         this.generator = result.startingFunction(this)();

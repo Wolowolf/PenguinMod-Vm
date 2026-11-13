@@ -132,10 +132,10 @@ class Sequencer {
             const events = this.runtime._events;
             this.pmThreadEvents = !!(events.BEFORE_THREAD_CONSIDERED || events.AFTER_THREAD_CONSIDERED ||
                 events.BEFORE_THREAD_STEP || events.AFTER_THREAD_STEP);
-            for (this.activeThreadIndex = 0; this.activeThreadIndex < threads.length; this.activeThreadIndex++,
+            // Desktop fork (section 252): a local loop index; activeThreadIndex has no reader and stays null.
+            for (let i = 0; i < threads.length; i++,
                  this.pmThreadEvents && this.runtime._events.AFTER_THREAD_CONSIDERED &&
                  this.runtime.emit('AFTER_THREAD_CONSIDERED', this.activeThread)) {
-                const i = this.activeThreadIndex;
                 const activeThread = this.activeThread = threads[i];
                 // Desktop fork (section 169): these four events fire per script per frame; emit makes an array even with no listener.
                 if (this.pmThreadEvents && this.runtime._events.BEFORE_THREAD_CONSIDERED) {
@@ -235,7 +235,6 @@ class Sequencer {
         }
 
         this.activeThread = null;
-        this.activeThreadIndex = null;
 
         return doneThreads;
     }
@@ -261,7 +260,7 @@ class Sequencer {
             // Did the null follow a hat block?
             if (thread.stack.length === 0) {
                 thread.status = Thread.STATUS_DONE;
-                this.runtime.emit('THREAD_FINISHED', thread);
+                if (this.runtime._events.THREAD_FINISHED) this.runtime.emit('THREAD_FINISHED', thread);
                 if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                 return;
             }
@@ -326,7 +325,7 @@ class Sequencer {
                 if (thread.stack.length === 0) {
                     // No more stack to run!
                     thread.status = Thread.STATUS_DONE;
-                    this.runtime.emit('THREAD_FINISHED', thread);
+                    if (this.runtime._events.THREAD_FINISHED) this.runtime.emit('THREAD_FINISHED', thread);
                     if (this.pmThreadEvents && this.runtime._events.AFTER_THREAD_STEP) this.runtime.emit('AFTER_THREAD_STEP', thread);
                     return;
                 }
@@ -463,7 +462,8 @@ class Sequencer {
         thread.stackFrame = [];
         thread.requestScriptGlowInFrame = false;
         thread.status = Thread.STATUS_DONE;
-        this.runtime.emit('THREAD_FINISHED', thread);
+        // Desktop fork (section 252): THREAD_FINISHED is emitted only when it has a listener (here and below).
+        if (this.runtime._events.THREAD_FINISHED) this.runtime.emit('THREAD_FINISHED', thread);
         if (thread.isCompiled) {
             thread.procedures = null;
             thread.generator = null;

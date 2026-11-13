@@ -30,6 +30,8 @@ const compile = thread => {
     return {
         startingFunction: entry,
         procedures,
+        // Desktop fork (section 252): the procedure codes, so Thread.tryCompile() can skip an empty object.
+        procedureCodes: Object.keys(procedures),
         executableHat: ir.entry.executableHat
     };
 };

@@ -3118,7 +3118,9 @@ class Runtime extends EventEmitter {
         }
         // For compatibility with Scratch 2, edge triggered hats need to be processed before
         // threads are stepped. See ScratchRuntime.as for original implementation
-        newThreads.forEach(thread => {
+        // Desktop fork (section 252): a plain loop; HATS_STARTED below is emitted only when it has a listener.
+        for (let i = 0; i < newThreads.length; i++) {
+            const thread = newThreads[i];
             // just incase, pause any new threads that appear while we are paused
             if (this.paused) thread.pause();
             if (thread.isCompiled) {
@@ -3133,7 +3135,7 @@ class Runtime extends EventEmitter {
                 execute(this.sequencer, thread);
                 thread.goToNextBlock();
             }
-        });
+        }
         // Section 128: a level hat whose check did not answer false at once (its script runs, or the check waits)
         // must be checked again next time.
         if (levelThreads) {
@@ -3141,7 +3143,7 @@ class Runtime extends EventEmitter {
                 if (thread.status !== Thread.STATUS_DONE) edgeHats.forget(thread.target, thread.topBlock);
             }
         }
-        this.emit(Runtime.HATS_STARTED, requestedHatOpcode, optMatchFields, optTarget, newThreads);
+        if (this._events.HATS_STARTED) this.emit(Runtime.HATS_STARTED, requestedHatOpcode, optMatchFields, optTarget, newThreads);
         return newThreads;
     }
 
@@ -3402,7 +3404,7 @@ class Runtime extends EventEmitter {
         }
         // Remove all remaining threads from executing in the next tick.
         this.threads.forEach(v => {
-            if (v.status !== Thread.STATUS_DONE) this.emit(Runtime.THREAD_FINISHED, v);
+            if (v.status !== Thread.STATUS_DONE && this._events.THREAD_FINISHED) this.emit(Runtime.THREAD_FINISHED, v);
             v.pmLeaveTarget();
         });
         this.threads = [];
