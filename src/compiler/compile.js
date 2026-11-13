@@ -32,6 +32,9 @@ const compile = thread => {
         procedures,
         // Desktop fork (section 252): the procedure codes, so Thread.tryCompile() can skip an empty object.
         procedureCodes: Object.keys(procedures),
+        // Desktop fork (section 253): false for a top-level script that never pauses (read after it was compiled:
+        // JSGenerator.compile sets it too). Thread.tryCompile() then keeps a plain function instead of a generator.
+        yields: ir.entry.yields,
         executableHat: ir.entry.executableHat
     };
 };

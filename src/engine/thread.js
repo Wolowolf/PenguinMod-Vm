@@ -225,6 +225,11 @@ class Thread {
          */
         this.generator = null;
         /**
+         * Desktop fork (section 253): the script as a plain function when it never pauses (generator is null then).
+         * @type {Function|null}
+         */
+        this.compiledFunction = null;
+        /**
          * @type {Object.<string, !CompiledScript>}
          */
         this.procedures = null;
@@ -667,7 +672,12 @@ class Thread {
             }
         }
         
-        this.generator = result.startingFunction(this)();
+        // Desktop fork (section 253): a script that never pauses is kept as a plain function; no generator is made.
+        if (result.yields) {
+            this.generator = result.startingFunction(this)();
+        } else {
+            this.compiledFunction = result.startingFunction(this);
+        }
 
         this.executableHat = result.executableHat;
 

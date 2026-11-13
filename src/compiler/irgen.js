@@ -1256,7 +1256,8 @@ class ScriptTreeGenerator {
                 target: this.descendInputOfBlock(block, 'CLONE_OPTION')
             };
         case 'control_delete_this_clone':
-            this.script.yields = true;
+            // Desktop fork (section 253): no pause; in a custom block the script is left by a throw (JSGenerator.retire)
+            if (this.runtime.pmNoPlainScripts) this.script.yields = true;
             return {
                 kind: 'control.deleteClone'
             };
@@ -1383,7 +1384,8 @@ class ScriptTreeGenerator {
         case 'control_stop': {
             const level = block.fields.STOP_OPTION.value;
             if (level === 'all') {
-                this.script.yields = true;
+                // Desktop fork (section 253): no pause, as "delete this clone" above
+                if (this.runtime.pmNoPlainScripts) this.script.yields = true;
                 return {
                     kind: 'control.stopAll'
                 };

@@ -60,9 +60,12 @@ class IntermediateScript {
          * Whether this script can `yield`
          * If false, this script will be compiled as a regular JavaScript function (function)
          * If true, this script will be compiled as a generator function (function*)
+         * Desktop fork (section 253): false at first for every script. The IR generator sets it for the blocks that
+         * pause or wait; for a top-level script the JS generator also sets it when the code it wrote pauses
+         * (JSGenerator.compile). A top-level script that never pauses runs as a plain function (Thread.tryCompile).
          * @type {boolean}
          */
-        this.yields = true;
+        this.yields = false;
 
         /**
          * Whether this script should use the "warp timer"

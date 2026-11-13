@@ -2046,9 +2046,7 @@ class JSGenerator {
             }
             if (procedureData.yields) {
                 source += 'yield* ';
-                if (!this.script.yields) {
-                    throw new Error('Script uses yielding procedure but is not marked as yielding.');
-                }
+                this.pmMarkYields('Script uses yielding procedure but is not marked as yielding.');
             }
             source += `${this.procedureCallee(procedureVariant)}(`;
             // Only include arguments if the procedure accepts any.
@@ -2385,6 +2383,8 @@ class JSGenerator {
             this.descendStack(node.try, new Frame(false, 'control.trycatch'));
             const error = this.localVariables.next();
             this.source += `} catch (${error}) {\n`;
+            // Desktop fork (section 253): a custom block that ended the script (JSGenerator.retire) is not an error
+            this.source += `if (${error} === globalState.pmRetired) throw ${error};\n`;
             this.source += `runtime.ext_scratch3_control._error = String(${error});\n`;
             this.descendStack(node.catch, new Frame(false, 'control.trycatch'));
             this.source += `}\n`;
@@ -2549,12 +2549,15 @@ class JSGenerator {
             this.source += `thread.spoofTarget = ${alreadySpoofTarget};\n`;
 
             this.source += `}\n`;
-            this.source += `} catch (e) {\nconsole.log('as sprite function failed;', e);\n`;
+            // Desktop fork (section 253): a custom block that ended the script (JSGenerator.retire) is passed on
+            // after the target is put back
+            this.source += `} catch (e) {\nif (e !== globalState.pmRetired) console.log('as sprite function failed;', e);\n`;
 
             // same as last undo
             this.source += `thread.target = ${originalTarget};\n`;
             this.source += `thread.spoofing = ${alreadySpoofing};\n`;
             this.source += `thread.spoofTarget = ${alreadySpoofTarget};\n`;
+            this.source += `if (e === globalState.pmRetired) throw e;\n`;
 
             this.source += `}\n`;
             break;
@@ -3096,9 +3099,7 @@ class JSGenerator {
             this.source += `let ${outputVariable} = `;
             if (procedureData.yields) {
                 this.source += 'yield* ';
-                if (!this.script.yields) {
-                    throw new Error('Script uses yielding procedure but is not marked as yielding.');
-                }
+                this.pmMarkYields('Script uses yielding procedure but is not marked as yielding.');
             }
             this.source += `${this.procedureCallee(procedureVariant)}(`;
             // Only include arguments if the procedure accepts any.
@@ -3706,8 +3707,15 @@ class JSGenerator {
         // After running retire() (sets thread status and cleans up some unused data), we need to return to the event loop.
         // When in a procedure, return will only send us back to the previous procedure, so instead we yield back to the sequencer.
         // Outside of a procedure, return will correctly bring us back to the sequencer.
-        if (this.isProcedure && this.script.yields) {
+        // Desktop fork (section 253): a custom block no longer pauses for that (it had to be a generator just for
+        // it): it throws a fixed value that passes through every caller and is taken by the top-level script's own
+        // catch (createScriptFactory); the "try" block and "as sprite" pass it on.
+        // runtime.pmNoPlainScripts = true switches section 253 off (tests only): the pause as before, and every
+        // top-level script a generator (compile).
+        if (this.isProcedure && this.script.yields && this.target.runtime.pmNoPlainScripts) {
             this.source += 'retire(); yield;\n';
+        } else if (this.isProcedure) {
+            this.source += 'retire(); throw globalState.pmRetired;\n';
         } else {
             this.source += 'retire(); return;\n';
         }
@@ -3758,11 +3766,21 @@ class JSGenerator {
     }
 
     yielded () {
-        if (!this.script.yields) {
-            throw new Error('Script yielded but is not marked as yielding.');
-        }
+        this.pmMarkYields('Script yielded but is not marked as yielding.');
         // Control may have been yielded to another script -- all bets are off.
         this.resetVariableInputs();
+    }
+
+    /**
+     * Desktop fork (section 253): this script's code pauses here. A top-level script becomes a generator by that; a
+     * custom block cannot change any more (its callers are written for a plain function), so there it is an error
+     * as before.
+     * @param {string} message The error for a custom block.
+     */
+    pmMarkYields (message) {
+        if (this.script.yields) return;
+        if (this.isProcedure) throw new Error(message);
+        this.script.yields = true;
     }
 
     /**
@@ -4448,6 +4466,8 @@ class JSGenerator {
 
         if (!this.isProcedure) {
             script += '} catch (err) {';
+            // Desktop fork (section 253): a custom block ended the script (JSGenerator.retire): it is retired already
+            script += 'if (err === globalState.pmRetired) return;\n';
             script += `console.log("${sanitize(script)}");\n`;
             script += 'console.error(err);';
             script += `runtime.emit("BLOCK_STACK_ERROR", {`;
@@ -4482,6 +4502,15 @@ class JSGenerator {
             } finally {
                 this.script.pmCompiling = false;
             }
+        }
+
+        // Desktop fork (section 253): a top-level script is a generator when the IR generator saw a block that pauses
+        // or waits, or when the code written for it pauses (a "yield" anywhere in it, also one an extension's
+        // compiler code wrote, or inside text: then a generator is merely not needed). Otherwise it is a plain
+        // function, which Thread.tryCompile() runs without a generator object.
+        if (!this.isProcedure && !this.script.yields &&
+            (this.target.runtime.pmNoPlainScripts || /\byield\b/.test(this.source))) {
+            this.script.yields = true;
         }
 
         const factory = this.createScriptFactory();

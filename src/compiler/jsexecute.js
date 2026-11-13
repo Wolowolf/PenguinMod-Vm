@@ -14,7 +14,10 @@ const globalState = {
     blockUtility: require('./compat-block-utility'),
     // PMDESKTOP_LISTLOOKUP (section 62)
     listLookup: require('../engine/list-lookup'),
-    thread: null
+    thread: null,
+    // Desktop fork (section 253): what a custom block throws after it ended the script ("delete this clone",
+    // "stop all"); the top-level script's catch takes it (JSGenerator.retire, createScriptFactory).
+    pmRetired: Object.freeze({toString: () => 'script ended inside a custom block'})
 };
 
 let baseRuntime = '';
@@ -1215,7 +1218,10 @@ runtimeFunctions.includes = `const includes = (obj, keyPath) => {
  */
 const execute = thread => {
     globalState.thread = thread;
-    thread.generator.next();
+    // Desktop fork (section 253): a script that never pauses is a plain function, run once to its end
+    const compiledFunction = thread.compiledFunction;
+    if (compiledFunction) compiledFunction();
+    else thread.generator.next();
 };
 
 const threadStack = [];
