@@ -258,7 +258,6 @@ let rendererDrawProfilerId = -1;
  * Manages targets, scripts, and the sequencer.
  * @constructor
  */
-// PMDESKTOP (section 168): remembers that someone wrote to the thread map, so _pmCleanThreads knows it must rebuild it.
 // Desktop fork (section 181): the scripts that have these hat fields; shared when none has, as that is the usual answer.
 const PM_NO_SCRIPTS = Object.freeze([]);
 const pmMatchingScripts = (scripts, matchFields) => {
@@ -275,24 +274,6 @@ const pmMatchingScripts = (scripts, matchFields) => {
     return matching;
 };
 
-class ThreadMap extends Map {
-    constructor () {
-        super();
-        this.pmChanged = false;
-    }
-    set (key, value) {
-        this.pmChanged = true;
-        return super.set(key, value);
-    }
-    delete (key) {
-        this.pmChanged = true;
-        return super.delete(key);
-    }
-    clear () {
-        this.pmChanged = true;
-        super.clear();
-    }
-}
 
 class Runtime extends EventEmitter {
     constructor () {
@@ -317,7 +298,11 @@ class Runtime extends EventEmitter {
          */
         this.threads = [];
 
-        this.threadMap = new ThreadMap();
+        this.threadMap = new Map();
+        // Desktop fork (section 255): set by every engine write to threadMap, so _pmCleanThreads knows it must rebuild
+        // it; the map's size at the last rebuild catches writes from outside the engine that set no flag.
+        this._pmThreadMapChanged = false;
+        this._pmThreadMapSize = 0;
         // Desktop fork (section 181): where _restartThread last found its thread
         this._pmRestartIndex = -1;
         // PMDESKTOP (section 168): what updateThreadMap last read from each thread (null ids = not in the map)
@@ -2692,6 +2677,7 @@ class Runtime extends EventEmitter {
         this.threads.push(thread);
         if (!thread.stackClick && !thread.updateMonitor) {
             this.threadMap.set(thread.getId(), thread);
+            this._pmThreadMapChanged = true;
         }
 
         // tw: compile new threads. Do not attempt to compile monitor threads.
@@ -2740,6 +2726,7 @@ class Runtime extends EventEmitter {
         }
         if (!newThread.stackClick && !newThread.updateMonitor) {
             this.threadMap.set(newThread.getId(), newThread);
+            this._pmThreadMapChanged = true;
         }
         // Desktop fork (section 181): hats restart their threads in list order, so usually it is the next one;
         // searching from the start for each of thousands of clones costs more than all the rest.
@@ -3409,6 +3396,7 @@ class Runtime extends EventEmitter {
         });
         this.threads = [];
         this.threadMap.clear();
+        this._pmThreadMapChanged = true;
     }
 
     updateThreadMap () {
@@ -3430,20 +3418,22 @@ class Runtime extends EventEmitter {
                 topBlocks[i] = null;
             }
         }
-        this.threadMap.pmChanged = false;
+        this._pmThreadMapChanged = false;
+        this._pmThreadMapSize = this.threadMap.size;
     }
 
     /**
      * PMDESKTOP (section 168): removes stopped threads and brings the thread map up to date, like filtering the list
      * and calling updateThreadMap, but only does that work when a thread stopped, the list or a thread's
-     * target, top block or kind changed, or someone wrote to the map.
+     * target, top block or kind changed, or someone wrote to the map (section 255: a flag, or a changed size).
      */
     _pmCleanThreads () {
         const threads = this.threads;
         const mapThreads = this._pmMapThreads;
         const targetIds = this._pmMapTargetIds;
         const topBlocks = this._pmMapTopBlocks;
-        let same = !this.threadMap.pmChanged && threads.length === mapThreads.length;
+        let same = !this._pmThreadMapChanged && this.threadMap.size === this._pmThreadMapSize &&
+            threads.length === mapThreads.length;
         let killed = false;
         for (let i = 0; i < threads.length; i++) {
             const thread = threads[i];

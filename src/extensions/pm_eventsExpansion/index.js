@@ -47,6 +47,7 @@ const evaluateBlock = (runtime, block, target) => new Promise(resolve => {
     thread.pushReportedValue = value => resolve(value);
     runtime.threads.push(thread);
     runtime.threadMap.set(thread.getId(), thread);
+    runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
 });
 
 const blockSeparator = '<sep gap="36"/>'; // At default scale, about 28px

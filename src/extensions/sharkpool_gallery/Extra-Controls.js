@@ -663,6 +663,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         tempThread.pushReportedValue = (value) => resolve(value);
         runtime.threads.push(tempThread);
         if (!tempThread.stackClick && !tempThread.updateMonitor) runtime.threadMap.set(tempThread.getId(), tempThread);
+        runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
         if (runtime.compilerOptions.enabled) tempThread.tryCompile();
       });
     }
@@ -847,6 +848,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         };
         runtime.threads.push(tempThread);
         if (!tempThread.stackClick && !tempThread.updateMonitor) runtime.threadMap.set(tempThread.getId(), tempThread);
+        runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
       });
     }
 
@@ -870,6 +872,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         };
         runtime.threads.push(tempThread);
         if (!tempThread.stackClick && !tempThread.updateMonitor) runtime.threadMap.set(tempThread.getId(), tempThread);
+        runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
       });
     }
 
