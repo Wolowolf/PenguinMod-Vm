@@ -249,7 +249,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (typeof util.thread.sharktilsPars === "undefined") util.thread.stackFrames[0].sharktilsPars = {};
       const blockId = `${util.target.id}${util.thread.peekStack()}`;
       const input = args.INPUT;
-      if (!lastValues[blockId]) lastValues[blockId] = input;
+      // Desktop fork (section 262): "nothing stored yet" is checked by key, so an old value of 0, "" or false is
+      // kept and its change is seen (a falsy stored value was overwritten with the new one before the comparison)
+      if (!Object.prototype.hasOwnProperty.call(lastValues, blockId)) lastValues[blockId] = input;
       if (lastValues[blockId] !== input) {
         util.thread.stackFrames[0].sharktilsPars.diff = lastValues[blockId];
         lastValues[blockId] = input;
@@ -262,7 +264,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (typeof stack === "undefined") return "";
       const params = stack[0].sharktilsPars;
       if (typeof params === "undefined") return "";
-      return params.diff || "";
+      return params.diff ?? ""; // Desktop fork (section 262): an old value of 0 or false is answered, not ""
     }
 
     randomSingleInteger() { return Scratch.vm.runtime.pmRandom() < 0.5 ? -1 : 1 }
