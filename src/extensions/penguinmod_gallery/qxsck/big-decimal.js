@@ -2,7 +2,8 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's qxsck/big-decimal.js, moved into
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (round: no endless loop;
 // section 259: whole numbers are added, subtracted, multiplied, raised to a power, divided with remainder and compared
-// with native big integers directly, with the same answers, instead of going through the decimal text form).
+// with native big integers directly, with the same answers, instead of going through the decimal text form; section 260:
+// bitwise and / or / xor / shifts / not in the two operation menus, from TurboWarp's BigInt, which was removed).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -33,6 +34,43 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   const wholeOf = (value) => {
     const text = String(value);
     return WHOLE.test(text) ? BigInt(text) : null;
+  };
+  // Desktop fork (section 260): the whole number the bitwise options work on, read like TurboWarp's BigInt extension
+  // (Skyhigh173, MIT) read its inputs: decimals cut off toward zero, "1.5e3" and "12n" understood, anything else 0.
+  const bigIntOf = (x) => {
+    if (typeof x === "string") {
+      x = x.toLowerCase();
+      if (x.charAt(x.length - 1) === "n") {
+        try { return BigInt(x.slice(0, -1)); } catch (e) { /* read on */ }
+      }
+      if (x.includes("e") && !x.includes("x")) {
+        const [mantissa, exponentStr] = x.split("e");
+        const exponent = parseInt(exponentStr, 10);
+        if (!isNaN(exponent) && exponent >= 0) {
+          const [integerPart, fractionalPart = ""] = mantissa.split(".");
+          x = exponent >= fractionalPart.length ?
+            integerPart + fractionalPart + "0".repeat(exponent - fractionalPart.length) :
+            integerPart + fractionalPart.slice(0, exponent);
+        }
+      }
+      const decimalIndex = x.indexOf(".");
+      try { return BigInt(decimalIndex === -1 ? x : x.substring(0, decimalIndex)); } catch (e) { return 0n; }
+    }
+    try { return BigInt(Math.trunc(x)); } catch (e) { return 0n; }
+  };
+  // a shift that would make a number too big to hold answers "NaN" instead of stopping the script with an error
+  const bitwise = (oper, a, b) => {
+    try {
+      switch (oper) {
+        case "bitwise and": return (a & b).toString();
+        case "bitwise or": return (a | b).toString();
+        case "bitwise xor": return (a ^ b).toString();
+        case "shift left": return (a << b).toString();
+        case "shift right": return (a >> b).toString();
+      }
+    } catch (e) {
+      return "NaN";
+    }
   };
   // Desktop fork (section 259): the patterns of removeLeft / removeRight, made once instead of on every call
   const edgePatterns = new Map();
@@ -529,10 +567,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           "unaryOper.List": {
-            items: ["abs", "ceil", "floor", 'trunc', 'sqrt',],
+            items: ["abs", "ceil", "floor", 'trunc', 'sqrt', "bitwise not"], // Desktop fork (section 260): + bitwise not
           },
           "binaryOper.List": {
-            items: ["max", "min",],
+            items: ["max", "min", "bitwise and", "bitwise or", "bitwise xor", "shift left", "shift right"], // Desktop fork (section 260): + bitwise
           },
         },
       };
@@ -626,6 +664,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               str = this.replaceString(str, '0', str.indexOf('.') + 1);
             return this.roundFunc(str, 0);
           }
+        case 'bitwise not': // Desktop fork (section 260)
+          return (~bigIntOf(args.NUM)).toString();
         case 'trunc':
           if (str.indexOf('.') !== -1)
             str = this.replaceString(str, '0', str.indexOf('.') + 1);
@@ -643,6 +683,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           return this.maxMinFunc('max', str, str2);
         case 'min':
           return this.maxMinFunc('min', str, str2);
+        default: // Desktop fork (section 260)
+          return bitwise(oper, bigIntOf(args.NUM), bigIntOf(args.NUM2));
       }
     }
     round(args) {
