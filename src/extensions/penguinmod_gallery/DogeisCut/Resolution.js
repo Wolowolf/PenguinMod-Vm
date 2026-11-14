@@ -51,31 +51,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                     '---',
                     {
-                        opcode: 'screenResolution',
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: 'screen resolution [DIM]',
-                        arguments: {
-                            DIM: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'dimensionMenu',
-                                defaultValue: 'width'
-                            }
-                        }
-                    },
-                    {
-                        opcode: 'innerResolution',
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: 'inner resolution [DIM]',
-                        arguments: {
-                            DIM: {
-                                type: Scratch.ArgumentType.STRING,
-                                menu: 'dimensionMenu',
-                                defaultValue: 'width'
-                            }
-                        }
-                    },
-                    '---',
-                    {
                         opcode: 'stageEdgePositionX',
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'x of a stage with width [WIDTH]\'s [EDGE]',
@@ -155,13 +130,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     }
                 ],
                 menus: {
-                    dimensionMenu: {
-                        acceptReporters: true,
-                        items: [
-                            { text: 'width', value: 'width' },
-                            { text: 'height', value: 'height' }
-                        ]
-                    },
                     axisMenu: {
                         acceptReporters: true,
                         items: [
@@ -196,16 +164,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             return Math.round((window.innerHeight / window.innerWidth) * 360);
             }
             return 360;
-        }
-
-        screenResolution(args) {
-            const DIM = Scratch.Cast.toString(args.DIM);
-            return DIM === 'width' ? window.screen.width : window.screen.height;
-        }
-
-        innerResolution(args) {
-            const DIM = Scratch.Cast.toString(args.DIM);
-            return DIM === 'width' ? window.innerWidth : window.innerHeight;
         }
 
         devicePixelRatio() {

@@ -15,7 +15,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
 // (It's getting harder and harder to think of original descriptions now)
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_List Tools":"Listenwerkzeuge"},"fi":{"_# of times [ITEM] appears in [LIST]":"[ITEM] -arvoisten kohteiden määrä listassa [LIST]","_List Tools":"Listatyökalut","_[LIST] as array":"[LIST] taulukkona","_[LIST] is empty?":"onko [LIST] tyhjä?","_ascending":"nouseva","_concatenate [LIST1] onto [LIST2]":"liitä [LIST1] listaan [LIST2]","_delete all [ITEM] in [LIST]":"poista jokainen [ITEM] listasta [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"poista kohteet [NUM1] – [NUM2] listasta [LIST]","_descending":"laskeva","_first":"ensimmäinen","_index # [INDEX] of item [ITEM] in [LIST]":"[INDEX]. [ITEM] -arvoinen kohde listassa [LIST]","_item [NUM] exists in [LIST]?":"onko listassa [LIST] kohde [NUM]?","_last":"viimeinen","_list [LIST] joined by [STRING]":"lista [LIST] erotettuna merkillä [STRING]","_order of [LIST] is [ORDER]?":"onko listan [LIST] järjestys [ORDER]?","_random":"satunnainen","_randomized":"satunnainen","_repeat [LIST1] [NUM] times in [LIST2]":"toista [LIST1] [NUM] kertaa listassa [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"korvaa jokainen [ITEM1] listassa [LIST] arvolla [ITEM2]","_reversed":"käänteinen","_set [LIST] to array [ARRAY]":"aseta listan [LIST] sisällöksi taulukko [ARRAY] ","_set items of [LIST1] to [LIST2]":"aseta listan [LIST1] kohteiksi [LIST2]","_set order of [LIST] to [ORDER]":"aseta listan [LIST] järjestykseksi [ORDER]"},"it":{"_# of times [ITEM] appears in [LIST]":"numero di volte che [ITEM] appare in [LIST]","_List Tools":"Strumenti Avanzati per Liste","_[LIST] as array":"[LIST] come elenco","_[LIST] is empty?":"[LIST] è vuota","_ascending":"ascendente","_concatenate [LIST1] onto [LIST2]":"concatena [LIST1] a [LIST2]","_delete all [ITEM] in [LIST]":"rimuovi tutti gli elementi [ITEM] in [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"rimuovi elementi da [NUM1] a [NUM2] di [LIST]","_descending":"discendente","_first":"primo","_index # [INDEX] of item [ITEM] in [LIST]":"elemento in posizione [INDEX] di elemento [ITEM] in [LIST]","_item [NUM] exists in [LIST]?":"esiste elemento [NUM] in [LIST]","_last":"ultimo","_list [LIST] joined by [STRING]":"unisci elementi di [LIST] con [STRING]","_order of [LIST] is [ORDER]?":"ordine di [LIST] è [ORDER]","_random":"casuale","_randomized":"casuale","_repeat [LIST1] [NUM] times in [LIST2]":"ripeti [LIST1] per [NUM] volte in [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"sostituisci tutti gli elementi [ITEM1] con [ITEM2] in [LIST]","_reversed":"inverso","_set [LIST] to array [ARRAY]":"imposta valori [LIST] da elenco [ARRAY]","_set items of [LIST1] to [LIST2]":"rimpiazza elementi di [LIST1] con [LIST2]","_set order of [LIST] to [ORDER]":"riordina [LIST] in modo [ORDER]"},"ja":{"_# of times [ITEM] appears in [LIST]":"[LIST]で[ITEM]が出てきた回数","_List Tools":"リストツール","_[LIST] as array":"[LIST]のarray","_[LIST] is empty?":"[LIST]が空","_ascending":"数が増加","_concatenate [LIST1] onto [LIST2]":"[LIST1]の中身を[LIST2]に追加する","_delete all [ITEM] in [LIST]":"[LIST]の[ITEM]をすべて削除する","_delete items [NUM1] to [NUM2] of [LIST]":"[LIST]の[NUM1]番から[NUM2]番までを削除する","_descending":"数が減少","_first":"最初の","_index # [INDEX] of item [ITEM] in [LIST]":"[LIST]の[ITEM]が[INDEX]番目に出てきた場所","_item [NUM] exists in [LIST]?":"[LIST]に[NUM]番目が存在する","_last":"最後の","_list [LIST] joined by [STRING]":"[STRING]でつなげた[LIST]","_order of [LIST] is [ORDER]?":"[LIST]が[ORDER]","_random":"ランダム","_randomized":"ランダム","_repeat [LIST1] [NUM] times in [LIST2]":"[LIST1]を[LIST2]で[NUM]回繰り返す","_replace all [ITEM1] with [ITEM2] in [LIST]":"[LIST]のすべての[ITEM1]を[ITEM2]で置き換える","_reversed":"順番が逆","_set [LIST] to array [ARRAY]":"[LIST]をarray[ARRAY]にセットする","_set items of [LIST1] to [LIST2]":"[LIST1]の中身を[LIST2]にする","_set order of [LIST] to [ORDER]":"[LIST]を[ORDER]にする"},"ko":{"_# of times [ITEM] appears in [LIST]":"[LIST]에서 [ITEM]의 개수 ","_List Tools":"리스트 도구","_[LIST] as array":"[LIST]을(를) 배열로","_[LIST] is empty?":"[LIST]이(가) 비었는가?","_ascending":"오름차순","_concatenate [LIST1] onto [LIST2]":"[LIST2]에서 [LIST1]을(를) 덛붙이기","_delete all [ITEM] in [LIST]":"[LIST]의 모든 [ITEM] 삭제하기","_delete items [NUM1] to [NUM2] of [LIST]":"[LIST]의 [NUM1]번째부터 [NUM2]번째까지 삭제하기","_descending":"내림차순","_first":"첫째","_item [NUM] exists in [LIST]?":"[LIST]에서 [NUM]이(가) 존재하는가?","_last":"마지막째","_list [LIST] joined by [STRING]":"[LIST]을(를) [STRING](으)로 이어붙임","_order of [LIST] is [ORDER]?":"[LIST]이(가) [ORDER]인가?","_random":"무작위","_randomized":"무작위","_replace all [ITEM1] with [ITEM2] in [LIST]":"[LIST]의 모든 [ITEM1]을(를) [ITEM2](으)로 바꾸기","_reversed":"역방향","_set [LIST] to array [ARRAY]":"[LIST]을(를) 배열 [ARRAY](으)로 설정하기","_set items of [LIST1] to [LIST2]":"[LIST1]을(를) [LIST2]의 항목으로 정하기","_set order of [LIST] to [ORDER]":"[LIST]을(를) [ORDER](으)로 정렬하기"},"nb":{"_List Tools":"Liste verktøy"},"nl":{"_# of times [ITEM] appears in [LIST]":"aantal [ITEM] in [LIST]","_List Tools":"Lijsttools","_[LIST] as array":"[LIST] als array","_[LIST] is empty?":"[LIST] is leeg?","_ascending":"oplopend","_concatenate [LIST1] onto [LIST2]":"voeg [LIST1] toe aan [LIST2]","_delete all [ITEM] in [LIST]":"verwijder alle [ITEM] in [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"verwijder items [NUM1] t/m [NUM2] van [LIST]","_descending":"aflopend","_index # [INDEX] of item [ITEM] in [LIST]":"index van herhaling # [INDEX] van item [ITEM] in [LIST]","_item [NUM] exists in [LIST]?":"item # [NUM] bestaat in [LIST]?","_list [LIST] joined by [STRING]":"lijst [LIST] samengevoegd met [STRING]","_order of [LIST] is [ORDER]?":"volgorde van [LIST] is [ORDER]?","_random":"willekeurig","_randomized":"willekeurig","_repeat [LIST1] [NUM] times in [LIST2]":"herhaal [LIST1] [NUM] keer in [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"vervang alle [ITEM1] door [ITEM2] in [LIST]","_reversed":"omgekeerd","_set [LIST] to array [ARRAY]":"maak [LIST] array [ARRAY]","_set items of [LIST1] to [LIST2]":"maak [LIST1] [LIST2]","_set order of [LIST] to [ORDER]":"maak volgorde van [LIST] [ORDER]"},"ru":{"_# of times [ITEM] appears in [LIST]":"количество [ITEM] в списке [LIST]","_List Tools":"Инструменты Списка","_[LIST] as array":"[LIST] как массив","_[LIST] is empty?":"[LIST] пустой?","_ascending":"нарастающей","_concatenate [LIST1] onto [LIST2]":"объединить список [LIST1] с [LIST2]","_delete all [ITEM] in [LIST]":"удалить все [ITEM] списка [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"удалить строчки из [NUM1] к [NUM2] списка [LIST]","_descending":"опускающей","_first":"первый","_index # [INDEX] of item [ITEM] in [LIST]":"индекс # [INDEX] элемента [ITEM] списка [LIST]","_item [NUM] exists in [LIST]?":"номер [NUM] существует в [LIST]?","_last":"последний","_list [LIST] joined by [STRING]":"список [LIST]к которому присоединяется [STRING]","_order of [LIST] is [ORDER]?":"сортирован список [LIST] по [ORDER]?","_random":"случайный","_randomized":"рандомизированный","_repeat [LIST1] [NUM] times in [LIST2]":"повторить [LIST1] [NUM] раз в [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"заменить всё [ITEM1] на [ITEM2] списка [LIST]","_reversed":"перевёрнутый","_set [LIST] to array [ARRAY]":"задать список [LIST] на[ARRAY]","_set items of [LIST1] to [LIST2]":"заменить список [LIST1] на [LIST2]","_set order of [LIST] to [ORDER]":"задать сортировку списка [LIST] на [ORDER]"},"tr":{"_List Tools":"Liste Araçları"},"uk":{"_# of times [ITEM] appears in [LIST]":"кількість [ITEM] у [LIST]","_List Tools":"Інструменти для Списків","_[LIST] as array":"[LIST] як масив","_[LIST] is empty?":"[LIST] порожній?","_ascending":"зростання","_concatenate [LIST1] onto [LIST2]":"доєднати [LIST1] до [LIST2]","_delete all [ITEM] in [LIST]":"вилучити усі [ITEM] з [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"вилучити з [NUM1] до [NUM2] з [LIST]","_descending":"спадання","_first":"перший","_item [NUM] exists in [LIST]?":"[NUM] -ий елемент існує у [LIST]?","_last":"останій","_list [LIST] joined by [STRING]":"список [LIST] з'єднаний через [STRING]","_order of [LIST] is [ORDER]?":"порядок у [LIST] є [ORDER]?","_random":"випадкове","_randomized":"випадковий","_repeat [LIST1] [NUM] times in [LIST2]":"повторити [LIST1] [NUM] разів у [LIST2] ","_replace all [ITEM1] with [ITEM2] in [LIST]":"замінити усі [ITEM1] на [ITEM2] у [LIST]","_reversed":"задом наперед","_set [LIST] to array [ARRAY]":"замінити елементи [LIST] на масив [ARRAY]","_set items of [LIST1] to [LIST2]":"замінити елементи у [LIST1] на [LIST2]","_set order of [LIST] to [ORDER]":"сортувати [LIST] у порядку [ORDER]"},"zh-cn":{"_# of times [ITEM] appears in [LIST]":"[ITEM]在[LIST]中出现的次数","_List Tools":"列表工具","_[LIST] as array":"[LIST]作为数组","_[LIST] is empty?":"[LIST]是空的吗？","_ascending":"正序","_concatenate [LIST1] onto [LIST2]":"将[LIST1]的内容加到[LIST2]的末尾","_delete all [ITEM] in [LIST]":"删除[LIST]中的所有[ITEM]","_delete items [NUM1] to [NUM2] of [LIST]":"删除[LIST]的第[NUM1]到[NUM2]项","_descending":"倒序","_first":"第一个","_index # [INDEX] of item [ITEM] in [LIST]":"[LIST]中第[INDEX]个[ITEM]的编号","_item [NUM] exists in [LIST]?":"[LIST]存在第[NUM]项？","_last":"最后一个","_list [LIST] joined by [STRING]":"使用[STRING]连接列表[LIST]","_order of [LIST] is [ORDER]?":"[LIST]的顺序为[ORDER]？","_random":"随机","_randomized":"打乱","_repeat [LIST1] [NUM] times in [LIST2]":"将[LIST1]重复[NUM]次后加入[LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"将[LIST]中的所有[ITEM1]替换为[ITEM2]","_reversed":"反转","_set [LIST] to array [ARRAY]":"将[LIST]设为数组[ARRAY]","_set items of [LIST1] to [LIST2]":"将[LIST1]中的内容设为[LIST2]","_set order of [LIST] to [ORDER]":"将[LIST]的顺序设为[ORDER]"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_List Tools":"Listenwerkzeuge"},"fi":{"_# of times [ITEM] appears in [LIST]":"[ITEM] -arvoisten kohteiden määrä listassa [LIST]","_List Tools":"Listatyökalut","_ascending":"nouseva","_concatenate [LIST1] onto [LIST2]":"liitä [LIST1] listaan [LIST2]","_delete all [ITEM] in [LIST]":"poista jokainen [ITEM] listasta [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"poista kohteet [NUM1] – [NUM2] listasta [LIST]","_descending":"laskeva","_first":"ensimmäinen","_index # [INDEX] of item [ITEM] in [LIST]":"[INDEX]. [ITEM] -arvoinen kohde listassa [LIST]","_last":"viimeinen","_list [LIST] joined by [STRING]":"lista [LIST] erotettuna merkillä [STRING]","_order of [LIST] is [ORDER]?":"onko listan [LIST] järjestys [ORDER]?","_random":"satunnainen","_randomized":"satunnainen","_repeat [LIST1] [NUM] times in [LIST2]":"toista [LIST1] [NUM] kertaa listassa [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"korvaa jokainen [ITEM1] listassa [LIST] arvolla [ITEM2]","_reversed":"käänteinen","_set items of [LIST1] to [LIST2]":"aseta listan [LIST1] kohteiksi [LIST2]","_set order of [LIST] to [ORDER]":"aseta listan [LIST] järjestykseksi [ORDER]"},"it":{"_# of times [ITEM] appears in [LIST]":"numero di volte che [ITEM] appare in [LIST]","_List Tools":"Strumenti Avanzati per Liste","_ascending":"ascendente","_concatenate [LIST1] onto [LIST2]":"concatena [LIST1] a [LIST2]","_delete all [ITEM] in [LIST]":"rimuovi tutti gli elementi [ITEM] in [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"rimuovi elementi da [NUM1] a [NUM2] di [LIST]","_descending":"discendente","_first":"primo","_index # [INDEX] of item [ITEM] in [LIST]":"elemento in posizione [INDEX] di elemento [ITEM] in [LIST]","_last":"ultimo","_list [LIST] joined by [STRING]":"unisci elementi di [LIST] con [STRING]","_order of [LIST] is [ORDER]?":"ordine di [LIST] è [ORDER]","_random":"casuale","_randomized":"casuale","_repeat [LIST1] [NUM] times in [LIST2]":"ripeti [LIST1] per [NUM] volte in [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"sostituisci tutti gli elementi [ITEM1] con [ITEM2] in [LIST]","_reversed":"inverso","_set items of [LIST1] to [LIST2]":"rimpiazza elementi di [LIST1] con [LIST2]","_set order of [LIST] to [ORDER]":"riordina [LIST] in modo [ORDER]"},"ja":{"_# of times [ITEM] appears in [LIST]":"[LIST]で[ITEM]が出てきた回数","_List Tools":"リストツール","_ascending":"数が増加","_concatenate [LIST1] onto [LIST2]":"[LIST1]の中身を[LIST2]に追加する","_delete all [ITEM] in [LIST]":"[LIST]の[ITEM]をすべて削除する","_delete items [NUM1] to [NUM2] of [LIST]":"[LIST]の[NUM1]番から[NUM2]番までを削除する","_descending":"数が減少","_first":"最初の","_index # [INDEX] of item [ITEM] in [LIST]":"[LIST]の[ITEM]が[INDEX]番目に出てきた場所","_last":"最後の","_list [LIST] joined by [STRING]":"[STRING]でつなげた[LIST]","_order of [LIST] is [ORDER]?":"[LIST]が[ORDER]","_random":"ランダム","_randomized":"ランダム","_repeat [LIST1] [NUM] times in [LIST2]":"[LIST1]を[LIST2]で[NUM]回繰り返す","_replace all [ITEM1] with [ITEM2] in [LIST]":"[LIST]のすべての[ITEM1]を[ITEM2]で置き換える","_reversed":"順番が逆","_set items of [LIST1] to [LIST2]":"[LIST1]の中身を[LIST2]にする","_set order of [LIST] to [ORDER]":"[LIST]を[ORDER]にする"},"ko":{"_# of times [ITEM] appears in [LIST]":"[LIST]에서 [ITEM]의 개수 ","_List Tools":"리스트 도구","_ascending":"오름차순","_concatenate [LIST1] onto [LIST2]":"[LIST2]에서 [LIST1]을(를) 덛붙이기","_delete all [ITEM] in [LIST]":"[LIST]의 모든 [ITEM] 삭제하기","_delete items [NUM1] to [NUM2] of [LIST]":"[LIST]의 [NUM1]번째부터 [NUM2]번째까지 삭제하기","_descending":"내림차순","_first":"첫째","_last":"마지막째","_list [LIST] joined by [STRING]":"[LIST]을(를) [STRING](으)로 이어붙임","_order of [LIST] is [ORDER]?":"[LIST]이(가) [ORDER]인가?","_random":"무작위","_randomized":"무작위","_replace all [ITEM1] with [ITEM2] in [LIST]":"[LIST]의 모든 [ITEM1]을(를) [ITEM2](으)로 바꾸기","_reversed":"역방향","_set items of [LIST1] to [LIST2]":"[LIST1]을(를) [LIST2]의 항목으로 정하기","_set order of [LIST] to [ORDER]":"[LIST]을(를) [ORDER](으)로 정렬하기"},"nb":{"_List Tools":"Liste verktøy"},"nl":{"_# of times [ITEM] appears in [LIST]":"aantal [ITEM] in [LIST]","_List Tools":"Lijsttools","_ascending":"oplopend","_concatenate [LIST1] onto [LIST2]":"voeg [LIST1] toe aan [LIST2]","_delete all [ITEM] in [LIST]":"verwijder alle [ITEM] in [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"verwijder items [NUM1] t/m [NUM2] van [LIST]","_descending":"aflopend","_index # [INDEX] of item [ITEM] in [LIST]":"index van herhaling # [INDEX] van item [ITEM] in [LIST]","_list [LIST] joined by [STRING]":"lijst [LIST] samengevoegd met [STRING]","_order of [LIST] is [ORDER]?":"volgorde van [LIST] is [ORDER]?","_random":"willekeurig","_randomized":"willekeurig","_repeat [LIST1] [NUM] times in [LIST2]":"herhaal [LIST1] [NUM] keer in [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"vervang alle [ITEM1] door [ITEM2] in [LIST]","_reversed":"omgekeerd","_set items of [LIST1] to [LIST2]":"maak [LIST1] [LIST2]","_set order of [LIST] to [ORDER]":"maak volgorde van [LIST] [ORDER]"},"ru":{"_# of times [ITEM] appears in [LIST]":"количество [ITEM] в списке [LIST]","_List Tools":"Инструменты Списка","_ascending":"нарастающей","_concatenate [LIST1] onto [LIST2]":"объединить список [LIST1] с [LIST2]","_delete all [ITEM] in [LIST]":"удалить все [ITEM] списка [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"удалить строчки из [NUM1] к [NUM2] списка [LIST]","_descending":"опускающей","_first":"первый","_index # [INDEX] of item [ITEM] in [LIST]":"индекс # [INDEX] элемента [ITEM] списка [LIST]","_last":"последний","_list [LIST] joined by [STRING]":"список [LIST]к которому присоединяется [STRING]","_order of [LIST] is [ORDER]?":"сортирован список [LIST] по [ORDER]?","_random":"случайный","_randomized":"рандомизированный","_repeat [LIST1] [NUM] times in [LIST2]":"повторить [LIST1] [NUM] раз в [LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"заменить всё [ITEM1] на [ITEM2] списка [LIST]","_reversed":"перевёрнутый","_set items of [LIST1] to [LIST2]":"заменить список [LIST1] на [LIST2]","_set order of [LIST] to [ORDER]":"задать сортировку списка [LIST] на [ORDER]"},"tr":{"_List Tools":"Liste Araçları"},"uk":{"_# of times [ITEM] appears in [LIST]":"кількість [ITEM] у [LIST]","_List Tools":"Інструменти для Списків","_ascending":"зростання","_concatenate [LIST1] onto [LIST2]":"доєднати [LIST1] до [LIST2]","_delete all [ITEM] in [LIST]":"вилучити усі [ITEM] з [LIST]","_delete items [NUM1] to [NUM2] of [LIST]":"вилучити з [NUM1] до [NUM2] з [LIST]","_descending":"спадання","_first":"перший","_last":"останій","_list [LIST] joined by [STRING]":"список [LIST] з'єднаний через [STRING]","_order of [LIST] is [ORDER]?":"порядок у [LIST] є [ORDER]?","_random":"випадкове","_randomized":"випадковий","_repeat [LIST1] [NUM] times in [LIST2]":"повторити [LIST1] [NUM] разів у [LIST2] ","_replace all [ITEM1] with [ITEM2] in [LIST]":"замінити усі [ITEM1] на [ITEM2] у [LIST]","_reversed":"задом наперед","_set items of [LIST1] to [LIST2]":"замінити елементи у [LIST1] на [LIST2]","_set order of [LIST] to [ORDER]":"сортувати [LIST] у порядку [ORDER]"},"zh-cn":{"_# of times [ITEM] appears in [LIST]":"[ITEM]在[LIST]中出现的次数","_List Tools":"列表工具","_ascending":"正序","_concatenate [LIST1] onto [LIST2]":"将[LIST1]的内容加到[LIST2]的末尾","_delete all [ITEM] in [LIST]":"删除[LIST]中的所有[ITEM]","_delete items [NUM1] to [NUM2] of [LIST]":"删除[LIST]的第[NUM1]到[NUM2]项","_descending":"倒序","_first":"第一个","_index # [INDEX] of item [ITEM] in [LIST]":"[LIST]中第[INDEX]个[ITEM]的编号","_last":"最后一个","_list [LIST] joined by [STRING]":"使用[STRING]连接列表[LIST]","_order of [LIST] is [ORDER]?":"[LIST]的顺序为[ORDER]？","_random":"随机","_randomized":"打乱","_repeat [LIST1] [NUM] times in [LIST2]":"将[LIST1]重复[NUM]次后加入[LIST2]","_replace all [ITEM1] with [ITEM2] in [LIST]":"将[LIST]中的所有[ITEM1]替换为[ITEM2]","_reversed":"反转","_set items of [LIST1] to [LIST2]":"将[LIST1]中的内容设为[LIST2]","_set order of [LIST] to [ORDER]":"将[LIST]的顺序设为[ORDER]"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
 
   /* -- SETUP -- */
@@ -178,34 +178,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           "---",
 
           {
-            opcode: "listIsEmpty",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("[LIST] is empty?"),
-            disableMonitor: true,
-            arguments: {
-              LIST: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "lists",
-              },
-            },
-          },
-          {
-            opcode: "itemNumExists",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("item [NUM] exists in [LIST]?"),
-            disableMonitor: true,
-            arguments: {
-              NUM: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "1",
-              },
-              LIST: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "lists",
-              },
-            },
-          },
-          {
             opcode: "orderIs",
             blockType: Scratch.BlockType.BOOLEAN,
             text: Scratch.translate("order of [LIST] is [ORDER]?"),
@@ -266,40 +238,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 menu: "lists",
               },
               LIST2: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "lists",
-              },
-            },
-          },
-
-          "---",
-
-
-          "---",
-
-          {
-            opcode: "setListArray",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("set [LIST] to array [ARRAY]"),
-            disableMonitor: true,
-            arguments: {
-              LIST: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "lists",
-              },
-              ARRAY: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: '["apple","banana"]',
-              },
-            },
-          },
-          {
-            opcode: "getListArray",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("[LIST] as array"),
-            disableMonitor: true,
-            arguments: {
-              LIST: {
                 type: Scratch.ArgumentType.STRING,
                 menu: "lists",
               },
@@ -508,33 +446,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
     }
 
-    listIsEmpty(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return true;
-      if (list.pmGetValue().length > 0) return false;
-      return true;
-    }
 
-    itemNumExists(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return false;
-      const listIndex = Scratch.Cast.toListIndex(
-        args.NUM,
-        list.pmGetValue().length,
-        false,
-        Scratch.vm.runtime
-      );
-      if (listIndex === Scratch.Cast.LIST_INVALID) return false;
-      return true;
-    }
 
     orderIs(args, util) {
       const list = getVarObjectFromName(
@@ -610,36 +522,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
 
 
-    setListArray(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return;
 
-      let array;
-      try {
-        array = JSON.parse(args.ARRAY);
-      } catch (error) {
-        return;
-      }
-
-      if (!Array.isArray(array)) return;
-      const newArray = array;
-      list.pmSetValue(newArray);
-      list._monitorUpToDate = false;
-    }
-
-    getListArray(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return "";
-      return JSON.stringify(list.pmGetValue());
-    }
 
     _getLists() {
       // @ts-expect-error - Blockly not typed yet

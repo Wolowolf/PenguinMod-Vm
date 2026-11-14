@@ -73,8 +73,6 @@ const defaultBuiltinExtensions = {
     jwProto: () => require("../extensions/jw_proto"),
     // Blockly 2: a faithful recreation of the original blockly blocks
     // omega num port for penguinmod
-    // good color utilties
-    jwColor: () => require("../extensions/jwColor"),
     // date type
     // integers
 
@@ -107,9 +105,6 @@ const defaultBuiltinExtensions = {
 
     // DT: ...
 
-    // griffpatch: ...
-    // griffpatch: () => require('../extensions/griffpatch_box2d')
-
     // iyg: erm a crep, erm a werdohhhh
     // iygPerlin:
     iygPerlin: () => require('../extensions/iyg_perlin_noise'),
@@ -124,9 +119,7 @@ const defaultBuiltinExtensions = {
     SPsoundWaves: () => import(/* webpackChunkName: "ext-SPsoundWaves" */ '../extensions/penguinmod_gallery/SharkPool/Sound-Waves'),
     beatSync: () => import(/* webpackChunkName: "ext-beatSync" */ '../extensions/penguinmod_gallery/Gen1x/beat_sync'),
     discordauth: () => import(/* webpackChunkName: "ext-discordauth" */ '../extensions/penguinmod_gallery/NotHouse/DiscordAuth'),
-    divVecQuat: () => import(/* webpackChunkName: "ext-divVecQuat" */ '../extensions/penguinmod_gallery/Div/divVecQuat'),
     dogeiscutResolution: () => import(/* webpackChunkName: "ext-dogeiscutResolution" */ '../extensions/penguinmod_gallery/DogeisCut/Resolution'),
-    e2ee: () => import(/* webpackChunkName: "ext-e2ee" */ '../extensions/penguinmod_gallery/MikeDev101/e2ee'),
     embintranslation: () => import(/* webpackChunkName: "ext-embintranslation" */ '../extensions/penguinmod_gallery/Embin/embintranslation'),
     g1nxIrisText: () => import(/* webpackChunkName: "ext-g1nxIrisText" */ '../extensions/penguinmod_gallery/Gen1x/iris-text'),
     g1nxLighting: () => import(/* webpackChunkName: "ext-g1nxLighting" */ '../extensions/penguinmod_gallery/Gen1x/lighting'),
@@ -162,7 +155,6 @@ const defaultBuiltinExtensions = {
     dninwakelock: () => import(/* webpackChunkName: "ext-dninwakelock" */ '../extensions/turbowarp_gallery/DNin/wake-lock'),
     dtbyxeroname: () => import(/* webpackChunkName: "ext-dtbyxeroname" */ '../extensions/turbowarp_gallery/XeroName/Deltatime'),
     faceSensing: () => import(/* webpackChunkName: "ext-faceSensing" */ '../extensions/turbowarp_gallery/lab/face-sensing'),
-    griffpatch: () => import(/* webpackChunkName: "ext-griffpatch" */ '../extensions/turbowarp_gallery/box2d'),
     gsaWebsocket: () => import(/* webpackChunkName: "ext-gsaWebsocket" */ '../extensions/turbowarp_gallery/godslayerakp/ws'),
     itch: () => import(/* webpackChunkName: "ext-itch" */ '../extensions/turbowarp_gallery/itchio'),
     lmsData: () => import(/* webpackChunkName: "ext-lmsData" */ '../extensions/turbowarp_gallery/Lily/ListTools'),
@@ -170,7 +162,6 @@ const defaultBuiltinExtensions = {
     lmsSoundExpanded: () => import(/* webpackChunkName: "ext-lmsSoundExpanded" */ '../extensions/turbowarp_gallery/Lily/SoundExpanded'),
     lmsVideo: () => import(/* webpackChunkName: "ext-lmsVideo" */ '../extensions/turbowarp_gallery/Lily/Video'),
     lmsclonesplus: () => import(/* webpackChunkName: "ext-lmsclonesplus" */ '../extensions/turbowarp_gallery/Lily/ClonesPlus'),
-    lmsutilsblocks: () => import(/* webpackChunkName: "ext-lmsutilsblocks" */ '../extensions/turbowarp_gallery/Lily/lmsutils'),
     localstorage: () => import(/* webpackChunkName: "ext-localstorage" */ '../extensions/turbowarp_gallery/local-storage'),
     mdwaltersnotifications: () => import(/* webpackChunkName: "ext-mdwaltersnotifications" */ '../extensions/turbowarp_gallery/mdwalters/notifications'),
     medericodertextcase: () => import(/* webpackChunkName: "ext-medericodertextcase" */ '../extensions/turbowarp_gallery/Medericoder/textcase'),
@@ -183,16 +174,13 @@ const defaultBuiltinExtensions = {
     qxsckvarandlist: () => import(/* webpackChunkName: "ext-qxsckvarandlist" */ '../extensions/turbowarp_gallery/qxsck/var-and-list'),
     runtimeoptions: () => import(/* webpackChunkName: "ext-runtimeoptions" */ '../extensions/turbowarp_gallery/runtime-options'),
     shovelColorPicker: () => import(/* webpackChunkName: "ext-shovelColorPicker" */ '../extensions/turbowarp_gallery/TheShovel/ColorPicker'),
-    skyhigh173BigInt: () => import(/* webpackChunkName: "ext-skyhigh173BigInt" */ '../extensions/turbowarp_gallery/Skyhigh173/bigint'),
     steamworks: () => import(/* webpackChunkName: "ext-steamworks" */ '../extensions/turbowarp_gallery/steamworks'),
-    stretch: () => import(/* webpackChunkName: "ext-stretch" */ '../extensions/turbowarp_gallery/stretch'),
     strings: () => import(/* webpackChunkName: "ext-strings" */ '../extensions/turbowarp_gallery/text'),
     theshovelcanvaseffects: () => import(/* webpackChunkName: "ext-theshovelcanvaseffects" */ '../extensions/turbowarp_gallery/TheShovel/CanvasEffects'),
     truefantombase: () => import(/* webpackChunkName: "ext-truefantombase" */ '../extensions/turbowarp_gallery/true-fantom/base'),
     truefantommath: () => import(/* webpackChunkName: "ext-truefantommath" */ '../extensions/turbowarp_gallery/true-fantom/math'),
     truefantomnetwork: () => import(/* webpackChunkName: "ext-truefantomnetwork" */ '../extensions/turbowarp_gallery/true-fantom/network'),
     utilities: () => import(/* webpackChunkName: "ext-utilities" */ '../extensions/turbowarp_gallery/utilities'),
-    videoSprites: () => import(/* webpackChunkName: "ext-videoSprites" */ '../extensions/turbowarp_gallery/lab/video-sprites'),
     xeltallivSimple3D: () => import(/* webpackChunkName: "ext-xeltallivSimple3D" */ '../extensions/turbowarp_gallery/Xeltalliv/simple3D'),
     xeltallivclipblend: () => import(/* webpackChunkName: "ext-xeltallivclipblend" */ '../extensions/turbowarp_gallery/Xeltalliv/clippingblending'),
     // SharkPool gallery
@@ -209,7 +197,6 @@ const defaultBuiltinExtensions = {
     SPgifManager: () => import(/* webpackChunkName: "ext-SPgifManager" */ '../extensions/sharkpool_gallery/GIF-Manager'),
     SPlayering: () => import(/* webpackChunkName: "ext-SPlayering" */ '../extensions/sharkpool_gallery/Layer-Control'),
     SPmbpCST: () => import(/* webpackChunkName: "ext-SPmbpCST" */ '../extensions/sharkpool_gallery/My-Blocks-Plus'),
-    SPmessagePlus: () => import(/* webpackChunkName: "ext-SPmessagePlus" */ '../extensions/sharkpool_gallery/Messages-Plus'),
     SPpartEngine: () => import(/* webpackChunkName: "ext-SPpartEngine" */ '../extensions/sharkpool_gallery/Particle-Engine'),
     SPpenPapers: () => import(/* webpackChunkName: "ext-SPpenPapers" */ '../extensions/sharkpool_gallery/Pen-Papers'),
     SPpopups: () => import(/* webpackChunkName: "ext-SPpopups" */ '../extensions/sharkpool_gallery/Popup-Phoenix'),

@@ -41,7 +41,6 @@ class JgPrismBlocks {
             this.mouseScrollDelta = { x: 0, y: 0, z: 0 };
         }, 65);
 
-        this.encodeCharacterLength = 6;
     }
 
 
@@ -149,42 +148,6 @@ class JgPrismBlocks {
                 //     blockType: BlockType.LABEL,
                 //     text: "More Mouse Inputs"
                 // },
-                {
-                    blockType: BlockType.LABEL,
-                    text: "Base64"
-                },
-                {
-                    opcode: 'base64Encode',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.base64Encode',
-                        default: 'base64 encode [TEXT]',
-                        description: 'Block that encodes and returns the result of it.'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        TEXT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "abc"
-                        }
-                    }
-                },
-                {
-                    opcode: 'base64Decode',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.base64Decode',
-                        default: 'base64 decode [TEXT]',
-                        description: 'Block that decodes and returns the result of it.'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        TEXT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "YWJj"
-                        }
-                    }
-                },
                 // {
                 //     blockType: BlockType.LABEL,
                 //     text: "String Character Codes"
@@ -224,32 +187,6 @@ class JgPrismBlocks {
                         ARRAY: {
                             type: ArgumentType.STRING,
                             defaultValue: "[]"
-                        }
-                    }
-                },
-                {
-                    blockType: BlockType.LABEL,
-                    text: "Numerical Encoding by cs2627883"
-                },
-                {
-                    opcode: 'NumericalEncode',
-                    blockType: BlockType.REPORTER,
-                    text: 'encode [DATA] to number',
-                    arguments: {
-                        DATA: {
-                            type: ArgumentType.STRING,
-                            defaultValue: 'Hello!'
-                        }
-                    }
-                },
-                {
-                    opcode: 'NumericalDecode',
-                    blockType: BlockType.REPORTER,
-                    text: 'decode [ENCODED] from number',
-                    arguments: {
-                        ENCODED: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '000072000101000108000108000111000033'
                         }
                     }
                 }
@@ -336,24 +273,6 @@ class JgPrismBlocks {
         });
     }
 
-    base64Encode(args) {
-        let result = "";
-        try {
-            result = btoa(String(args.TEXT));
-        } catch {
-            // what a shame
-        }
-        return result;
-    }
-    base64Decode(args) {
-        let result = "";
-        try {
-            result = atob(String(args.TEXT));
-        } catch {
-            // what a shame
-        }
-        return result;
-    }
     lib_deflate_deflateArray(args) {
         const array = validateArray(args.ARRAY).array;
 
@@ -365,35 +284,6 @@ class JgPrismBlocks {
         return JSON.stringify(beatgammit.inflate(array));
     }
 
-    NumericalEncode(args) {
-        const toencode = String(args.DATA);
-        let encoded = "";
-        for (let i = 0; i < toencode.length; ++i) {
-            // Get char code of character
-            let encodedchar = String(toencode.charCodeAt(i));
-            // Pad encodedchar with 0s to ensure all encodedchars are the same length
-            encodedchar = "0".repeat(this.encodeCharacterLength - encodedchar.length) + encodedchar;
-            encoded += encodedchar;
-        }
-        return encoded;
-    }
-    NumericalDecode(args) {
-        const todecode = String(args.ENCODED);
-        if (todecode == "") {
-            return "";
-        }
-        let decoded = "";
-        // Create regex to split by char length
-        const regex = new RegExp('.{1,' + this.encodeCharacterLength + '}', 'g');
-        // Split into array of characters
-        let encodedchars = todecode.match(regex);
-        for (let i = 0; i < encodedchars.length; i++) {
-            // Get character from char code
-            let decodedchar = String.fromCharCode(encodedchars[i]);
-            decoded += decodedchar;
-        }
-        return decoded;
-    }
 }
 
 module.exports = JgPrismBlocks;

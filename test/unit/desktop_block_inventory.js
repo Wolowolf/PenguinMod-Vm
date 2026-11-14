@@ -132,7 +132,6 @@ const anything = () => new Proxy(function () {}, {
 });
 // Blocks marked "page" may check that the page exists: give them a minimal one (nothing a pure block may change).
 global.window = {location: new URL('https://studio.penguinmod.com/editor.html'), URLSearchParams, parent: null};
-global.vm = anything(); // jwColor shares its colour type on the page's vm
 // Only while an extension is made (its constructor may prepare page parts it uses in other blocks).
 const CONSTRUCTION_ONLY = ['Audio', 'Image', 'document', 'navigator', 'addEventListener'];
 // Timers that constructors start must not keep the test running after the last check.

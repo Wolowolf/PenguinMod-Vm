@@ -634,7 +634,7 @@ const FOLDABLE_KINDS = new Set([
     'sensing.regexTest', 'sensing.distanceTo',
     // Operators Expansion blocks compiled to inline code (section 140); helpers in PURE_HELPER_NAMES too
     'pmInline.isMultipleOf', 'pmInline.isInteger', 'pmInline.isPrime', 'pmInline.isEven', 'pmInline.between',
-    'pmInline.partOfRatio', 'pmInline.simplifyRatio', 'pmInline.number', 'pmInline.truncate', 'pmInline.reverse',
+    'pmInline.partOfRatio', 'pmInline.simplifyRatio', 'pmInline.number', 'pmInline.truncate',
     'pmInline.textAfter', 'pmInline.textBefore', 'pmInline.exactlyEqual'
 ]);
 
@@ -1550,8 +1550,6 @@ class JSGenerator {
             return new TypedInput(`(${node.source})`, TYPE_NUMBER);
         case 'pmInline.truncate':
             return new TypedInput(`Math.trunc(${this.exactNumber(this.descendInput(node.num))})`, TYPE_NUMBER);
-        case 'pmInline.reverse':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.split("").reverse().join(""))`, TYPE_UNKNOWN);
         case 'pmInline.textAfter':
             return new TypedInput(`pmxTextAfter(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.base))})`, TYPE_UNKNOWN);
         case 'pmInline.textBefore':
@@ -1572,12 +1570,8 @@ class JSGenerator {
             return new TypedInput('(target.getName())', TYPE_UNKNOWN);
         case 'pmInline.currentMillisecond':
             return new TypedInput('(runtime.pmDateNow() % 1000)', TYPE_NUMBER);
-        case 'pmInline.deltaTime':
-            return new TypedInput('pmxDeltaTime(runtime.ext_pmSensingExpansion)', TYPE_NUMBER);
         case 'pmInline.maxSpriteLayers':
             return new TypedInput('(runtime.renderer._drawList.length - 1)', TYPE_NUMBER);
-        case 'pmInline.scrollingDistance':
-            return new TypedInput('(runtime.ext_pmSensingExpansion.scrollDistance)', TYPE_UNKNOWN);
         case 'pmInline.currentKey':
             return new TypedInput('pmxCurrentKey(runtime)', TYPE_UNKNOWN);
         case 'pmInline.lastKey':
@@ -1617,14 +1611,6 @@ class JSGenerator {
             return new TypedInput(`pmsVarExists(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
         case 'search.broadcast':
             return new TypedInput(`pmsReceived(${this.evaluateOnce(`new pmsBroadcast(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
-        case 'search.listItem':
-            return new TypedInput(`pmsListItem(runtime, ${this.exactNumber(this.descendInput(node.index))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
-        case 'search.listLength':
-            return new TypedInput(`pmsListLength(${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
-        case 'search.listContains':
-            return new TypedInput(`pmsListContains(${this.exactString(this.descendInput(node.term))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
-        case 'search.listIndexOf':
-            return new TypedInput(`pmsListIndexOf(${this.exactString(this.descendInput(node.term))}, ${this.evaluateOnce(`new pmsList(runtime, "${sanitize(node.list)}")`)})`, TYPE_UNKNOWN);
 
         // Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks (irgen.js
         // descendDataInline). Each does what the extension's function does with the arguments the extension
@@ -1680,22 +1666,9 @@ class JSGenerator {
             const v = this.dataName(node.name, 'list', true);
             return new TypedInput(`pmlItemIndex(thread.target, ${v.site}, ${index}, ${item}, ${v.name})`, TYPE_NUMBER);
         }
-        case 'lms.isEmpty': {
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlIsEmpty(thread.target, ${v.site}, ${v.name})`, TYPE_BOOLEAN);
-        }
-        case 'lms.itemExists': {
-            const num = this.exactNumber(this.descendInput(node.num));
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlItemExists(thread.target, ${v.site}, ${num}, ${v.name})`, TYPE_BOOLEAN);
-        }
         case 'lms.orderIs': {
             const v = this.dataName(node.name, 'list', true);
             return new TypedInput(`pmlOrderIs(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}")`, TYPE_BOOLEAN);
-        }
-        case 'lms.asArray': {
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlAsArray(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
         }
 
         case 'op.abs':
@@ -2889,12 +2862,6 @@ class JSGenerator {
         case 'pmInline.tweenTowards':
             this.source += `pmxTweenTowards(target, ${this.exactNumber(this.descendInput(node.percent))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
             break;
-        case 'pmInline.setScrolling':
-            this.source += `runtime.ext_pmSensingExpansion.scrollDistance = ${this.exactNumber(this.descendInput(node.amount))};\n`;
-            break;
-        case 'pmInline.changeScrolling':
-            this.source += `runtime.ext_pmSensingExpansion.scrollDistance += ${this.exactNumber(this.descendInput(node.amount))};\n`;
-            break;
 
         // Desktop fork (section 149): "Variable and list" and List Tools commands (irgen.js descendDataInline), as
         // the extension's functions are.
@@ -3002,12 +2969,6 @@ class JSGenerator {
             if (node.what === 'toggle') this.source += `pmsTimerToggle(${timer});\n`;
             else if (node.what === 'stop') this.source += `pmsTimerStop(${timer});\n`;
             else this.source += `${timer}.${node.what}();\n`;
-            break;
-        }
-        case 'lms.setArray': {
-            const v = this.dataName(node.name, 'list', true);
-            const array = node.array.kind === 'search.fixedJson' ? this.descendInput(node.array).source : this.exactString(this.descendInput(node.array));
-            this.source += `pmlSetArray(thread.target, ${v.site}, ${v.name}, ${array});\n`;
             break;
         }
 

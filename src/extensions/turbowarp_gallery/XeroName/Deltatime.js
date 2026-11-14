@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's XeroName/Deltatime.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below) and section 259:
+// "fps" counts the frames of the last second (Shovel Utilities' removed fps block) instead of 1 / ΔT, which jumped around.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -41,6 +42,19 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     previousTime = now;
   });
 
+  // Desktop fork (section 259): frames counted over the last second, as Shovel Utilities' fps block did
+  // (based on https://www.growingwiththeweb.com/2017/12/fast-simple-js-fps-counter.html)
+  const frameTimes = [];
+  let fps = vm.runtime.frameLoop.framerate;
+  vm.runtime.on("RUNTIME_STEP_END", () => {
+    const now = Scratch.vm.runtime.pmPerfNow();
+    while (frameTimes.length > 0 && frameTimes[0] <= now - 1000) {
+      frameTimes.shift();
+    }
+    frameTimes.push(now);
+    fps = frameTimes.length;
+  });
+
   class Dt {
     getInfo() {
       return {
@@ -72,7 +86,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     fps() {
-      return +(1 / deltaTime).toFixed(2);
+      return fps; // Desktop fork (section 259): was +(1 / deltaTime).toFixed(2)
     }
   }
 

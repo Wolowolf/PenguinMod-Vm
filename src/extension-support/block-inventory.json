@@ -4,9 +4,6 @@
     "replaces": [],
     "note": "inputs not cast",
     "blocks": {
-      "isNumberBits": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "toNumberBits": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "ofNumberBits": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "bitwiseRightShift": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "bitwiseLeftShift": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "bitwiseLogicalRightShift": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
@@ -75,12 +72,7 @@
     "replaces": [],
     "blocks": {
       "encode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "decode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for an invalid URL encoding"},
-      "hash": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "Conversioncodes": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "Restorecode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "Randomstrings": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"a huge length never finishes","direct":true},
-      "Fontgenerationstring": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"a huge length never finishes","direct":true}
+      "decode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for an invalid URL encoding"}
     }
   },
   "Gamepad": {
@@ -106,33 +98,21 @@
     "source": "src/extensions/sharkpool_gallery/Hyper-Sense-V2.js",
     "replaces": [],
     "note": "own window listeners (wheel, mouse, keys, can block default key behaviour); edits the ask box in the page",
-    "state": {"mouseData":"shared","keyData":"setting","askBoxSettings":"setting","loudnessCache":"outside"},
+    "state": {"mouseData":"shared","keyData":"setting","askBoxSettings":"setting"},
     "blocks": {
       "scrollValue": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"any","compiled":false,"note":"from its own page listeners","direct":true},
       "setScrollDist": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "changeScrollDist": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "whenScrolled": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "isScrolled": {"type":"Boolean","pure":false,"reads":["input","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"direct":true},
-      "mouseClick": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "realMouse": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
       "mouseVelocity": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
-      "whenKey": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
-      "isKey": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
-      "currentKey": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":"any","compiled":false,"note":"from its own page listeners","direct":true},
-      "timeKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"direct":true},
       "setKeyBlock": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"direct":true},
       "resetKeyBlocks": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"direct":true},
       "getKeyBlockers": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
       "spritePointing": {"type":"Boolean","pure":false,"reads":["input","sprite","sprites"],"writes":["sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"turns the sprite and back to test","direct":true},
-      "spriteTouchingSprite": {"type":"Boolean","pure":false,"reads":["input","renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "spriteTouchingSpriteType": {"type":"Boolean","pure":false,"reads":["input","renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "spriteTouchingClone": {"type":"Boolean","pure":false,"reads":["input","renderer","sprite","sprites","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "spritesTouching": {"type":"reporter","pure":false,"reads":["input","renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "getNeighbors": {"type":"reporter","pure":false,"reads":["input","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "objTouchingColor": {"type":"reporter","pure":false,"reads":["input","renderer","sprite","sprites","stage size"],"writes":["sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"hides the sprite while it reads the colour","direct":true},
-      "colorAtPosition": {"type":"reporter","pure":false,"reads":["renderer","stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
-      "spriteDragMode": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "spriteDraggable": {"type":"Boolean","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "advancedAsk": {"type":"command","pure":false,"reads":["sprite"],"writes":["events","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":null,"compiled":false},
       "askReporter": {"type":"reporter","pure":false,"reads":["sprite"],"writes":["events","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":true,"answer":"string","compiled":false},
       "stopAsking": {"type":"command","pure":false,"reads":[],"writes":["events"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"direct":true},
@@ -141,10 +121,7 @@
       "setAskDisplay": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"direct":true},
       "setAskType": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"direct":true},
       "setAskList": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"direct":true},
-      "isScreen": {"type":"Boolean","pure":false,"reads":["renderer","stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "screenOff": {"type":"reporter","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
-      "averageMicVolume": {"type":"reporter","pure":false,"reads":["sound"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":false,"answer":"number","compiled":false,"note":"microphone loudness, averaged over its last calls","direct":true},
-      "allLayers": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "boolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "getAllString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
@@ -222,7 +199,7 @@
     "source": "src/extensions/penguinmod_gallery/pooiod/Box2D.js",
     "replaces": [],
     "note": "the physics world, bodies and joints live inside the extension; inputs are not cast",
-    "state": {"b2Dworld":"shared","b2Dzoom":"setting","fixDef":"shared","bodyDef":"shared","bodies":"shared","joints":"shared","uid_seq":"shared","ujid_seq":"shared","categorySeq":"shared","bodyCategoryBits":"shared","noCollideSeq":"shared","this.impacts":"shared","this.scraping":"shared","this.lastimpacts":"shared","selectedBody":"cache","mousePVec":"cache","defSpring":"shared","prb2djaxisX":"shared","prb2djaxisY":"shared","prb2dju":"shared","prb2djl":"shared","simspeed":"setting","positerations":"setting","veliterations":"setting"},
+    "state": {"b2Dworld":"shared","b2Dzoom":"setting","fixDef":"shared","bodyDef":"shared","bodies":"shared","joints":"shared","uid_seq":"shared","ujid_seq":"shared","categorySeq":"shared","bodyCategoryBits":"shared","noCollideSeq":"shared","this.impacts":"shared","this.scraping":"shared","this.lastimpacts":"shared","selectedBody":"cache","mousePVec":"cache","defSpring":"shared","prb2djaxisX":"shared","prb2djaxisY":"shared","prb2dju":"shared","prb2djl":"shared","simspeed":"setting","positerations":"setting","veliterations":"setting","attachedSprites":"sprite"},
     "blocks": {
       "setBodyAttrs": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "defineCircle": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
@@ -230,6 +207,8 @@
       "definePoly": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false,"note":"waits and uses a page canvas when given an SVG or data: URL"},
       "difineCostume": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"the costume's outline (convex hull)","direct":true},
       "placeBody": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
+      "attachSprite": {"type":"command","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"stateReads":[],"stateWrites":["sprite"],"direct":true},
+      "detachSprite": {"type":"command","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"page":false,"answer":null,"compiled":false,"stateReads":[],"stateWrites":["sprite"],"direct":true},
       "destroyBody": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "destroyBodys": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "setObjectLayer": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"direct":true},
@@ -261,7 +240,7 @@
       "setWorldForces": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "getsimspeed": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
       "setsimspeed": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "stepSimulation": {"type":"command","pure":false,"reads":[],"writes":["threads"],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"starts the impact hats; a 10 ms timer copies the impacts"},
+      "stepSimulation": {"type":"command","pure":false,"reads":["sprites"],"writes":["threads","renderer","sprites","events"],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared","sprite"],"page":false,"answer":null,"compiled":false,"note":"starts the impact hats; a 10 ms timer copies the impacts; moves each attached sprite to its object, and an attached sprite a script moved moves its object first"},
       "rotatePoint": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"a number, or text for both parts"},
       "rotationFromPoint": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "magnitudeOfPoint": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
@@ -289,19 +268,14 @@
     "replaces": [],
     "hooks": ["ScratchBlocks canDragDuplicate block option (editor)","runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmRestartThreadHooks","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
     "note": "some blocks run branches in Thread objects it makes itself (interpreter only); key listeners in the page post bound keys",
-    "state": {"conditionStorage":"shared","overrideCalls":"shared","hats":"shared","keybinds":"setting","erroredScripts":"shared"},
+    "state": {"conditionStorage":"shared","overrideCalls":"shared","hats":"shared","keybinds":"setting"},
     "blocks": {
-      "runFlag": {"type":"command","pure":false,"reads":["sprites","threads"],"writes":["events","sound","sprites","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "waitSecsOrCon": {"type":"conditional","pure":false,"reads":[],"writes":["script"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "waitChanged": {"type":"conditional","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "repeatForUntil": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
-      "repeatSecs": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "repeatSecUntil": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "spayedCondition": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "loopInd": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "loopTimer": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":["script"],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "continueLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
-      "breakLoop": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "newThreadAdv": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "threadArgs": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "runType": {"type":"loop","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -312,15 +286,10 @@
       "ifPart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":true},
       "elsePart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":true},
       "ifElseVal": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "tryCatch": {"type":"conditional","pure":false,"reads":["blocks","script","threads"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"runs the try branch as a script and the catch branch when that script fails (BLOCK_STACK_ERROR); waits a tick at a time"},
       "runInSprite": {"type":"conditional","pure":false,"reads":["blocks","script","sprites"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "asClone": {"type":"conditional","pure":false,"reads":["blocks","script","sprites","variables"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "asParent": {"type":"conditional","pure":false,"reads":["blocks","script","sprite"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "getInSprite": {"type":"reporter","pure":false,"reads":["blocks","script","sprites"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "getInClone": {"type":"reporter","pure":false,"reads":["blocks","script","sprites","variables"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "onCall": {"type":"conditional","pure":false,"reads":["script"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "runBranch": {"type":"command","pure":false,"reads":["blocks","sprites"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "runBranchWait": {"type":"command","pure":false,"reads":["blocks","sprites","threads"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "defineFunc": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "returnFunc": {"type":"command","pure":false,"reads":[],"writes":["script","threads"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "callFunc": {"type":"command","pure":false,"reads":["script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -472,32 +441,6 @@
       "evalParam": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true,"note":"runs the input again in a Thread it makes itself"},
       "getParam": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true},
       "stopCallerScript": {"type":"command","pure":false,"reads":[],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false}
-    }
-  },
-  "SPmessagePlus": {
-    "source": "src/extensions/sharkpool_gallery/Messages-Plus.js",
-    "replaces": [],
-    "hooks": ["runtime HATS_STARTED event (adds its threads to a broadcast's)","runtime.pmRestartThreadHooks"],
-    "note": "its startHats wrapper makes section 63 check hats every frame (EXTENSION-ROADMAP step 5)",
-    "state": {"receivedMsgs":"shared","noRestartMsgs":"setting","overlappedMsgs":"setting","multiResponseMsgs":"setting"},
-    "blocks": {
-      "whenAnyBroadcast": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "messageName": {"type":"reporter","pure":false,"reads":["script","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "broadcastTarget": {"type":"command","pure":false,"reads":["sprites","threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"waits only with \"and wait\""},
-      "broadcastDataTarget": {"type":"command","pure":false,"reads":["sprites","threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"waits only with \"and wait\""},
-      "broadcastArray": {"type":"command","pure":false,"reads":["sprites","threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"waits only with \"and wait\""},
-      "receivedData": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "otherData": {"type":"reporter","pure":false,"reads":["blocks","sprites","threads"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "broadcastReturn": {"type":"reporter","pure":false,"reads":["sprites","threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "broadcastReturnData": {"type":"reporter","pure":false,"reads":["sprites","threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "respondData": {"type":"command","pure":false,"reads":[],"writes":["script","threads"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"stops its script after a frame"},
-      "isReceived": {"type":"Boolean","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "isWaiting": {"type":"Boolean","pure":false,"reads":["threads"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "receivers": {"type":"reporter","pure":false,"reads":["blocks","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "toggleRestart": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "toggleOverlap": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "toggleMultiResponse": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "whenReceived": {"type":"hat","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false}
     }
   },
   "SPpartEngine": {
@@ -872,15 +815,11 @@
     "blocks": {
       "penLayer": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "getText": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "costumeInfo": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "setTargetCostume": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "cloudCode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "whenChanged": {"type":"hat","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"remembers values per sprite and block (module list)"},
       "changeV": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "isChanged": {"type":"Boolean","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"remembers the last value in the script"},
       "broadcastRun": {"type":"loop","pure":false,"reads":["threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "setSpriteEffect": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "hexBrightness": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "removeThorns": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for a number input (not cast)"},
       "genShape": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"the png option draws on a page canvas and waits"},
       "unboundSound": {"type":"command","pure":false,"reads":["sprites"],"writes":["sound","sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
@@ -898,11 +837,8 @@
     "source": "src/extensions/turbowarp_gallery/TheShovel/ShovelUtils.js",
     "replaces": [],
     "hooks": ["runtime RUNTIME_STEP_END event (counts frames per second)"],
-    "state": {"fps":"outside","times":"outside"},
     "blocks": {
       "importImage": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait","direct":true},
-      "getlist": {"type":"reporter","pure":false,"reads":["variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "setlist": {"type":"command","pure":false,"reads":["variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"replaces a stage list's items (pmSetValue, section 125)","direct":true},
       "importSprite": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"does not wait","direct":true},
       "importSound": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait","direct":true},
       "importProject": {"type":"command","pure":false,"reads":[],"writes":["project","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"replaces the whole project (asks first in the editor)","direct":true},
@@ -910,8 +846,7 @@
       "deleteImage": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
       "setedtarget": {"type":"command","pure":false,"reads":["sprites"],"writes":["blocks"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"changes the editor's editing target","direct":true},
       "brightnessByColor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "getAllSprites": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "getfps": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true}
+      "getAllSprites": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true}
     }
   },
   "battery": {
@@ -977,9 +912,7 @@
     "blocks": {
       "whenCopied": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "whenPasted": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "setClipboard": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"direct":true},
       "resetClipboard": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"direct":true},
-      "clipboard": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"asks Scratch.canReadClipboard"},
       "getLastPastedText": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"any","compiled":false,"direct":true}
     }
   },
@@ -1134,42 +1067,6 @@
       "logout": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false,"note":"revokes the token online","direct":true}
     }
   },
-  "divVecQuat": {
-    "source": "src/extensions/penguinmod_gallery/Div/divVecQuat.js",
-    "replaces": [],
-    "note": "own value types (Vector3D, Quaternion) with registered serializers; compiler code for every block",
-    "blocks": {
-      "vecNew": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecComp": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true},
-      "vecAdd": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecSub": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecScale": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecDot": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true},
-      "vecCross": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecMagSq": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true},
-      "vecNorm": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecProject": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "vecReject": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatNew": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatWithVec": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatAround": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatReal": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true},
-      "quatImag": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatTransform": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatSpan": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatAdd": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatSub": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatScale": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatMult": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatInv": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatMagSq": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true},
-      "quatNorm": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatConj": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatSqrt": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatExp": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true},
-      "quatLog": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":true}
-    }
-  },
   "dninwakelock": {
     "source": "src/extensions/turbowarp_gallery/DNin/wake-lock.js",
     "replaces": [],
@@ -1188,8 +1085,6 @@
       "suggestedStageWidth": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
       "suggestedStageHeight": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
       "devicePixelRatio": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
-      "screenResolution": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
-      "innerResolution": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
       "stageEdgePositionX": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "stageEdgePositionY": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "stageAnchorX": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
@@ -1199,28 +1094,11 @@
   "dtbyxeroname": {
     "source": "src/extensions/turbowarp_gallery/XeroName/Deltatime.js",
     "replaces": [],
-    "note": "measures the time between frames itself (performance.now on BEFORE_EXECUTE)",
-    "state": {"deltaTime":"shared","previousTime":"shared"},
+    "note": "measures the time between frames itself (performance.now on BEFORE_EXECUTE); fps counts the frames of the last second (RUNTIME_STEP_END)",
+    "state": {"deltaTime":"shared","previousTime":"shared","frameTimes":"shared","fps":"shared"},
     "blocks": {
       "dt": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
       "fps": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true}
-    }
-  },
-  "e2ee": {
-    "source": "src/extensions/penguinmod_gallery/MikeDev101/e2ee.js",
-    "replaces": [],
-    "note": "Web Crypto (crypto.subtle), no server",
-    "state": {"this.publicKey":"shared","this.privateKey":"shared","this.encryption":"shared","this.encrypted":"shared","this.IV":"shared","this.decrypted":"shared"},
-    "blocks": {
-      "generateKeyPair": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false},
-      "myPubKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
-      "myPrivKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
-      "makeSharedKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"same answer for the same keys, but waits (async crypto)"},
-      "encryptData": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"random IV"},
-      "iv": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
-      "encryptedData": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
-      "decryptData": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false},
-      "decryptedData": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true}
     }
   },
   "embintranslation": {
@@ -1247,27 +1125,17 @@
     "source": "src/extensions/sharkpool_gallery/KeysPlusV2.js",
     "replaces": [],
     "note": "own window listeners for keys, mouse buttons and wheel",
-    "state": {"this._lastKeyPressed":"outside","this._keysPressed":"outside","this._mouseDown":"outside","this._scrollDeltaY":"outside","this._lastScrollTime":"outside","this._keybinds":"setting","this._tags":"setting","this._settings":"setting","this._importError":"shared"},
+    "state": {"this._keysPressed":"outside","this._mouseDown":"outside","this._keybinds":"setting","this._tags":"setting","this._settings":"setting","this._importError":"shared"},
     "blocks": {
       "eventMouseDown": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
-      "isMouseDown": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
       "isMouseHit": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
       "timeMouseDown": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
-      "eventScroll": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
-      "isScrolling": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
-      "scrollDirection": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"note":"from its own page listeners","direct":true},
       "eventKeysPressed": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
-      "eventKeyPressed": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
       "isKeysPressed": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
-      "isKeyPressed": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
       "isKeysHit": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
-      "isKeyHit": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
-      "lastKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"note":"from its own page listeners","direct":true},
       "currentKeysPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"note":"from its own page listeners","direct":true},
-      "currentKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"note":"from its own page listeners","direct":true},
       "keyPressedProperty": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"any","compiled":false,"note":"from its own page listeners","direct":true},
       "timeKeysPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"any","compiled":false,"note":"from its own page listeners","direct":true},
-      "timeKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"from its own page listeners","direct":true},
       "eventKeybindTriggered": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":null,"compiled":false,"note":"from its own page listeners"},
       "whileKeybindTriggered": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
       "whenKeybindTriggered": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","outside"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"note":"from its own page listeners","direct":true},
@@ -1514,7 +1382,7 @@
     "blocks": {
       "randomUUID": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "randomValues": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "digest": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"same answer for the same inputs, but waits (async crypto)"},
+      "digest": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"same answer for the same inputs, but waits (async crypto; MD5 is worked out at once but still answers through the promise)"},
       "generateSignKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "signValue": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"same answer for the same inputs, but waits (async crypto)"},
       "verifySignature": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"empty text for a bad key"},
@@ -1525,7 +1393,9 @@
       "rsaSign": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "rsaVerify": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"empty text for a bad key"},
       "rsaPublicKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"async: answers through a promise (crypto.subtle)"},
-      "rsaPrivateKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"async: answers through a promise (crypto.subtle)"}
+      "rsaPrivateKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"async: answers through a promise (crypto.subtle)"},
+      "generateECDHKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false},
+      "ecdhSharedKey": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"async: answers through a promise (crypto.subtle); '' when a key is not an ECDH key"}
     }
   },
   "gaimeriDeviceMotionExtension": {
@@ -1567,48 +1437,6 @@
       "getUser": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
       "getError": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
       "logout": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false,"note":"revokes the token online","direct":true}
-    }
-  },
-  "griffpatch": {
-    "source": "src/extensions/turbowarp_gallery/box2d.js",
-    "replaces": [],
-    "note": "moves sprites without setXY (writes x/y, updateDrawableProperties, emits target events itself); RUNTIME PROJECT_START listener resets the world",
-    "state": {"fixDef":"cache","bodyDef":"cache","bodies":"sprite","prevPos":"sprite","defSpring":"shared","stageBodies":"shared","pinned":"sprite","tickRate":"setting","_scroll":"shared","world":"shared"},
-    "blocks": {
-      "setStage": {"type":"command","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setGravity": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "getGravityX": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "getGravityY": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setPhysics": {"type":"command","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "disablePhysics": {"type":"command","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "doTick": {"type":"command","pure":false,"reads":["sprites"],"writes":["renderer","sprites","events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"note":"moves sprites by writing x/y and the renderer directly","direct":true},
-      "setTickRate": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "getTickRate": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setPosition": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite","events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setVelocity": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "changeVelocity": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getVelocityX": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "getVelocityY": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "applyForce": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "applyAngForce": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "setAngVelocity": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getAngVelocity": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setStatic": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getStatic": {"type":"Boolean","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "setDensity": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "setDensityValue": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getDensity": {"type":"reporter","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setFriction": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "setFrictionValue": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getFriction": {"type":"reporter","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setRestitution": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "setRestitutionValue": {"type":"command","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":null,"compiled":false,"note":"makes the sprite's body from its costume outline when it has none","direct":true},
-      "getRestitution": {"type":"reporter","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared","cache"],"page":false,"answer":"number","compiled":false,"direct":true},
-      "getTouching": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["sprite"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
-      "setScroll": {"type":"command","pure":false,"reads":["sprites"],"writes":["renderer","sprites","events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"note":"moves sprites by writing x/y and the renderer directly","direct":true},
-      "changeScroll": {"type":"command","pure":false,"reads":["sprites"],"writes":["renderer","sprites","events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["sprite","shared"],"page":false,"answer":null,"compiled":false,"note":"moves sprites by writing x/y and the renderer directly","direct":true},
-      "getScrollX": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "getScrollY": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true}
     }
   },
   "gsaWebsocket": {
@@ -1672,12 +1500,8 @@
       "dataUriFromImageUrl": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"needs an online server (api.allorigins.win)"},
       "dataUriFromArrayBuffer": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "arrayBufferFromDataUri": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"fetch() of a data: URL"},
-      "base64Encode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "base64Decode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "lib_deflate_deflateArray": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "lib_deflate_inflateArray": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "NumericalEncode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "NumericalDecode": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
+      "lib_deflate_inflateArray": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
   },
   "jgTailgating": {
@@ -1702,23 +1526,6 @@
       "tweenPropertyCancel": {"type":"command","pure":false,"reads":["sprite","threads"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"marks other scripts' tweens as cancelled","direct":true},
       "tweenC": {"type":"loop","pure":false,"reads":[],"writes":["script"],"time":true,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "tweenVal": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false}
-    }
-  },
-  "jwColor": {
-    "replaces": [],
-    "blocks": {
-      "newColor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "fromRGB": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "fromHSV": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "fromHex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "add": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "sub": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "mul": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "interpolate": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"object","compiled":false,"note":"answers a colour object"},
-      "get": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "set": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"a colour object; nothing for an unknown option (its menu takes reporters)"},
-      "toDecimal": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "toHex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
   },
   "jwProto": {
@@ -1746,34 +1553,25 @@
       "getListJoin": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "timesItemAppears": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "itemIndex": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true,"note":"random only for \"random\""},
-      "listIsEmpty": {"type":"Boolean","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "itemNumExists": {"type":"Boolean","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "orderIs": {"type":"Boolean","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "orderList": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true,"note":"random only for \"randomised\""},
       "setListToList": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "joinLists": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "setListArray": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "getListArray": {"type":"reporter","pure":false,"reads":["sprite","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true}
+      "joinLists": {"type":"command","pure":false,"reads":["sprite","variables"],"writes":["variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true}
     }
   },
   "lmsLooksPlus": {
     "source": "src/extensions/turbowarp_gallery/Lily/LooksPlus.js",
     "replaces": [],
     "blocks": {
-      "showSprite": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "hideSprite": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "spriteVisible": {"type":"Boolean","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "setLayerTo": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
       "spriteLayerNumber": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "effectValue": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "targetCostumeNumber": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "costumeAttribute": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "snapshotStage": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "replaceCostumeContentNew": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"waits for the SVG to load"},
       "restoreCostumeContent": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
       "costumeContent": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "replaceColors": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "colorHex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answers its input unchanged"}
+      "replaceColors": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
   },
   "lmsSoundExpanded": {
@@ -1794,7 +1592,6 @@
       "stopAllSpriteSounds": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["sound"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
       "pauseSounds": {"type":"command","pure":false,"reads":[],"writes":["sound"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"suspends or resumes the whole audio context","direct":true},
       "resumeSounds": {"type":"command","pure":false,"reads":[],"writes":["sound"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"suspends or resumes the whole audio context","direct":true},
-      "isSoundPlaying": {"type":"Boolean","pure":false,"reads":["sound","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "attributeOfSound": {"type":"reporter","pure":false,"reads":["sound","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "getSoundEffect": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "setProjectVolume": {"type":"command","pure":false,"reads":["sound"],"writes":["sound"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
@@ -1848,41 +1645,8 @@
       "stopScriptsInMainSprite": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "deleteClonesInSprite": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "deleteCloneWithVar": {"type":"command","pure":false,"reads":["sprite","sprites","variables"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "isClone": {"type":"Boolean","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "cloneCount": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "spriteCloneCount": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true}
-    }
-  },
-  "lmsutilsblocks": {
-    "source": "src/extensions/turbowarp_gallery/Lily/lmsutils.js",
-    "replaces": [],
-    "blocks": {
-      "whenBooleanHat": {"type":"hat","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"checked every frame"},
-      "whenKeyString": {"type":"hat","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "keyStringPressed": {"type":"Boolean","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "trueFalseBoolean": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"random only for \"random\"","direct":true},
-      "stringIf": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"tests the raw input (text \"false\" counts as true)"},
-      "stringIfElse": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"tests the raw input (text \"false\" counts as true)"},
-      "getEffectValue": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "spriteClicked": {"type":"Boolean","pure":false,"reads":["input","renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "lettersToOf": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "replaceWords": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "findIndexOfString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "itemOfFromString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "stringToUpperCase": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "stringToLowerCase": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "norBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"raw inputs: text and numbers differ"},
-      "xorBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"raw inputs: text and numbers differ"},
-      "xnorBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"raw inputs: text and numbers differ"},
-      "nandBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"raw inputs: text and numbers differ"},
-      "stringCheckBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"throws for number inputs with the upper/lower case options"},
-      "negativeReporter": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "normaliseValue": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "clampNumber": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "isUserMobile": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
-      "screenReporter": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
-      "windowReporter": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
-      "osBrowserDetails": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true}
     }
   },
   "localstorage": {
@@ -1914,11 +1678,7 @@
     "replaces": [],
     "note": "inputs not cast",
     "blocks": {
-      "strictlyequal": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"note":"raw inputs: text and numbers differ"},
-      "quasiequal": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "changecase": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"random only for the random case option","direct":true},
       "getcase": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "iscase": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "glitch": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true}
     }
   },
@@ -2012,8 +1772,6 @@
     "source": "src/extensions/turbowarp_gallery/navigator.js",
     "replaces": [],
     "blocks": {
-      "getOS": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
-      "getBrowser": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "getMemory": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
       "getPreferredColorScheme": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "getPreferredReducedMotion": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
@@ -2047,9 +1805,7 @@
       "formatCurrency": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"the number itself for an unknown currency"},
       "formatPercentage": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for digit counts the browser refuses"},
       "roundNumber": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "isInteger": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "isFinite": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "clamp": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false}
+      "isFinite": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false}
     }
   },
   "obviousAlexCMath3d": {
@@ -2077,6 +1833,15 @@
       "reflectionV3": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
       "rotateAroundPointV3": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
       "rotateAroundCenterV3": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "newQuat": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatFromVector": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatAroundAxis": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatFromTo": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatOperation": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatScale": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatFunction": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatPart": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
+      "quatRotate": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
       "newV2": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","cache"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
       "newV2fromValue": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting","cache"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
       "getAxisOfV2": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":false,"answer":"any","compiled":false,"note":"answer format depends on module-wide flags set by earlier blocks (object inputs, set mode)","direct":true},
@@ -2128,7 +1893,7 @@
     "source": "src/extensions/turbowarp_gallery/obviousAlexC/SensingPlus.js",
     "replaces": [],
     "note": "own touch listeners on the stage; speech blocks use webkitSpeechRecognition (online in Chrome, missing in Electron)",
-    "state": {"initializedSpeechRecognition":"outside","speechRecognition":"outside","recognizedSpeech":"outside","recording":"outside","sensorStatus":"outside","initializingSensorsPromise":"outside","askedForSensorPermission":"outside","physicalDeviceState":"outside","inflightSpeechRecognitionInit":"outside","nativeTouchIdToScratchId":"outside","scratchFingers":"outside","fingersMenu":"cache"},
+    "state": {"sensorStatus":"outside","initializingSensorsPromise":"outside","askedForSensorPermission":"outside","physicalDeviceState":"outside","nativeTouchIdToScratchId":"outside","scratchFingers":"outside","fingersMenu":"cache"},
     "blocks": {
       "supportsTouches": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "getMaxTouches": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"number","compiled":false,"direct":true},
@@ -2139,23 +1904,6 @@
       "getTouchingFingerID": {"type":"reporter","pure":false,"reads":["input","renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"direct":true},
       "fingerPosition": {"type":"reporter","pure":false,"reads":["input","stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"direct":true},
       "getFingerSpeed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":true,"answer":"number","compiled":false,"note":"remembers the last position each time it is asked","direct":true},
-      "listInSprite": {"type":"reporter","pure":false,"reads":["sprites","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "lengthOfListInSprite": {"type":"reporter","pure":false,"reads":["sprites","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "listContains": {"type":"Boolean","pure":false,"reads":["sprites","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"empty text when the list is not found","direct":true},
-      "itemNumberInList": {"type":"reporter","pure":false,"reads":["sprites","variables"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "touchingOriginal": {"type":"Boolean","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "touchingClone": {"type":"Boolean","pure":false,"reads":["renderer","sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "clonesOfSprite": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "getEffect": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "isHidden": {"type":"Boolean","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
-      "getRotationStyle": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "getSpriteLayer": {"type":"reporter","pure":false,"reads":["renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "getClipBoard": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false},
-      "setClipBoard": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false},
-      "isPackaged": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
-      "recording": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false},
-      "returnWords": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
-      "isrecording": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
       "hasDevice": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":"boolean","compiled":false,"note":"may ask for sensor permission in a stage overlay"},
       "getDeviceSpeed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":"any","compiled":false}
     }
@@ -2416,7 +2164,6 @@
       "infinity": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "truncateNumber": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "atan2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
-      "reverseChars": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "shuffleChars": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "textAfter": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "textBefore": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
@@ -2430,28 +2177,20 @@
   },
   "pmSensingExpansion": {
     "replaces": [],
-    "state": {"this.lastValues":"shared","this.loudnessArray":"outside","this.canGetLoudness":"outside","this.scrollDistance":"shared","this.canVibrate":"outside","this.lastUpdate":"shared"},
+    "state": {"this.lastValues":"shared","this.loudnessArray":"outside","this.canGetLoudness":"outside","this.canVibrate":"outside"},
     "blocks": {
-      "batteryPercentage": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"number","compiled":false},
-      "batteryCharging": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"boolean","compiled":false},
       "vibrateDevice": {"type":"command","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false,"direct":true},
-      "browserLanguage": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "urlOptions": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "urlOptionsOf": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"pure, but checks that window exists"},
-      "setUsername": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"uses the page global vm"},
       "setUrlEnd": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"direct":true},
       "queryParamOfUrl": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"pure, but checks that window exists; null when the parameter is missing"},
       "packaged": {"type":"Boolean","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "spriteName": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "framed": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "currentMillisecond": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "deltaTime": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":"number","compiled":false,"direct":true},
       "pickColor": {"type":"reporter","pure":false,"reads":["renderer","stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"uses the canvas size on the page","direct":true},
       "maxSpriteLayers": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "averageLoudness": {"type":"reporter","pure":false,"reads":["sound"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":false,"answer":"number","compiled":false,"note":"microphone, sampled by its own timer","direct":true},
-      "scrollingDistance": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "setScrollingDistance": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "changeScrollingDistanceBy": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "currentKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
       "amountOfTimeKeyHasBeenHeld": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "getLastKeyPressed": {"type":"reporter","pure":false,"reads":["input"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
@@ -2581,7 +2320,6 @@
       "getDimension": {"type":"reporter","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "setDimensions": {"type":"command","pure":false,"reads":[],"writes":["stage size"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "setUsername": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "greenFlag": {"type":"command","pure":false,"reads":[],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "whenChange": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"}
     }
   },
@@ -2628,33 +2366,6 @@
     "blocks": {
       "compress": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "decompress": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
-    }
-  },
-  "skyhigh173BigInt": {
-    "source": "src/extensions/turbowarp_gallery/Skyhigh173/bigint.js",
-    "replaces": [],
-    "blocks": {
-      "from": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answers a JavaScript BigInt"},
-      "to": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "add": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "sub": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "mul": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "div": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "pow": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "mod": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "select": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "lt": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "le": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "eq": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "neq": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "ge": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "gt": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "and": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "or": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "xor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "ls": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "rs": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"},
-      "not": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for results too big for a BigInt"}
     }
   },
   "speechSP": {
@@ -2745,39 +2456,17 @@
       "whengt": {"type":"hat","pure":false,"reads":["variables"],"writes":["variables"],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"makes the timer variable on first use"}
     }
   },
-  "stretch": {
-    "source": "src/extensions/turbowarp_gallery/stretch.js",
-    "replaces": [],
-    "note": "since section 120 its blocks set PenguinMod's own sprite stretch (target.stretch, setStretch), the same as the Looks stretch blocks",
-    "blocks": {
-      "changeStretch": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "setStretchX": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "setStretchY": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "changeStretchX": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "changeStretchY": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "getX": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "getY": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true}
-    }
-  },
   "strings": {
     "source": "src/extensions/turbowarp_gallery/text.js",
     "replaces": [],
     "blocks": {
-      "letters_of": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "split": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "count": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "indexof": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "replace": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "repeat": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "unicodeof": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "replaceRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "matchRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "matchRegexJSON": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "testRegex": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "countRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"uses the match cache, which only remembers the last answer (an invalid pattern clears it since section 111)"},
       "isCase": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "toCase": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"pure except the \"random case\" option","direct":true},
-      "posWith": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "reverse": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "trim": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
@@ -2821,24 +2510,14 @@
     "source": "src/extensions/turbowarp_gallery/true-fantom/math.js",
     "replaces": [],
     "blocks": {
-      "root_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "negative_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "exactly_equal_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "not_exactly_equal_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "almost_equal_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "not_almost_equal_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "between_or_equal": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "between": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "exactly_cont_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "sign_of": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "clamp_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answers one of its raw inputs"},
       "scale_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "trunc2_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "log_with_base_block": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "true_math_op": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "is_safe_number_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "is_number_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "is_int_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "is_float_block": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false}
     }
   },
@@ -2847,8 +2526,6 @@
     "replaces": [],
     "state": {"this.requestHeaders":"setting","this.formFields":"setting","this.responseHeaders":"outside"},
     "blocks": {
-      "browser_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
-      "current_url_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "network_type_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "network_generation_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "downlink_speed_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
@@ -2875,12 +2552,8 @@
     "source": "src/extensions/turbowarp_gallery/utilities.js",
     "replaces": [],
     "blocks": {
-      "ternaryOperator": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"tests the raw input (text \"false\" counts as true)"},
-      "letters": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "fetchFrom": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"Scratch.fetch of any address (network)"},
       "parseJSON": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "stringToBoolean": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
-      "regexReplace": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
+      "spriteClicked": {"type":"Boolean","pure":false,"reads":["input","renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true}
     }
   },
   "videoSensing": {
@@ -2891,20 +2564,6 @@
       "videoOn": {"type":"reporter","pure":false,"reads":["input","renderer","sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":false,"answer":"number","compiled":false,"direct":true},
       "videoToggle": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":false,"answer":null,"compiled":false,"direct":true},
       "setVideoTransparency": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":false,"answer":null,"compiled":false,"direct":true}
-    }
-  },
-  "videoSprites": {
-    "source": "src/extensions/turbowarp_gallery/lab/video-sprites.js",
-    "replaces": [],
-    "hooks": ["runtime.pmCloneCreatedHooks (clones keep the video)","renderer.createCustomSkin"],
-    "note": "own renderer skins (renderer.createCustomSkin); AFTER_EXECUTE listener updates them every frame",
-    "state": {"workCanvas":"cache","hidPreview":"cache","workContext":"cache"},
-    "blocks": {
-      "videoSpriteFillSprite": {"type":"command","pure":false,"reads":[],"writes":["input","renderer","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["cache"],"page":false,"answer":null,"compiled":false,"note":"turns the camera on and waits for it"},
-      "videoSpriteFillColor": {"type":"command","pure":false,"reads":[],"writes":["input","renderer","sprite"],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["cache"],"page":false,"answer":null,"compiled":false,"note":"turns the camera on and waits for it"},
-      "changeCameraBy": {"type":"command","pure":false,"reads":["sprite"],"writes":["sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "scaleCamera": {"type":"command","pure":false,"reads":["sprite"],"writes":["sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "videoSpriteOff": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer","sprite"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true}
     }
   },
   "webrtc": {

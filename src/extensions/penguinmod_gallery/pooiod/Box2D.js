@@ -6,6 +6,9 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 259): "Attach this sprite to object" / "Detach this sprite": after each simulation step an
+// attached sprite goes to its object's position and, with rotation style "all around", its angle; a sprite a script
+// moved or turned moves its object (what the removed Physics extension did with its sprites). Marked "Desktop fork (section 259)".
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Boxed Physics
 // ID: P7BoxPhys
@@ -48,6 +51,8 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 
 	var bodies = {};
 	var joints = {};
+	// Desktop fork (section 259): attached sprites, target ID => {name: object name, x, y, dir: where it was put last}
+	const attachedSprites = new Map();
 
 	var bodyCategoryBits = 1;
 	var bodyMaskBits = 1;
@@ -190,6 +195,25 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 								defaultValue: 90,
 							},
 						},
+					},
+					// Desktop fork (section 259)
+					{
+						opcode: 'attachSprite',
+						blockType: Scratch.BlockType.COMMAND,
+						text: 'Attach this sprite to object [NAME]',
+						filter: [Scratch.TargetType.SPRITE],
+						arguments: {
+							NAME: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: 'Object',
+							},
+						},
+					},
+					{
+						opcode: 'detachSprite',
+						blockType: Scratch.BlockType.COMMAND,
+						text: 'Detach this sprite from its object',
+						filter: [Scratch.TargetType.SPRITE],
 					},
 
 					{ blockType: Scratch.BlockType.LABEL, text: "Modify objects" }, // ---- Modify objects ---
@@ -904,6 +928,7 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 
 			bodies = {};
 			joints = {};
+			attachedSprites.clear(); // Desktop fork (section 259)
 			uid_seq = 0;
 			ujid_seq = 0;
 
@@ -1264,6 +1289,57 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 				}
 			}
 			return Scratch.Cast.toString(bodynames);
+		}
+
+		// Desktop fork (section 259): attach / detach the sprite running the block
+		attachSprite(args, util) {
+			if (util.target.isStage) return;
+			attachedSprites.set(util.target.id, { name: String(args.NAME), x: null, y: null, dir: null });
+		}
+
+		detachSprite(args, util) {
+			attachedSprites.delete(util.target.id);
+		}
+
+		// Desktop fork (section 259): before a step, an attached sprite that a script moved or turned since the last
+		// step moves or turns its object; sprites that are gone or whose object is gone are forgotten
+		pushAttachedSprites() {
+			for (const [id, attached] of attachedSprites) {
+				const target = this.runtime.getTargetById(id);
+				const body = bodies[attached.name];
+				if (!target || !body) {
+					attachedSprites.delete(id);
+					continue;
+				}
+				if (attached.x !== null && (target.x !== attached.x || target.y !== attached.y)) {
+					body.SetPosition(new b2Vec2(target.x / b2Dzoom, target.y / b2Dzoom));
+					body.SetAwake(true);
+				}
+				if (attached.dir !== null && target.direction !== attached.dir && target.rotationStyle === 'all around') {
+					body.SetAngle((90 - target.direction) * toRad);
+					body.SetAwake(true);
+				}
+			}
+		}
+
+		// Desktop fork (section 259): after a step, each attached sprite goes to its object (not while the user drags it:
+		// then the object follows the sprite; the stage edge does not stop it, as objects can leave the stage) and turns with
+		// it when it rotates all around
+		pullAttachedSprites() {
+			for (const [id, attached] of attachedSprites) {
+				const target = this.runtime.getTargetById(id);
+				const body = bodies[attached.name];
+				if (!target || !body) {
+					attachedSprites.delete(id);
+					continue;
+				}
+				const position = body.GetPosition();
+				target.setXY(position.x * b2Dzoom, position.y * b2Dzoom, false, true);
+				if (target.rotationStyle === 'all around') target.setDirection(90 - body.GetAngle() / toRad);
+				attached.x = target.x;
+				attached.y = target.y;
+				attached.dir = target.direction;
+			}
 		}
 
 		destroyBodys() {
@@ -1901,8 +1977,10 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 
 			Scratch.vm.runtime.startHats('P7BoxPhys_whenImpactDetected');
 
+			this.pushAttachedSprites(); // Desktop fork (section 259)
 			b2Dworld.Step(1 / secondsimspeed, veliterations, positerations);
 			b2Dworld.ClearForces();
+			this.pullAttachedSprites(); // Desktop fork (section 259)
 
 			Scratch.vm.runtime.pmSetTimeout(()=>{
 				this.lastimpacts = this.impacts;

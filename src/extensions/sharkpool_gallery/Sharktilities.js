@@ -34,15 +34,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   runtime.on("BEFORE_EXECUTE", () => runtime.startHats("SharkPoolSharktilities_whenChanged"));
   // Desktop fork (section 123): the block's canDragDuplicate makes the block library treat it like an argument reporter
 
-  // This function was taken from Looks+ by LilyMakesThings
-  const packageTest = (blockName) => {
-    if (runtime.isPackaged) {
-      Scratch.vm.runtime.pmPage.alert(`For SharkTilities to work, the creator of the packaged project must uncheck "Remove raw asset data after loading to save RAM" under advanced settings in the packager.`);
-      return true;
-    }
-    return false;
-  };
-
   class Sharktilities {
     getInfo() {
       return {
@@ -66,16 +57,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             }
           },
           {
-            opcode: "costumeInfo",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "[INFO] of costume #[NUM] in [SPRITE]",
-            arguments: {
-              INFO: { type: Scratch.ArgumentType.STRING, menu: "cosInfo" },
-              NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" }
-            }
-          },
-          {
             opcode: "setTargetCostume",
             blockType: Scratch.BlockType.COMMAND,
             text: "set costume of [SPRITE] to [NUM]",
@@ -85,15 +66,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             }
           },
           "---",
-          {
-            opcode: "cloudCode",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "☁ cloud [CODE] string [TEXT]",
-            arguments: {
-              CODE: { type: Scratch.ArgumentType.STRING, menu: "encoder" },
-              TEXT: { type: Scratch.ArgumentType.STRING, defaultValue: "SharkPool" }
-            }
-          },
           { blockType: Scratch.BlockType.XML, xml: `<block type="SharkPoolSharktilities_whenChanged"><value name="CHANGE"><shadow type="SharkPoolSharktilities_changeV"></shadow></value></block>` },
           {
             opcode: "whenChanged", blockType: Scratch.BlockType.HAT,
@@ -105,14 +77,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "changeV", blockType: Scratch.BlockType.REPORTER,
             hideFromPalette: true, text: "old value", canDragDuplicate: true // Desktop fork (section 123)
-          },
-          {
-            opcode: "isChanged",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[INPUT] changed",
-            arguments: {
-              INPUT: { type: null }
-            }
           },
           {
             opcode: "broadcastRun",
@@ -131,15 +95,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               EFFECT: { type: Scratch.ArgumentType.STRING, menu: "EFFECT_MENU" },
               VALUE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               SPRITE: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" }
-            }
-          },
-          {
-            opcode: "hexBrightness",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "change brightness of [COLOR] by [CHANGE]",
-            arguments: {
-              COLOR: { type: Scratch.ArgumentType.COLOR },
-              CHANGE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 }
             }
           },
           {
@@ -267,14 +222,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           STRING: ["||", "??"],
           SOUND: ["volume", "pitch", "pan"],
           RETURN: ["svg", "encoded svg", "png"],
-          encoder: ["encode", "decode"],
-          cosInfo: {
-            acceptReporters: true,
-            items: [
-              "name", "width", "height", "type", "rotation center x",
-              "rotation center y", "content", "data.uri"
-            ]
-          },
           shuffleOption: {
             acceptReporters: true,
             items: [
@@ -318,16 +265,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return params.diff || "";
     }
 
-    isChanged(args, util) {
-      const thisID = util.thread.isCompiled ? util.thread.peekStack() : util.thread.peekStackFrame().op.id;
-      const input = args.INPUT;
-      if (!util.thread.stackFrames[0].oldVal) util.thread.stackFrames[0].oldVal = {};
-      const oldVal = util.thread.stackFrames[0].oldVal[thisID];
-      const con = oldVal !== input && oldVal !== undefined;
-      util.thread.stackFrames[0].oldVal[thisID] = input;
-      return con;
-    }
-
     randomSingleInteger() { return Scratch.vm.runtime.pmRandom() < 0.5 ? -1 : 1 }
 
     setSpriteEffect(args, util) {
@@ -368,14 +305,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    hexBrightness(args) {
-      const brightness = Scratch.Cast.toNumber(args.CHANGE);
-      let rgb = Scratch.Cast.toRgbColorList(args.COLOR).map((channel) => {
-        return Math.min(255, channel + brightness);
-      });
-      return `#${(1 << 24 | rgb[0] << 16 | rgb[1] << 8 | rgb[2]).toString(16).slice(1)}`;
-    }
-
     smooth(spd, lim, type, num) {
       type = type === "sin" ? "sin" : type === "cos" ? "cos" : "tan";
       const speed = Scratch.Cast.toNumber(spd) / 10;
@@ -406,47 +335,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       });
     }
 
-    costumeInfo(args, util) {
-      let target = args.SPRITE;
-      target = target === "_myself_" ? util.target : target === "_stage_" ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(target);
-      if (!target) return "";
-      const targetInfo = target.getCostumes();
-      if (args.OVERRIDE !== undefined) return target.sprite.costumes.length;
-      let index = Math.round(Math.abs(Scratch.Cast.toString(args.NUM))) - 1;
-      if (!index || Scratch.Cast.toString(index).includes("Infinity")) index = 0;
-      if (index > target.sprite.costumes.length - 1) index = target.sprite.costumes.length - 1;
-      const costume = targetInfo[index];
-      switch (args.INFO) {
-        case "name": return costume.name;
-        case "width": return costume.size[0];
-        case "height": return costume.size[1];
-        case "type": return packageTest("costume format") ? "unknown" : costume.dataFormat;
-        case "rotation center x": return costume.rotationCenterX;
-        case "rotation center y": return costume.rotationCenterY;
-        case "content": return packageTest("costume content") ? "" : costume.asset.decodeText();
-        case "data.uri": return packageTest("costume content") ? "" : costume.asset.encodeDataURI();
-        default: return "";
-      }
-    }
-
     getText(args, util) {
       const target = args.SPRITE === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.SPRITE);
       if (!target || !target._customState["Scratch.looks"]) return "";
       return target._customState["Scratch.looks"].text;
-    }
-
-    cloudCode(args) {
-      const txt = Scratch.Cast.toString(args.TEXT);
-      return args.CODE === "encode" ? this.encodeText(txt) : this.decodeText(txt);
-    }
-    encodeText(txt) { return txt.split("").map(char => char.charCodeAt(0)).map(value => value.toString().padStart(3, "0")).join("") }
-    decodeText(txt) {
-      const decodedString = [];
-      for (let i = 0; i < txt.length; i += 3) {
-        const charCode = parseInt(txt.slice(i, i + 3), 10);
-        decodedString.push(String.fromCharCode(charCode));
-      }
-      return decodedString.join("");
     }
 
     setTargetCostume(args, util) {

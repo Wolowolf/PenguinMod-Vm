@@ -291,17 +291,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             }
           },
           {
-            opcode: 'isInteger',
-            blockType: BlockType.BOOLEAN,
-            text: 'is [NUMBER] an integer?',
-            arguments: {
-              NUMBER: {
-                type: ArgumentType.NUMBER,
-                defaultValue: 5
-              }
-            }
-          },
-          {
             opcode: 'isFinite',
             blockType: BlockType.BOOLEAN,
             text: 'is [NUMBER] finite?',
@@ -311,27 +300,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 defaultValue: 42
               }
             }
-          },
-          {
-            opcode: 'clamp',
-            blockType: BlockType.REPORTER,
-            text: 'clamp [NUMBER] between [MIN] and [MAX]',
-            arguments: {
-              NUMBER: {
-                type: ArgumentType.NUMBER,
-                defaultValue: 50
-              },
-              MIN: {
-                type: ArgumentType.NUMBER,
-                defaultValue: 0
-              },
-              MAX: {
-                type: ArgumentType.NUMBER,
-                defaultValue: 100
-              }
-            }
-          }
-        ]
+          }        ]
       };
     }
 
@@ -379,26 +348,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return Math.round(Cast.toNumber(args.NUMBER) / multiple) * multiple;
     }
 
-    isInteger(args) {
-      return Number.isInteger(Cast.toNumber(args.NUMBER));
-    }
-
     isFinite(args) {
       return Number.isFinite(Cast.toNumber(args.NUMBER));
     }
 
-    clamp(args) {
-      const num = Cast.toNumber(args.NUMBER);
-      let min = Cast.toNumber(args.MIN);
-      let max = Cast.toNumber(args.MAX);
-      
-      // swap stuff
-      if (min > max) {
-        [min, max] = [max, min];
-      }
-      
-      return Math.min(Math.max(num, min), max);
-    }
   }
 
   Scratch.extensions.register(new MubiLopNumberUtilities());

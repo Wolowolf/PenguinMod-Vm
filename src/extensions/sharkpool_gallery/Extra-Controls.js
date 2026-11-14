@@ -7,6 +7,8 @@
 // ScratchBlocks.scratchBlocksUtils.isShadowArgumentReporter; marked "Desktop fork (section 123)".
 // Section 131: thread arguments ("data") kept on the thread, "run [forward]" works interpreted; marked "Desktop fork (section 131)".
 // Section 152: the branch IDs of "if" / "else" readable by the compiler's inline code; marked "Desktop fork (section 152)".
+// Section 259: the blocks that duplicate built-in ones are removed (run flag and continue, wait or until, repeat for secs,
+// run next cycle, break out loop, try / catch, get from clone, on call / call to run), with their compiled code and error watcher.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -33,11 +35,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const getIconURI = (name) => {
     const start = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIH";
     return start + {
-      "loop": "dpZHRoPSIyMC4xMTgiIGhlaWdodD0iMjAuMTE4IiB2aWV3Qm94PSIwIDAgMjAuMTE4IDIwLjExOCI+PGcgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIj48cGF0aCBkPSJNMCAyMC4xMThWLS4wMDFoMjAuMTE4djIwLjExOHoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMTguMjQ3IDguNjE0aC0yLjZjMCAxLjUtLjMgMi45LTEgNC4yLS44IDEuNi0yLjEgMi44LTMuNyAzLjYtMS41LjgtMy4zIDEuMS00LjkuOC0xLjYtLjItMy4yLTEtNC40LTIuMS0uNC0uMy0uNC0uOS0uMS0xLjIuMy0uNC45LS40IDEuMi0uMSAxIC43IDIuMiAxLjEgMy40IDEuMXMyLjMtLjMgMy4zLTFjLjktLjYgMS42LTEuNSAyLTIuNi4zLS45LjQtMS44LjItMi44aC0yLjRjLS40IDAtLjctLjMtLjctLjcgMC0uMi4xLS4zLjItLjRsNC40LTQuNGMuMy0uMy43LS4zLjkgMGw0LjQgNC40cS40NS40NS4zLjljLS4xLjMtLjMuMy0uNS4zeiIgZmlsbD0iI2ZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii4xNTciIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIyLjUiLz48cGF0aCBkPSJNMTguMjQ3IDguNjE0aC0yLjZjMCAxLjUtLjMgMi45LTEgNC4yLS44IDEuNi0yLjEgMi44LTMuNyAzLjYtMS41LjgtMy4zIDEuMS00LjkuOC0xLjYtLjItMy4yLTEtNC40LTIuMS0uNC0uMy0uNC0uOS0uMS0xLjIuMy0uNC45LS40IDEuMi0uMSAxIC43IDIuMiAxLjEgMy40IDEuMXMyLjMtLjMgMy4zLTFjLjktLjYgMS42LTEuNSAyLTIuNi4zLS45LjQtMS44LjItMi44aC0yLjRjLS40IDAtLjctLjMtLjctLjcgMC0uMi4xLS4zLjItLjRsNC40LTQuNGMuMy0uMy43LS4zLjkgMGw0LjQgNC40cS40NS40NS4zLjljLS4xLjMtLjMuMy0uNS4zIiBmaWxsPSIjZmZmIi8+PC9nPjwvc3ZnPg==",
-      "break": "dpZHRoPSI2NS43OTYiIGhlaWdodD0iNjAuMDc1IiB2aWV3Qm94PSIwIDAgNjUuNzk2IDYwLjA3NSI+PGcgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIj48cGF0aCBkPSJNMjIuMDcyIDQuNDcxYzAgMS4yLjUgMi40IDEuMSAyLjYuOS4zLjkgMS41LjMgNC4zLS43IDMtMS42IDQuMS0zLjkgNC44LTEuNy41LTQuOCAyLjMtNi45IDMuOC00LjggMy41LTcuMiAzLjYtMTAuMy43LTMuNy0zLjUtMy4xLTcuOCAyLTEzIDIuMy0yLjQgNS44LTUuMSA3LjctNiA2LjEtMyAxMC0xLjkgMTAgMi44bS04LjUgMS4zYy00LjggMy05LjggOC44LTkuMiAxMC41LjkgMi4zIDMuMSAyIDguNC0xLjQgMi42LTEuNyA1LjMtMyA2LTNzMS4zLS41IDEuMy0xYzAtLjYtLjYtMS0xLjQtMS0xLjkgMC0yLjktMy0xLjUtNC42IDEuNi0yLS4xLTEuNy0zLjYuNSIgZmlsbC1vcGFjaXR5PSIuMTU3Ii8+PHBhdGggZD0iTTE3LjIwNiA1LjIzNGMtMS40IDEuNi0uMzg0IDQuNjMgMS41MTYgNC42My44IDAgMS40LjQwNyAxLjQgMS4wMDcgMCAuNS0uNiAxLjAwOC0xLjMgMS4wMDhzLTMuNDQzIDEuMzQyLTYuMDQzIDMuMDQyYy01LjMgMy40LTcuNTQ4IDMuNjc5LTguNDQ4IDEuMzc5LS42LTEuNyA0LjQ1NC03LjU3NyA5LjI1NC0xMC41NzcgMy41LTIuMiA1LjIyLTIuNDkgMy42Mi0uNDkiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJtMzQuMzcyLjU3MSA2LjEuNmM2LjkuNyAxNCAyLjkgMTcuNCA1LjUgMi4xIDEuNiAyLjIgMi4yIDEuMyA2LjItMS44IDguMi05LjYgMTIuOS0xNSA5LjEtMS42LTEuMi0zLjQtMi4xLTQtMi4xLTEuOSAwLTEwLjEtOC4yLTEwLjEtMTAuMSAwLTEgMS0zLjQgMi4yLTUuNXptMS4yIDYuN2MtMS41IDIuMi0xLjQgMi42LjggNSAxLjMgMS40IDIuOCAyLjYgMy4yIDIuNi41IDAgMi44LjkgNS4yIDIuMSA0IDEuOSA0LjUgMiA2LjcuNSAxLjQtLjggMi43LTMgMy4xLTQuNy45LTQtLjYtNS4zLTcuNy02LjgtNy40LTEuNi05LjYtMS40LTExLjMgMS4zIiBmaWxsLW9wYWNpdHk9Ii4xNTciLz48cGF0aCBkPSJNNDYuODkgNS45MjRjNy4xIDEuNSA4LjYzMiAyLjg1MiA3LjczMiA2Ljg1Mi0uNCAxLjctMS43MTEgMy45MjctMy4xMTEgNC43MjctMi4yIDEuNS0yLjczOCAxLjQxOC02LjczOC0uNDgyLTIuNC0xLjItNC43NDMtMi4xMjQtNS4yNDMtMi4xMjQtLjQgMC0xLjkwOC0xLjIyMy0zLjIwOC0yLjYyMy0yLjItMi40LTIuMjk1LTIuODI1LS43OTUtNS4wMjUgMS43LTIuNyAzLjk2My0yLjkyNSAxMS4zNjMtMS4zMjUiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJtNDAuMjcyIDI0Ljk3MSA0LjQgMi4xYzQuMyAyLjEgNC4zIDIuMSA3LjkuMiA1LjMtMi44IDctMS4zIDcgNi42LjEgNS43LjMgNi4zIDIuOCA3LjYgMy40IDEuOCA0LjQgNS42IDIuNCA4LjgtMS4yIDEuOC00LjggMy41LTE0LjEgNi42LTE2LjYgNS41LTE2LjUgNS42LTIyLjUtMTMuNC0zLjItOS45LTMuMi0xMC0xLjMtMTIuNSAyLTIuNyA2LjYtMy40IDEwLjQtMS43IDEuMy42IDEuOS4yIDIuNC0xLjh6bTQuOSA2LjljLTEuNC0uNy0yLjEtLjQtMy4xIDEuNWwtMS4zIDIuMy00LjMtMi4xYy03LTMuMy03LjMtMS44LTIuOSAxMS4zIDIuMSA2LjEgNC4yIDExLjMgNC41IDExLjUgMSAuNiAyMC44LTYuMSAyMi42LTcuNiAyLjItMS44IDEuNy0yLjgtMy01LjFsLTQuNC0yLjEgMS40LTMuM2MuOC0xLjggMS40LTQuMyAxLjQtNS40IDAtMi4xLTEuNC0yLjctMi41LTEtLjMuNS0yIDEtMy42IDEtMS43IDAtMy44LS40LTQuOC0xIiBmaWxsLW9wYWNpdHk9Ii4xNTciLz48cGF0aCBkPSJNNDkuOTg4IDMyLjgyNGMxLjYgMCAzLjMxLS40OTUgMy42MS0uOTk1IDEuMS0xLjcgMi41MDgtMS4wOTUgMi41MDggMS4wMDUgMCAxLjEtLjU5MiAzLjYxLTEuMzkyIDUuNDFsLTEuMzk0IDMuMzEzIDQuNDAyIDIuMTE0YzQuNyAyLjMgNS4xOTcgMy4zMTcgMi45OTcgNS4xMTctMS44IDEuNS0yMS42NzQgOC4yMjUtMjIuNjc0IDcuNjI1LS4zLS4yLTIuNDIyLTUuNDM3LTQuNTIyLTExLjUzNy00LjQtMTMuMS00LjA4Ni0xNC42NCAyLjkxNC0xMS4zNGw0LjMwNyAyLjA5NCAxLjMxLTIuMzA1YzEtMS45IDEuNzE0LTIuMjA0IDMuMTE0LTEuNTA0IDEgLjYgMy4xMiAxLjAwMyA0LjgyIDEuMDAzIiBmaWxsPSIjZmZmIi8+PC9nPjwvc3ZnPg==",
       "new": "dpZHRoPSIyMS4zMzMiIGhlaWdodD0iMjEuMzMzIiB2aWV3Qm94PSIwIDAgMjEuMzMzIDIxLjMzMyI+PGcgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIj48cGF0aCBkPSJNMTUuMDE1IDcuMjU4aC0yLjEwN2wtLjI4IDIuMTc0LTMuOTc0LjAwNi0uMjc1LTIuMThINi4zMjFjLS41ODYgMC0uODY5LS43MzMtLjQ2NC0xLjE1N2w0LjM0NS00LjU3NmEuNjQzLjY0MyAwIDAgMSAuOTE4IDBsNC4zNiA0LjU3NmMuNDA0LjQyNC4xMSAxLjE1Ny0uNDY1IDEuMTU3bTAgNi44MThjLjU3NSAwIC44NjkuNzMzLjQ2NSAxLjE1N2wtNC4zNiA0LjU3NmEuNjQzLjY0MyAwIDAgMS0uOTE4IDBsLTQuMzQ1LTQuNTc2Yy0uNDA1LS40MjQtLjEyMi0xLjE1Ny40NjQtMS4xNTdoMi4wNThsLjI1My0yLjE0OSAzLjk4LjAyNC4yOTYgMi4xMjVoMi4xMDciIGZpbGw9Im5vbmUiIHN0cm9rZS1vcGFjaXR5PSIuMiIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjIuNSIvPjxwYXRoIGQ9Ik0xNS4wMTUgNy4yNThoLTIuMTA3bC0uOTA1IDYuODM4Yy0uMDk4Ljc4NC0uNzk2IDEuMzM3LTEuNTU1IDEuMjIxLS42MTItLjA5LTEuMDktLjYwNC0xLjE2NC0xLjIybC0uOTA1LTYuODM5SDYuMzIxYy0uNTg2IDAtLjg2OS0uNzMzLS40NjQtMS4xNTdsNC4zNDUtNC41NzZhLjY0My42NDMgMCAwIDEgLjkxOCAwbDQuMzYgNC41NzZjLjQwNC40MjQuMTEgMS4xNTctLjQ2NSAxLjE1NyIgZmlsbD0iI2ZmZiIgZmlsbC1ydWxlPSJldmVub2RkIi8+PHBhdGggZD0iTTE1LjAxNSAxNC4wNzZjLjU3NSAwIC44NjkuNzMzLjQ2NSAxLjE1N2wtNC4zNiA0LjU3NmEuNjQzLjY0MyAwIDAgMS0uOTE4IDBsLTQuMzQ1LTQuNTc2Yy0uNDA1LS40MjQtLjEyMi0xLjE1Ny40NjQtMS4xNTdoMi4wNThsLjkwNS02LjgzOGMuMDc1LS42MTcuNTUyLTEuMTMxIDEuMTY0LTEuMjIxLjc2LS4xMTYgMS40NTcuNDM3IDEuNTU1IDEuMjJsLjkwNSA2LjgzOXoiIGZpbGw9IiNmZmYiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjxwYXRoIGQ9Ik0wIDIxLjMzNFYwaDIxLjMzNHYyMS4zMzR6IiBmaWxsPSJub25lIi8+PC9nPjwvc3ZnPg==",
-      "time": "dpZHRoPSIxOC40MSIgaGVpZ2h0PSIxOC40MSIgdmlld0JveD0iMCAwIDE4LjQxIDE4LjQxIj48ZyBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0yLjEyOCA5Ljg3OWE3LjA3IDcuMDcgMCAwIDEgMy4zNDYtNi4wMTV2LS42NzhjMC0uOTU3Ljc3Ni0xLjczMiAxLjczMi0xLjczMmgzLjk5OWMuOTU2IDAgMS43MzIuNzc1IDEuNzMyIDEuNzMydi42NzhBNy4wNzcgNy4wNzcgMCAxIDEgMi4xMjkgOS44Nzl6bTguNzAzLTIuNzhjLjIyMyAwIC4zMzctLjI4NC4xOC0uNDQ4TDkuMzE5IDQuODc0YS4yNS4yNSAwIDAgMC0uMzU3IDBMNy4yNzYgNi42NTFjLS4xNTguMTY0LS4wNDguNDQ5LjE4LjQ0OWguNzk5bC4zNDQgMi42YS44NzQuODc0IDAgMCAwIC41NjMgMS41N2wxLjg5NiAxLjctMS4wMzguNzIyYy0uMTYxLjE2MS0uMDM4LjQ0LjE5LjQ0NWwyLjQ0OS4wNjNhLjI1LjI1IDAgMCAwIC4yNTItLjI1MmwtLjA2LTIuNDUyYy0uMDA1LS4yMjgtLjI4Ny0uMzQ4LS40NDUtLjE5bC0uNTc4LjU3OC0xLjgzLTEuNDAyYS44Ny44NyAwIDAgMC0uMzMxLS43NzVsLS4wMjMtMi44MTh6IiBmaWxsPSJub25lIiBzdHJva2Utb3BhY2l0eT0iLjIiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjc1Ii8+PHBhdGggZD0iTTAgMTguNDFWMGgxOC40MXYxOC40MXoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMi4xMjggOS44NzlhNy4wNyA3LjA3IDAgMCAxIDMuMzQ2LTYuMDE1di0uNjc4YzAtLjk1Ny43NzYtMS43MzIgMS43MzItMS43MzJoMy45OTljLjk1NiAwIDEuNzMyLjc3NSAxLjczMiAxLjczMnYuNjc4QTcuMDc3IDcuMDc3IDAgMSAxIDIuMTI5IDkuODc5em04LjcwMy0yLjc4Yy4yMjMgMCAuMzM3LS4yODQuMTgtLjQ0OEw5LjMxOSA0Ljg3NGEuMjUuMjUgMCAwIDAtLjM1NyAwTDcuMjc2IDYuNjUxYy0uMTU4LjE2NC0uMDQ4LjQ0OS4xOC40NDloLjc5OWwuMzQ0IDIuNmEuODc0Ljg3NCAwIDAgMCAuNTYzIDEuNTdsMS40MjMgMS44NTctLjU2NS41NjVjLS4xNjEuMTYxLS4wMzguNDQuMTkuNDQ1bDIuNDQ5LjA2M2EuMjUuMjUgMCAwIDAgLjI1Mi0uMjUybC0uMDYtMi40NTJjLS4wMDUtLjIyOC0uMjg3LS4zNDgtLjQ0NS0uMTlsLS41NzguNTc4LTEuODMtMS40MDJhLjg3Ljg3IDAgMCAwLS4zMzEtLjc3NWwuMzQ2LTIuNjA3eiIgZmlsbD0iI2ZmZiIvPjwvZz48L3N2Zz4=",
-      "flag": "ZpZXdCb3g9IjAgMCAyMCAyMCI+PHBvbHlnb24gcG9pbnRzPSIzLjA3LDIgMy4wNywxOCAxNi45MywxMCIgZmlsbD0iIzJmYmY0ZiIvPjwvc3ZnPg=="
+      "time": "dpZHRoPSIxOC40MSIgaGVpZ2h0PSIxOC40MSIgdmlld0JveD0iMCAwIDE4LjQxIDE4LjQxIj48ZyBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiPjxwYXRoIGQ9Ik0yLjEyOCA5Ljg3OWE3LjA3IDcuMDcgMCAwIDEgMy4zNDYtNi4wMTV2LS42NzhjMC0uOTU3Ljc3Ni0xLjczMiAxLjczMi0xLjczMmgzLjk5OWMuOTU2IDAgMS43MzIuNzc1IDEuNzMyIDEuNzMydi42NzhBNy4wNzcgNy4wNzcgMCAxIDEgMi4xMjkgOS44Nzl6bTguNzAzLTIuNzhjLjIyMyAwIC4zMzctLjI4NC4xOC0uNDQ4TDkuMzE5IDQuODc0YS4yNS4yNSAwIDAgMC0uMzU3IDBMNy4yNzYgNi42NTFjLS4xNTguMTY0LS4wNDguNDQ5LjE4LjQ0OWguNzk5bC4zNDQgMi42YS44NzQuODc0IDAgMCAwIC41NjMgMS41N2wxLjg5NiAxLjctMS4wMzguNzIyYy0uMTYxLjE2MS0uMDM4LjQ0LjE5LjQ0NWwyLjQ0OS4wNjNhLjI1LjI1IDAgMCAwIC4yNTItLjI1MmwtLjA2LTIuNDUyYy0uMDA1LS4yMjgtLjI4Ny0uMzQ4LS40NDUtLjE5bC0uNTc4LjU3OC0xLjgzLTEuNDAyYS44Ny44NyAwIDAgMC0uMzMxLS43NzVsLS4wMjMtMi44MTh6IiBmaWxsPSJub25lIiBzdHJva2Utb3BhY2l0eT0iLjIiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjc1Ii8+PHBhdGggZD0iTTAgMTguNDFWMGgxOC40MXYxOC40MXoiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMi4xMjggOS44NzlhNy4wNyA3LjA3IDAgMCAxIDMuMzQ2LTYuMDE1di0uNjc4YzAtLjk1Ny43NzYtMS43MzIgMS43MzItMS43MzJoMy45OTljLjk1NiAwIDEuNzMyLjc3NSAxLjczMiAxLjczMnYuNjc4QTcuMDc3IDcuMDc3IDAgMSAxIDIuMTI5IDkuODc5em04LjcwMy0yLjc4Yy4yMjMgMCAuMzM3LS4yODQuMTgtLjQ0OEw5LjMxOSA0Ljg3NGEuMjUuMjUgMCAwIDAtLjM1NyAwTDcuMjc2IDYuNjUxYy0uMTU4LjE2NC0uMDQ4LjQ0OS4xOC40NDloLjc5OWwuMzQ0IDIuNmEuODc0Ljg3NCAwIDAgMCAuNTYzIDEuNTdsMS40MjMgMS44NTctLjU2NS41NjVjLS4xNjEuMTYxLS4wMzguNDQuMTkuNDQ1bDIuNDQ5LjA2M2EuMjUuMjUgMCAwIDAgLjI1Mi0uMjUybC0uMDYtMi40NTJjLS4wMDUtLjIyOC0uMjg3LS4zNDgtLjQ0NS0uMTlsLS41NzguNTc4LTEuODMtMS40MDJhLjg3Ljg3IDAgMCAwLS4zMzEtLjc3NWwuMzQ2LTIuNjA3eiIgZmlsbD0iI2ZmZiIvPjwvZz48L3N2Zz4="
     }[name]
   };
 
@@ -71,7 +70,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   const resetStorage = () => {
     conditionStorage = Object.create(null);
-    erroredScripts.clear(); // Desktop fork (section 121)
   };
   runtime.on("PROJECT_STOP_ALL", resetStorage);
   runtime.on("PROJECT_START", resetStorage);
@@ -93,14 +91,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const key = keybinds[keyName];
       if (keys.indexOf(keyName.toLowerCase()) === -1) key.keyV.forEach(i => postData(i, false));
     }
-  });
-
-  // Desktop fork (section 121): errors are noted from the compiler's BLOCK_STACK_ERROR event (a compiled script
-  // that threw; its id is the script's top block) instead of replacing window.Error and console.error.
-  // tryCatch watches the IDs of the branches it runs.
-  const erroredScripts = new Set();
-  runtime.on("BLOCK_STACK_ERROR", (error) => {
-    if (error && error.id !== undefined) erroredScripts.add(error.id);
   });
 
   // Override needed for "ifRunBlock"
@@ -146,27 +136,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   });
 
   Thread = vm.exports.Thread;
-  // Desktop fork (section 121): compiled through runtime.registerCompiledExtensionBlocks instead of replacing
-  // the compiler classes' descendStackedBlock. Same generated code.
-  runtime.registerCompiledExtensionBlocks("SPadvControl", {
-    ir: {
-      breakLoop: (generator, block) => ({ kind: "stack", id: block.id }),
-      continueLoop: (generator, block) => ({ kind: "stack", id: block.id })
-    },
-    js: {
-      breakLoop: (node, compiler) => {
-        // execute in compatibility layer in case we are in a non-compiled loop block
-        if (compiler.frames.find(frame => frame.isLoop)?.isLoop) compiler.source += "break;\n";
-        else compiler.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_breakLoop"), false, false, "${node.id}", null);\n`;
-      },
-      continueLoop: (node, compiler) => {
-        // execute in compatibility layer in case we are in a non-compiled loop block
-        if (compiler.frames.find(frame => frame.isLoop)?.isLoop) compiler.source += "continue;\n";
-        else compiler.source += `yield* executeInCompatibilityLayer({}, runtime.getOpcodeFunction("SPadvControl_continueLoop"), false, false, "${node.id}", null);\n`;
-      }
-    }
-  });
-
   class SPadvControl {
     // Desktop fork (section 152): read by the inline code of "if" / "else" (src/compiler/jsexecute.js pmBranchInline)
     get pmConditionStorage() { return conditionStorage; }
@@ -181,27 +150,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         color3: "#CF8B17",
         menuIconURI,
         blocks: [
-          {
-            opcode: "runFlag",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "run [FLAG] and continue",
-            arguments: {
-              FLAG: { type: Scratch.ArgumentType.IMAGE, dataURI: getIconURI("flag") }
-            }
-          },
-          "---",
-          {
-            opcode: "waitSecsOrCon",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.CONDITIONAL,
-            branchCount: -1,
-            text: "wait [NUM] seconds or until [CON]",
-            arguments: {
-              NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              CON: { type: Scratch.ArgumentType.BOOLEAN }
-            }
-          },
           {
             opcode: "waitChanged",
             extensions: ["colours_control"],
@@ -221,15 +169,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               NUM: { type: Scratch.ArgumentType.STRING, defaultValue: 10 },
               CON: { type: Scratch.ArgumentType.BOOLEAN }
-            }
-          },
-          {
-            opcode: "repeatSecs",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.LOOP,
-            text: "repeat for [NUM] secs",
-            arguments: {
-              NUM: { type: Scratch.ArgumentType.STRING, defaultValue: 1 }
             }
           },
           {
@@ -266,26 +205,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.REPORTER,
             disableMonitor: true,
             text: "timer in loop"
-          },
-          {
-            opcode: "continueLoop",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "run next cycle [ICON]",
-            isTerminal: true,
-            arguments: {
-              ICON: { type: Scratch.ArgumentType.IMAGE, dataURI: getIconURI("loop") }
-            }
-          },
-          {
-            opcode: "breakLoop",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "break out loop [ICON]",
-            isTerminal: true,
-            arguments: {
-              ICON: { type: Scratch.ArgumentType.IMAGE, dataURI: getIconURI("break") }
-            }
           },
           "---",
           { blockType: Scratch.BlockType.XML, xml: `<block type="SPadvControl_newThreadAdv"><value name="ARGS"><shadow type="text"><field name="TEXT">{ info: 1 }</field></shadow></value><value name="FRAME"><shadow type="SPadvControl_threadArgs"></shadow></value></block>` },
@@ -380,14 +299,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           "---",
           {
-            opcode: "tryCatch",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.CONDITIONAL,
-            text: ["try", "catch"],
-            branchCount: 2
-          },
-          "---",
-          {
             opcode: "runInSprite",
             extensions: ["colours_control"],
             blockType: Scratch.BlockType.CONDITIONAL,
@@ -425,50 +336,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               THING: {}
             }
           },
-          {
-            opcode: "getInClone",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get [THING] from clone [ID] of [SPRITE] with [VAR] set to [VAL]",
-            allowDropAnywhere: true,
-            arguments: {
-              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "targets2" },
-              THING: {},
-              ID: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
-              VAR: { type: Scratch.ArgumentType.STRING, defaultValue: "my variable" },
-              VAL: { type: Scratch.ArgumentType.STRING, defaultValue: "0" }
-            }
-          },
           /* Deprecation Marker */
           /* Marker End */
           { blockType: Scratch.BlockType.LABEL, text: "Functions" },
-          {
-            opcode: "onCall",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.CONDITIONAL,
-            text: "on call [CALL] run",
-            arguments: {
-              CALL: { type: Scratch.ArgumentType.STRING, defaultValue: "branch1" }
-            }
-          },
-          {
-            opcode: "runBranch",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "call [ID] to run",
-            arguments: {
-              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "branch1" }
-            }
-          },
-          {
-            opcode: "runBranchWait",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "call [ID] to run and wait",
-            arguments: {
-              ID: { type: Scratch.ArgumentType.STRING, defaultValue: "branch1" }
-            }
-          },
           "---",
           { blockType: Scratch.BlockType.XML, xml: `<block type="SPadvControl_defineFunc"><value name="NAME"><shadow type="text"><field name="TEXT">my-function</field></shadow></value><value name="ARG"><shadow type="SPadvControl_threadArgs"></shadow></value><value name="SUBSTACK"><block type="SPadvControl_returnFunc"><value name="VALUE"><shadow type="text"><field name="TEXT">value</field></shadow></value></block></value></block>` },
           {
@@ -673,45 +543,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       else return util.thread.blockContainer.getBlock(util.thread.isCompiled ? util.thread.peekStack() : util.thread.peekStackFrame().op.id);
     }
 
-    getLoopBlock(thread) {
-      const stackFrames = thread.stackFrames, frameCount = stackFrames.length;
-      let loopBlock = null, stackIndex = -1;
-      for (let i = frameCount - 1; i >= 0; i--) {
-        if (i < 0) break;
-        if (!stackFrames[i].isLoop) continue;
-        loopBlock = stackFrames[i].op.id;
-        stackIndex = i;
-        break;
-      }
-      if (!loopBlock) return false;
-      return { block: loopBlock, index: stackIndex };
-    }
-
     // Block Functions
-    runFlag(_, util) {
-      const thisThread = util.thread.topBlock;
-      runtime.emit("PROJECT_START_BEFORE_RESET");
-      runtime.threads.filter(thread => thread.topBlock !== thisThread).forEach(thread => thread.stopThisScript());
-
-      runtime.ext_scratch3_sound.stopAllSounds();
-      runtime.emit("PROJECT_START");
-      runtime.updateCurrentMSecs();
-      runtime.ioDevices.clock.resetProjectTimer();
-      runtime.targets.forEach(target => target.clearEdgeActivatedValues());
-      for (let i = runtime.targets.length - 1; i >= 0; i--) {
-        const thisTarget = runtime.targets[i];
-        thisTarget.onGreenFlag();
-        if (!thisTarget.isOriginal) {
-          runtime.disposeTarget(thisTarget);
-          runtime.stopForTarget(thisTarget);
-        }
-      }
-      runtime.startHats("event_whenflagclicked");
-    }
-
-    waitSecsOrCon(args, util) {
-      this.repeatSecUntil(args, util);
-    }
 
     waitChanged(args, util) {
       const input = Cast.toString(args.THING);
@@ -723,16 +555,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (typeof util.stackFrame.loopCounter === "undefined") util.stackFrame.loopCounter = Math.round(Cast.toNumber(args.NUM));
       util.stackFrame.loopCounter--;
       if (!Cast.toBoolean(args.CON) && util.stackFrame.loopCounter >= 0) util.startBranch(1, true);
-    }
-
-    repeatSecs(args, util) {
-      if (util.stackTimerNeedsInit()) {
-        util.startStackTimer(Math.max(0, 1000 * Cast.toNumber(args.NUM)));
-        runtime.requestRedraw();
-        util.startBranch(1, true);
-      } else if (!util.stackTimerFinished()) {
-        util.startBranch(1, true);
-      }
     }
 
     repeatSecUntil(args, util) {
@@ -774,27 +596,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (typeof util.thread.SPloopReader === "undefined") util.thread.SPloopReader = {};
       if (util.thread.SPloopReader[ID] === undefined) util.thread.SPloopReader[ID] = util.sequencer.timer.startTime;
       return (Scratch.vm.runtime.pmDateNow() - util.thread.SPloopReader[ID]) / 1000;
-    }
-
-    continueLoop(_, util) { this.blockLoop("continue", util) }
-    breakLoop(_, util) { this.blockLoop("break", util) }
-    blockLoop(b, util) {
-      const thread = util.thread;
-      const wasCompiled = thread.isCompiled;
-      thread.isCompiled = false; // Failsafe
-      const frameData = this.getLoopBlock(thread);
-      if (!frameData) return;
-      const block = frameData.block;
-      const afterLoop = thread.blockContainer.getBlock(frameData.block).next;
-      if (b === "break") {
-        while(thread.stack.at(-1) !== frameData.block) thread.popStack();
-        thread.popStack();
-        if (afterLoop) thread.pushStack(afterLoop);
-      } else {
-        while (thread.stack[0] && thread.stack.at(-1) !== block) thread.popStack();
-        thread.status = thread.constructor.STATUS_YIELD;
-      }
-      thread.isCompiled = wasCompiled;
     }
 
     // Desktop fork (section 131): the thread arguments are kept on the thread, not on its first stack frame: the engine
@@ -945,27 +746,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     // wait" does) instead of awaiting a promise. After an awaited promise neither the interpreter nor the compiler
     // looks at a branch started by the block, so the catch branch never ran. Yielding a tick (not util.yield) also
     // lets the try branch run inside "run without screen refresh" with the warp timer off.
-    tryCatch(_, util) {
-      const state = util.stackFrame;
-      if (!state.pmTry) {
-        const branch = this.getThisBlock(util, true, 1);
-        if (!branch) return;
-        // Desktop fork (section 121): an error is a BLOCK_STACK_ERROR of the branch's script (see erroredScripts)
-        erroredScripts.delete(branch);
-        const thread = this.pushThread(branch, util, { stackClick: false });
-        this.addMissKeys(util.thread, thread);
-        state.pmTry = { branch, thread };
-      }
-      const { branch, thread } = state.pmTry;
-      if (runtime.isActiveThread(thread)) {
-        if (!erroredScripts.has(branch)) {
-          util.yieldTick();
-          return;
-        }
-        thread.stopThisScript();
-      }
-      if (erroredScripts.delete(branch)) util.startBranch(2, false);
-    }
 
     async runInSprite(args, util) {
       const thisSprite = util.thread.ogTarget !== undefined ? util.thread.ogTarget : util.target;
@@ -1031,27 +811,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return await this.genFakeCode(thing, util, newTarget) ?? "";
     }
 
-    async getInClone(args, util) {
-      const target = args.SPRITE === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.SPRITE);
-      const block = this.getThisBlock(util, false);
-      if (!block || !target) return "";
-      const clones = target.sprite.clones;
-      const varName = Cast.toString(args.VAR);
-      let newTarget = [];
-      if (!varName) newTarget = clones[Cast.toNumber(args.ID) - 1];
-      else {
-        for (let i = 1; i < clones.length; i++) {
-          const variable = clones[i]?.lookupVariableByNameAndType(varName, "", true);
-          if (variable && Cast.toString(variable.value) === Cast.toString(args.VAL)) newTarget.push(clones[i]);
-        }
-        newTarget = newTarget[Cast.toNumber(args.ID) - 1];
-      }
-
-      if (!newTarget || !block?.inputs.THING) return "";
-      const thing = util.thread.blockContainer.getBlock(block.inputs.THING.block);
-      return await this.genFakeCode(thing, util, newTarget) ?? "";
-    }
-
     asParent(args, util) {
       const target = util.target;
       if (target.isOriginal) return;
@@ -1061,37 +820,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     /* Deprecation Marker */
     /* Marker End */
-
-    onCall(args, util) {
-      if (util.thread.SPcallID === args.CALL && util.stackFrame.doneJob === undefined) {
-        util.stackFrame.doneJob = true;
-        util.startBranch(1, true);
-      } else { util.thread.stopThisScript() }
-    }
-
-    runBranch(args, util) {
-      const allBlocks = [], newThreads = [];
-      for (const thisT in runtime.targets) {
-        const target = runtime.targets[thisT];
-        const targetBlocks = target.blocks._blocks;
-        for (const block in targetBlocks) {
-          if (targetBlocks[block].opcode === "SPadvControl_onCall") allBlocks.push({ block, target});
-        };
-      }
-      for (let i = 0; i < allBlocks.length; i++) {
-        const thread = runtime._pushThread(allBlocks[i].block, allBlocks[i].target);
-        thread.SPcallID = Cast.toString(args.ID);
-        newThreads.push(thread);
-      }
-      return newThreads; // used for "run and wait"
-    }
-    runBranchWait(args, util) {
-      if (util.stackFrame.newThreads === undefined) util.stackFrame.newThreads = this.runBranch(args, util);
-      if (util.stackFrame.newThreads.some((thread) => runtime.threads.indexOf(thread) !== -1)) {
-        if (util.stackFrame.newThreads.every((thread) => runtime.isWaitingThread(thread))) util.yieldTick();
-        else util.yield();
-      }
-    }
 
     defineFunc(args, util) {
       util.thread[`SPfunction-${args.NAME}`] = this.getThisBlock(util, true, 1);

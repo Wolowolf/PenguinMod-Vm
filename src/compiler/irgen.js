@@ -25,18 +25,16 @@ const EXPANSION_INLINE_INPUTS = new Set([
     'pmOperatorsExpansion_isNumberMultipleOf', 'pmOperatorsExpansion_isInteger', 'pmOperatorsExpansion_isPrime',
     'pmOperatorsExpansion_isEven', 'pmOperatorsExpansion_betweenNumbers', 'pmOperatorsExpansion_partOfRatio',
     'pmOperatorsExpansion_simplifyRatio', 'pmOperatorsExpansion_pi', 'pmOperatorsExpansion_euler',
-    'pmOperatorsExpansion_infinity', 'pmOperatorsExpansion_truncateNumber', 'pmOperatorsExpansion_reverseChars',
+    'pmOperatorsExpansion_infinity', 'pmOperatorsExpansion_truncateNumber',
     'pmOperatorsExpansion_textAfter', 'pmOperatorsExpansion_textBefore', 'pmOperatorsExpansion_exactlyEqual',
     'pmMotionExpansion_rotationStyle', 'pmMotionExpansion_directionto', 'pmMotionExpansion_distanceto',
     'pmMotionExpansion_spritewh', 'pmSensingExpansion_packaged', 'pmSensingExpansion_spriteName',
-    'pmSensingExpansion_currentMillisecond', 'pmSensingExpansion_deltaTime', 'pmSensingExpansion_maxSpriteLayers',
-    'pmSensingExpansion_scrollingDistance', 'pmSensingExpansion_currentKeyPressed',
+    'pmSensingExpansion_currentMillisecond', 'pmSensingExpansion_maxSpriteLayers', 'pmSensingExpansion_currentKeyPressed',
     'pmSensingExpansion_getLastKeyPressed', 'pmSensingExpansion_amountOfTimeKeyHasBeenHeld',
     'pmSensingExpansion_getButtonIsDown'
 ]);
 const EXPANSION_INLINE_STACKS = new Set([
-    'pmMotionExpansion_fence', 'pmMotionExpansion_steptowards', 'pmMotionExpansion_tweentowards',
-    'pmSensingExpansion_setScrollingDistance', 'pmSensingExpansion_changeScrollingDistanceBy'
+    'pmMotionExpansion_fence', 'pmMotionExpansion_steptowards', 'pmMotionExpansion_tweentowards'
 ]);
 // Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks compiled to inline code
 // (descendDataInlineInput / Stack).
@@ -44,21 +42,18 @@ const DATA_INLINE_INPUTS = new Set([
     'qxsckvarandlist_getVar', 'qxsckvarandlist_seriVarsToJson', 'qxsckvarandlist_getList',
     'qxsckvarandlist_getValueOfList', 'qxsckvarandlist_seriListsToJson', 'qxsckvarandlist_getIndexOfList',
     'qxsckvarandlist_getIndexesOfList', 'qxsckvarandlist_length', 'qxsckvarandlist_listContains',
-    'lmsData_getListJoin', 'lmsData_timesItemAppears', 'lmsData_itemIndex', 'lmsData_listIsEmpty',
-    'lmsData_itemNumExists', 'lmsData_orderIs', 'lmsData_getListArray'
+    'lmsData_getListJoin', 'lmsData_timesItemAppears', 'lmsData_itemIndex', 'lmsData_orderIs'
 ]);
 const DATA_INLINE_STACKS = new Set([
     'qxsckvarandlist_setVar', 'qxsckvarandlist_clearList', 'qxsckvarandlist_deleteOfList',
     'qxsckvarandlist_addValueInList', 'qxsckvarandlist_replaceOfList', 'qxsckvarandlist_copyList',
     'lmsData_deleteItems', 'lmsData_deleteAllOfItem', 'lmsData_replaceAllOfItem', 'lmsData_repeatList',
-    'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists', 'lmsData_setListArray'
+    'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists'
 ]);
 // Desktop fork (section 195): blocks that search by a name fixed in the block, compiled to inline code
 // (descendNameSearchInline).
 const NAME_SEARCH_INLINE = new Set([
-    'DICandSPmonitorsPlus_reportVal', 'DICandSPmonitorsPlus_exists', 'pmEventsExpansion_isBroadcastReceived',
-    'obviousalexsensing_listInSprite', 'obviousalexsensing_lengthOfListInSprite',
-    'obviousalexsensing_listContains', 'obviousalexsensing_itemNumberInList'
+    'DICandSPmonitorsPlus_reportVal', 'DICandSPmonitorsPlus_exists', 'pmEventsExpansion_isBroadcastReceived'
 ]);
 // Desktop fork (section 196): more blocks that search by a fixed name (descendSearchParseInline).
 const SEARCH_PARSE_INLINE_INPUTS = new Set([
@@ -85,8 +80,7 @@ const FIXED_JSON_INPUTS = {
     enderKeysPlusV2_isKeysHit: {inputs: ['keys'], form: 'keys'},
     utilities_parseJSON: {inputs: ['JSON_STRING'], form: 'any'},
     embintranslation_get_translation_with_data: {inputs: ['data'], form: 'flat'},
-    SharkPoolSharktilities_shuffleArray: {inputs: ['WORDS'], form: 'flat'},
-    ShovelUtils_setlist: {inputs: ['TEXT'], form: 'flat'}
+    SharkPoolSharktilities_shuffleArray: {inputs: ['WORDS'], form: 'flat'}
 };
 for (const [inputs, names] of [
     [['a', 'b'], ['addV3', 'subV3', 'mulV3', 'divV3', 'dotProductOfV3', 'crossProductOfV3', 'distanceV3', 'angleV3', 'rotateAroundPointV3',
@@ -105,10 +99,8 @@ for (const [inputs, names] of [
 const BRANCH_INLINE = {
     SPadvControl_ifPart: {inputs: ['CON', 'ID'], loop: false},
     SPadvControl_elsePart: {inputs: ['ID'], loop: false},
-    SPadvControl_waitSecsOrCon: {inputs: ['NUM', 'CON'], loop: true},
     SPadvControl_waitChanged: {inputs: ['THING'], loop: true},
     SPadvControl_repeatForUntil: {inputs: ['NUM', 'CON'], loop: true},
-    SPadvControl_repeatSecs: {inputs: ['NUM'], loop: true},
     SPadvControl_repeatSecUntil: {inputs: ['NUM', 'CON'], loop: true},
     SPadvControl_spayedCondition: {inputs: ['CON1', 'CON2'], loop: true}
 };
@@ -2646,8 +2638,6 @@ class ScriptTreeGenerator {
             return {kind: 'pmInline.number', source: 'Infinity'};
         case 'pmOperatorsExpansion_truncateNumber':
             return {kind: 'pmInline.truncate', num: input('NUM')};
-        case 'pmOperatorsExpansion_reverseChars':
-            return {kind: 'pmInline.reverse', text: input('TEXT')};
         case 'pmOperatorsExpansion_textAfter':
             return {kind: 'pmInline.textAfter', text: input('TEXT'), base: input('BASE')};
         case 'pmOperatorsExpansion_textBefore':
@@ -2672,12 +2662,8 @@ class ScriptTreeGenerator {
             return {kind: 'pmInline.spriteName'};
         case 'pmSensingExpansion_currentMillisecond':
             return {kind: 'pmInline.currentMillisecond'};
-        case 'pmSensingExpansion_deltaTime':
-            return {kind: 'pmInline.deltaTime'};
         case 'pmSensingExpansion_maxSpriteLayers':
             return {kind: 'pmInline.maxSpriteLayers'};
-        case 'pmSensingExpansion_scrollingDistance':
-            return {kind: 'pmInline.scrollingDistance'};
         case 'pmSensingExpansion_currentKeyPressed':
             return {kind: 'pmInline.currentKey'};
         case 'pmSensingExpansion_getLastKeyPressed':
@@ -2715,10 +2701,6 @@ class ScriptTreeGenerator {
             return {kind: 'pmInline.stepTowards', steps: input('STEPS'), x: input('X'), y: input('Y')};
         case 'pmMotionExpansion_tweentowards':
             return {kind: 'pmInline.tweenTowards', percent: input('PERCENT'), x: input('X'), y: input('Y')};
-        case 'pmSensingExpansion_setScrollingDistance':
-            return {kind: 'pmInline.setScrolling', amount: input('AMOUNT')};
-        case 'pmSensingExpansion_changeScrollingDistanceBy':
-            return {kind: 'pmInline.changeScrolling', amount: input('AMOUNT')};
         }
         return null;
     }
@@ -2782,22 +2764,6 @@ class ScriptTreeGenerator {
             // (an empty name logs an error on every call)
             if (name === null || name === '') return null;
             return {kind: 'search.broadcast', name};
-        }
-        case 'obviousalexsensing_listInSprite': {
-            const index = input('index');
-            const list = fixed('List');
-            return list === null ? null : {kind: 'search.listItem', index, list};
-        }
-        case 'obviousalexsensing_lengthOfListInSprite': {
-            const list = fixed('List');
-            return list === null ? null : {kind: 'search.listLength', list};
-        }
-        case 'obviousalexsensing_listContains':
-        case 'obviousalexsensing_itemNumberInList': {
-            const term = input('term');
-            const list = fixed('List');
-            if (list === null) return null;
-            return {kind: block.opcode === 'obviousalexsensing_listContains' ? 'search.listContains' : 'search.listIndexOf', term, list};
         }
         }
         return null;
@@ -2942,24 +2908,6 @@ class ScriptTreeGenerator {
     }
 
     /**
-     * Desktop fork (section 196): fixed text of List Tools' "set list to array", parsed once when it is an array
-     * without arrays or objects in it (fixedJsonInputs).
-     * @param {Node} node The input's node.
-     * @returns {Node} The node to use.
-     */
-    fixedJsonArray (node) {
-        if (node.kind !== 'constant' || this.runtime.pmNoSearchParseInline) return node;
-        let parsed;
-        try {
-            parsed = JSON.parse(String(node.value));
-        } catch (e) {
-            return node;
-        }
-        if (!Array.isArray(parsed) || parsed.some(item => item && typeof item === 'object')) return node;
-        return {kind: 'search.fixedJson', json: JSON.stringify(parsed), bare: false};
-    }
-
-    /**
      * Desktop fork (section 196): text fixed in a block that parses it as JSON on every call is parsed here, and the
      * block gets the parsed value (the extensions take it, FIXED_JSON_INPUTS). Text that does not parse to the expected
      * form stays text, so what the block does with it does not change. A pure block whose inputs are all fixed is left
@@ -3043,10 +2991,6 @@ class ScriptTreeGenerator {
             return {kind: 'lms.timesAppears', item: input('ITEM'), name: input('LIST')};
         case 'lmsData_itemIndex':
             return {kind: 'lms.itemIndex', index: input('INDEX'), item: input('ITEM'), name: input('LIST')};
-        case 'lmsData_listIsEmpty':
-            return {kind: 'lms.isEmpty', name: input('LIST')};
-        case 'lmsData_itemNumExists':
-            return {kind: 'lms.itemExists', num: input('NUM'), name: input('LIST')};
         case 'lmsData_orderIs':
             return {kind: 'lms.orderIs', name: input('LIST'), order: field('ORDER')};
         case 'lmsData_orderList':
@@ -3055,10 +2999,6 @@ class ScriptTreeGenerator {
             return {kind: 'lms.setToList', name1: input('LIST1'), name2: input('LIST2')};
         case 'lmsData_joinLists':
             return {kind: 'lms.concat', name1: input('LIST1'), name2: input('LIST2')};
-        case 'lmsData_setListArray':
-            return {kind: 'lms.setArray', name: input('LIST'), array: this.fixedJsonArray(input('ARRAY'))};
-        case 'lmsData_getListArray':
-            return {kind: 'lms.asArray', name: input('LIST')};
         }
         return null;
     }

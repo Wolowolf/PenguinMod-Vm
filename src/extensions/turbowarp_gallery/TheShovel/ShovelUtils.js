@@ -1,6 +1,7 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's TheShovel/ShovelUtils.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): RUNTIME_STEP_END instead of wrapping runtime._step; (section 125, step 5e) its list blocks use Variable.pmGetValue / pmSetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except: section 259 removed its list and fps blocks (built-in list
+// blocks and Delta Time do the same; Delta Time now counts frames the way its fps block did), and with them sections 119 and 125's changes.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -15,26 +16,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 // By: Mio <https://scratch.mit.edu/users/0znzw/>
 // License: MIT
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_ShovelUtils":"SchaufelUtils"},"fi":{"_Link or data URI here":"Linkki tai data URI tähän","_ShovelUtils":"Lapiotyökalut","_all sprites":"kaikki hahmot","_brightness of [color]":"värin [color] kirkkaus","_delete costume [COSNAME] in [SPRITE]":"poista hahmon [SPRITE] asuste [COSNAME]","_delete sprite [SPRITE]":"poista hahmo [SPRITE]","_fps":"kuvataajuus","_import image from [TEXT] name [NAME]":"tuo kuva osoitteesta [TEXT] nimellä [NAME]","_import project from [TEXT]":"tuo projekti osoitteesta [TEXT]","_import sound from [TEXT] name [NAME]":"tuo ääni osoitteesta [TEXT] nimellä [NAME]","_import sprite from [TEXT]":"tuo hahmo osoitteesta [TEXT]","_list [TEXT] as array":"lista [TEXT] taulukkona","_set editing target to [NAME]":"aseta muokkauksen kohteeksi [NAME]","_set list [NAME] to [TEXT]":"aseta lista [NAME] arvoon [TEXT]"},"it":{"_Link or data URI here":"Link o dara URI","_ShovelUtils":"Utilità Varie","_all sprites":"tutti gli sprite","_brightness of [color]":"luminosità di [color]","_delete costume [COSNAME] in [SPRITE]":"rimuovi costume [COSNAME] di [SPRITE]","_delete sprite [SPRITE]":"rimuovi sprite [SPRITE]","_import image from [TEXT] name [NAME]":"importa immagine da [TEXT] come [NAME]","_import project from [TEXT]":"importa progetto da [TEXT]","_import sound from [TEXT] name [NAME]":"importa suono da [TEXT] come [NAME]","_import sprite from [TEXT]":"importa sprite da [TEXT]","_list [TEXT] as array":"lista [TEXT] come array","_set editing target to [NAME]":"seleziona [NAME]","_set list [NAME] to [TEXT]":"porta contenuto lista [NAME] a [TEXT]"},"ja":{"_Link or data URI here":"リンクまたはURL","_ShovelUtils":"ショベルユーティリティ","_all sprites":"すべてのスプライト","_brightness of [color]":"[color]の明るさ","_delete costume [COSNAME] in [SPRITE]":"[SPRITE]内のコスチューム[COSNAME]を削除する","_delete sprite [SPRITE]":"スプライト[SPRITE]を削除する","_fps":"FPS","_import image from [TEXT] name [NAME]":"画像を[TEXT]から名前[NAME]としてインポートする","_import project from [TEXT]":"プロジェクトを[TEXT]からインポートする","_import sound from [TEXT] name [NAME]":"音を[TEXT]から名前[NAME]としてインポートする","_import sprite from [TEXT]":"スプライトを[TEXT]からインポートする","_list [TEXT] as array":"リスト[TEXT]のarray","_set editing target to [NAME]":"編集ターゲットを[NAME]にする","_set list [NAME] to [TEXT]":"リスト[NAME]を[TEXT]にする"},"ko":{"_Link or data URI here":"링크 또는 dataURI 입력","_ShovelUtils":"Shovel유틸","_all sprites":"모든 스프라이트 목록","_brightness of [color]":"[color]의 밝기","_delete costume [COSNAME] in [SPRITE]":"[SPRITE]의 모양 [COSNAME]을(를) 삭제하기","_delete sprite [SPRITE]":"스프라이트 [SPRITE]을(를) 삭제하기","_import image from [TEXT] name [NAME]":"모양 [NAME]을(를) [TEXT]에서 불러오기","_import project from [TEXT]":"프로젝트를 [TEXT]에서 불러오기","_import sound from [TEXT] name [NAME]":"소리 [NAME]을(를) [TEXT]에서 불러오기 ","_import sprite from [TEXT]":"스프라이트를 [TEXT]에서 불러오기","_list [TEXT] as array":"리스트 [TEXT](을)를 배열로","_set editing target to [NAME]":"편집기 대상을 [NAME](으)로 정하기","_set list [NAME] to [TEXT]":"리스트 [NAME]을(를) [TEXT](으)로 정하기"},"nl":{"_all sprites":"alle sprites"},"pl":{"_all sprites":"wszystkie duszki"},"ru":{"_Link or data URI here":"Ссылка или URI данные здесь","_ShovelUtils":"УтилитыЛопатки","_all sprites":"все спрайты","_brightness of [color]":"яркость [color]","_delete costume [COSNAME] in [SPRITE]":"удалить костюм [COSNAME] в [SPRITE]","_delete sprite [SPRITE]":"удалить спрайт [SPRITE]","_import image from [TEXT] name [NAME]":"импортировать изображение из [TEXT] имя [NAME]","_import project from [TEXT]":"импортировать проект из [TEXT]","_import sound from [TEXT] name [NAME]":"импортировать звук из [TEXT] имя [NAME]","_import sprite from [TEXT]":"импортировать спрайт из [TEXT]","_list [TEXT] as array":"список [TEXT] как массив","_set editing target to [NAME]":"задать редактирущую цель на [NAME]","_set list [NAME] to [TEXT]":"задать список [NAME] в [TEXT]"},"zh-cn":{"_Link or data URI here":"输入链接或dataURI","_all sprites":"所有角色","_brightness of [color]":"[color]的亮度","_delete costume [COSNAME] in [SPRITE]":"删除角色[SPRITE]的造型[COSNAME]","_delete sprite [SPRITE]":"删除角色[SPRITE]","_import image from [TEXT] name [NAME]":"从[TEXT]导入图片并命名为[NAME]","_import project from [TEXT]":"从[TEXT]导入项目","_import sound from [TEXT] name [NAME]":"从[TEXT]导入音频并命名为[NAME]","_import sprite from [TEXT]":"从[TEXT]导入角色","_list [TEXT] as array":"原版列表[TEXT]","_set editing target to [NAME]":"将当前编辑角色设为[NAME]","_set list [NAME] to [TEXT]":"将列表[NAME]设为[TEXT]"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_ShovelUtils":"SchaufelUtils"},"fi":{"_Link or data URI here":"Linkki tai data URI tähän","_ShovelUtils":"Lapiotyökalut","_all sprites":"kaikki hahmot","_brightness of [color]":"värin [color] kirkkaus","_delete costume [COSNAME] in [SPRITE]":"poista hahmon [SPRITE] asuste [COSNAME]","_delete sprite [SPRITE]":"poista hahmo [SPRITE]","_import image from [TEXT] name [NAME]":"tuo kuva osoitteesta [TEXT] nimellä [NAME]","_import project from [TEXT]":"tuo projekti osoitteesta [TEXT]","_import sound from [TEXT] name [NAME]":"tuo ääni osoitteesta [TEXT] nimellä [NAME]","_import sprite from [TEXT]":"tuo hahmo osoitteesta [TEXT]","_set editing target to [NAME]":"aseta muokkauksen kohteeksi [NAME]"},"it":{"_Link or data URI here":"Link o dara URI","_ShovelUtils":"Utilità Varie","_all sprites":"tutti gli sprite","_brightness of [color]":"luminosità di [color]","_delete costume [COSNAME] in [SPRITE]":"rimuovi costume [COSNAME] di [SPRITE]","_delete sprite [SPRITE]":"rimuovi sprite [SPRITE]","_import image from [TEXT] name [NAME]":"importa immagine da [TEXT] come [NAME]","_import project from [TEXT]":"importa progetto da [TEXT]","_import sound from [TEXT] name [NAME]":"importa suono da [TEXT] come [NAME]","_import sprite from [TEXT]":"importa sprite da [TEXT]","_set editing target to [NAME]":"seleziona [NAME]"},"ja":{"_Link or data URI here":"リンクまたはURL","_ShovelUtils":"ショベルユーティリティ","_all sprites":"すべてのスプライト","_brightness of [color]":"[color]の明るさ","_delete costume [COSNAME] in [SPRITE]":"[SPRITE]内のコスチューム[COSNAME]を削除する","_delete sprite [SPRITE]":"スプライト[SPRITE]を削除する","_import image from [TEXT] name [NAME]":"画像を[TEXT]から名前[NAME]としてインポートする","_import project from [TEXT]":"プロジェクトを[TEXT]からインポートする","_import sound from [TEXT] name [NAME]":"音を[TEXT]から名前[NAME]としてインポートする","_import sprite from [TEXT]":"スプライトを[TEXT]からインポートする","_set editing target to [NAME]":"編集ターゲットを[NAME]にする"},"ko":{"_Link or data URI here":"링크 또는 dataURI 입력","_ShovelUtils":"Shovel유틸","_all sprites":"모든 스프라이트 목록","_brightness of [color]":"[color]의 밝기","_delete costume [COSNAME] in [SPRITE]":"[SPRITE]의 모양 [COSNAME]을(를) 삭제하기","_delete sprite [SPRITE]":"스프라이트 [SPRITE]을(를) 삭제하기","_import image from [TEXT] name [NAME]":"모양 [NAME]을(를) [TEXT]에서 불러오기","_import project from [TEXT]":"프로젝트를 [TEXT]에서 불러오기","_import sound from [TEXT] name [NAME]":"소리 [NAME]을(를) [TEXT]에서 불러오기 ","_import sprite from [TEXT]":"스프라이트를 [TEXT]에서 불러오기","_set editing target to [NAME]":"편집기 대상을 [NAME](으)로 정하기"},"nl":{"_all sprites":"alle sprites"},"pl":{"_all sprites":"wszystkie duszki"},"ru":{"_Link or data URI here":"Ссылка или URI данные здесь","_ShovelUtils":"УтилитыЛопатки","_all sprites":"все спрайты","_brightness of [color]":"яркость [color]","_delete costume [COSNAME] in [SPRITE]":"удалить костюм [COSNAME] в [SPRITE]","_delete sprite [SPRITE]":"удалить спрайт [SPRITE]","_import image from [TEXT] name [NAME]":"импортировать изображение из [TEXT] имя [NAME]","_import project from [TEXT]":"импортировать проект из [TEXT]","_import sound from [TEXT] name [NAME]":"импортировать звук из [TEXT] имя [NAME]","_import sprite from [TEXT]":"импортировать спрайт из [TEXT]","_set editing target to [NAME]":"задать редактирущую цель на [NAME]"},"zh-cn":{"_Link or data URI here":"输入链接或dataURI","_all sprites":"所有角色","_brightness of [color]":"[color]的亮度","_delete costume [COSNAME] in [SPRITE]":"删除角色[SPRITE]的造型[COSNAME]","_delete sprite [SPRITE]":"删除角色[SPRITE]","_import image from [TEXT] name [NAME]":"从[TEXT]导入图片并命名为[NAME]","_import project from [TEXT]":"从[TEXT]导入项目","_import sound from [TEXT] name [NAME]":"从[TEXT]导入音频并命名为[NAME]","_import sprite from [TEXT]":"从[TEXT]导入角色","_set editing target to [NAME]":"将当前编辑角色设为[NAME]"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
   if (!Scratch.extensions.unsandboxed) {
     throw new Error("ShovelUtils must be run unsandboxed");
   }
   console.log("ShovelUtils v1.4");
   const vm = Scratch.vm;
-
-  // Based on from https://www.growingwiththeweb.com/2017/12/fast-simple-js-fps-counter.html
-  const times = [];
-  let fps = vm.runtime.frameLoop.framerate;
-  // Desktop fork (section 119): after each frame
-  vm.runtime.on("RUNTIME_STEP_END", () => {
-    const now = Scratch.vm.runtime.pmPerfNow();
-    while (times.length > 0 && times[0] <= now - 1000) {
-      times.shift();
-    }
-    times.push(now);
-    fps = times.length;
-  });
 
   class ShovelUtils {
     getInfo() {
@@ -58,32 +46,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               NAME: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "Dango",
-              },
-            },
-          },
-          {
-            opcode: "getlist",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("list [TEXT] as array"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "MyList",
-              },
-            },
-          },
-          {
-            opcode: "setlist",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("set list [NAME] to [TEXT]"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "[1,2]",
-              },
-              NAME: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "MyList",
               },
             },
           },
@@ -180,11 +142,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("all sprites"),
           },
-          {
-            opcode: "getfps",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("fps"),
-          },
         ],
       };
     }
@@ -279,48 +236,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         });
     }
 
-
-    getlist({ TEXT }) {
-      const list = vm.runtime
-        .getTargetForStage()
-        .lookupVariableByNameAndType(TEXT, "list");
-      if (list) {
-        // Desktop fork (section 125): pmGetValue / pmSetValue instead of value
-        return JSON.stringify(list.pmGetValue());
-      } else {
-        return "";
-      }
-    }
-    setlist({ TEXT, NAME }) {
-      let parsed;
-      try {
-        // Desktop fork (section 196): fixed text comes parsed (irgen.js fixedJsonInputs); the list gets its own copy
-        parsed = TEXT.pmFixedJson ? TEXT.pmFixedJson.slice() : JSON.parse(TEXT);
-      } catch (e) {
-        return; // JSON was invalid
-      }
-
-      if (!Array.isArray(parsed)) {
-        return; // it's not an array
-      }
-
-      for (const element of parsed) {
-        const type = typeof element;
-        if (type !== "string" && type !== "number" && type !== "boolean") {
-          return; // One of the elements has a disallowed type
-        }
-      }
-
-      const list = vm.runtime
-        .getTargetForStage()
-        .lookupVariableByNameAndType(NAME, "list");
-      if (!list) {
-        return; // List was not found
-      }
-
-      list.pmSetValue(parsed);
-    }
-
     setedtarget({ NAME }) {
       let target;
 
@@ -344,10 +259,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       // https://www.w3.org/TR/AERT/#color-contrast
       const { r, g, b } = Scratch.Cast.toRgbColorObject(color);
       return (r * 299 + g * 587 + b * 114) / 1000;
-    }
-
-    getfps() {
-      return fps;
     }
 
     deleteImage({ SPRITE, COSNAME }) {

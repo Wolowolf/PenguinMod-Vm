@@ -30,7 +30,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
  * limitations under the License.
  */
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_Clipboard":"Zwischenablage"},"fi":{"_Clipboard":"Leikepöytä","_clipboard":"leikepöytä","_copy to clipboard: [TEXT]":"kopioi leikepöydälle: [TEXT]","_last pasted text":"viimeisin liitetty teksti","_reset clipboard":"tyhjennä leikepöytä","_when something is copied":"kun jotakin kopioidaan","_when something is pasted":"kun jotakin liitetään"},"it":{"_Clipboard":"Appunti","_clipboard":"appunti","_copy to clipboard: [TEXT]":"copia [TEXT] negli appunti","_last pasted text":"ultimo testo incollato","_reset clipboard":"svuota gli appunti","_when something is copied":"quando qualcosa viene copiato","_when something is pasted":"quando qualcosa viene incollato"},"ja":{"_Clipboard":"クリップボード","_clipboard":"クリップボードの内容","_copy to clipboard: [TEXT]":"[TEXT]をクリップボードにコピーする","_last pasted text":"最後に貼り付けられたテキスト","_reset clipboard":"クリップボードをリセット","_when something is copied":"何かがコピーされたとき","_when something is pasted":"何かが貼り付けられたとき"},"ko":{"_Clipboard":"클립보드","_clipboard":"클립보드","_copy to clipboard: [TEXT]":"클립보드에 복사하기: [TEXT]","_last pasted text":"방금 붙여넣은 텍스트","_reset clipboard":"클립보드 비우기","_when something is copied":"복사가 발생했을 때","_when something is pasted":"붙여넣기가 발생했을 때"},"nb":{"_Clipboard":"Utklippstavle","_clipboard":"Utklippstavle","_copy to clipboard: [TEXT]":"kopier til utklippstavle: [TEXT]","_last pasted text":"siste kopierte tekst","_reset clipboard":"nullstill utklippstavlen","_when something is copied":"når noe blir kopiert","_when something is pasted":"når noe blir limt inn"},"nl":{"_Clipboard":"Klembord","_clipboard":"klembord","_copy to clipboard: [TEXT]":"kopieer [TEXT] naar klembord","_last pasted text":"laatst geplakte tekst","_reset clipboard":"wis klembord","_when something is copied":"wanneer iets is gekopieerd","_when something is pasted":"wanneer iets is geplakt"},"pl":{"_Clipboard":"Schowek"},"ru":{"_Clipboard":"Буфер Обмена","_clipboard":"буфер обмена","_copy to clipboard: [TEXT]":"скопировать: [TEXT]","_last pasted text":"последний вставленный текст","_reset clipboard":"очистить буфер обмена","_when something is copied":"когда что-либо скопировано","_when something is pasted":"когда что-либо вставлено"},"uk":{"_Clipboard":"Буфер Обміну","_clipboard":"буфер обміну","_copy to clipboard: [TEXT]":"скопіювати в буфер обміну: [TEXT]","_last pasted text":"останній вставлений текст","_reset clipboard":"очистити буфер обміну","_when something is copied":"коли щось скопійовано","_when something is pasted":"коли щось вставлено"},"zh-cn":{"_Clipboard":"剪切板","_clipboard":"最新复制的文本","_copy to clipboard: [TEXT]":"把文本[TEXT]复制到剪切板","_last pasted text":"最新粘贴的文本","_reset clipboard":"重置剪贴板","_when something is copied":"当有文本被复制时","_when something is pasted":"当有文本被粘贴时"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_Clipboard":"Zwischenablage"},"fi":{"_Clipboard":"Leikepöytä","_clipboard":"leikepöytä","_last pasted text":"viimeisin liitetty teksti","_reset clipboard":"tyhjennä leikepöytä","_when something is copied":"kun jotakin kopioidaan","_when something is pasted":"kun jotakin liitetään"},"it":{"_Clipboard":"Appunti","_clipboard":"appunti","_last pasted text":"ultimo testo incollato","_reset clipboard":"svuota gli appunti","_when something is copied":"quando qualcosa viene copiato","_when something is pasted":"quando qualcosa viene incollato"},"ja":{"_Clipboard":"クリップボード","_clipboard":"クリップボードの内容","_last pasted text":"最後に貼り付けられたテキスト","_reset clipboard":"クリップボードをリセット","_when something is copied":"何かがコピーされたとき","_when something is pasted":"何かが貼り付けられたとき"},"ko":{"_Clipboard":"클립보드","_clipboard":"클립보드","_last pasted text":"방금 붙여넣은 텍스트","_reset clipboard":"클립보드 비우기","_when something is copied":"복사가 발생했을 때","_when something is pasted":"붙여넣기가 발생했을 때"},"nb":{"_Clipboard":"Utklippstavle","_clipboard":"Utklippstavle","_last pasted text":"siste kopierte tekst","_reset clipboard":"nullstill utklippstavlen","_when something is copied":"når noe blir kopiert","_when something is pasted":"når noe blir limt inn"},"nl":{"_Clipboard":"Klembord","_clipboard":"klembord","_last pasted text":"laatst geplakte tekst","_reset clipboard":"wis klembord","_when something is copied":"wanneer iets is gekopieerd","_when something is pasted":"wanneer iets is geplakt"},"pl":{"_Clipboard":"Schowek"},"ru":{"_Clipboard":"Буфер Обмена","_clipboard":"буфер обмена","_last pasted text":"последний вставленный текст","_reset clipboard":"очистить буфер обмена","_when something is copied":"когда что-либо скопировано","_when something is pasted":"когда что-либо вставлено"},"uk":{"_Clipboard":"Буфер Обміну","_clipboard":"буфер обміну","_last pasted text":"останній вставлений текст","_reset clipboard":"очистити буфер обміну","_when something is copied":"коли щось скопійовано","_when something is pasted":"коли щось вставлено"},"zh-cn":{"_Clipboard":"剪切板","_clipboard":"最新复制的文本","_last pasted text":"最新粘贴的文本","_reset clipboard":"重置剪贴板","_when something is copied":"当有文本被复制时","_when something is pasted":"当有文本被粘贴时"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
 
   if (!Scratch.extensions.unsandboxed) {
@@ -75,27 +75,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           "---",
           {
-            opcode: "setClipboard",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("copy to clipboard: [TEXT]"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-              },
-            },
-          },
-          {
             opcode: "resetClipboard",
             blockType: Scratch.BlockType.COMMAND,
             text: Scratch.translate("reset clipboard"),
           },
           "---",
-          {
-            opcode: "clipboard",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("clipboard"),
-            disableMonitor: true,
-          },
           {
             opcode: "getLastPastedText",
             blockType: Scratch.BlockType.REPORTER,
@@ -106,28 +90,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       };
     }
 
-    setClipboard(args) {
-      navigator.clipboard.writeText(args.TEXT);
-    }
-
     resetClipboard() {
       navigator.clipboard.writeText("");
-    }
-
-    clipboard() {
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        return Scratch.canReadClipboard()
-          .then((allowed) => {
-            if (allowed) {
-              return navigator.clipboard.readText() ?? "";
-            }
-            return "";
-          })
-          .catch(() => {
-            return "";
-          });
-      }
-      return "";
     }
 
     getLastPastedText() {

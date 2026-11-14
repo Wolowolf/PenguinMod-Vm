@@ -129,7 +129,6 @@ const uniteReplacments = {
 
 // extensions to be patched by the extension patcher
 const ExtensionPatches = {
-    "griffpatch": {id: 'griffpatch', url: 'https://extensions.turbowarp.org/box2d.js'},
     // "cloudlink": {id: 'cloudlink', url: 'https://extensions.turbowarp.org/cloudlink.js'},
     // maybe this patch should be moved outside of something called **Extension**Patches but i dont know
     "operators": (_, object) => { // fix expandable join using the wrong prefix

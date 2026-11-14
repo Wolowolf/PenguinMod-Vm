@@ -41,7 +41,6 @@
         },
         "internals": {
             "._answer": 1,
-            "._drawList": 1,
             "._gl": 2
         }
     },
@@ -89,11 +88,11 @@
     "SPASfontManager": {},
     "SPadvControl": {
         "internals": {
-            "._blocks": 2,
+            "._blocks": 1,
             "._hats": 5,
             "._keysPressed": 1,
             "._pmThreadMapChanged": 3,
-            "._pushThread": 4,
+            "._pushThread": 3,
             "write runtime._pmThreadMapChanged": 3
         }
     },
@@ -156,12 +155,6 @@
             "write runtime.SPmbpCSTOldStorage": 3,
             "write runtime.extensionStorage": 1,
             "write vm.globalBlocksCache": 1
-        }
-    },
-    "SPmessagePlus": {
-        "internals": {
-            "._pushThread": 2,
-            "._restartThread": 1
         }
     },
     "SPpartEngine": {
@@ -347,7 +340,7 @@
     "claytonhtmlencode": {},
     "clipboard": {
         "page": {
-            "navigator.clipboard": 5,
+            "navigator.clipboard": 1,
             "window.clipboardData": 1
         }
     },
@@ -415,17 +408,6 @@
             "window.open": 2
         }
     },
-    "divVecQuat": {
-        "page": {
-            "document.body": 1,
-            "document.createElement": 18,
-            "document.getElementById": 1,
-            "document.head": 1
-        },
-        "internals": {
-            "write vm.divVecQuat": 1
-        }
-    },
     "dninwakelock": {
         "page": {
             "document.visibilityState": 3,
@@ -435,18 +417,11 @@
     "dogeiscutResolution": {
         "page": {
             "window.devicePixelRatio": 1,
-            "window.innerHeight": 4,
-            "window.innerWidth": 4,
-            "window.screen": 2
+            "window.innerHeight": 3,
+            "window.innerWidth": 3
         }
     },
     "dtbyxeroname": {},
-    "e2ee": {
-        "page": {
-            "window.atob": 1,
-            "window.crypto": 11
-        }
-    },
     "embintranslation": {
         "page": {
             "navigator.userLanguage": 2
@@ -543,16 +518,6 @@
             "window.open": 2
         }
     },
-    "griffpatch": {
-        "random": {
-            "Math.random": 2
-        },
-        "internals": {
-            "._allDrawables": 1,
-            "._convexHullPoints": 1,
-            "._getConvexHullPointsForDrawable": 1
-        }
-    },
     "gsaWebsocket": {},
     "itch": {
         "page": {
@@ -571,20 +536,8 @@
     },
     "jgTailgating": {},
     "jgTween": {},
-    "jwColor": {
-        "page": {
-            "document.createElement": 5
-        },
-        "internals": {
-            "write vm.jwColor": 1
-        }
-    },
     "jwProto": {},
-    "lmsData": {
-        "internals": {
-            "._monitorUpToDate": 1
-        }
-    },
+    "lmsData": {},
     "lmsLooksPlus": {
         "internals": {
             "._allSkins": 4,
@@ -619,14 +572,6 @@
         "internals": {
             "._cloneCounter": 1,
             "._createClone": 2
-        }
-    },
-    "lmsutilsblocks": {
-        "page": {
-            "screen.height": 1,
-            "screen.width": 1,
-            "window.innerHeight": 1,
-            "window.innerWidth": 1
         }
     },
     "localstorage": {
@@ -668,15 +613,8 @@
         "page": {
             "document.createElement": 2,
             "location.hostname": 1,
-            "navigator.clipboard": 6,
             "navigator.maxTouchPoints": 1,
-            "renderer.canvas": 1,
-            "webkitSpeechRecognition": 1,
-            "window.SpeechRecognition": 2,
-            "window.webkitSpeechRecognition": 1
-        },
-        "internals": {
-            "._drawList": 1
+            "renderer.canvas": 1
         }
     },
     "p7videosharing": {
@@ -797,8 +735,7 @@
             "history.replaceState": 1,
             "location": 1,
             "location.origin": 3,
-            "navigator": 4,
-            "navigator.getBattery": 2,
+            "navigator": 1,
             "navigator.vibrate": 1,
             "window": 5,
             "window.parent": 2
@@ -879,7 +816,6 @@
         }
     },
     "shovellzcompresss": {},
-    "skyhigh173BigInt": {},
     "speechSP": {
         "page": {
             "document.createElement": 4,
@@ -901,7 +837,6 @@
             "document.createElement": 1
         }
     },
-    "stretch": {},
     "strings": {},
     "theshovelcanvaseffects": {
         "page": {
@@ -926,7 +861,6 @@
     "truefantommath": {},
     "truefantomnetwork": {
         "page": {
-            "document.URL": 1,
             "window.screen": 8
         }
     },
@@ -935,19 +869,6 @@
         "internals": {
             "._allDrawables": 1,
             "write runtime.ioDevices": 1
-        }
-    },
-    "videoSprites": {
-        "page": {
-            "document.createElement": 1,
-            "renderer.gl": 1
-        },
-        "internals": {
-            "._allDrawables": 1,
-            "._allSkins": 5,
-            "._colorData": 1,
-            "._height": 1,
-            "._width": 1
         }
     },
     "webrtc": {

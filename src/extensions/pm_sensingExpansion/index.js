@@ -39,21 +39,18 @@ const blocks = `
     </value>
 </block>
 ${blockSeparator}
-%b16>
-%b17>
-%b20>
-%b22>
+%b11>
+%b12>
+%b14>
 <block type="pmSensingExpansion_amountOfTimeKeyHasBeenHeld">
     <value name="KEY">
         <shadow type="sensing_keyoptions" />
     </value>
 </block>
-%b18>
-%b19>
-%b23>
-%b24>
+%b15>
+%b16>
 ${blockSeparator}
-%b14>
+%b9>
 <block type="sensing_getspritewithattrib">
     <value name="var">
         <shadow type="text">
@@ -66,30 +63,23 @@ ${blockSeparator}
         </shadow>
     </value>
 </block>
-%b10>
-${blockSeparator}
 %b6>
-%b9>
-%b11>
-%b15>
-%b12>
-%b13>
+${blockSeparator}
+%b5>
+%b7>
+%b10>
+%b8>
 ${blockSeparator}
 <block type="sensing_getoperatingsystem"/>
 <block type="sensing_getbrowser"/>
 <block type="sensing_geturl"/>
 ${blockSeparator}
-%b7>
-%b5>
-%b8>
-%b4>
-${blockSeparator}
 %b3>
-${blockSeparator}
-%b0>
+%b2>
+%b4>
 %b1>
 ${blockSeparator}
-%b2>
+%b0>
 `
 
 /**
@@ -106,13 +96,8 @@ class pmSensingExpansion {
 
         this.canVibrate = true;
 
-        // Desktop fork (section 154): the runtime's clock, here and below
-        this.lastUpdate = runtime.pmDateNow();
-
         this.canGetLoudness = false;
         this.loudnessArray = [0];
-
-        this.scrollDistance = 0;
 
         this.lastValues = {};
     }
@@ -143,27 +128,9 @@ class pmSensingExpansion {
             orderBlocks: this.orderCategoryBlocks,
             blocks: [
                 {
-                    opcode: 'batteryPercentage',
-                    text: 'battery percentage',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true
-                },
-                {
-                    opcode: 'batteryCharging',
-                    text: 'is device charging?',
-                    blockType: BlockType.BOOLEAN,
-                    disableMonitor: true
-                },
-                {
                     opcode: 'vibrateDevice',
                     text: 'vibrate',
                     blockType: BlockType.COMMAND
-                },
-                {
-                    opcode: 'browserLanguage',
-                    text: 'preferred language',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true
                 },
                 {
                     opcode: 'urlOptions',
@@ -190,17 +157,6 @@ class pmSensingExpansion {
                         URL: {
                             type: ArgumentType.STRING,
                             defaultValue: "https://home.penguinmod.com:3000/some/random/page?param=10#20"
-                        }
-                    }
-                },
-                {
-                    opcode: 'setUsername',
-                    text: 'set username to [NAME]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        NAME: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "Penguin"
                         }
                     }
                 },
@@ -256,12 +212,6 @@ class pmSensingExpansion {
                     disableMonitor: false
                 },
                 {
-                    opcode: 'deltaTime',
-                    text: 'delta time',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: false
-                },
-                {
                     opcode: 'pickColor',
                     text: 'grab color at x: [X] y: [Y]',
                     blockType: BlockType.REPORTER,
@@ -285,33 +235,6 @@ class pmSensingExpansion {
                     opcode: 'averageLoudness',
                     text: 'average loudness',
                     blockType: BlockType.REPORTER
-                },
-                {
-                    opcode: 'scrollingDistance',
-                    text: 'scrolling distance',
-                    blockType: BlockType.REPORTER
-                },
-                {
-                    opcode: 'setScrollingDistance',
-                    text: 'set scrolling distance to [AMOUNT]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        AMOUNT: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 0
-                        }
-                    }
-                },
-                {
-                    opcode: 'changeScrollingDistanceBy',
-                    text: 'change scrolling distance by [AMOUNT]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        AMOUNT: {
-                            type: ArgumentType.NUMBER,
-                            defaultValue: 100
-                        }
-                    }
                 },
                 {
                     opcode: 'currentKeyPressed',
@@ -492,32 +415,6 @@ class pmSensingExpansion {
     }
 
     // blocks
-    batteryPercentage() {
-        if ('getBattery' in navigator) {
-            return new Promise((resolve) => {
-                navigator.getBattery().then(batteryManager => {
-                    resolve(batteryManager.level * 100);
-                }).catch(() => {
-                    return 100;
-                });
-            });
-        } else {
-            return 100;
-        }
-    }
-    batteryCharging() {
-        if ('getBattery' in navigator) {
-            return new Promise((resolve) => {
-                navigator.getBattery().then(batteryManager => {
-                    resolve(batteryManager.charging);
-                }).catch(() => {
-                    return true;
-                });
-            });
-        } else {
-            return true;
-        }
-    }
 
     maxSpriteLayers() {
         return this.runtime.renderer._drawList.length - 1;
@@ -551,18 +448,6 @@ class pmSensingExpansion {
         return addedTogether / max;
     }
 
-    scrollingDistance() {
-        return this.scrollDistance;
-    }
-    setScrollingDistance(args) {
-        const amount = Cast.toNumber(args.AMOUNT);
-        this.scrollDistance = amount;
-    }
-    changeScrollingDistanceBy(args) {
-        const amount = Cast.toNumber(args.AMOUNT);
-        this.scrollDistance += amount;
-    }
-
     currentKeyPressed(_, util) {
         const keys = util.ioQuery('keyboard', 'getAllKeysPressed');
         const key = keys[keys.length - 1];
@@ -573,7 +458,7 @@ class pmSensingExpansion {
         const key = Cast.toString(args.KEY);
         const keyTimestamp = util.ioQuery('keyboard', 'getKeyTimestamp', [key]);
         if (keyTimestamp === 0) return 0;
-        const currentTime = this.runtime.pmDateNow();
+        const currentTime = this.runtime.pmDateNow(); // Desktop fork (section 154): the runtime's clock, here and below
         const timestamp = currentTime - keyTimestamp;
         return timestamp / 1000;
     }
@@ -592,73 +477,6 @@ class pmSensingExpansion {
         }
     }
 
-    browserLanguage() {
-        if (!('language' in navigator)) return 'Unknown';
-        const lang = Cast.toString(navigator.language);
-        const check = lang.split("-")[0].toLowerCase();
-
-        switch (check) {
-            case 'en':
-                return 'English';
-            case 'es':
-                return 'Spanish';
-            case 'fr':
-                return 'French';
-            case 'it':
-                return 'Italian';
-            case 'pt':
-                return 'Portuguese';
-            case 'de':
-                return 'German';
-            case 'ru':
-                return 'Russian';
-            case 'ar':
-                return 'Arabic';
-            case 'zh':
-                return 'Chinese (Mandarin)';
-            case 'he':
-                return 'Hebrew';
-            case 'ja':
-                return 'Japanese';
-            case 'ko':
-                return 'Korean';
-            case 'sw':
-                return 'Swahili';
-            case 'sq':
-                return 'Albanian';
-            case 'hy':
-                return 'Armenian';
-            case 'eu':
-                return 'Basque';
-            case 'nl':
-                return 'Dutch';
-            case 'ka':
-                return 'Georgian';
-            case 'gd':
-                return 'Scottish Gaelic';
-            case 'ga':
-                return 'Modern Irish';
-            case 'fa':
-                return 'Persian (Farsi)';
-            case 'bo':
-                return 'Tibetan';
-            case 'cy':
-                return 'Welsh';
-            case 'el':
-                return 'Modern Greek';
-            case 'grc':
-                return 'Ancient Greek';
-            case 'la':
-                return 'Latin';
-            case 'ang':
-                return 'Anglo-Saxon';
-            case 'enm':
-                return 'Middle English';
-            default:
-                return 'Unknown';
-        }
-    }
-
     urlOptions(args) {
         if (!('location' in window)) return ''; // idk how this would fail but funny
         const option = Cast.toString(args.OPTIONS).toLowerCase();
@@ -670,14 +488,6 @@ class pmSensingExpansion {
         const url = Cast.toString(args.URL);
         if (!this.validateUrl(url)) return '';
         return this.urlOptionFromObject(option, new URL(url));
-    }
-
-    setUsername(args) {
-        const username = Cast.toString(args.NAME);
-        vm.postIOData('userData', {
-            username: username,
-            loggedIn: false,
-        });
     }
 
     setUrlEnd(args) {
@@ -710,13 +520,6 @@ class pmSensingExpansion {
 
     currentMillisecond() {
         return this.runtime.pmDateNow() % 1000;
-    }
-
-    deltaTime() {
-        let now = this.runtime.pmDateNow();
-        let dt = now - this.lastUpdate;
-        this.lastUpdate = now;
-        return dt;
     }
 
 }

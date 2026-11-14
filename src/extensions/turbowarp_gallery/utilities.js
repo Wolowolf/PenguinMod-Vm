@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's utilities.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
+// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below) and section 259:
+// the blocks that duplicate built-in or Network blocks are removed, and "sprite clicked?" is added (from the removed
+// Lily's Toolbox), marked "Desktop fork (section 259)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -40,7 +42,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
  * SOFTWARE.
  */
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_Utilities":"Verschiedene Blöcke","_[PATH] of [JSON_STRING]":"[PATH] von [JSON_STRING]"},"fi":{"_Utilities":"Työkalut","_[PATH] of [JSON_STRING]":"[PATH] JSON-koodissa [JSON_STRING]","_content from [URL]":"sisältö URL-osoitteesta [URL]","_if [A] then [B] else [C]":"jos [A], niin [B] tai muuten [C]","_letters [START] to [END] of [STRING]":"merkkijonon [STRING] merkit [START] – [END]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"korvaa [REGEX] merkkijonolla [NEWSTRING] merkkijonossa [STRING]"},"it":{"_Utilities":"Utilità","_[PATH] of [JSON_STRING]":"[PATH] di [JSON_STRING]","_content from [URL]":"contenuto di [URL]","_if [A] then [B] else [C]":"se [A] allora [B] altrimenti [C]","_letters [START] to [END] of [STRING]":"lettere da [START] a [END] di [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"sostituisci [REGEX] in [STRING] con [NEWSTRING]"},"ja":{"_Utilities":"ユーティリティ","_[PATH] of [JSON_STRING]":"[JSON_STRING]の[PATH]","_content from [URL]":"[URL]からのコンテンツ","_if [A] then [B] else [C]":"もし[A]なら[B]でなければ[C]","_letters [START] to [END] of [STRING]":"[STRING]の[START]から[END]番目","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"[STRING]の[REGEX]を[NEWSTRING]に置き換える"},"ko":{"_Utilities":"유틸리티","_[PATH] of [JSON_STRING]":"[JSON_STRING]에서 [PATH]","_content from [URL]":"[URL]의 내용","_if [A] then [B] else [C]":"[A] (이)라면 [B] 아니면 [C]","_letters [START] to [END] of [STRING]":"[STRING]의 [START]부터 [END]까지의 글자"},"nb":{"_Utilities":"Verktøy"},"nl":{"_Utilities":"Utiliteiten","_[PATH] of [JSON_STRING]":"[PATH] van [JSON_STRING]","_if [A] then [B] else [C]":"als [A] dan [B] anders [C]","_letters [START] to [END] of [STRING]":"letters [START] t/m [END] van [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"vervang [STRING] met regel [REGEX] door [NEWSTRING]"},"ru":{"_Utilities":"Утилиты","_[PATH] of [JSON_STRING]":"[PATH] из [JSON_STRING]","_content from [URL]":"контент из [URL]","_if [A] then [B] else [C]":"если [A] тогда [B] иначе [C]","_letters [START] to [END] of [STRING]":"буквы с [START] до [END] в строке [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"заменить [STRING] используя правило [REGEX] с [NEWSTRING]"},"zh-cn":{"_Utilities":"工具","_[PATH] of [JSON_STRING]":"[JSON_STRING]中的[PATH]","_content from [URL]":"来自[URL]的内容","_if [A] then [B] else [C]":"[A]？[B]：[C]","_letters [START] to [END] of [STRING]":"[STRING]的第[START]到第[END]位","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"以规则[REGEX]替换[STRING]为[NEWSTRING]"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_Utilities":"Verschiedene Blöcke","_[PATH] of [JSON_STRING]":"[PATH] von [JSON_STRING]"},"fi":{"_Utilities":"Työkalut","_[PATH] of [JSON_STRING]":"[PATH] JSON-koodissa [JSON_STRING]","_sprite clicked?":"napautetaanko hahmoa?"},"it":{"_Utilities":"Utilità","_[PATH] of [JSON_STRING]":"[PATH] di [JSON_STRING]","_sprite clicked?":"sprite cliccato"},"ja":{"_Utilities":"ユーティリティ","_[PATH] of [JSON_STRING]":"[JSON_STRING]の[PATH]","_sprite clicked?":"スプライトがクリックされている"},"ko":{"_Utilities":"유틸리티","_[PATH] of [JSON_STRING]":"[JSON_STRING]에서 [PATH]","_sprite clicked?":"스프라이트를 클릭했는가?"},"nb":{"_Utilities":"Verktøy"},"nl":{"_Utilities":"Utiliteiten","_[PATH] of [JSON_STRING]":"[PATH] van [JSON_STRING]","_sprite clicked?":"sprite geklikt?"},"ru":{"_Utilities":"Утилиты","_[PATH] of [JSON_STRING]":"[PATH] из [JSON_STRING]","_sprite clicked?":"спрайт нажат?"},"zh-cn":{"_Utilities":"工具","_[PATH] of [JSON_STRING]":"[JSON_STRING]中的[PATH]","_sprite clicked?":"角色被点击？"},"uk":{"_sprite clicked?":"спрайт натиснуто?"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
 
   const icon =
@@ -59,61 +61,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         menuIconURI: icon,
 
         blocks: [
-          {
-            opcode: "ternaryOperator",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            text: Scratch.translate("if [A] then [B] else [C]"),
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-              B: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "banana",
-              },
-              C: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "apple",
-              },
-            },
-            allowDropAnywhere: true,
-          },
-          {
-            opcode: "letters",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            text: Scratch.translate("letters [START] to [END] of [STRING]"),
-            arguments: {
-              START: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 5,
-              },
-              END: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 7,
-              },
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "red apple",
-              },
-            },
-          },
-          {
-            opcode: "fetchFrom",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            text: Scratch.translate("content from [URL]"),
-            arguments: {
-              URL: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "https://extensions.turbowarp.org/hello.txt",
-              },
-            },
-          },
           {
             opcode: "parseJSON",
 
@@ -136,69 +83,25 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
             },
           },
+          "---",
+          // Desktop fork (section 259): from the removed Lily's Toolbox
           {
-            opcode: "stringToBoolean",
-
+            opcode: "spriteClicked",
             blockType: Scratch.BlockType.BOOLEAN,
-
-            // eslint-disable-next-line extension/should-translate
-            text: "[STRING]",
-            arguments: {
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "true",
-              },
-            },
-          },
-          {
-            opcode: "regexReplace",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            text: Scratch.translate(
-              "replace [STRING] using the rule [REGEX] with [NEWSTRING]"
-            ),
-            arguments: {
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "bananas are awesome. i like bananas.",
-              },
-              REGEX: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "banana",
-              },
-              NEWSTRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "apple",
-              },
-            },
+            text: Scratch.translate("sprite clicked?"),
+            filter: [Scratch.TargetType.SPRITE],
+            disableMonitor: true,
           },
         ],
       };
     }
 
-
-
-
-
-
-
-
-    ternaryOperator({ A, B, C }) {
-      return A ? B : C;
-    }
-
-    letters({ STRING, START, END }) {
-      const str = Scratch.Cast.toString(STRING);
-      return str.slice(Math.max(1, START) - 1, Math.min(str.length, END));
-    }
-
-
-
-    fetchFrom({ URL }) {
-      return Scratch.fetch(URL)
-        .then((res) => res.text())
-        .catch((err) => "");
+    // Desktop fork (section 259): from the removed Lily's Toolbox: the mouse is down on this sprite
+    spriteClicked(args, util) {
+      return (
+        util.ioQuery("mouse", "getIsDown") &&
+        util.target.isTouchingObject("_mouse_")
+      );
     }
 
     parseJSON({ PATH, JSON_STRING }) {
@@ -233,13 +136,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
 
-    stringToBoolean({ STRING }) {
-      return Scratch.Cast.toBoolean(STRING);
-    }
 
-    regexReplace({ STRING, REGEX, NEWSTRING }) {
-      return STRING.toString().replace(new RegExp(REGEX, "gi"), NEWSTRING);
-    }
   }
 
   Scratch.extensions.register(new Utilities());

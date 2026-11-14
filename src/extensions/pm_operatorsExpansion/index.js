@@ -372,24 +372,6 @@ class pmOperatorsExpansion {
           `
         },
         {
-          opcode: "reverseChars",
-          text: "reverse [TEXT]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            TEXT: {
-              type: ArgumentType.STRING,
-              defaultValue: "Hello!"
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shuffleChars"
-          ],
-          switchText: "reverse text"
-        },
-        {
           opcode: "shuffleChars",
           text: "shuffle [TEXT]",
           blockType: BlockType.REPORTER,
@@ -400,12 +382,7 @@ class pmOperatorsExpansion {
               type: ArgumentType.STRING,
               defaultValue: "Hello!"
             }
-          },
-          switches: [
-            { isNoop: true },
-            "reverseChars",
-          ],
-          switchText: "shuffle text"
+          }
         },
         {
           opcode: "textAfter",
@@ -793,11 +770,6 @@ class pmOperatorsExpansion {
     return (number <= max) && (number >= min);
   }
 
-  reverseChars(args) {
-    const text = Cast.toString(args.TEXT);
-    const split = text.split("");
-    return split.reverse().join("");
-  }
   shuffleChars(args) {
     const text = Cast.toString(args.TEXT);
     const split = text.split("");

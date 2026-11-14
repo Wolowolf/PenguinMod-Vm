@@ -1,8 +1,9 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Hyper-Sense-V2.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except: its key hat is checked only when its answer can
-// change, after a key changed and every frame while a key is held (`pmEdgeHat`; section 128, roadmap step 6b;
-// marked "Desktop fork (section 128)").
+// the VM as a built-in extension. The code is the gallery file, except where marked "Desktop fork".
+// Desktop fork (section 259): the blocks that duplicate built-in or More Sensing blocks are removed (scroll hat and
+// check, mouse button, key blocks, sprite touching sprite, drag mode, fullscreen check, loudness, layers, colour at
+// x y; stage width and height in "stage [ ]"), with the key timers and hats only they used (section 128's key hat).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
@@ -47,14 +48,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   });
 
   const keyData = {
-    curKey: "",
-    lastKey: "",
-    keys: [],
-    keyTimers: new Map(),
     keyBlockers: new Set()
   };
 
-  const scrollChecks = new WeakMap();
   const mouseData = {
     client: [0, 0],
     velocity: [0, 0],
@@ -79,20 +75,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     { text: Scratch.translate("color"), value: "color" }
   ];
 
-  let loudnessCache = [];
-
   class HyperSense2SP {
     constructor() {
       runtime.on("BEFORE_EXECUTE", () => {
-        // key operations
-        const keyTimers = keyData.keyTimers;
-        keyTimers.forEach((value, key) => {
-          keyTimers.set(key, value + 0.1);
-        });
-        // Desktop fork (section 128): a held key's timer grows every frame, which can change the key hat's answer
-        if (keyTimers.size) runtime.pmEdgeHatsChanged("HyperSense2SP");
-        runtime.startHats("HyperSense2SP_whenKey");
-
         // velocity application
         const { velocity, scrollVelocity } = mouseData;
         mouseData.velocity[0] += (0 - velocity[0]) / 3;
@@ -103,40 +88,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       });
 
       Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (e) => {
-        runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
         const key = this.toProperKey(e, false);
-        keyData.curKey = key;
-        keyData.lastKey = key;
-        if (!keyData.keyTimers.has(key)) {
-          keyData.keys.push(key);
-          keyData.keyTimers.set(key, 0);
-        }
-
         // if this is a blocked key, prevent default
         if (keyData.keyBlockers.has("any") || keyData.keyBlockers.has(key)) {
           e.preventDefault();
         }
       });
-      Scratch.vm.runtime.pmPage.addEventListener("window", "keyup", (e) => {
-        runtime.pmEdgeHatsChanged("HyperSense2SP"); // Desktop fork (section 128)
-        const key = this.toProperKey(e, false);
-        const index = keyData.keys.indexOf(key);
-
-        keyData.keyTimers.delete(key);
-        keyData.keys.splice(index, 1);
-        keyData.curKey = keyData.keys[0] || "";
-      });
-
       Scratch.vm.runtime.pmPage.addEventListener("document", "wheel", (e) => {
         const oldScroll = mouseData.scroll;
         mouseData.scroll = [oldScroll[0] + e.deltaX, oldScroll[1] + e.deltaY];
         mouseData.scrollVelocity = [e.deltaX, e.deltaY];
-
-        if (e.deltaX > 1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "right" });
-        else if (e.deltaX < -1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "left" });
-
-        if (e.deltaY > 1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "up" });
-        else if (e.deltaY < -1) runtime.startHats("HyperSense2SP_whenScrolled", { DIR: "down" });
       });
       Scratch.vm.runtime.pmPage.addEventListener("document", "mousemove", (e) => {
         mouseData.client = [e.clientX, e.clientY];
@@ -182,33 +143,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               AMT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 }
             },
           },
-          {
-            opcode: "whenScrolled",
-            blockType: Scratch.BlockType.EVENT,
-            text: Scratch.translate("when scrolled [DIR]"),
-            isEdgeActivated: false,
-            arguments: {
-              DIR: { type: Scratch.ArgumentType.STRING, menu: "SCROLL_EVENTS" }
-            },
-          },
-          {
-            opcode: "isScrolled",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is scrolling [TYPE] ?"),
-            disableMonitor: true,
-            arguments: {
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "SCROLL_EVENTS" }
-            },
-          },
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Mouse Detection") },
-          {
-            opcode: "mouseClick",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is mouse [BUTTON] down?"),
-            arguments: {
-              BUTTON: { type: Scratch.ArgumentType.STRING, menu: "MOUSE_BUTTONS" }
-            }
-          },
           {
             opcode: "realMouse",
             blockType: Scratch.BlockType.REPORTER,
@@ -226,44 +161,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             }
           },
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Key Detection") },
-          {
-            opcode: "whenKey",
-            blockType: Scratch.BlockType.HAT,
-            text: Scratch.translate("when [KEY] key [TYPE]"),
-            isEdgeActivated: false,
-            pmEdgeHat: { signals: ["HyperSense2SP"] }, // Desktop fork (section 128)
-            arguments: {
-              KEY: { type: Scratch.ArgumentType.STRING, menu: "KEYS" },
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "KEY_PRESS" }
-            }
-          },
-          {
-            opcode: "isKey",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("key [KEY] [TYPE] ?"),
-            arguments: {
-              KEY: { type: Scratch.ArgumentType.STRING, menu: "KEYS" },
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "KEY_PRESS" }
-            }
-          },
-          "---",
-          {
-            opcode: "currentKey",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("[TYPE] pressed"),
-            arguments: {
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "KEY_LISTS" }
-            }
-          },
-          {
-            opcode: "timeKeyPressed",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("seconds [KEY] key pressed"),
-            arguments: {
-              KEY: { type: Scratch.ArgumentType.STRING, menu: "KEYS" }
-            }
-          },
-          "---",
           {
             opcode: "setKeyBlock",
             blockType: Scratch.BlockType.COMMAND,
@@ -290,25 +187,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               SPRITE1: { type: Scratch.ArgumentType.STRING, menu: "ALL_TARGETS" },
               SPRITE2: { type: Scratch.ArgumentType.STRING, menu: "OBJECTS" }
-            }
-          },
-          {
-            opcode: "spriteTouchingSprite",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is [SPRITE1] touching [SPRITE2]?"),
-            arguments: {
-              SPRITE1: { type: Scratch.ArgumentType.STRING, menu: "OBJECTS" },
-              SPRITE2: { type: Scratch.ArgumentType.STRING, menu: "ALL_TARGETS" }
-            }
-          },
-          {
-            opcode: "spriteTouchingSpriteType",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is [SPRITE1] touching [TYPE] of [SPRITE2]?"),
-            arguments: {
-              SPRITE1: { type: Scratch.ArgumentType.STRING, menu: "ALL_OBJECTS" },
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "TARGET_TYPE" },
-              SPRITE2: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" }
             }
           },
           {
@@ -349,34 +227,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               SPRITE: { type: Scratch.ArgumentType.STRING, menu: "ALL_OBJECTS" }
             }
           },
-          {
-            opcode: "colorAtPosition",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("color at x [x] y [y]"),
-            arguments: {
-              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
-              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
-            }
-          },
           "---",
-          {
-            opcode: "spriteDragMode",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("set drag mode of [SPRITE] to [DRAG]"),
-            arguments: {
-              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "ALL_TARGETS" },
-              DRAG: { type: Scratch.ArgumentType.STRING, menu: "DRAG_MODES" }
-            },
-          },
-          {
-            opcode: "spriteDraggable",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is [SPRITE] [DRAG] ?"),
-            arguments: {
-              SPRITE: { type: Scratch.ArgumentType.STRING, menu: "ALL_TARGETS" },
-              DRAG: { type: Scratch.ArgumentType.STRING, menu: "DRAG_TYPE" }
-            },
-          },
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Asking") },
           {
             opcode: "advancedAsk",
@@ -442,31 +293,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Miscellaneous") },
           {
-            opcode: "isScreen",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is [SCREEN] ?"),
-            arguments: {
-              SCREEN: { type: Scratch.ArgumentType.STRING, menu: "SCREENS" }
-            }
-          },
-          {
             opcode: "screenOff",
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("stage [TYPE]"),
             arguments: {
               TYPE: { type: Scratch.ArgumentType.STRING, menu: "STAGE_SCALES" }
             }
-          },
-          "---",
-          {
-            opcode: "averageMicVolume",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("average loudness")
-          },
-          {
-            opcode: "allLayers",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("max sprite layers")
           },
           "---",
           {
@@ -503,49 +335,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             { text: Scratch.translate("velocity x"), value: "velocityX" },
             { text: Scratch.translate("velocity y"), value: "velocityY" }
           ],
-          SCROLL_EVENTS: [
-            { text: Scratch.translate("up"), value: "up" },
-            { text: Scratch.translate("down"), value: "down" },
-            { text: Scratch.translate("left"), value: "left" },
-            { text: Scratch.translate("right"), value: "right" }
-          ],
-          MOUSE_BUTTONS: {
-            acceptReporters: true,
-            items: [
-              { text: Scratch.translate("left"), value: "0" },
-              { text: Scratch.translate("scroll wheel"), value: "1" },
-              { text: Scratch.translate("right"), value: "2" },
-              { text: Scratch.translate("back"), value: "3" },
-              { text: Scratch.translate("foward"), value: "4" }
-            ],
-          },
-          KEY_PRESS: [
-            { text: Scratch.translate("pressed"), value: "pressed" },
-            { text: Scratch.translate("hit"), value: "hit" }
-          ],
-          KEY_LISTS: [
-            { text: Scratch.translate("current key"), value: "press" },
-            { text: Scratch.translate("keys"), value: "pressed" },
-            { text: Scratch.translate("last key"), value: "lastPress" }
-          ],
           KEYS: {
             acceptReporters: true,
             items: translatedKeys
-          },
-          TARGET_TYPE: [
-            { text: Scratch.translate("parent"), value: "parent" },
-            { text: Scratch.translate("clone"), value: "clone" }
-          ],
-          DRAG_TYPE: [
-            { text: Scratch.translate("draggable"), value: "draggable" },
-            { text: Scratch.translate("being dragged"), value: "being dragged" }
-          ],
-          DRAG_MODES: {
-            acceptReporters: true,
-            items: [
-              { text: Scratch.translate("draggable"), value: "draggable" },
-              { text: Scratch.translate("not draggable"), value: "not draggable" }
-            ]
           },
           ASK_TYPE: [
             { text: Scratch.translate("stage"), value: "stage" },
@@ -555,16 +347,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             acceptReporters: true,
             items: validInputs
           },
-          SCREENS: [
-            { text: Scratch.translate("fullscreen"), value: "fullscreen" },
-            { text: Scratch.translate("smallscreen"), value: "smallscreen" }
-          ],
           STAGE_SCALES: {
             acceptReporters: true,
             items: [
-              { text: Scratch.translate("width"), value: "width" },
               { text: Scratch.translate("display width"), value: "display width" },
-              { text: Scratch.translate("height"), value: "height" },
               { text: Scratch.translate("display height"), value: "display height" },
               { text: Scratch.translate("size ratio"), value: "ratio" }
             ]
@@ -607,13 +393,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       else if (key === "capslock") key = "caps lock";
       else if (key === "contextmenu") key = "context menu";
       return key;
-    }
-
-    keyCheckHandler(key, hitOnly) {
-      const { keyTimers, curKey } = keyData;
-      if (key === "any" && curKey !== "") return hitOnly ? keyTimers.get(curKey) <= 0.1 : true;
-      if (keyTimers.has(key)) return hitOnly ? keyTimers.get(key) <= 0.1 : true;
-      return false;
     }
 
     colorAtPos(x, y) {
@@ -703,63 +482,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       mouseData.scroll[index] += Cast.toNumber(args.AMT);
     }
 
-    isScrolled(args, util) {
-      const type = Cast.toString(args.TYPE);
-      const isX = type === "left" || type === "right";
-      const scrollDist = mouseData.scroll[isX ? 0 : 1];
-      const stackName = `SPscrollCheck${isX ? "X" : "Y"}`;
-
-      // Desktop fork (section 179): per script in a table of its own, not on the thread's stack frame, which later
-      // goes to other scripts with these values still on it
-      let checks = scrollChecks.get(util.thread);
-      if (!checks) scrollChecks.set(util.thread, checks = {});
-      if (checks[stackName] === undefined) checks[stackName] = 0;
-      const testerVal = checks[stackName];
-
-      const status = type === "down" || type === "left" ?
-        scrollDist > testerVal : scrollDist < testerVal;
-
-      if (status) checks[stackName] = scrollDist;
-      return Cast.toBoolean(status);
-    }
-
-    mouseClick(args, util) {
-      return util.ioQuery("mouse", "getButtonIsDown", [Cast.toNumber(args.BUTTON)])
-    }
-
     realMouse(args) {
       return mouseData.client[args.POS === "x" ? 0 : 1];
     }
 
     mouseVelocity(args) {
       return mouseData.velocity[args.POS === "x" ? 0 : 1];
-    }
-
-    whenKey(args) {
-      const key = Cast.toString(args.KEY);
-      const isHit = Cast.toString(args.TYPE) === "hit";
-      return this.keyCheckHandler(key, isHit);
-    }
-
-    isKey(args) {
-      // really nothing special here
-      return this.whenKey(args);
-    }
-
-    currentKey(args) {
-      const type = Cast.toString(args.TYPE);
-      switch (type) {
-        case "press": return keyData.curKey;
-        case "pressed": return JSON.stringify(keyData.keys);
-        case "lastPress": return keyData.lastKey;
-        default: return "";
-      }
-    }
-
-    timeKeyPressed(args) {
-      const key = Cast.toString(args.KEY).toLowerCase();
-      if (key === "any") return Math.max(0, ...keyData.keyTimers.values().toArray());
-      else return keyData.keyTimers.get(key) ?? 0;
     }
 
     setKeyBlock(args) {
@@ -784,31 +512,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       target.setDirection(oldDir);
 
       return Math.round(newDir) === Math.round(oldDir);
-    }
-
-    spriteTouchingSprite(args, util) {
-      const target = this.getTarget(args.SPRITE2, util, false, true);
-      if (!target) return false;
-      return target.sprite.clones.some((t) => t.isTouchingObject(args.SPRITE1));
-    }
-
-    spriteTouchingSpriteType(args, util) {
-      const target1 = this.getTarget(args.SPRITE1, util, true, true);
-      const target2 = runtime.getSpriteTargetByName(args.SPRITE2);
-      if (!target1 || !target2) return false;
-
-      if (args.TYPE === "parent") {
-        if (target1 === "_mouse_") return target2.isTouchingObject("_mouse_");
-        else return render.isTouchingDrawables(target1.drawableID, [target2.drawableID]);
-      } else {
-        const clones = target2.sprite.clones;
-        if (target1 === "_mouse_") return clones.some((c) => !c.isOriginal && c.isTouchingObject("_mouse_"));
-        else {
-          const cloneIds = [];
-          for (var i = 1; i < clones.length; i++) cloneIds.push(clones[i].drawableID);
-          return render.isTouchingDrawables(target1.drawableID, cloneIds);
-        }
-      }
     }
 
     spriteTouchingClone(args, util) {
@@ -877,9 +580,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return JSON.stringify(list);
     }
 
-    colorAtPosition(args) {
-      return this.colorAtPos(Cast.toNumber(args.x), Cast.toNumber(args.y));
-    }
     objTouchingColor(args, util) {
       if (args.SPRITE === "_mouse_") return this.colorAtPos(util.ioQuery("mouse", "getScratchX"), util.ioQuery("mouse", "getScratchY"));
       else {
@@ -892,16 +592,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
  
         return hex;
       }
-    }
-
-    spriteDragMode(args, util) {
-      const target = this.getTarget(args.SPRITE, util, false, true);
-      if (target) target.setDraggable(args.DRAG === "draggable");
-    }
-    spriteDraggable(args, util) {
-      const target = this.getTarget(args.SPRITE, util, false, true);
-      if (target) return target[args.DRAG === "draggable" ? "draggable" : "dragging"];
-      return false;
     }
 
     advancedAsk(args, util) {
@@ -965,36 +655,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       } catch {}
     }
 
-    isScreen(args) {
-      const values = [render.canvas.getBoundingClientRect().width, runtime.stageWidth];
-      return args.SCREEN === "fullscreen" ? values[0] > values[1] : values[0] < values[1];
-    }
-
     screenOff(args) {
       const type = Cast.toString(args.TYPE);
       const canvasBounds = type.startsWith("display") || type === "ratio" ?
         render.canvas.getBoundingClientRect() : {};
       switch (type) {
-        case "width": return runtime.stageWidth;
-        case "height": return runtime.stageHeight;
         case "display width": return canvasBounds.width;
         case "display height": return canvasBounds.height;
         case "ratio": return canvasBounds.width / runtime.stageWidth;
         default: return 0;
       }
-    }
-
-    averageMicVolume() {
-      if (loudnessCache.length >= 30) loudnessCache = [];
-      loudnessCache.push(sensingCore.getLoudness());
-      let sum = loudnessCache.reduce((accumulator, curValue) => accumulator + curValue, 0);
-
-      return Math.round((sum / loudnessCache.length) * 100) / 100;
-    }
-
-
-    allLayers() {
-      return render._drawList.length - 1;
     }
 
     boolean(args) {

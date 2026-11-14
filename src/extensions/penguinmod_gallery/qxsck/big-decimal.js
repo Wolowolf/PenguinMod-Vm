@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's qxsck/big-decimal.js, moved into
-// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (round: no endless loop).
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (round: no endless loop;
+// section 259: whole numbers are added, subtracted, multiplied, raised to a power, divided with remainder and compared
+// with native big integers directly, with the same answers, instead of going through the decimal text form).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -25,6 +27,24 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       "pick random [NUM] to [NUM2]": '获取从 [NUM] 到 [NUM2] 的随机数',
     },
   });
+  // Desktop fork (section 259): a whole number written plainly ("-12", "007"), as text or as a number. For these the
+  // blocks below answer exactly what the decimal code answers, but straight from native big integers.
+  const WHOLE = /^-?\d+$/;
+  const wholeOf = (value) => {
+    const text = String(value);
+    return WHOLE.test(text) ? BigInt(text) : null;
+  };
+  // Desktop fork (section 259): the patterns of removeLeft / removeRight, made once instead of on every call
+  const edgePatterns = new Map();
+  const edgePattern = (side, pattern) => {
+    const key = side + pattern;
+    let regex = edgePatterns.get(key);
+    if (!regex) {
+      regex = new RegExp(side === "left" ? "^" + pattern + "+" : pattern + "+$");
+      edgePatterns.set(key, regex);
+    }
+    return regex;
+  };
   class bigNumber {
     constructor() {
       this.maxPrecision = 100;
@@ -39,12 +59,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return isNaN(Number(val)) ? 0 : Number(val);
       };
       this.removeLeft = function (str, pattern) {
-        const regex = new RegExp("^" + pattern + "+");
-        return str.replace(regex, "");
+        return str.replace(edgePattern("left", pattern), ""); // Desktop fork (section 259)
       };
       this.removeRight = function (str, pattern) {
-        const regex = new RegExp(pattern + "+$");
-        return str.replace(regex, "");
+        return str.replace(edgePattern("right", pattern), ""); // Desktop fork (section 259)
       };
       this.formatNum = function (result, len) {
         result = String(result);
@@ -95,18 +113,25 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       };
 
       this.addFunc = function (num, num2) {
+        // Desktop fork (section 259): whole numbers directly
+        const wa = wholeOf(num), wb = wa === null ? null : wholeOf(num2);
+        if (wb !== null) return String(wa + wb);
         let { num: a, num2: b } = this.toSamePer(num, num2);
         let result = a.num + b.num;
         let num_ = this.formatNum(result, a.len);
         return this.roundFunc(num_, this.maxPrecision);
       };
       this.subFunc = function (num, num2) {
+        const wa = wholeOf(num), wb = wa === null ? null : wholeOf(num2); // Desktop fork (section 259)
+        if (wb !== null) return String(wa - wb);
         let { num: a, num2: b } = this.toSamePer(num, num2);
         let result = a.num - b.num;
         let num_ = this.formatNum(result, a.len);
         return this.roundFunc(num_, this.maxPrecision);
       };
       this.mulFunc = function (num, num2) {
+        const wa = wholeOf(num), wb = wa === null ? null : wholeOf(num2); // Desktop fork (section 259)
+        if (wb !== null) return String(wa * wb);
         let { num: a, num2: b } = this.toSamePer(num, num2);
         let result = a.num * b.num;
         let num_ = this.formatNum(result, a.len * 2);
@@ -124,6 +149,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           flag = 0;
         if (a.num === 0n) return '0';
         else if (b.num === 0n) return '1';
+        // Desktop fork (section 259): a whole number to a power of at least 0 directly (b is already a whole number)
+        if (a.len === 0 && b >= 0) return String(a.num ** BigInt(b));
         if (b < 0) (flag = 1), (b = -b);
         let result = a.num ** BigInt(b);
         let num_;
@@ -132,6 +159,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return this.roundFunc(num_, this.maxPrecision);
       };
       this.modFunc = function (num, num2) {
+        const wa = wholeOf(num), wb = wa === null ? null : wholeOf(num2); // Desktop fork (section 259)
+        if (wb !== null) return wb === 0n ? '0' : String(wa % wb);
         let { num: a, num2: b } = this.toSamePer(num, num2);
         if (b.num === 0n) return '0';
         let result = a.num % b.num;
@@ -539,29 +568,36 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return this.modFunc(args.NUM, args.NUM2);
     }
 
-    lt(args) {
+    // Desktop fork (section 259): the comparisons compare two whole numbers directly
+    compareOf(args) {
+      const wa = wholeOf(args.NUM), wb = wa === null ? null : wholeOf(args.NUM2);
+      if (wb !== null) return { a: wa, b: wb };
       let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num < b.num;
+      return { a: a.num, b: b.num };
+    }
+    lt(args) {
+      const { a, b } = this.compareOf(args);
+      return a < b;
     }
     le(args) {
-      let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num <= b.num;
+      const { a, b } = this.compareOf(args);
+      return a <= b;
     }
     gt(args) {
-      let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num > b.num;
+      const { a, b } = this.compareOf(args);
+      return a > b;
     }
     ge(args) {
-      let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num >= b.num;
+      const { a, b } = this.compareOf(args);
+      return a >= b;
     }
     eq(args) {
-      let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num === b.num;
+      const { a, b } = this.compareOf(args);
+      return a === b;
     }
     neq(args) {
-      let { num: a, num2: b } = this.toSamePer(args.NUM, args.NUM2);
-      return a.num !== b.num;
+      const { a, b } = this.compareOf(args);
+      return a !== b;
     }
 
     unaryOper(args) {

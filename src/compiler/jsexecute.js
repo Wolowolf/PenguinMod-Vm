@@ -446,7 +446,6 @@ const finishExtensionCallBranch = function*(isWarp) {
  * block's input order, so the inputs are worked out in the same order.
  */
 runtimeFunctions.pmBranchInline = `const pmBranchString = value => (typeof value === 'string' ? value : globalState.Cast.toString(value));
-const pmBranchNumber = value => (typeof value === 'number' ? value : globalState.Cast.toNumber(value));
 const pmBranchBoolean = value => (typeof value === 'boolean' ? value : globalState.Cast.toBoolean(value));
 const pmBranchStart = (branchInfo, isLoop) => {
     branchInfo.isLoop = isLoop;
@@ -491,8 +490,6 @@ const pmBranchSecUntil = (branchInfo, NUM, CON) => {
     }
     pmBranchNone(branchInfo);
 };
-const pmBranchInline_waitSecsOrCon = (branchInfo, NUM, CON) =>
-    pmBranchSecUntil(branchInfo, pmBranchNumber(NUM), pmBranchBoolean(CON));
 const pmBranchInline_repeatSecUntil = (branchInfo, NUM, CON) =>
     pmBranchSecUntil(branchInfo, pmBranchString(NUM), pmBranchBoolean(CON));
 const pmBranchInline_waitChanged = (branchInfo, THING) => {
@@ -511,17 +508,6 @@ const pmBranchInline_repeatForUntil = (branchInfo, NUM, CON) => {
     if (typeof stackFrame.loopCounter === 'undefined') stackFrame.loopCounter = Math.round(Cast.toNumber(NUM));
     stackFrame.loopCounter--;
     if (!Cast.toBoolean(CON) && stackFrame.loopCounter >= 0) return pmBranchStart(branchInfo, true);
-    pmBranchNone(branchInfo);
-};
-const pmBranchInline_repeatSecs = (branchInfo, NUM) => {
-    const stackFrame = branchInfo.stackFrame;
-    NUM = pmBranchString(NUM);
-    if (!stackFrame.timer) {
-        pmBranchStartTimer(stackFrame, Math.max(0, 1000 * globalState.Cast.toNumber(NUM)));
-        return pmBranchStart(branchInfo, true);
-    } else if (stackFrame.timer.timeElapsed() < stackFrame.duration) {
-        return pmBranchStart(branchInfo, true);
-    }
     pmBranchNone(branchInfo);
 };
 const pmBranchInline_spayedCondition = (branchInfo, CON1, CON2) => {
@@ -1323,89 +1309,21 @@ runtimeFunctions.pmxTextBefore = `const pmxTextBefore = (text, base) => {
  * parameters are in the block's input order. A helper cannot call another one (compiled code gets only the helpers
  * its source names), so the shared parts are written out in each.
  */
-runtimeFunctions.pmiBitsToNumber = `const pmiBitsToNumber = bits => (/^-?[01]+$/.test(bits) ? parseInt(bits, 2) || 0 : 0)`;
 runtimeFunctions.pmiRotateRight = `const pmiRotateRight = (number, k) => (number >>> k) | (number << (32 - k))`;
 runtimeFunctions.pmiRotateLeft = `const pmiRotateLeft = (number, k) => (number << k) | (number >>> (32 - k))`;
-runtimeFunctions.pmiRootOf = `const pmiRootOf = (a, b) => Math.pow(b, 1 / a)`;
-// True Fantom Math's exactlyCompare: Cast.compare without lower-casing the texts
-runtimeFunctions.pmiExactCompare = `const pmiExactCompare = (v1, v2) => {
-    const notZero = val => {
-        if (typeof val !== "string") return false;
-        for (let i = 0; i < val.length; i++) {
-            const code = val.charCodeAt(i);
-            if (code === 48 || code === 9) return false;
-        }
-        return true;
-    };
-    let n1 = Number(v1);
-    let n2 = Number(v2);
-    if (n1 === 0 && notZero(v1)) {
-        n1 = NaN;
-    } else if (n2 === 0 && notZero(v2)) {
-        n2 = NaN;
-    }
-    if (isNaN(n1) || isNaN(n2)) {
-        const s1 = String(v1);
-        const s2 = String(v2);
-        if (s1 < s2) return -1;
-        if (s1 > s2) return 1;
-        return 0;
-    }
-    if ((n1 === Infinity && n2 === Infinity) || (n1 === -Infinity && n2 === -Infinity)) return 0;
-    return n1 - n2;
-}`;
 runtimeFunctions.pmiAlmostEqual = `const pmiAlmostEqual = (a, b) => {
     const c = globalState.Cast.compare(a, b);
     return c <= 0.5 && c >= -0.5;
 }`;
-runtimeFunctions.pmiBetweenOrEqual = `const pmiBetweenOrEqual = (a, b, c) => globalState.Cast.compare(a, b) <= 0 && globalState.Cast.compare(b, c) <= 0`;
-runtimeFunctions.pmiBetweenOnly = `const pmiBetweenOnly = (a, b, c) => globalState.Cast.compare(a, b) < 0 && globalState.Cast.compare(b, c) < 0`;
-runtimeFunctions.pmiClampCompare = `const pmiClampCompare = (a, b, c) => {
-    if (globalState.Cast.compare(a, b) < 0) return b;
-    if (globalState.Cast.compare(a, c) > 0) return c;
-    return a;
-}`;
 runtimeFunctions.pmiScale = `const pmiScale = (a, m1, M1, m2, M2) => ((a - m1) * (M2 - m2)) / (M1 - m1) + m2`;
-runtimeFunctions.pmiTruncTo = `const pmiTruncTo = (a, b) => {
-    let n = Math.floor(b);
-    if (n >= 1) {
-        n = 10 ** n;
-        if (n !== Infinity) return Math.trunc(a * n) / n;
-        return a;
-    }
-    return Math.trunc(a);
-}`;
-// True Fantom Math's is integer / is float (isTrueInt and toNaNNumber; NaN is neither)
-runtimeFunctions.pmiIsWhole = `const pmiIsWhole = val => {
-    const n = Number(val);
-    if (Number.isNaN(n)) return false;
-    if (typeof val === "number" || typeof val === "string") return n === Math.floor(n);
-    return typeof val === "boolean";
-}`;
+// True Fantom Math's is float (isTrueInt and toNaNNumber; NaN is neither)
 runtimeFunctions.pmiIsFraction = `const pmiIsFraction = val => {
     const n = Number(val);
     if (Number.isNaN(n)) return false;
     if (typeof val === "number" || typeof val === "string") return n !== Math.floor(n);
     return typeof val !== "boolean";
 }`;
-runtimeFunctions.pmiChoose = `const pmiChoose = (condition, a, b) => (condition ? a : b)`;
-runtimeFunctions.pmiLettersClamped = `const pmiLettersClamped = (start, end, str) => str.slice(Math.max(1, start) - 1, Math.min(str.length, end))`;
-runtimeFunctions.pmiSliceFromOne = `const pmiSliceFromOne = (from, to, string) => string.slice(from - 1, to)`;
-runtimeFunctions.pmiReplaceIn = `const pmiReplaceIn = (find, replace, string) => string.replace(find, replace)`;
-runtimeFunctions.pmiFindFromOne = `const pmiFindFromOne = (find, string) => (string.includes(find) ? string.indexOf(find) + 1 : "")`;
-runtimeFunctions.pmiItemOfSplit = `const pmiItemOfSplit = (index, string, separator) => string.split(separator)[index - 1] || ""`;
-runtimeFunctions.pmiIsUpper = `const pmiIsUpper = input => input == input.toUpperCase()`;
-runtimeFunctions.pmiIsLower = `const pmiIsLower = input => input == input.toLowerCase()`;
-runtimeFunctions.pmiUnitOrZeroText = `const pmiUnitOrZeroText = value => {
-    const output = value / Math.abs(value);
-    if (isNaN(output)) return "0";
-    return output;
-}`;
 runtimeFunctions.pmiRoundTo = `const pmiRoundTo = (number, multiple) => Math.round(number / multiple) * multiple`;
-runtimeFunctions.pmiClampSwapped = `const pmiClampSwapped = (num, min, max) => {
-    if (min > max) [min, max] = [max, min];
-    return Math.min(Math.max(num, min), max);
-}`;
 runtimeFunctions.pmiSegmentLength = `const pmiSegmentLength = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))`;
 runtimeFunctions.pmiRayDirection = `const pmiRayDirection = (x1, y1, x2, y2) => (Math.atan2(x2 - x1, y2 - y1) * 180) / Math.PI`;
 runtimeFunctions.pmiPerpendicular = `const pmiPerpendicular = (a, b) => {
@@ -1463,12 +1381,6 @@ runtimeFunctions.pmxSpriteSize = `const pmxSpriteSize = (runtime, target, what) 
     }
     const costume = target.sprite.costumes[target.currentCostume];
     return Math.ceil(what === "costume width" ? costume.size[0] : costume.size[1]);
-}`;
-runtimeFunctions.pmxDeltaTime = `const pmxDeltaTime = ext => {
-    const now = ext.runtime.pmDateNow();
-    const dt = now - ext.lastUpdate;
-    ext.lastUpdate = now;
-    return dt;
 }`;
 runtimeFunctions.pmxCurrentKey = `const pmxCurrentKey = runtime => {
     const keys = runtime.ioDevices.keyboard.getAllKeysPressed();
@@ -1706,25 +1618,6 @@ runtimeFunctions.pmsList = `class pmsList {
         const variable = target.variables[this.variableId];
         return variable && variable.type === "list" ? variable : null;
     }
-}`;
-runtimeFunctions.pmsListItem = `const pmsListItem = (runtime, index, site) => {
-    const variable = site.get();
-    if (!variable) return "";
-    const position = globalState.Cast.toListIndex(index, variable.pmGetValue().length, false, runtime);
-    if (position === "INVALID") return "";
-    return variable.pmGetValue()[position - 1];
-}`;
-runtimeFunctions.pmsListLength = `const pmsListLength = site => {
-    const variable = site.get();
-    return variable ? variable.pmGetValue().length : "";
-}`;
-runtimeFunctions.pmsListContains = `const pmsListContains = (term, site) => {
-    const variable = site.get();
-    return variable ? variable.pmIndexOf(term) !== 0 : "";
-}`;
-runtimeFunctions.pmsListIndexOf = `const pmsListIndexOf = (term, site) => {
-    const variable = site.get();
-    return variable ? variable.pmIndexOf(term) : "";
 }`;
 /**
  * Desktop fork (section 196): more blocks that remember a search by a fixed name (irgen.js descendSearchParseInline).
@@ -1985,19 +1878,6 @@ runtimeFunctions.pmlItemIndex = `const pmlItemIndex = (target, site, index, item
         return globalState.Cast.toNumber(indexes[globalState.Cast.toNumber(index) - 1] + 1);
     }
 }`;
-runtimeFunctions.pmlIsEmpty = `const pmlIsEmpty = (target, site, name) => {
-    const list = site.get(target, name);
-    if (!list) return true;
-    if (list.pmGetValue().length > 0) return false;
-    return true;
-}`;
-runtimeFunctions.pmlItemExists = `const pmlItemExists = (target, site, num, name) => {
-    const list = site.get(target, name);
-    if (!list) return false;
-    const listIndex = globalState.Cast.toListIndex(num, list.pmGetValue().length, false, target.runtime);
-    if (listIndex === "INVALID") return false;
-    return true;
-}`;
 runtimeFunctions.pmlOrderIs = `const pmlOrderIs = (target, site, name, order) => {
     const list = site.get(target, name);
     if (!list) return false;
@@ -2039,25 +1919,6 @@ runtimeFunctions.pmlConcat = `const pmlConcat = (target, site1, site2, name1, na
     const list2 = site2.get(target, name2);
     if (!list2) return;
     list2.pmSetValue(list2.pmGetValue().concat(list1.pmGetValue()));
-}`;
-runtimeFunctions.pmlSetArray = `const pmlSetArray = (target, site, name, array) => {
-    const list = site.get(target, name);
-    if (!list) return;
-    let parsed;
-    try {
-        // Desktop fork (section 196): fixed text comes parsed; the list gets its own copy
-        parsed = array.pmFixedJson ? array.pmFixedJson.slice() : JSON.parse(array);
-    } catch (error) {
-        return;
-    }
-    if (!Array.isArray(parsed)) return;
-    list.pmSetValue(parsed);
-    list._monitorUpToDate = false;
-}`;
-runtimeFunctions.pmlAsArray = `const pmlAsArray = (target, site, name) => {
-    const list = site.get(target, name);
-    if (!list) return "";
-    return JSON.stringify(list.pmGetValue());
 }`;
 
 // PMDESKTOP_FOLD (section 44): evaluates an expression that uses no project state (only the runtime helpers

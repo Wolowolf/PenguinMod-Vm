@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file, except: its mouse, key and keybind hats are checked
 // only after its pressed keys, mouse buttons, keybinds or tags changed (`pmEdgeHat`; section 128, roadmap step 6b;
 // marked "Desktop fork (section 128)").
+// Desktop fork (section 259): the blocks that duplicate built-in or More Sensing blocks are removed (mouse button down,
+// scrolling, single-key hat, pressed, hit, last / current key, time key pressed); "time [key] key pressed" stays as a helper.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -71,7 +73,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     const createLabel = (text) => ({ blockType: Scratch.BlockType.LABEL, text: text });
 
     function startKeyEvents(_trigger) {
-        runtime.startHats("enderKeysPlusV2_eventKeyPressed", { trigger: _trigger });
         runtime.startHats("enderKeysPlusV2_eventKeysPressed", { trigger: _trigger });
         runtime.startHats("enderKeysPlusV2_eventKeybindTriggered", { trigger: _trigger });
     }
@@ -108,11 +109,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             this._keybinds = {};
 
             this._mouseDown = {};
-            this._scrollDeltaY = 0;
-            this._lastScrollTime = Scratch.vm.runtime.pmDateNow();
 
             this._keysPressed = {};
-            this._lastKeyPressed = "";
 
             this._importError = "None";
 
@@ -124,7 +122,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (event) => {
                 hatsChanged(); // Desktop fork (section 128)
                 const key = format(event);
-                this._lastKeyPressed = key;
                 if (!this._keysPressed[key]) {
                     this._keysPressed[key] = { time: Scratch.vm.runtime.pmDateNow(), code: event.code, value: event.key };
                     startKeyEvents("when");
@@ -157,11 +154,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "after" });
                 delete this._mouseDown[event.button];
             })
-            Scratch.vm.runtime.pmPage.addEventListener("window", "wheel", (event) => {
-                this._scrollDeltaY = event.deltaY;
-                this._lastScrollTime = Scratch.vm.runtime.pmDateNow()
-                runtime.startHats("enderKeysPlusV2_eventScroll")
-            });
         }
         getInfo() {
             return {
@@ -185,14 +177,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     },
                     "---",
                     {
-                        opcode: "isMouseDown",
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: "is [button] mouse button down?",
-                        arguments: {
-                            button: { type: Scratch.ArgumentType.STRING, menu: "mouseButtons" }
-                        }
-                    },
-                    {
                         opcode: "isMouseHit",
                         blockType: Scratch.BlockType.BOOLEAN,
                         text: "is [button] mouse button clicked?",
@@ -209,31 +193,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                             button: { type: Scratch.ArgumentType.STRING, menu: "mouseButtons" }
                         }
                     },
-                    createLabel("Scrolling"),
-                    {
-                        opcode: "eventScroll",
-                        blockType: Scratch.BlockType.HAT,
-                        text: "when scrolling [dir]",
-                        isEdgeActivated: false,
-                        arguments: {
-                            dir: { type: Scratch.ArgumentType.STRING, menu: "upDown" }
-                        }
-                    },
-                    {
-                        opcode: "isScrolling",
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: "is scrolling [dir]?",
-                        disableMonitor: true,
-                        arguments: {
-                            dir: { type: Scratch.ArgumentType.STRING, menu: "upDown" }
-                        }
-                    },
-                    "---",
-                    {
-                        opcode: "scrollDirection",
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: "scroll direction"
-                    },
                     createLabel("Keys"),
                     {
                         opcode: "eventKeysPressed",
@@ -247,17 +206,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                             keys: { type: Scratch.ArgumentType.STRING, defaultValue: '"a", "b", "c"' }
                         }
                     },
-                    {
-                        opcode: "eventKeyPressed",
-                        blockType: Scratch.BlockType.HAT,
-                        text: "[trigger] [key] key is pressed",
-                        isEdgeActivated: false,
-                        pmEdgeHat: { signals: ["enderKeysPlusV2"] }, // Desktop fork (section 128)
-                        arguments: {
-                            trigger: { type: Scratch.ArgumentType.STRING, menu: "eventTriggerCondition" },
-                            key: { type: Scratch.ArgumentType.STRING, menu: "keys" }
-                        }
-                    },
                     "---",
                     {
                         opcode: "isKeysPressed",
@@ -266,14 +214,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         arguments: {
                             ordered: { type: Scratch.ArgumentType.STRING, menu: "orderMode" },
                             keys: { type: Scratch.ArgumentType.STRING, defaultValue: '"a", "b", "c"' }
-                        }
-                    },
-                    {
-                        opcode: "isKeyPressed",
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: "is [key] key pressed?",
-                        arguments: {
-                            key: { type: Scratch.ArgumentType.STRING, menu: "keys" }
                         }
                     },
                     "---",
@@ -286,29 +226,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                             keys: { type: Scratch.ArgumentType.STRING, defaultValue: '"a", "b", "c"' }
                         }
                     },
-                    {
-                        opcode: "isKeyHit",
-                        blockType: Scratch.BlockType.BOOLEAN,
-                        text: "is [key] key hit?",
-                        arguments: {
-                            key: { type: Scratch.ArgumentType.STRING, menu: "keys" }
-                        }
-                    },
                     "---",
-                    {
-                        opcode: "lastKeyPressed",
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: "last key pressed"
-                    },
                     {
                         opcode: "currentKeysPressed",
                         blockType: Scratch.BlockType.REPORTER,
                         text: "current keys pressed",
-                    },
-                    {
-                        opcode: "currentKeyPressed",
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: "current key pressed",
                     },
                     {
                         opcode: "keyPressedProperty",
@@ -328,15 +250,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         arguments: {
                             mode: { type: Scratch.ArgumentType.STRING, menu: "returnMode" },
                             keys: { type: Scratch.ArgumentType.STRING, defaultValue: '"a", "b", "c"' }
-                        }
-                    },
-                    {
-                        opcode: "timeKeyPressed",
-                        blockType: Scratch.BlockType.REPORTER,
-                        text: "time [key] key pressed",
-                        disableMonitor: true,
-                        arguments: {
-                            key: { type: Scratch.ArgumentType.STRING, menu: "keys" }
                         }
                     },
                     createLabel("Keybinding"),
@@ -575,8 +488,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     returnMode: { items: ["together & in order", "together & ignore order", "individually"] },
                     orderMode: { items: ["together & in order", "together & ignore order"] },
                     toggle: { items: ["enabled", "disabled"] },
-                    data: { items: ["all", "tags", "keybinds", "settings"] },
-                    upDown: { items: ["up", "down"] }
+                    data: { items: ["all", "tags", "keybinds", "settings"] }
                 }
             };
         };
@@ -644,12 +556,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   
         // Mouse
         eventMouseDown(args) {
-            return this.isMouseDown(args);
+            return Cast.toNumber(args.button) in this._mouseDown; // Desktop fork (section 259): was this.isMouseDown(args), a removed block
         }
 
-        isMouseDown(args) {
-            return Cast.toNumber(args.button) in this._mouseDown;
-        }
         isMouseHit(args) {
             const time = this.timeMouseDown(args);
             return time !== 0 && time <= 0.075;
@@ -660,60 +569,31 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             return button ? (Scratch.vm.runtime.pmDateNow() - button.time) / 1000 : 0;
         }
         // Scrolling
-        eventScroll(args) {
-            return args.dir === "up" ? this._scrollDeltaY < 0 : this._scrollDeltaY > 0;
-        }
-        isScrolling({ dir }) {
-            const withinRange = Scratch.vm.runtime.pmDateNow() - this._lastScrollTime < 50;
-            return dir === "up" ? this._scrollDeltaY < 0 && withinRange : this._scrollDeltaY > 0 && withinRange;
-        }   
-        scrollDirection() {
-            if (this._scrollDeltaY && Scratch.vm.runtime.pmDateNow() - this._lastScrollTime < 50) {
-                return this._scrollDeltaY < 0 ? "up" : "down";
-            }
-            return "none";
-        }            
         // Keys
         eventKeysPressed(args) {
             const ordered = args.ordered === "together & in order";
             return this._isKeysPressed(args.keys, ordered);
-        }
-        eventKeyPressed(args) {
-            return this._isKeyPressed(args.key);
         }
 
         isKeysPressed(args) {
             const ordered = args.ordered === "together & in order";
             return this._isKeysPressed(args.keys, ordered);
         }
-        isKeyPressed(args) {
-            return this._isKeyPressed(args.key);
-        }
 
         isKeysHit(args) {
             const time = this.timeKeysPressed(args);
             return time !== 0 && time <= 0.075;
         }
-        isKeyHit(args) {
-            const time = this.timeKeyPressed(args);
-            return time !== 0 && time <= 0.075;
-        }
 
-        lastKeyPressed() {
-            return this._lastKeyPressed.slice(1);
-        }
         currentKeysPressed() {
             return JSON.stringify(this._getKeysPressed());
         }
-        currentKeyPressed() {
-            return this._getKeysPressed().reverse()[0] || "None";
-        }
         keyPressedProperty(args) {
-            const key = this.currentKeyPressed();
+            const key = this._getKeysPressed().reverse()[0] || "None"; // Desktop fork (section 259): was this.currentKeyPressed(), a removed block
             if (key === "None") return 0;
             switch (args.property) {
                 case "time":
-                    return this.timeKeyPressed({ key: key });
+                    return this._timeKeyPressed({ key: key });
                 case "name":
                     return key;
                 case "code":
@@ -727,7 +607,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             const keys = this._parse(args.keys);
             if (!keys.length) return 0;
             if (args.mode === "individually") {
-                return JSON.stringify(keys.map(key => this.timeKeyPressed({ key })));
+                return JSON.stringify(keys.map(key => this._timeKeyPressed({ key })));
             }
             const ordered = args.mode === "together & in order";
             const isKeysPressed = this._isKeysPressed(keys, ordered);
@@ -738,11 +618,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     : this._getKeysPressed()
                         .filter(key => keys.includes(key))
                         .reverse()[0];
-                return this.timeKeyPressed({ key: key });
+                return this._timeKeyPressed({ key: key });
             }
             return 0;
         }
-        timeKeyPressed(args) {
+        // Desktop fork (section 259): the removed block "time [key] key pressed", kept as a helper of the blocks above
+        _timeKeyPressed(args) {
             const data = this._isKeyPressed(args.key, true);
             const key = this._keysPressed["_" + data.source];
             return key ? (Scratch.vm.runtime.pmDateNow() - key.time) / 1000 : 0;

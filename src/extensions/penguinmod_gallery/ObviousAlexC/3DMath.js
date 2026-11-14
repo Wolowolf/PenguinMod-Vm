@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's ObviousAlexC/3DMath.js, moved into
 // the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's pmVisualReportHooks instead of replacing runtime.visualReport (marked "Desktop fork").
+// Desktop fork (section 259): quaternion blocks (from the removed Vectors & Quaternions extension, same maths), on
+// quaternions written [w, x, y, z] like this extension's vectors, marked "Desktop fork (section 259)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -276,6 +278,105 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
               pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
               roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+            },
+          },
+
+          // Desktop fork (section 259): quaternions, [w, x, y, z]
+          {
+            blockType: Scratch.BlockType.LABEL,
+            text: "Quaternion",
+          },
+          {
+            disableMonitor: true,
+            opcode: "newQuat",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "quaternion w:[w] x:[x] y:[y] z:[z]",
+            arguments: {
+              w: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 },
+              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+              z: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatFromVector",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "quaternion from real [w] and vector [v]",
+            arguments: {
+              w: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+              v: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatAroundAxis",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "quaternion around axis [axis] by [angle] degrees",
+            arguments: {
+              axis: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1,0]" },
+              angle: { type: Scratch.ArgumentType.NUMBER, defaultValue: 90 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatFromTo",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "quaternion from [a] to [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0]" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,1,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatOperation",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: [a] [operation] [b]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
+              operation: { type: Scratch.ArgumentType.STRING, menu: "quatOperationMenu" },
+              b: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatScale",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: [a] * number [s]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
+              s: { type: Scratch.ArgumentType.NUMBER, defaultValue: 2 },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatFunction",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: [function] of [a]",
+            arguments: {
+              function: { type: Scratch.ArgumentType.STRING, menu: "quatFunctionMenu" },
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatPart",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: [part] of [a]",
+            arguments: {
+              part: { type: Scratch.ArgumentType.STRING, menu: "quatPartMenu" },
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
+            },
+          },
+          {
+            disableMonitor: true,
+            opcode: "quatRotate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: rotate [v] by [q]",
+            arguments: {
+              v: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0]" },
+              q: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
             },
           },
 
@@ -808,6 +909,23 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
         ],
         menus: {
+          // Desktop fork (section 259): the quaternion blocks' menus
+          quatOperationMenu: {
+            items: [
+              { text: "+", value: "add" },
+              { text: "-", value: "subtract" },
+              { text: "*", value: "multiply" },
+            ],
+            acceptReporters: true,
+          },
+          quatFunctionMenu: {
+            items: ["conjugate", "inverse", "normalize", "square root", "exp", "log"],
+            acceptReporters: true,
+          },
+          quatPartMenu: {
+            items: ["real part", "vector part", "squared magnitude"],
+            acceptReporters: true,
+          },
           axisMenu: {
             items: [
               { text: "x / yaw", value: "0" },
@@ -1443,6 +1561,126 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return this.stringify(a);
       }
       return this.stringify([0, 0, 0]);
+    }
+
+    // Desktop fork (section 259): quaternions [w, x, y, z], with the maths of the removed Vectors & Quaternions
+    // extension (its quaternion r + yz i + xz j + xy k is [r, yz, xz, xy] here). Anything that is not a list of
+    // numbers counts as the zero quaternion or vector, as it did there.
+    quatOf(value) {
+      const q = this.parse(value);
+      if (!Array.isArray(q)) return [0, 0, 0, 0];
+      return [0, 1, 2, 3].map((i) => Scratch.Cast.toNumber(q[i]));
+    }
+    vecOf(value) {
+      const v = this.parse(value);
+      if (!Array.isArray(v)) return [0, 0, 0];
+      return [0, 1, 2].map((i) => Scratch.Cast.toNumber(v[i]));
+    }
+    quatMultiply(a, b) {
+      return [
+        a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
+        a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+        a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+        a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
+      ];
+    }
+    quatInverse(q) {
+      const s = 1 / (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+      return [q[0] * s, -q[1] * s, -q[2] * s, -q[3] * s];
+    }
+    // a list scaled to length 1; a zero list stays as it is
+    unitOf(list) {
+      const magsq = list.reduce((sum, n) => sum + n * n, 0);
+      if (magsq == 0) return list;
+      const s = 1 / Math.sqrt(magsq);
+      return list.map((n) => n * s);
+    }
+    newQuat({ w, x, y, z }) {
+      wasObject = false;
+      return this.stringify([w, x, y, z].map((n) => Scratch.Cast.toNumber(n)));
+    }
+    quatFromVector({ w, v }) {
+      v = this.vecOf(v);
+      return this.stringify([Scratch.Cast.toNumber(w), v[0], v[1], v[2]]);
+    }
+    quatAroundAxis({ axis, angle }) {
+      axis = this.vecOf(axis);
+      angle = Scratch.Cast.toNumber(angle);
+      if (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2] === 0) return this.stringify([0, 0, 0, 0]);
+      if (angle === 0) return this.stringify([1, 0, 0, 0]);
+      angle = angle * (Math.PI / 180);
+      const unit = this.unitOf(axis), s = Math.sin(angle / 2);
+      return this.stringify([Math.cos(angle / 2), unit[0] * s, unit[1] * s, unit[2] * s]);
+    }
+    quatFromTo({ a, b }) {
+      a = this.vecOf(a);
+      b = this.vecOf(b);
+      return this.stringify([
+        a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+      ]);
+    }
+    quatOperation({ a, operation, b }) {
+      a = this.quatOf(a);
+      b = this.quatOf(b);
+      switch (Scratch.Cast.toString(operation)) {
+        case "add": return this.stringify(a.map((n, i) => n + b[i]));
+        case "subtract": return this.stringify(a.map((n, i) => n - b[i]));
+        case "multiply": return this.stringify(this.quatMultiply(a, b));
+      }
+      return this.stringify([0, 0, 0, 0]);
+    }
+    quatScale({ a, s }) {
+      s = Scratch.Cast.toNumber(s);
+      return this.stringify(this.quatOf(a).map((n) => n * s));
+    }
+    quatFunction({ function: fn, a }) {
+      const q = this.quatOf(a);
+      const vecMagsq = q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+      const magsq = q[0] * q[0] + vecMagsq;
+      switch (Scratch.Cast.toString(fn)) {
+        case "conjugate":
+          return this.stringify([q[0], -q[1], -q[2], -q[3]]);
+        case "inverse":
+          return this.stringify(this.quatInverse(q));
+        case "normalize":
+          return this.stringify(this.unitOf(q));
+        case "square root": {
+          const mag = Math.sqrt(magsq);
+          if (mag + q[0] === 0) return this.stringify([0, mag, 0, 0]);
+          const root = Math.sqrt(mag);
+          return this.stringify(this.unitOf([q[0] + mag, q[1], q[2], q[3]]).map((n) => n * root));
+        }
+        case "exp": {
+          if (q[0] === Number.NEGATIVE_INFINITY) return this.stringify([0, 0, 0, 0]);
+          const alpha = Math.sqrt(vecMagsq), unit = this.unitOf([q[1], q[2], q[3]]), scale = Math.exp(q[0]);
+          const s = Math.sin(alpha);
+          return this.stringify([Math.cos(alpha) * scale, unit[0] * s * scale, unit[1] * s * scale, unit[2] * s * scale]);
+        }
+        case "log": {
+          if (magsq === 0) return this.stringify([Number.NEGATIVE_INFINITY, 0, 0, 0]);
+          const angle = Math.atan2(Math.sqrt(vecMagsq), q[0]), unit = this.unitOf([q[1], q[2], q[3]]);
+          return this.stringify([Math.log(magsq) / 2, unit[0] * angle, unit[1] * angle, unit[2] * angle]);
+        }
+      }
+      return this.stringify([0, 0, 0, 0]);
+    }
+    quatPart({ part, a }) {
+      const q = this.quatOf(a);
+      switch (Scratch.Cast.toString(part)) {
+        case "real part": return q[0];
+        case "vector part": return this.stringify([q[1], q[2], q[3]]);
+        case "squared magnitude": return q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+      }
+      return 0;
+    }
+    quatRotate({ v, q }) {
+      v = this.vecOf(v);
+      q = this.quatOf(q);
+      const rotated = this.quatMultiply(this.quatMultiply(q, [0, v[0], v[1], v[2]]), this.quatInverse(q));
+      return this.stringify([rotated[1], rotated[2], rotated[3]]);
     }
     newV2({ x, y }) {
       return this.stringify([

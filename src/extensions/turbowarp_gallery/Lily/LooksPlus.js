@@ -12,7 +12,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 // By: LilyMakesThings <https://scratch.mit.edu/users/LilyMakesThings/>
 // License: MIT AND LGPL-3.0
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_content":"Inhalt","_height":"Höhe","_rotation center x":"Rotationszentrum x","_rotation center y":"Rotationszentrum y","_width":"Weite"},"fi":{"_# of costumes in [TARGET]":"hahmon [TARGET] asusteiden määrä","_Looks+":"Ulkonäkö +","_[ATTRIBUTE] of [COSTUME]":"asusteen [COSTUME] [ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"hahmon [TARGET] [COSTUME]. asusteen [CONTENT]","_[EFFECT] effect of [TARGET]":"hahmon [TARGET] [EFFECT] tehoste","_[TARGET] visible?":"onko [TARGET] näkyvissä?","_brightness":"kirkkaus","_color":"väri","_content":"sisältö","_fisheye":"kalansilmä","_format":"tiedostotyyppi","_ghost":"haamu","_height":"korkeus","_hex of [COLOR]":"värin [COLOR] heksadesimaalikoodi","_hide [TARGET]":"piilota [TARGET]","_layer # of [TARGET]":"hahmon [TARGET] taso","_mosaic":"mosaiikki","_pixelate":"pikselöi","_replace [COLOR1] with [COLOR2] in [SVG]":"korvaa [COLOR1] värillä [COLOR2] SVG:ssä [SVG]","_restore content for [COSTUME]":"palauta asusteen [COSTUME] sisältö","_rotation center x":"x-kiertokeskus","_rotation center y":"y-kiertokeskus","_set layer # of [TARGET] to [LAYER]":"aseta hahmon [TARGET] tasoksi [LAYER]","_show [TARGET]":"näytä [TARGET]","_snapshot stage":"tallenna esiintymislava","_whirl":"pyörre","_width":"leveys"},"fr":{"_height":"hauteur","_rotation center x":"centre de rotation x","_rotation center y":"centre de rotation droit","_width":"largeur"},"it":{"_# of costumes in [TARGET]":"numero costumi di [TARGET]","_Looks+":"Aspetto+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] di [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] costume n. [COSTUME] di [TARGET]","_[EFFECT] effect of [TARGET]":"effetto [EFFECT] di [TARGET]","_[TARGET] visible?":"[TARGET] è visibile","_brightness":"luminosità","_color":"colore","_content":"contenuto","_format":"formato","_ghost":"fantasma","_height":"altezza","_hex of [COLOR]":"codice esadecimale di [COLOR]","_hide [TARGET]":"nascondi [TARGET]","_layer # of [TARGET]":"livello di [TARGET]","_mosaic":"mosaico","_pixelate":"pixel","_replace [COLOR1] with [COLOR2] in [SVG]":"sostituisci [COLOR1] con [COLOR2] in [SVG]","_restore content for [COSTUME]":"ripristina contenuto di [COSTUME]","_rotation center x":"x del centro di rotazione","_rotation center y":"y del centro di rotazione","_set layer # of [TARGET] to [LAYER]":"porta livello di [TARGET] a [LAYER]","_snapshot stage":"foto dello Stage","_whirl":"mulinello","_width":"larghezza"},"ja":{"_# of costumes in [TARGET]":"[TARGET]のコスチュームの数","_Looks+":"見た目+","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]の[ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]の[COSTUME]番目の[CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]の[EFFECT]の効果量","_[TARGET] visible?":"[TARGET]が表示されている","_brightness":"明るさ","_color":"色","_content":"コンテンツ","_dataURI":"データURL","_fisheye":"魚眼レンズ","_format":"フォーマット","_ghost":"幽霊","_height":"高さ","_hex of [COLOR]":"[COLOR]のカラーコード","_hide [TARGET]":"[TARGET]を隠す","_layer # of [TARGET]":"[TARGET]のレイヤー番号","_mosaic":"モザイク","_pixelate":"ピクセル化","_replace [COLOR1] with [COLOR2] in [SVG]":"[SVG]内の[COLOR1]色を[COLOR2]色で置き換える","_restore content for [COSTUME]":"[COSTUME]のコスチュームを復元する","_rotation center x":"回転中心X","_rotation center y":"回転中心Y","_set layer # of [TARGET] to [LAYER]":"[TARGET]のレイヤーを[LAYER]番目にする","_show [TARGET]":"[TARGET]を表示する","_snapshot stage":"ステージのスナップショット","_whirl":"渦巻き","_width":"横幅"},"ko":{"_# of costumes in [TARGET]":"[TARGET]의 모양 번째","_Looks+":"형태 플러스","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]의 [ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]의 모양 [COSTUME]번째의 [CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]의 [EFFECT] 효과 값","_[TARGET] visible?":"[TARGET]이(가) 보이는가?","_brightness":"밝기","_color":"색깔","_content":"내용","_fisheye":"어안 렌즈","_format":"파일 확장자","_ghost":"투명도","_height":"높이","_hex of [COLOR]":"[COLOR]의 Hex코드","_hide [TARGET]":"[TARGET] 숨기기","_layer # of [TARGET]":"[TARGET]의 레이어 번째","_mosaic":"모자이크","_pixelate":"픽셀화","_replace [COLOR1] with [COLOR2] in [SVG]":"[SVG]에서 [COLOR1](을)를 [COLOR2](으)로 대체","_restore content for [COSTUME]":"[COSTUME]의 내용 복구하기","_rotation center x":"회전축 x","_rotation center y":"회전축 y","_set layer # of [TARGET] to [LAYER]":"[TARGET]의 레이어를 [LAYER]번째로 정하기","_show [TARGET]":"[TARGET] 보이기","_snapshot stage":"무대 스크린샷","_whirl":"소용돌이","_width":"넓이"},"nb":{"_brightness":"lysstyrke","_color":"farge","_content":"innhold","_fisheye":"fiskeøye","_ghost":"spøkelse","_height":"høyde","_mosaic":"mosaikk","_pixelate":"pixelere","_whirl":"virvel","_width":"bredde"},"nl":{"_# of costumes in [TARGET]":"aantal uiterlijken in [TARGET]","_Looks+":"Uiterlijken+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] van [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] van uiterlijk # [COSTUME] van [TARGET]","_[EFFECT] effect of [TARGET]":"[EFFECT] effect van [TARGET]","_[TARGET] visible?":"[TARGET] zichtbaar?","_brightness":"helderheid","_color":"kleur","_content":"inhoud","_fisheye":"vissenoog","_format":"formaat","_ghost":"transparant","_height":"hoogte","_hex of [COLOR]":"HEX-code van [COLOR]","_hide [TARGET]":"verberg [TARGET]","_layer # of [TARGET]":"laag # van [TARGET]","_mosaic":"mozaïek","_pixelate":"pixeleren","_replace [COLOR1] with [COLOR2] in [SVG]":"vervang [COLOR1] met [COLOR2] in [SVG]","_restore content for [COSTUME]":"herstel inhoud voor [COSTUME]","_rotation center x":"draaimiddelpunt x","_rotation center y":"draaimiddelpunt y","_set layer # of [TARGET] to [LAYER]":"maak laag # van [TARGET] [LAYER]","_show [TARGET]":"toon [TARGET]","_snapshot stage":"opname speelveld","_whirl":"draaikolk","_width":"breedte"},"pl":{"_Looks+":"Wygląd+","_[TARGET] visible?":"[TARGET] widoczny?","_brightness":"jasność","_color":"kolor","_fisheye":"rybie oko","_height":"wysokość","_hide [TARGET]":"ukryj [TARGET]","_show [TARGET]":"pokaż [TARGET]","_width":"szerokość"},"ru":{"_# of costumes in [TARGET]":"количество костюмов [TARGET]","_Looks+":"Вид+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] костюма [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] костюма [COSTUME] спрайта [TARGET]","_[EFFECT] effect of [TARGET]":"эффект [EFFECT] на [TARGET]","_[TARGET] visible?":"[TARGET] виден?","_brightness":"яркость","_color":"цвет","_content":"контент","_dataURI":"Хранилище Данных","_fisheye":"рыбий глаз","_format":"формат","_ghost":"прозрачность","_height":"высота","_hex of [COLOR]":"HEX [COLOR]","_hide [TARGET]":"скрыть [TARGET]","_layer # of [TARGET]":"слой [TARGET]","_mosaic":"мозайка","_pixelate":"укрупнение пикселей","_replace [COLOR1] with [COLOR2] in [SVG]":"заменить [COLOR1] на [COLOR2] в [SVG]","_restore content for [COSTUME]":"восстановить контент [COSTUME]","_rotation center x":"центр вращения x","_rotation center y":"центр вращения y","_set layer # of [TARGET] to [LAYER]":"задать слой [TARGET] на [LAYER]","_set svg for [COSTUME] to [CONTENT]":"задать svg для [COSTUME] на [CONTENT]","_show [TARGET]":"показать [TARGET]","_snapshot stage":"в разработке","_whirl":"завихрение","_width":"ширина"},"uk":{"_brightness":"яскравість","_color":"колір","_fisheye":"риб'яче око","_ghost":"привид","_height":"висота","_mosaic":"мозаїка","_pixelate":"пікселями","_whirl":"закручування","_width":"ширина"},"zh-cn":{"_# of costumes in [TARGET]":"[TARGET]的造型数量","_Looks+":"外观+","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]的[ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]第[COSTUME]个造型的[CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]的[EFFECT]特效","_[TARGET] visible?":"[TARGET]可见？","_brightness":"亮度","_color":"颜色","_content":"文本","_dataURI":"dataURL","_fisheye":"鱼眼","_format":"类型","_ghost":"虚影","_height":"高度","_hex of [COLOR]":"[COLOR]的代码","_hide [TARGET]":"隐藏[TARGET]","_layer # of [TARGET]":"[TARGET]的图层序号","_mosaic":"马赛克","_pixelate":"像素化","_replace [COLOR1] with [COLOR2] in [SVG]":"将[SVG]中的[COLOR1]替换为[COLOR2]","_restore content for [COSTUME]":"恢复[COSTUME]的内容","_rotation center x":"旋转中心x","_rotation center y":"旋转中心y","_set layer # of [TARGET] to [LAYER]":"将[TARGET]的图层序号设为[LAYER]","_show [TARGET]":"显示[TARGET]","_snapshot stage":"舞台截图","_whirl":"漩涡","_width":"宽度"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_content":"Inhalt","_height":"Höhe","_rotation center x":"Rotationszentrum x","_rotation center y":"Rotationszentrum y","_width":"Weite"},"fi":{"_# of costumes in [TARGET]":"hahmon [TARGET] asusteiden määrä","_Looks+":"Ulkonäkö +","_[ATTRIBUTE] of [COSTUME]":"asusteen [COSTUME] [ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"hahmon [TARGET] [COSTUME]. asusteen [CONTENT]","_[EFFECT] effect of [TARGET]":"hahmon [TARGET] [EFFECT] tehoste","_brightness":"kirkkaus","_color":"väri","_content":"sisältö","_fisheye":"kalansilmä","_format":"tiedostotyyppi","_ghost":"haamu","_height":"korkeus","_layer # of [TARGET]":"hahmon [TARGET] taso","_mosaic":"mosaiikki","_pixelate":"pikselöi","_replace [COLOR1] with [COLOR2] in [SVG]":"korvaa [COLOR1] värillä [COLOR2] SVG:ssä [SVG]","_restore content for [COSTUME]":"palauta asusteen [COSTUME] sisältö","_rotation center x":"x-kiertokeskus","_rotation center y":"y-kiertokeskus","_set layer # of [TARGET] to [LAYER]":"aseta hahmon [TARGET] tasoksi [LAYER]","_whirl":"pyörre","_width":"leveys"},"fr":{"_height":"hauteur","_rotation center x":"centre de rotation x","_rotation center y":"centre de rotation droit","_width":"largeur"},"it":{"_# of costumes in [TARGET]":"numero costumi di [TARGET]","_Looks+":"Aspetto+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] di [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] costume n. [COSTUME] di [TARGET]","_[EFFECT] effect of [TARGET]":"effetto [EFFECT] di [TARGET]","_brightness":"luminosità","_color":"colore","_content":"contenuto","_format":"formato","_ghost":"fantasma","_height":"altezza","_layer # of [TARGET]":"livello di [TARGET]","_mosaic":"mosaico","_pixelate":"pixel","_replace [COLOR1] with [COLOR2] in [SVG]":"sostituisci [COLOR1] con [COLOR2] in [SVG]","_restore content for [COSTUME]":"ripristina contenuto di [COSTUME]","_rotation center x":"x del centro di rotazione","_rotation center y":"y del centro di rotazione","_set layer # of [TARGET] to [LAYER]":"porta livello di [TARGET] a [LAYER]","_whirl":"mulinello","_width":"larghezza"},"ja":{"_# of costumes in [TARGET]":"[TARGET]のコスチュームの数","_Looks+":"見た目+","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]の[ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]の[COSTUME]番目の[CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]の[EFFECT]の効果量","_brightness":"明るさ","_color":"色","_content":"コンテンツ","_dataURI":"データURL","_fisheye":"魚眼レンズ","_format":"フォーマット","_ghost":"幽霊","_height":"高さ","_layer # of [TARGET]":"[TARGET]のレイヤー番号","_mosaic":"モザイク","_pixelate":"ピクセル化","_replace [COLOR1] with [COLOR2] in [SVG]":"[SVG]内の[COLOR1]色を[COLOR2]色で置き換える","_restore content for [COSTUME]":"[COSTUME]のコスチュームを復元する","_rotation center x":"回転中心X","_rotation center y":"回転中心Y","_set layer # of [TARGET] to [LAYER]":"[TARGET]のレイヤーを[LAYER]番目にする","_whirl":"渦巻き","_width":"横幅"},"ko":{"_# of costumes in [TARGET]":"[TARGET]의 모양 번째","_Looks+":"형태 플러스","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]의 [ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]의 모양 [COSTUME]번째의 [CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]의 [EFFECT] 효과 값","_brightness":"밝기","_color":"색깔","_content":"내용","_fisheye":"어안 렌즈","_format":"파일 확장자","_ghost":"투명도","_height":"높이","_layer # of [TARGET]":"[TARGET]의 레이어 번째","_mosaic":"모자이크","_pixelate":"픽셀화","_replace [COLOR1] with [COLOR2] in [SVG]":"[SVG]에서 [COLOR1](을)를 [COLOR2](으)로 대체","_restore content for [COSTUME]":"[COSTUME]의 내용 복구하기","_rotation center x":"회전축 x","_rotation center y":"회전축 y","_set layer # of [TARGET] to [LAYER]":"[TARGET]의 레이어를 [LAYER]번째로 정하기","_whirl":"소용돌이","_width":"넓이"},"nb":{"_brightness":"lysstyrke","_color":"farge","_content":"innhold","_fisheye":"fiskeøye","_ghost":"spøkelse","_height":"høyde","_mosaic":"mosaikk","_pixelate":"pixelere","_whirl":"virvel","_width":"bredde"},"nl":{"_# of costumes in [TARGET]":"aantal uiterlijken in [TARGET]","_Looks+":"Uiterlijken+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] van [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] van uiterlijk # [COSTUME] van [TARGET]","_[EFFECT] effect of [TARGET]":"[EFFECT] effect van [TARGET]","_brightness":"helderheid","_color":"kleur","_content":"inhoud","_fisheye":"vissenoog","_format":"formaat","_ghost":"transparant","_height":"hoogte","_layer # of [TARGET]":"laag # van [TARGET]","_mosaic":"mozaïek","_pixelate":"pixeleren","_replace [COLOR1] with [COLOR2] in [SVG]":"vervang [COLOR1] met [COLOR2] in [SVG]","_restore content for [COSTUME]":"herstel inhoud voor [COSTUME]","_rotation center x":"draaimiddelpunt x","_rotation center y":"draaimiddelpunt y","_set layer # of [TARGET] to [LAYER]":"maak laag # van [TARGET] [LAYER]","_whirl":"draaikolk","_width":"breedte"},"pl":{"_Looks+":"Wygląd+","_brightness":"jasność","_color":"kolor","_fisheye":"rybie oko","_height":"wysokość","_width":"szerokość"},"ru":{"_# of costumes in [TARGET]":"количество костюмов [TARGET]","_Looks+":"Вид+","_[ATTRIBUTE] of [COSTUME]":"[ATTRIBUTE] костюма [COSTUME]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[CONTENT] костюма [COSTUME] спрайта [TARGET]","_[EFFECT] effect of [TARGET]":"эффект [EFFECT] на [TARGET]","_brightness":"яркость","_color":"цвет","_content":"контент","_dataURI":"Хранилище Данных","_fisheye":"рыбий глаз","_format":"формат","_ghost":"прозрачность","_height":"высота","_layer # of [TARGET]":"слой [TARGET]","_mosaic":"мозайка","_pixelate":"укрупнение пикселей","_replace [COLOR1] with [COLOR2] in [SVG]":"заменить [COLOR1] на [COLOR2] в [SVG]","_restore content for [COSTUME]":"восстановить контент [COSTUME]","_rotation center x":"центр вращения x","_rotation center y":"центр вращения y","_set layer # of [TARGET] to [LAYER]":"задать слой [TARGET] на [LAYER]","_set svg for [COSTUME] to [CONTENT]":"задать svg для [COSTUME] на [CONTENT]","_whirl":"завихрение","_width":"ширина"},"uk":{"_brightness":"яскравість","_color":"колір","_fisheye":"риб'яче око","_ghost":"привид","_height":"висота","_mosaic":"мозаїка","_pixelate":"пікселями","_whirl":"закручування","_width":"ширина"},"zh-cn":{"_# of costumes in [TARGET]":"[TARGET]的造型数量","_Looks+":"外观+","_[ATTRIBUTE] of [COSTUME]":"[COSTUME]的[ATTRIBUTE]","_[CONTENT] of costume # [COSTUME] of [TARGET]":"[TARGET]第[COSTUME]个造型的[CONTENT]","_[EFFECT] effect of [TARGET]":"[TARGET]的[EFFECT]特效","_brightness":"亮度","_color":"颜色","_content":"文本","_dataURI":"dataURL","_fisheye":"鱼眼","_format":"类型","_ghost":"虚影","_height":"高度","_layer # of [TARGET]":"[TARGET]的图层序号","_mosaic":"马赛克","_pixelate":"像素化","_replace [COLOR1] with [COLOR2] in [SVG]":"将[SVG]中的[COLOR1]替换为[COLOR2]","_restore content for [COSTUME]":"恢复[COSTUME]的内容","_rotation center x":"旋转中心x","_rotation center y":"旋转中心y","_set layer # of [TARGET] to [LAYER]":"将[TARGET]的图层序号设为[LAYER]","_whirl":"漩涡","_width":"宽度"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
 
   const menuIconURI =
@@ -77,45 +77,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         color3: "#774DCB",
         menuIconURI: menuIconURI,
         blocks: [
-          {
-            opcode: "showSprite",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("show [TARGET]"),
-            arguments: {
-              TARGET: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "spriteMenu",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-          {
-            opcode: "hideSprite",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("hide [TARGET]"),
-            arguments: {
-              TARGET: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "spriteMenu",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-          {
-            opcode: "spriteVisible",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("[TARGET] visible?"),
-            arguments: {
-              TARGET: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "spriteMenu",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-
-          "---",
-
           {
             opcode: "setLayerTo",
             blockType: Scratch.BlockType.COMMAND,
@@ -195,16 +156,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           "---",
 
           {
-            opcode: "snapshotStage",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("snapshot stage"),
-            disableMonitor: true,
-            extensions: ["colours_looks"],
-          },
-
-          "---",
-
-          {
             opcode: "replaceCostumeContentNew",
             blockType: Scratch.BlockType.COMMAND,
             text: Scratch.translate("set svg for [COSTUME] to [CONTENT]"),
@@ -272,18 +223,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               SVG: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "<svg />",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-          {
-            opcode: "colorHex",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("hex of [COLOR]"),
-            arguments: {
-              COLOR: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#FFD983",
               },
             },
             extensions: ["colours_looks"],
@@ -379,28 +318,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       };
     }
 
-    showSprite(args, util) {
-      const target = getSpriteTargetByName(util, args.TARGET);
-      if (target) {
-        target.setVisible(true);
-      }
-    }
-
-    hideSprite(args, util) {
-      const target = getSpriteTargetByName(util, args.TARGET);
-      if (target) {
-        target.setVisible(false);
-      }
-    }
-
-    spriteVisible(args, util) {
-      const target = getSpriteTargetByName(util, args.TARGET);
-      if (!target) {
-        return false;
-      }
-      return Scratch.Cast.toBoolean(target.visible);
-    }
-
     setLayerTo(args, util) {
       const target = getSpriteTargetByName(util, args.TARGET);
       if (!target) {
@@ -471,15 +388,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
       return Scratch.Cast.toNumber(target.sprite.costumes.length);
     }
-
-    snapshotStage(args, util) {
-      return new Promise((resolve) => {
-        renderer.requestSnapshot((uri) => {
-          resolve(uri);
-        });
-      });
-    }
-
 
     async replaceCostumeContentNew(args, util) {
       const costumeIndex = this.getCostumeInput(args.COSTUME, util.target);
@@ -580,10 +488,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         // regex was invalid, don't replace anything
         return svg;
       }
-    }
-
-    colorHex(args, util) {
-      return args.COLOR;
     }
 
     getCostumeInput(costume, target) {

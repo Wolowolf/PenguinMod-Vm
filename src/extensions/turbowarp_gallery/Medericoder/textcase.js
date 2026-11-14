@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Medericoder/textcase.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below).
+// the VM as a built-in extension. The code is the gallery file unchanged except for sections 154 (below) and 259:
+// its compare and convert / check case blocks are removed (built-in "=", More Operators "exactly equals" and
+// Text Tools' case blocks, which took over its cases), marked "Desktop fork (section 259)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -30,188 +32,17 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
 (function (Scratch) {
   "use strict";
-  function funchangecase(text, format) {
-    if (format === "uppercase") {
-      return text.toString().toUpperCase();
-    } else if (format === "lowercase") {
-      return text.toString().toLowerCase();
-    } else if (format === "invert") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (text.toString()[i] === text.toString()[i].toUpperCase()) {
-          x += text.toString()[i].toLowerCase();
-        } else {
-          x += text.toString()[i].toUpperCase();
-        }
+  // Desktop fork (section 259): only the "invert" case of the removed convert block is kept, for the glitch block
+  function invertCase(text) {
+    let x = "";
+    for (let i = 0; i < text.length; i++) {
+      if (text.toString()[i] === text.toString()[i].toUpperCase()) {
+        x += text.toString()[i].toLowerCase();
+      } else {
+        x += text.toString()[i].toUpperCase();
       }
-      return x;
-    } else if (format === "begin") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i];
-        }
-      }
-      return x;
-    } else if (format === "begin words") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else if (
-          text.toString()[i - 1].toLowerCase() ===
-          text.toString()[i - 1].toUpperCase()
-        ) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i];
-        }
-      }
-      return x;
-    } else if (format === "begin sentences") {
-      let x = "";
-      let mybool = true;
-      for (let i = 0; i < text.length; i++) {
-        if (mybool) {
-          x += text.toString()[i].toUpperCase();
-          if (
-            !(
-              text.toString()[i].toLowerCase() ===
-              text.toString()[i].toUpperCase()
-            )
-          ) {
-            mybool = false;
-          }
-        } else if (
-          text.toString()[i] == "." ||
-          text.toString()[i] == "!" ||
-          text.toString()[i] == "?"
-        ) {
-          x += text.toString()[i];
-          mybool = true;
-        } else {
-          x += text.toString()[i];
-        }
-      }
-      return x;
-    } else if (format === "begin only") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "begin words only") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else if (
-          text.toString()[i - 1].toLowerCase() ===
-          text.toString()[i - 1].toUpperCase()
-        ) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "begin sentences only") {
-      let x = "";
-      let mybool = true;
-      for (let i = 0; i < text.length; i++) {
-        if (mybool) {
-          x += text.toString()[i].toUpperCase();
-          if (
-            !(
-              text.toString()[i].toLowerCase() ===
-              text.toString()[i].toUpperCase()
-            )
-          ) {
-            mybool = false;
-          }
-        } else if (
-          text.toString()[i] == "." ||
-          text.toString()[i] == "!" ||
-          text.toString()[i] == "?"
-        ) {
-          x += text.toString()[i];
-          mybool = true;
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "1/2 up") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i % 2 == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "1/2 low") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (i % 2 == 1) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "1/2 up letters only") {
-      let x = "";
-      let noletters = 0;
-      for (let i = 0; i < text.length; i++) {
-        if (
-          text.toString()[i].toUpperCase() === text.toString()[i].toLowerCase()
-        ) {
-          noletters += 1;
-          x += text.toString()[i];
-        } else if ((i - noletters) % 2 == 0) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "1/2 low letters only") {
-      let x = "";
-      let noletters = 0;
-      for (let i = 0; i < text.length; i++) {
-        if (
-          text.toString()[i].toUpperCase() === text.toString()[i].toLowerCase()
-        ) {
-          noletters += 1;
-          x += text.toString()[i];
-        } else if ((i - noletters) % 2 == 1) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else if (format === "random") {
-      let x = "";
-      for (let i = 0; i < text.length; i++) {
-        if (Scratch.vm.runtime.pmRandom() < 0.5) {
-          x += text.toString()[i].toUpperCase();
-        } else {
-          x += text.toString()[i].toLowerCase();
-        }
-      }
-      return x;
-    } else {
-      return text.toString();
     }
+    return x;
   }
 
   function fungetcase(args) {
@@ -256,56 +87,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         name: Scratch.translate("Text Case"),
         blocks: [
           {
-            opcode: "strictlyequal",
-            blockType: Scratch.BlockType.BOOLEAN,
-            // eslint-disable-next-line extension/should-translate
-            text: "[TEXT1] ≡ [TEXT2]",
-            arguments: {
-              TEXT1: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate("Hello"),
-              },
-              TEXT2: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate("hello"),
-              },
-            },
-          },
-          {
-            opcode: "quasiequal",
-            blockType: Scratch.BlockType.BOOLEAN,
-            // eslint-disable-next-line extension/should-translate
-            text: "[TEXT1] ≈ [TEXT2]",
-            arguments: {
-              TEXT1: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate("Hello"),
-              },
-              TEXT2: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate("hello"),
-              },
-            },
-          },
-          "---",
-          {
-            opcode: "changecase",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("convert [TEXT] to case [FORMAT]"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate(
-                  "Where is the apple? It is here!"
-                ),
-              },
-              FORMAT: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "FORMAT_MENU",
-              },
-            },
-          },
-          {
             opcode: "getcase",
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("case from [TEXT]"),
@@ -313,21 +94,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               TEXT: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: Scratch.translate("hello world"),
-              },
-            },
-          },
-          {
-            opcode: "iscase",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is [TEXT] [FORMAT]"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: Scratch.translate("hello world"),
-              },
-              FORMAT: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "FORMAT_MENU",
               },
             },
           },
@@ -348,78 +114,18 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
           },
         ],
-        menus: {
-          FORMAT_MENU: {
-            acceptReporters: true,
-            items: [
-              { text: Scratch.translate("uppercase"), value: "uppercase" },
-              { text: Scratch.translate("lowercase"), value: "lowercase" },
-              { text: Scratch.translate("invert"), value: "invert" },
-              { text: Scratch.translate("begin"), value: "begin" },
-              { text: Scratch.translate("begin words"), value: "begin words" },
-              {
-                text: Scratch.translate("begin sentences"),
-                value: "begin sentences",
-              },
-              { text: Scratch.translate("begin only"), value: "begin only" },
-              {
-                text: Scratch.translate("begin words only"),
-                value: "begin words only",
-              },
-              {
-                text: Scratch.translate("begin sentences only"),
-                value: "begin sentences only",
-              },
-              { text: Scratch.translate("1/2 up"), value: "1/2 up" },
-              { text: Scratch.translate("1/2 low"), value: "1/2 low" },
-              {
-                text: Scratch.translate("1/2 up letters only"),
-                value: "1/2 up letters only",
-              },
-              {
-                text: Scratch.translate("1/2 low letters only"),
-                value: "1/2 low letters only",
-              },
-              { text: Scratch.translate("random"), value: "random" },
-              { text: Scratch.translate("identity"), value: "identity" },
-            ],
-          },
-        },
       };
-    }
-
-    changecase(args) {
-      return funchangecase(args.TEXT, args.FORMAT);
     }
 
     getcase(args) {
       return fungetcase(args);
     }
 
-    iscase(args) {
-      if (args.FORMAT == "random") {
-        return fungetcase(args).includes("mixed");
-      } else {
-        return args.TEXT.toString() === funchangecase(args.TEXT, args.FORMAT);
-      }
-    }
-
-    strictlyequal(args) {
-      return args.TEXT1 === args.TEXT2;
-    }
-
-    quasiequal(args) {
-      return (
-        args.TEXT1.toString().toLowerCase() ===
-        args.TEXT2.toString().toLowerCase()
-      );
-    }
-
     glitch(args) {
       var x = "";
       for (let i = 0; i < args.TEXT.toString().length; i++) {
         if (Scratch.vm.runtime.pmRandom() * 100 < args.PROBA) {
-          x += funchangecase(args.TEXT.toString()[i], "invert");
+          x += invertCase(args.TEXT.toString()[i]);
         } else {
           x += args.TEXT.toString()[i];
         }
