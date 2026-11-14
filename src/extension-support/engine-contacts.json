@@ -92,7 +92,9 @@
             "._blocks": 2,
             "._hats": 5,
             "._keysPressed": 1,
-            "._pushThread": 4
+            "._pmThreadMapChanged": 3,
+            "._pushThread": 4,
+            "write runtime._pmThreadMapChanged": 3
         }
     },
     "SPanimations": {
@@ -625,9 +627,6 @@
             "screen.width": 1,
             "window.innerHeight": 1,
             "window.innerWidth": 1
-        },
-        "internals": {
-            "._cloneCounter": 1
         }
     },
     "localstorage": {
@@ -759,8 +758,10 @@
         "internals": {
             "._blockInfo": 1,
             "._hats": 1,
+            "._pmThreadMapChanged": 1,
             "._pushThread": 2,
             "._restartThread": 2,
+            "write runtime._pmThreadMapChanged": 1,
             "write runtime.pmEventsExpansion": 1
         }
     },
@@ -787,6 +788,7 @@
             "window": 6
         },
         "internals": {
+            "._compile": 25,
             "write Function.prototype.toString": 1
         }
     },

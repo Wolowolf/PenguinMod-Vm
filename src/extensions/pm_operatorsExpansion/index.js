@@ -31,159 +31,6 @@ class pmOperatorsExpansion {
       color3: "#389438",
       blocks: [
         {
-          opcode: "shiftLeft",
-          text: "[num1] << [num2]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 1
-            },
-            num2: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 5
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftRight",
-            "binnaryAnd",
-            "binnaryOr",
-            "binnaryXor",
-            "binnaryNot",
-          ],
-          switchText: "lshift"
-        },
-        {
-          opcode: "shiftRight",
-          text: "[num1] >> [num2]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 32
-            },
-            num2: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 5
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftLeft",
-            "binnaryAnd",
-            "binnaryOr",
-            "binnaryXor",
-            "binnaryNot",
-          ],
-          switchText: "rshift"
-        },
-        {
-          opcode: "binnaryAnd",
-          text: "[num1] & [num2]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 32
-            },
-            num2: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 5
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftLeft",
-            "shiftRight",
-            "binnaryOr",
-            "binnaryXor",
-            "binnaryNot",
-          ],
-          switchText: "and"
-        },
-        {
-          opcode: "binnaryOr",
-          text: "[num1] | [num2]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 7
-            },
-            num2: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 8
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftLeft",
-            "shiftRight",
-            "binnaryAnd",
-            "binnaryXor",
-            "binnaryNot",
-          ],
-          switchText: "or"
-        },
-        {
-          opcode: "binnaryXor",
-          text: "[num1] ^ [num2]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 7
-            },
-            num2: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 2
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftLeft",
-            "shiftRight",
-            "binnaryAnd",
-            "binnaryOr",
-            "binnaryNot",
-          ],
-          switchText: "xor"
-        },
-        {
-          opcode: "binnaryNot",
-          text: "~ [num1]",
-          blockType: BlockType.REPORTER,
-          extensions: ["colours_operators"],
-          disableMonitor: true,
-          arguments: {
-            num1: {
-              type: ArgumentType.NUMBER,
-              defaultValue: 2
-            }
-          },
-          switches: [
-            { isNoop: true },
-            "shiftLeft",
-            "shiftRight",
-            "binnaryAnd",
-            "binnaryOr",
-            "binnaryXor",
-          ],
-          switchText: "not"
-        },
-        "---",
-        {
           opcode: "orIfFalsey",
           text: "[ONE] or else [TWO]",
           blockType: BlockType.REPORTER,
@@ -756,35 +603,6 @@ class pmOperatorsExpansion {
   getCompileInfo() {
     return {
       ir: {
-        shiftLeft: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1"),
-          num2: generator.descendInputOfBlock(block, "num2")
-        }),
-        shiftRight: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1"),
-          num2: generator.descendInputOfBlock(block, "num2")
-        }),
-        binnaryAnd: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1"),
-          num2: generator.descendInputOfBlock(block, "num2")
-        }),
-        binnaryOr: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1"),
-          num2: generator.descendInputOfBlock(block, "num2")
-        }),
-        binnaryXor: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1"),
-          num2: generator.descendInputOfBlock(block, "num2")
-        }),
-        binnaryNot: (generator, block) => ({
-          kind: "input",
-          num1: generator.descendInputOfBlock(block, "num1")
-        }),
         orIfFalsey: (generator, block) => ({
           kind: "input",
           one: generator.descendInputOfBlock(block, "ONE"),
@@ -810,59 +628,6 @@ class pmOperatorsExpansion {
         })
       },
       js: {
-        shiftLeft: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-          const num2 = compiler.descendInput(node.num2).asNumber();
-
-          return new TypedInput(`(${num1} << ${num2})`, TYPE_NUMBER);
-        },
-        shiftRight: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-          const num2 = compiler.descendInput(node.num2).asNumber();
-
-          return new TypedInput(`(${num1} >> ${num2})`, TYPE_NUMBER);
-        },
-        binnaryAnd: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-          const num2 = compiler.descendInput(node.num2).asNumber();
-
-          return new TypedInput(`(${num1} & ${num2})`, TYPE_NUMBER);
-        },
-        binnaryOr: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-          const num2 = compiler.descendInput(node.num2).asNumber();
-
-          return new TypedInput(`(${num1} | ${num2})`, TYPE_NUMBER);
-        },
-        binnaryXor: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-          const num2 = compiler.descendInput(node.num2).asNumber();
-
-          return new TypedInput(`(${num1} ^ ${num2})`, TYPE_NUMBER);
-        },
-        binnaryNot: (node, compiler, {
-          TypedInput,
-          TYPE_NUMBER
-        }) => {
-          const num1 = compiler.descendInput(node.num1).asNumber();
-
-          return new TypedInput(`(~${num1})`, TYPE_NUMBER);
-        },
         orIfFalsey: (node, compiler, {
           TypedInput,
           TYPE_UNKNOWN
@@ -1078,12 +843,6 @@ class pmOperatorsExpansion {
   // so these blocks only worked in compiled scripts)
   orIfFalsey(args) { return args.ONE || args.TWO }
   ifIsTruthy(args) { return Cast.toBoolean(args.ONE) && args.TWO }
-  shiftLeft(args) { return Cast.toNumber(args.num1) << Cast.toNumber(args.num2) }
-  shiftRight(args) { return Cast.toNumber(args.num1) >> Cast.toNumber(args.num2) }
-  binnaryAnd(args) { return Cast.toNumber(args.num1) & Cast.toNumber(args.num2) }
-  binnaryOr(args) { return Cast.toNumber(args.num1) | Cast.toNumber(args.num2) }
-  binnaryXor(args) { return Cast.toNumber(args.num1) ^ Cast.toNumber(args.num2) }
-  binnaryNot(args) { return ~Cast.toNumber(args.num1) }
   speedToPitch(args) { return (1200 * Math.log2(Cast.toNumber(args.SPEED))) / 10 }
   pitchToSpeed(args) { return Math.pow(2, (Cast.toNumber(args.PITCH) * 10) / 1200) }
   atan2(args) {

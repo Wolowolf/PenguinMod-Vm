@@ -622,10 +622,8 @@ const FOLDABLE_KINDS = new Set([
     'op.join', 'op.length', 'op.letterOf', 'op.contains',
     // PenguinMod's expandable math / and-or / compare blocks (their inputs are lists of inputs)
     'op.expandmath', 'op.expandBool', 'op.expandCompare',
-    // the "Operators Expansion" extension's calculations (bit operations, if-falsey/truthy, pitch, atan2); they
-    // are compiled by the extension itself, only the answer is worked out here
-    'pmOperatorsExpansion.shiftLeft', 'pmOperatorsExpansion.shiftRight', 'pmOperatorsExpansion.binnaryAnd',
-    'pmOperatorsExpansion.binnaryOr', 'pmOperatorsExpansion.binnaryXor', 'pmOperatorsExpansion.binnaryNot',
+    // the "Operators Expansion" extension's calculations (if-falsey/truthy, pitch, atan2); they are compiled by the
+    // extension itself, only the answer is worked out here
     'pmOperatorsExpansion.orIfFalsey', 'pmOperatorsExpansion.ifIsTruthy', 'pmOperatorsExpansion.speedToPitch',
     'pmOperatorsExpansion.pitchToSpeed', 'pmOperatorsExpansion.atan2',
     // core blocks that used the compatibility layer (section 138); their helpers are in jsexecute.js PURE_HELPER_NAMES

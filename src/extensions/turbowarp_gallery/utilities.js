@@ -40,7 +40,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
  * SOFTWARE.
  */
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_Utilities":"Verschiedene Blöcke","_[PATH] of [JSON_STRING]":"[PATH] von [JSON_STRING]"},"fi":{"_Utilities":"Työkalut","_[PATH] of [JSON_STRING]":"[PATH] JSON-koodissa [JSON_STRING]","_clamp [INPUT] between [MIN] and [MAX]":"rajoita [INPUT] välille [MIN] – [MAX]","_content from [URL]":"sisältö URL-osoitteesta [URL]","_current millisecond":"nykyinen millisekunti","_false":"epätosi","_if [A] then [B] else [C]":"jos [A], niin [B] tai muuten [C]","_is [A] exactly [B]?":"onko [A] tarkalleen [B]?","_letters [START] to [END] of [STRING]":"merkkijonon [STRING] merkit [START] – [END]","_newline character":"uusi rivi","_pi":"pii","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"korvaa [REGEX] merkkijonolla [NEWSTRING] merkkijonossa [STRING]","_true":"tosi"},"it":{"_Utilities":"Utilità","_[PATH] of [JSON_STRING]":"[PATH] di [JSON_STRING]","_clamp [INPUT] between [MIN] and [MAX]":"vincola [INPUT] tra [MIN] e [MAX]","_content from [URL]":"contenuto di [URL]","_current millisecond":"millisecondi attuali","_false":"falso","_if [A] then [B] else [C]":"se [A] allora [B] altrimenti [C]","_is [A] exactly [B]?":"[A] identico a [B]","_letters [START] to [END] of [STRING]":"lettere da [START] a [END] di [STRING]","_newline character":"carattere accapo","_pi":"pi greco","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"sostituisci [REGEX] in [STRING] con [NEWSTRING]","_true":"vero"},"ja":{"_Utilities":"ユーティリティ","_[PATH] of [JSON_STRING]":"[JSON_STRING]の[PATH]","_clamp [INPUT] between [MIN] and [MAX]":"[INPUT]を[MIN]から[MAX]までで表す","_content from [URL]":"[URL]からのコンテンツ","_current millisecond":"現在のミリ秒","_false":"偽","_if [A] then [B] else [C]":"もし[A]なら[B]でなければ[C]","_is [A] exactly [B]?":"[A]が[B]と同一","_letters [START] to [END] of [STRING]":"[STRING]の[START]から[END]番目","_newline character":"改行文字","_pi":"π","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"[STRING]の[REGEX]を[NEWSTRING]に置き換える","_true":"真"},"ko":{"_Utilities":"유틸리티","_[PATH] of [JSON_STRING]":"[JSON_STRING]에서 [PATH]","_clamp [INPUT] between [MIN] and [MAX]":"[INPUT] 값을 [MIN]부터 [MAX]까지 범위로 제한","_content from [URL]":"[URL]의 내용","_current millisecond":"현재 밀리초","_false":"거짓","_if [A] then [B] else [C]":"[A] (이)라면 [B] 아니면 [C]","_is [A] exactly [B]?":"[A]이(가) [B]와(과) 일치하는가?","_letters [START] to [END] of [STRING]":"[STRING]의 [START]부터 [END]까지의 글자","_newline character":"줄바꿈 문자","_true":"참"},"nb":{"_Utilities":"Verktøy","_true":"sann"},"nl":{"_Utilities":"Utiliteiten","_[PATH] of [JSON_STRING]":"[PATH] van [JSON_STRING]","_clamp [INPUT] between [MIN] and [MAX]":"klem [INPUT] tussen [MIN] en [MAX]","_current millisecond":"huidige milliseconde","_false":"onwaar","_if [A] then [B] else [C]":"als [A] dan [B] anders [C]","_is [A] exactly [B]?":"is [A] precies [B]?","_letters [START] to [END] of [STRING]":"letters [START] t/m [END] van [STRING]","_newline character":"nieuwregelteken","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"vervang [STRING] met regel [REGEX] door [NEWSTRING]","_true":"waar"},"pl":{"_false":"fałsz","_true":"prawda"},"ru":{"_Utilities":"Утилиты","_[PATH] of [JSON_STRING]":"[PATH] из [JSON_STRING]","_clamp [INPUT] between [MIN] and [MAX]":"зажим [INPUT] между [MIN] и [MAX]","_content from [URL]":"контент из [URL]","_current millisecond":"текущие миллисекунды","_false":"нет","_if [A] then [B] else [C]":"если [A] тогда [B] иначе [C]","_is [A] exactly [B]?":"[A] точно ли [B]?","_letters [START] to [END] of [STRING]":"буквы с [START] до [END] в строке [STRING]","_newline character":"символ новой строки","_pi":"пи","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"заменить [STRING] используя правило [REGEX] с [NEWSTRING]","_true":"да"},"uk":{"_newline character":"символ переносу строки"},"zh-cn":{"_Utilities":"工具","_[PATH] of [JSON_STRING]":"[JSON_STRING]中的[PATH]","_clamp [INPUT] between [MIN] and [MAX]":"[MIN]到[MAX]之间的[INPUT]","_content from [URL]":"来自[URL]的内容","_current millisecond":"当前毫秒","_false":"假","_if [A] then [B] else [C]":"[A]？[B]：[C]","_is [A] exactly [B]?":"[A]===[B]","_letters [START] to [END] of [STRING]":"[STRING]的第[START]到第[END]位","_newline character":"换行符","_pi":"π","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"以规则[REGEX]替换[STRING]为[NEWSTRING]","_true":"真"}});/* end generated l10n code */(function (Scratch) {
+/* generated l10n code */Scratch.translate.setup({"de":{"_Utilities":"Verschiedene Blöcke","_[PATH] of [JSON_STRING]":"[PATH] von [JSON_STRING]"},"fi":{"_Utilities":"Työkalut","_[PATH] of [JSON_STRING]":"[PATH] JSON-koodissa [JSON_STRING]","_content from [URL]":"sisältö URL-osoitteesta [URL]","_if [A] then [B] else [C]":"jos [A], niin [B] tai muuten [C]","_letters [START] to [END] of [STRING]":"merkkijonon [STRING] merkit [START] – [END]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"korvaa [REGEX] merkkijonolla [NEWSTRING] merkkijonossa [STRING]"},"it":{"_Utilities":"Utilità","_[PATH] of [JSON_STRING]":"[PATH] di [JSON_STRING]","_content from [URL]":"contenuto di [URL]","_if [A] then [B] else [C]":"se [A] allora [B] altrimenti [C]","_letters [START] to [END] of [STRING]":"lettere da [START] a [END] di [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"sostituisci [REGEX] in [STRING] con [NEWSTRING]"},"ja":{"_Utilities":"ユーティリティ","_[PATH] of [JSON_STRING]":"[JSON_STRING]の[PATH]","_content from [URL]":"[URL]からのコンテンツ","_if [A] then [B] else [C]":"もし[A]なら[B]でなければ[C]","_letters [START] to [END] of [STRING]":"[STRING]の[START]から[END]番目","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"[STRING]の[REGEX]を[NEWSTRING]に置き換える"},"ko":{"_Utilities":"유틸리티","_[PATH] of [JSON_STRING]":"[JSON_STRING]에서 [PATH]","_content from [URL]":"[URL]의 내용","_if [A] then [B] else [C]":"[A] (이)라면 [B] 아니면 [C]","_letters [START] to [END] of [STRING]":"[STRING]의 [START]부터 [END]까지의 글자"},"nb":{"_Utilities":"Verktøy"},"nl":{"_Utilities":"Utiliteiten","_[PATH] of [JSON_STRING]":"[PATH] van [JSON_STRING]","_if [A] then [B] else [C]":"als [A] dan [B] anders [C]","_letters [START] to [END] of [STRING]":"letters [START] t/m [END] van [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"vervang [STRING] met regel [REGEX] door [NEWSTRING]"},"ru":{"_Utilities":"Утилиты","_[PATH] of [JSON_STRING]":"[PATH] из [JSON_STRING]","_content from [URL]":"контент из [URL]","_if [A] then [B] else [C]":"если [A] тогда [B] иначе [C]","_letters [START] to [END] of [STRING]":"буквы с [START] до [END] в строке [STRING]","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"заменить [STRING] используя правило [REGEX] с [NEWSTRING]"},"zh-cn":{"_Utilities":"工具","_[PATH] of [JSON_STRING]":"[JSON_STRING]中的[PATH]","_content from [URL]":"来自[URL]的内容","_if [A] then [B] else [C]":"[A]？[B]：[C]","_letters [START] to [END] of [STRING]":"[STRING]的第[START]到第[END]位","_replace [STRING] using the rule [REGEX] with [NEWSTRING]":"以规则[REGEX]替换[STRING]为[NEWSTRING]"}});/* end generated l10n code */(function (Scratch) {
   "use strict";
 
   const icon =
@@ -59,99 +59,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         menuIconURI: icon,
 
         blocks: [
-          {
-            opcode: "isExactly",
-
-            blockType: Scratch.BlockType.BOOLEAN,
-
-            text: Scratch.translate("is [A] exactly [B]?"),
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "apple",
-              },
-              B: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "APPLE",
-              },
-            },
-          },
-          {
-            opcode: "isLessOrEqual",
-
-            blockType: Scratch.BlockType.BOOLEAN,
-
-            // eslint-disable-next-line extension/should-translate
-            text: "[A] <= [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-              },
-              B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 50,
-              },
-            },
-          },
-          {
-            opcode: "isMoreOrEqual",
-
-            blockType: Scratch.BlockType.BOOLEAN,
-
-            // eslint-disable-next-line extension/should-translate
-            text: "[A] >= [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-              },
-              B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 50,
-              },
-            },
-          },
-          {
-            opcode: "trueBlock",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate({
-              default: "true",
-              description: "Block that returns true",
-            }),
-            disableMonitor: true,
-          },
-          {
-            opcode: "falseBlock",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate({
-              default: "false",
-              description: "Block that returns false",
-            }),
-            disableMonitor: true,
-          },
-          {
-            opcode: "exponent",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            // eslint-disable-next-line extension/should-translate
-            text: "[A] ^ [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-              },
-              B: {
-                type: Scratch.ArgumentType.NUMBER,
-              },
-            },
-          },
-          {
-            opcode: "pi",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate({
-              default: "pi",
-              description: "Block that returns 3.1415...",
-            }),
-          },
           {
             opcode: "ternaryOperator",
 
@@ -195,32 +102,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             },
           },
           {
-            opcode: "clamp",
-
-            blockType: Scratch.BlockType.REPORTER,
-
-            text: Scratch.translate("clamp [INPUT] between [MIN] and [MAX]"),
-            arguments: {
-              INPUT: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 30,
-              },
-              MIN: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 25,
-              },
-              MAX: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 40,
-              },
-            },
-          },
-          {
-            opcode: "currentMillisecond",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("current millisecond"),
-          },
-          {
             opcode: "fetchFrom",
 
             blockType: Scratch.BlockType.REPORTER,
@@ -254,13 +135,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                   '{"fruit": {"apples": 2, "bananas": 3}, "total_fruit": 5}',
               },
             },
-          },
-          {
-            opcode: "newline",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("newline character"),
-            disableMonitor: true,
-            arguments: {},
           },
           {
             opcode: "stringToBoolean",
@@ -303,35 +177,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       };
     }
 
-    isExactly({ A, B }) {
-      return A === B;
-    }
 
-    isLessOrEqual({ A, B }) {
-      return Scratch.Cast.compare(A, B) <= 0;
-    }
 
-    isMoreOrEqual({ A, B }) {
-      return Scratch.Cast.compare(A, B) >= 0;
-    }
 
-    trueBlock() {
-      return true;
-    }
 
-    falseBlock() {
-      return false;
-    }
 
-    exponent({ A, B }) {
-      A = Scratch.Cast.toNumber(A);
-      B = Scratch.Cast.toNumber(B);
-      return Math.pow(A, B);
-    }
 
-    pi() {
-      return Math.PI;
-    }
 
     ternaryOperator({ A, B, C }) {
       return A ? B : C;
@@ -342,20 +193,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return str.slice(Math.max(1, START) - 1, Math.min(str.length, END));
     }
 
-    clamp({ INPUT, MIN, MAX }) {
-      INPUT = Scratch.Cast.toNumber(INPUT);
-      MIN = Scratch.Cast.toNumber(MIN);
-      MAX = Scratch.Cast.toNumber(MAX);
-      if (MIN > MAX) {
-        return Math.min(Math.max(INPUT, MAX), MIN);
-      } else {
-        return Math.min(Math.max(INPUT, MIN), MAX);
-      }
-    }
 
-    currentMillisecond() {
-      return Scratch.vm.runtime.pmDateNow() % 1000;
-    }
 
     fetchFrom({ URL }) {
       return Scratch.fetch(URL)
@@ -394,9 +232,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    newline() {
-      return "\n";
-    }
 
     stringToBoolean({ STRING }) {
       return Scratch.Cast.toBoolean(STRING);

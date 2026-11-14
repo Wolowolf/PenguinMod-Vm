@@ -10,7 +10,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 // By: TrueFantom <https://scratch.mit.edu/users/TrueFantom/>
 // License: MIT
 
-/* generated l10n code */Scratch.translate.setup({"de":{"_Math":"Mathe"},"fi":{"_Math":"Matematiikka","_[A] exactly contains [B]?":"[A] sisältää tarkalleen [B]?","_[A] is multiple of [B]?":"onko [A] luvun [B] kerrannainen?","_clamp [A] between [B] and [C]":"rajoita [A] välillä [B] – [C]","_is float [A]?":"onko [A] liukuluku?","_is int [A]?":"onko [A] kokonaisluku?","_is number [A]?":"onko [A] luku?","_is safe number [A]?":"onko luku [A] turvallinen?","_log of [A] with base [B]":"logaritmi luvusta [A] kannalla [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"muunna [A] väliltä [m1] – [M1] välille [m2] – [M2]","_sign of [A]":"luvun [A] etumerkki","_true [OPERATOR] [NUM]":"tosi [OPERATOR] [NUM]","_trunc of [A]":"katkaise [A]","_trunc of [A] with [B] digits after dot":"katkaise [A] [B]. pisteen jälkeisen merkin kohdalta"},"it":{"_Math":"Matematica","_[A] exactly contains [B]?":"[A] contiene sequenza [B]","_[A] is multiple of [B]?":"[A] è multiplo di [B]","_clamp [A] between [B] and [C]":"vincola [A] tra [B] e [C]","_is float [A]?":"[A] virgola mobile","_is int [A]?":"[A] intero","_is number [A]?":"[A]numero","_is safe number [A]?":"[A] numero primo sicuro","_log of [A] with base [B]":"log di [A] con base [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"mappa [A] da range [m1] - [M1] a range [m2] - [M2]","_sign of [A]":"segno di [A]","_true [OPERATOR] [NUM]":"valore reale di [OPERATOR] di [NUM]","_trunc of [A]":"tronca [A]","_trunc of [A] with [B] digits after dot":"tronca [A] con [B] cifre dopo la virgola"},"ja":{"_Math":"数学","_[A] exactly contains [B]?":"[A]が確かに[B]を含んでいる","_clamp [A] between [B] and [C]":"[A]を[B]から[C]までで表す","_is float [A]?":"[A]が小数","_is int [A]?":"[A]が整数","_is number [A]?":"[A]が数字","_is safe number [A]?":"[A]が安全な数字","_log of [A] with base [B]":"底を[B]とする[A]の対数","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"[A]の[m1]から[M1]までの範囲を[m2]から[M2]までの範囲にする"},"ko":{"_Math":"수학","_[A] exactly contains [B]?":"[A]이(가) [B]을(를) 정확히 포함하는가?","_[A] is multiple of [B]?":"[A]이(가) [B]의 배수인가?","_clamp [A] between [B] and [C]":"[A] 값을 [B]부터 [C]까지 범위로 제한","_is float [A]?":"[A]이(가) 부동소수점인가?","_is int [A]?":"[A]이(가) 정수인가?","_is number [A]?":"[A](이)가 숫자인가?","_is safe number [A]?":"[A]이(가) 안전한 숫자인가?","_log of [A] with base [B]":"밑이 [B]인 log [A]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"[A] 값의 [m1] - [M1] 범위를 [m2] - [M2] 범위에 대응","_trunc of [A]":"버림 [A]","_trunc of [A] with [B] digits after dot":"[A]을(를) 소숫점 [B]자리 이후로 버림"},"nb":{"_Math":"Matte"},"nl":{"_Math":"Wiskunde"},"ru":{"_Math":"Математика","_[A] exactly contains [B]?":"[A] содержит именно [B]?","_[A] is multiple of [B]?":"[A] умножен [B]?","_clamp [A] between [B] and [C]":"зажать [A] между[B] и [C]","_is float [A]?":"[A] число?","_is int [A]?":"[A] округлённое число?","_is number [A]?":"[A] цифра?","_is safe number [A]?":"[A] безопасное число?","_log of [A] with base [B]":"логарифм [A] с основанием [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"карта [A] из расстояния [m1] - [M1] до расстояния [m2] - [M2]","_sign of [A]":"знак [A]","_true [OPERATOR] [NUM]":"правда [OPERATOR] [NUM] ","_trunc of [A]":"усечение [A]","_trunc of [A] with [B] digits after dot":"усечение [A] с [B] цифрами после точки"},"uk":{"_Math":"Математика"},"zh-cn":{"_Math":"数学","_[A] exactly contains [B]?":"[A]真的包含 [B]？","_[A] is multiple of [B]?":"[A]是[B]的倍数？","_clamp [A] between [B] and [C]":"将[A]限制在[B]到[C]之间","_is float [A]?":"[A]是小数？","_is int [A]?":"[A]是整数？","_is number [A]?":"[A]是数字？","_is safe number [A]?":"[A]可被精确表示？","_log of [A] with base [B]":"log[A]以[B]为底","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"将[A]从范围[m1]-[M1]映射到范围[m2]-[M2]","_sign of [A]":"[A]的函数符号","_true [OPERATOR] [NUM]":"精确[OPERATOR][NUM]","_trunc of [A]":"[A]的整数部分","_trunc of [A] with [B] digits after dot":"[A]保留[B]位小数 "}});/* end generated l10n code */((Scratch) => {
+/* generated l10n code */Scratch.translate.setup({"de":{"_Math":"Mathe"},"fi":{"_Math":"Matematiikka","_[A] exactly contains [B]?":"[A] sisältää tarkalleen [B]?","_clamp [A] between [B] and [C]":"rajoita [A] välillä [B] – [C]","_is float [A]?":"onko [A] liukuluku?","_is int [A]?":"onko [A] kokonaisluku?","_is number [A]?":"onko [A] luku?","_is safe number [A]?":"onko luku [A] turvallinen?","_log of [A] with base [B]":"logaritmi luvusta [A] kannalla [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"muunna [A] väliltä [m1] – [M1] välille [m2] – [M2]","_sign of [A]":"luvun [A] etumerkki","_true [OPERATOR] [NUM]":"tosi [OPERATOR] [NUM]","_trunc of [A] with [B] digits after dot":"katkaise [A] [B]. pisteen jälkeisen merkin kohdalta"},"it":{"_Math":"Matematica","_[A] exactly contains [B]?":"[A] contiene sequenza [B]","_clamp [A] between [B] and [C]":"vincola [A] tra [B] e [C]","_is float [A]?":"[A] virgola mobile","_is int [A]?":"[A] intero","_is number [A]?":"[A]numero","_is safe number [A]?":"[A] numero primo sicuro","_log of [A] with base [B]":"log di [A] con base [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"mappa [A] da range [m1] - [M1] a range [m2] - [M2]","_sign of [A]":"segno di [A]","_true [OPERATOR] [NUM]":"valore reale di [OPERATOR] di [NUM]","_trunc of [A] with [B] digits after dot":"tronca [A] con [B] cifre dopo la virgola"},"ja":{"_Math":"数学","_[A] exactly contains [B]?":"[A]が確かに[B]を含んでいる","_clamp [A] between [B] and [C]":"[A]を[B]から[C]までで表す","_is float [A]?":"[A]が小数","_is int [A]?":"[A]が整数","_is number [A]?":"[A]が数字","_is safe number [A]?":"[A]が安全な数字","_log of [A] with base [B]":"底を[B]とする[A]の対数","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"[A]の[m1]から[M1]までの範囲を[m2]から[M2]までの範囲にする"},"ko":{"_Math":"수학","_[A] exactly contains [B]?":"[A]이(가) [B]을(를) 정확히 포함하는가?","_clamp [A] between [B] and [C]":"[A] 값을 [B]부터 [C]까지 범위로 제한","_is float [A]?":"[A]이(가) 부동소수점인가?","_is int [A]?":"[A]이(가) 정수인가?","_is number [A]?":"[A](이)가 숫자인가?","_is safe number [A]?":"[A]이(가) 안전한 숫자인가?","_log of [A] with base [B]":"밑이 [B]인 log [A]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"[A] 값의 [m1] - [M1] 범위를 [m2] - [M2] 범위에 대응","_trunc of [A] with [B] digits after dot":"[A]을(를) 소숫점 [B]자리 이후로 버림"},"nb":{"_Math":"Matte"},"nl":{"_Math":"Wiskunde"},"ru":{"_Math":"Математика","_[A] exactly contains [B]?":"[A] содержит именно [B]?","_clamp [A] between [B] and [C]":"зажать [A] между[B] и [C]","_is float [A]?":"[A] число?","_is int [A]?":"[A] округлённое число?","_is number [A]?":"[A] цифра?","_is safe number [A]?":"[A] безопасное число?","_log of [A] with base [B]":"логарифм [A] с основанием [B]","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"карта [A] из расстояния [m1] - [M1] до расстояния [m2] - [M2]","_sign of [A]":"знак [A]","_true [OPERATOR] [NUM]":"правда [OPERATOR] [NUM] ","_trunc of [A] with [B] digits after dot":"усечение [A] с [B] цифрами после точки"},"uk":{"_Math":"Математика"},"zh-cn":{"_Math":"数学","_[A] exactly contains [B]?":"[A]真的包含 [B]？","_clamp [A] between [B] and [C]":"将[A]限制在[B]到[C]之间","_is float [A]?":"[A]是小数？","_is int [A]?":"[A]是整数？","_is number [A]?":"[A]是数字？","_is safe number [A]?":"[A]可被精确表示？","_log of [A] with base [B]":"log[A]以[B]为底","_map [A] from range [m1] - [M1] to range [m2] - [M2]":"将[A]从范围[m1]-[M1]映射到范围[m2]-[M2]","_sign of [A]":"[A]的函数符号","_true [OPERATOR] [NUM]":"精确[OPERATOR][NUM]","_trunc of [A] with [B] digits after dot":"[A]保留[B]位小数 "}});/* end generated l10n code */((Scratch) => {
   "use strict";
 
   const icon =
@@ -115,23 +115,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         menuIconURI: icon,
 
         blocks: [
-          /* eslint-disable extension/should-translate */
-          {
-            opcode: "exponent_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "[A] ^ [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "",
-              },
-              B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "",
-              },
-            },
-            extensions: ["colours_operators"],
-          },
           {
             opcode: "root_block",
             blockType: Scratch.BlockType.REPORTER,
@@ -161,54 +144,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             extensions: ["colours_operators"],
           },
           "---",
-          {
-            opcode: "more_or_equal_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] ≥ [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "",
-              },
-              B: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 50,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "less_or_equal_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] ≤ [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "",
-              },
-              B: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 50,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "not_equal_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] ≠ [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "",
-              },
-              B: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: 50,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
           {
             opcode: "exactly_equal_block",
             blockType: Scratch.BlockType.BOOLEAN,
@@ -316,64 +251,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           "---",
           {
-            opcode: "nand_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] nand [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-              B: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "nor_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] nor [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-              B: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "xor_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] xor [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-              B: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "xnor_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "[A] xnor [B]",
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-              B: {
-                type: Scratch.ArgumentType.BOOLEAN,
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          /* eslint-enable extension/should-translate */
-          "---",
-          {
             opcode: "exactly_cont_block",
             blockType: Scratch.BlockType.BOOLEAN,
             text: Scratch.translate("[A] exactly contains [B]?"),
@@ -469,35 +346,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             extensions: ["colours_operators"],
           },
-          {
-            opcode: "trunc_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("trunc of [A]"),
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "",
-              },
-            },
-            extensions: ["colours_operators"],
-          },
-          "---",
-          {
-            opcode: "is_multiple_of_block",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("[A] is multiple of [B]?"),
-            arguments: {
-              A: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "",
-              },
-              B: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "",
-              },
-            },
-            extensions: ["colours_operators"],
-          },
           "---",
           {
             opcode: "log_with_base_block",
@@ -530,27 +378,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             extensions: ["colours_operators"],
           },
-          "---",
-          /* eslint-disable extension/should-translate */
-          {
-            opcode: "pi_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "𝜋",
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "e_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "𝘦",
-            extensions: ["colours_operators"],
-          },
-          {
-            opcode: "infinity_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "∞",
-            extensions: ["colours_operators"],
-          },
-          /* eslint-enable extension/should-translate */
           "---",
           {
             opcode: "is_safe_number_block",
@@ -611,23 +438,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       };
     }
 
-    exponent_block({ A, B }) {
-      return Math.pow(cast.toNumber(A), cast.toNumber(B));
-    }
     root_block({ A, B }) {
       return Math.pow(cast.toNumber(B), 1 / cast.toNumber(A));
     }
     negative_block({ A }) {
       return 0 - cast.toNumber(A);
-    }
-    more_or_equal_block({ A, B }) {
-      return cast.compare(A, B) >= 0;
-    }
-    less_or_equal_block({ A, B }) {
-      return cast.compare(A, B) <= 0;
-    }
-    not_equal_block({ A, B }) {
-      return cast.compare(A, B) !== 0;
     }
     exactly_equal_block({ A, B }) {
       return exactlyCompare(A, B) === 0;
@@ -642,18 +457,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     not_almost_equal_block({ A, B }) {
       const c = cast.compare(A, B);
       return !(c <= 0.5 && c >= -0.5);
-    }
-    nand_block({ A, B }) {
-      return !(cast.toBoolean(A) && cast.toBoolean(B));
-    }
-    nor_block({ A, B }) {
-      return !(cast.toBoolean(A) || cast.toBoolean(B));
-    }
-    xor_block({ A, B }) {
-      return cast.toBoolean(A) !== cast.toBoolean(B);
-    }
-    xnor_block({ A, B }) {
-      return cast.toBoolean(A) === cast.toBoolean(B);
     }
     between_or_equal({ A, B, C }) {
       return cast.compare(A, B) <= 0 && cast.compare(B, C) <= 0;
@@ -695,12 +498,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
       return Math.trunc(cast.toNumber(A));
     }
-    trunc_block({ A }) {
-      return Math.trunc(cast.toNumber(A));
-    }
-    is_multiple_of_block({ A, B }) {
-      return cast.toNumber(A) % cast.toNumber(B) === 0;
-    }
     log_with_base_block({ A, B }) {
       return Math.log(cast.toNumber(A)) / Math.log(cast.toNumber(B));
     }
@@ -723,15 +520,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         default:
           return 0;
       }
-    }
-    pi_block() {
-      return Math.PI;
-    }
-    e_block() {
-      return Math.E;
-    }
-    infinity_block() {
-      return Infinity;
     }
     is_safe_number_block({ A }) {
       return Number.isSafeInteger(cast.toNumber(A));

@@ -464,11 +464,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             text: Scratch.translate("average loudness")
           },
           {
-            opcode: "getSpriteName",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("my sprite name")
-          },
-          {
             opcode: "allLayers",
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("max sprite layers")
@@ -997,9 +992,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return Math.round((sum / loudnessCache.length) * 100) / 100;
     }
 
-    getSpriteName(_, util) {
-      return util.target.getName();
-    }
 
     allLayers() {
       return render._drawList.length - 1;

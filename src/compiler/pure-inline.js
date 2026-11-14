@@ -18,10 +18,6 @@
  * Switch (tests only): runtime.pmNoPureInline puts every block back on the direct call.
  */
 
-const cmpOp = (a, x, y, op) => [`(pmiCompare(${a.cmp(x)}, ${a.cmp(y)}) ${op} 0)`, 'boolean'];
-// Cast.compare(a, b) <op> 0 for two numbers that are never NaN is a <op> b (equal infinities compare as 0)
-const numCmpOp = (a, x, y, op) => (a.knownNumber(x) && a.knownNumber(y) ?
-    [`(${a.raw(x)} ${op} ${a.raw(y)})`, 'boolean'] : cmpOp(a, x, y, op));
 const call = (helper, args, type) => [`${helper}(${args.join(', ')})`, type];
 const fixedText = (a, name) => {
     const fixed = a.fixed(name);
@@ -45,21 +41,13 @@ const BLOCKS = {
     Bitwise_bitwiseNot: {order: ['CENTRAL'], js: a => [`(~${a.raw('CENTRAL')})`, 'int']},
 
     // TurboWarp "True Fantom Math"
-    truefantommath_exponent_block: {order: ['A', 'B'], js: a => [`Math.pow(${a.num('A')}, ${a.num('B')})`, 'number']},
     truefantommath_root_block: {order: ['A', 'B'], js: a => call('pmiRootOf', [a.num('A'), a.num('B')], 'number')},
     truefantommath_negative_block: {order: ['A'], js: a => [`(0 - ${a.num('A')})`, 'number']},
-    truefantommath_more_or_equal_block: {order: ['A', 'B'], js: a => cmpOp(a, 'A', 'B', '>=')},
-    truefantommath_less_or_equal_block: {order: ['A', 'B'], js: a => cmpOp(a, 'A', 'B', '<=')},
-    truefantommath_not_equal_block: {order: ['A', 'B'], js: a => cmpOp(a, 'A', 'B', '!==')},
     truefantommath_exactly_equal_block: {order: ['A', 'B'], js: a => [`(pmiExactCompare(${a.cmp('A')}, ${a.cmp('B')}) === 0)`, 'boolean']},
     truefantommath_not_exactly_equal_block: {order: ['A', 'B'], js: a => [`(pmiExactCompare(${a.cmp('A')}, ${a.cmp('B')}) !== 0)`, 'boolean']},
     truefantommath_almost_equal_block: {order: ['A', 'B'], js: a => call('pmiAlmostEqual', [a.cmp('A'), a.cmp('B')], 'boolean')},
     truefantommath_not_almost_equal_block: {order: ['A', 'B'], js: a => [`!pmiAlmostEqual(${a.cmp('A')}, ${a.cmp('B')})`, 'boolean']},
     // (& and | instead of && and ||: both inputs are always worked out, as for the call)
-    truefantommath_nand_block: {order: ['A', 'B'], js: a => [`!(${a.bool('A')} & ${a.bool('B')})`, 'boolean']},
-    truefantommath_nor_block: {order: ['A', 'B'], js: a => [`!(${a.bool('A')} | ${a.bool('B')})`, 'boolean']},
-    truefantommath_xor_block: {order: ['A', 'B'], js: a => [`(${a.bool('A')} !== ${a.bool('B')})`, 'boolean']},
-    truefantommath_xnor_block: {order: ['A', 'B'], js: a => [`(${a.bool('A')} === ${a.bool('B')})`, 'boolean']},
     truefantommath_between_or_equal: {order: ['A', 'B', 'C'], js: a => call('pmiBetweenOrEqual', [a.raw('A'), a.raw('B'), a.raw('C')], 'boolean')},
     truefantommath_between: {order: ['A', 'B', 'C'], js: a => call('pmiBetweenOnly', [a.raw('A'), a.raw('B'), a.raw('C')], 'boolean')},
     truefantommath_exactly_cont_block: {order: ['A', 'B'], js: a => [`${a.str('A')}.includes(${a.str('B')})`, 'boolean']},
@@ -69,8 +57,6 @@ const BLOCKS = {
     truefantommath_scale_block: {order: ['A', 'm1', 'M1', 'm2', 'M2'],
         js: a => call('pmiScale', [a.num('A'), a.num('m1'), a.num('M1'), a.num('m2'), a.num('M2')], 'number')},
     truefantommath_trunc2_block: {order: ['A', 'B'], js: a => call('pmiTruncTo', [a.num('A'), a.num('B')], 'number')},
-    truefantommath_trunc_block: {order: ['A'], js: a => [`Math.trunc(${a.num('A')})`, 'number']},
-    truefantommath_is_multiple_of_block: {order: ['A', 'B'], js: a => [`(${a.num('A')} % ${a.num('B')} === 0)`, 'boolean']},
     truefantommath_log_with_base_block: {order: ['A', 'B'], js: a => [`(Math.log(${a.num('A')}) / Math.log(${a.num('B')}))`, 'number']},
     truefantommath_true_math_op: {order: ['OPERATOR', 'NUM'], js: a => {
         const operator = fixedText(a, 'OPERATOR');
@@ -86,13 +72,8 @@ const BLOCKS = {
     truefantommath_is_float_block: {order: ['A'], js: a => call('pmiIsFraction', [a.raw('A')], 'boolean')},
 
     // TurboWarp "Utilities"
-    utilities_isExactly: {order: ['A', 'B'], js: a => [`(${a.raw('A')} === ${a.raw('B')})`, 'boolean']},
-    utilities_isLessOrEqual: {order: ['A', 'B'], js: a => numCmpOp(a, 'A', 'B', '<=')},
-    utilities_isMoreOrEqual: {order: ['A', 'B'], js: a => numCmpOp(a, 'A', 'B', '>=')},
-    utilities_exponent: {order: ['A', 'B'], js: a => [`Math.pow(${a.num('A')}, ${a.num('B')})`, 'number']},
     utilities_ternaryOperator: {order: ['A', 'B', 'C'], js: a => call('pmiChoose', [a.raw('A'), a.raw('B'), a.raw('C')], 'unknown')},
     utilities_letters: {order: ['START', 'END', 'STRING'], js: a => call('pmiLettersClamped', [a.raw('START'), a.raw('END'), a.str('STRING')], 'unknown')},
-    utilities_clamp: {order: ['INPUT', 'MIN', 'MAX'], js: a => call('pmiClampEitherWay', [a.num('INPUT'), a.num('MIN'), a.num('MAX')], 'number')},
     utilities_stringToBoolean: {order: ['STRING'], js: a => [a.bool('STRING'), 'boolean']},
 
     // TurboWarp "Lily's utils" (lmsutilsblocks)
@@ -104,15 +85,10 @@ const BLOCKS = {
     lmsutilsblocks_itemOfFromString: {order: ['INPUTA', 'INPUTB', 'INPUTC'], js: a => call('pmiItemOfSplit', [a.num('INPUTA'), a.str('INPUTB'), a.raw('INPUTC')], 'unknown')},
     lmsutilsblocks_stringToUpperCase: {order: ['STRING'], js: a => [`${a.str('STRING')}.toUpperCase()`, 'unknown']},
     lmsutilsblocks_stringToLowerCase: {order: ['STRING'], js: a => [`${a.str('STRING')}.toLowerCase()`, 'unknown']},
-    lmsutilsblocks_reverseString: {order: ['STRING'], js: a => [`${a.str('STRING')}.split("").reverse().join("")`, 'unknown']},
     lmsutilsblocks_norBoolean: {order: ['INPUTA', 'INPUTB'], js: a => [`!(${a.raw('INPUTA')} | ${a.raw('INPUTB')})`, 'boolean']},
     lmsutilsblocks_xorBoolean: {order: ['INPUTA', 'INPUTB'], js: a => [`(${a.raw('INPUTA')} !== ${a.raw('INPUTB')})`, 'boolean']},
     lmsutilsblocks_xnorBoolean: {order: ['INPUTA', 'INPUTB'], js: a => [`(${a.raw('INPUTA')} === ${a.raw('INPUTB')})`, 'boolean']},
     lmsutilsblocks_nandBoolean: {order: ['INPUTA', 'INPUTB'], js: a => [`!(${a.raw('INPUTA')} & ${a.raw('INPUTB')})`, 'boolean']},
-    lmsutilsblocks_equalsExactly: {order: ['ONE', 'TWO'], js: a => [`(${a.raw('ONE')} === ${a.raw('TWO')})`, 'boolean']},
-    lmsutilsblocks_notEqualTo: {order: ['INPUTA', 'INPUTB'], js: a => cmpOp(a, 'INPUTA', 'INPUTB', '!==')},
-    lmsutilsblocks_moreThanEqual: {order: ['INPUTA', 'INPUTB'], js: a => numCmpOp(a, 'INPUTA', 'INPUTB', '>=')},
-    lmsutilsblocks_lessThanEqual: {order: ['INPUTA', 'INPUTB'], js: a => numCmpOp(a, 'INPUTA', 'INPUTB', '<=')},
     lmsutilsblocks_stringCheckBoolean: {order: ['INPUT', 'DROPDOWN'], js: a => {
         const check = fixedText(a, 'DROPDOWN');
         if (check === 'text') return [`isNaN(${a.raw('INPUT')})`, 'boolean'];
@@ -123,8 +99,6 @@ const BLOCKS = {
         return [`(${a.raw('INPUT')}, false)`, 'boolean'];
     }},
     lmsutilsblocks_negativeReporter: {order: ['INPUT'], js: a => [`(${a.num('INPUT')} * -1)`, 'number']},
-    lmsutilsblocks_exponentBlock: {order: ['INPUTA', 'INPUTB'], js: a => [`Math.pow(${a.num('INPUTA')}, ${a.num('INPUTB')})`, 'number']},
-    lmsutilsblocks_rootBlock: {order: ['INPUTA', 'INPUTB'], js: a => call('pmiRootOf', [a.num('INPUTA'), a.num('INPUTB')], 'number')},
     lmsutilsblocks_normaliseValue: {order: ['INPUT'], js: a => call('pmiUnitOrZeroText', [a.num('INPUT')], 'unknown')},
     lmsutilsblocks_clampNumber: {order: ['INPUTA', 'INPUTB', 'INPUTC'],
         js: a => [`Math.min(Math.max(${a.num('INPUTA')}, ${a.num('INPUTB')}), ${a.num('INPUTC')})`, 'number']},

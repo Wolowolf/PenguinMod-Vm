@@ -1323,7 +1323,6 @@ runtimeFunctions.pmxTextBefore = `const pmxTextBefore = (text, base) => {
  * parameters are in the block's input order. A helper cannot call another one (compiled code gets only the helpers
  * its source names), so the shared parts are written out in each.
  */
-runtimeFunctions.pmiCompare = `const pmiCompare = globalState.Cast.compare`;
 runtimeFunctions.pmiBitsToNumber = `const pmiBitsToNumber = bits => (/^-?[01]+$/.test(bits) ? parseInt(bits, 2) || 0 : 0)`;
 runtimeFunctions.pmiRotateRight = `const pmiRotateRight = (number, k) => (number >>> k) | (number << (32 - k))`;
 runtimeFunctions.pmiRotateLeft = `const pmiRotateLeft = (number, k) => (number << k) | (number >>> (32 - k))`;
@@ -1391,10 +1390,6 @@ runtimeFunctions.pmiIsFraction = `const pmiIsFraction = val => {
 }`;
 runtimeFunctions.pmiChoose = `const pmiChoose = (condition, a, b) => (condition ? a : b)`;
 runtimeFunctions.pmiLettersClamped = `const pmiLettersClamped = (start, end, str) => str.slice(Math.max(1, start) - 1, Math.min(str.length, end))`;
-runtimeFunctions.pmiClampEitherWay = `const pmiClampEitherWay = (value, min, max) => {
-    if (min > max) return Math.min(Math.max(value, max), min);
-    return Math.min(Math.max(value, min), max);
-}`;
 runtimeFunctions.pmiSliceFromOne = `const pmiSliceFromOne = (from, to, string) => string.slice(from - 1, to)`;
 runtimeFunctions.pmiReplaceIn = `const pmiReplaceIn = (find, replace, string) => string.replace(find, replace)`;
 runtimeFunctions.pmiFindFromOne = `const pmiFindFromOne = (find, string) => (string.includes(find) ? string.indexOf(find) + 1 : "")`;
