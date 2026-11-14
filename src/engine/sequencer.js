@@ -287,7 +287,12 @@ class Sequencer {
             if (thread.target === null) {
                 this.retireThread(thread);
             } else {
-                execute(this, thread);
+                // Desktop fork (section 261): a block inside an interpreted try / catch that throws starts its catch branch
+                try {
+                    execute(this, thread);
+                } catch (error) {
+                    if (!this.pmCatchError(thread, error)) throw error;
+                }
             }
             thread.blockGlowInFrame = currentBlockId;
             // If the thread has yielded or is waiting, yield to other threads.
@@ -456,6 +461,32 @@ class Sequencer {
             value: String(error)
         });
         this.retireThread(thread);
+    }
+
+    /**
+     * Desktop fork (section 261): a block of an interpreted script threw. If it ran inside the try branch of a try / catch
+     * (its frame marked by scratch3_control's tryCatch), the frames above that one are dropped, the error is kept for the
+     * "error" reporter and the catch branch is pushed; stepThread then goes on with it (or, for an empty catch branch,
+     * with the block after the try / catch), like the compiled block's JavaScript catch.
+     * @param {!Thread} thread The interpreted thread whose block threw.
+     * @param {*} error What it threw.
+     * @return {boolean} true if a try / catch took the error.
+     */
+    pmCatchError (thread, error) {
+        const stack = thread.stack;
+        const frames = thread.stackFrames;
+        for (let i = stack.length - 1; i >= 0; i--) {
+            const context = frames[i] && frames[i].executionContext;
+            if (!context || context.pmTry !== 1) continue;
+            while (stack.length > i + 1) thread.popStack();
+            context.pmTry = 2;
+            this.runtime.ext_scratch3_control._error = String(error);
+            thread.status = Thread.STATUS_RUNNING;
+            thread.justReported = null;
+            thread.pushStack(thread.target.blocks.getBranch(stack[i], 2) || null);
+            return true;
+        }
+        return false;
     }
 
     retireThread (thread) {

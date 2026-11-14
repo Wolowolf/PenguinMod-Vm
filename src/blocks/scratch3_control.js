@@ -55,7 +55,11 @@ class Scratch3ControlBlocks {
             control_backToGreenFlag: this.backToGreenFlag,
             control_exitLoop: this.exitLoop,
             control_continueLoop: this.continueLoop,
-            control_if_return_else_return: this.if_return_else_return
+            control_if_return_else_return: this.if_return_else_return,
+            // Desktop fork (section 261): these three had only compiled code; interpreted scripts stopped at them
+            control_try_catch: this.tryCatch,
+            control_throw_error: this.throwError,
+            control_error: this.getError
         };
     }
 
@@ -87,6 +91,27 @@ class Scratch3ControlBlocks {
             }
         }
         this.runtime.startHats("event_whenflagclicked");
+    }
+
+    /**
+     * Desktop fork (section 261): try / catch for interpreted scripts. The try branch runs; this frame is marked, so when a
+     * block inside it (also in a custom block it calls) throws, Sequencer.pmCatchError drops the frames above this one,
+     * stores the error for the "error" reporter and starts the catch branch, as the compiled block's JavaScript try does.
+     * An error in the catch branch goes to an outer try / catch, or stops the script.
+     * @param {object} args Block arguments (none).
+     * @param {BlockUtility} util Utility for the running block.
+     */
+    tryCatch (args, util) {
+        util.stackFrame.pmTry = 1;
+        util.startBranch(1, false);
+    }
+
+    throwError (args) {
+        throw Cast.toString(args.ERROR);
+    }
+
+    getError () {
+        return this._error;
     }
 
     if_return_else_return (args) {
