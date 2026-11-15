@@ -2,11 +2,18 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's encoding.js as its build makes it, moved into
 // the VM as a built-in extension. The code is the gallery file unchanged except for section 154 (below)
 // and section 259: hash, character code and random text blocks removed (Cryptography, built-in and Random Tools blocks
-// do the same; MD5 moved to Cryptography).
+// do the same; MD5 moved to Cryptography); extension merges: HTML Encode (an encode / decode option), LZ Compress and
+// Prism's deflate (compress / decompress) and Base (convert, check) moved in, marked "Desktop fork (extension merges)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (extension merges): the libraries of the merged-in LZ Compress and Prism blocks, outside the wrapped
+// gallery code (which hides require)
+const LZString = require('lz-string');
+const deflateBytes = require('./encoding-deflate');
+const inflateBytes = require('./encoding-inflate');
+const {validateArray} = require('../../util/json-block-utilities');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Encoding
 // ID: Encoding
@@ -159,6 +166,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   // End of the MPL-2.0 part.
 
+  // Desktop fork (extension merges): HTML Encode's escaping, and its reverse for decode
+  const htmlEntities = { "&": "&amp;", '"': "&quot;", "'": "&apos;", ">": "&gt;", "<": "&lt;" };
+  const htmlCharacters = {};
+  for (const [character, entity] of Object.entries(htmlEntities)) htmlCharacters[entity] = character;
+  // Desktop fork (extension merges): Base's bases 2 to 36 and their digits
+  const bases = Array.from({ length: 35 }, (_, i) => String(i + 2));
+  const baseChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   class Encoding {
     getInfo() {
       return {
@@ -202,6 +216,102 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
             },
           },
+          "---",
+          // Desktop fork (extension merges): from LZ Compress
+          {
+            opcode: "compress",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "compress [string] in [code]",
+            arguments: {
+              string: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Hello world!",
+              },
+              code: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "compress",
+                defaultValue: "Base64",
+              },
+            },
+          },
+          {
+            opcode: "decompress",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "decompress [string] with [code]",
+            arguments: {
+              string: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: LZString.compressToBase64("Hello world!"),
+              },
+              code: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "compress",
+                defaultValue: "Base64",
+              },
+            },
+          },
+          // Desktop fork (extension merges): from Prism
+          {
+            opcode: "deflate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "compress byte list [bytes] with deflate",
+            arguments: {
+              bytes: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[72,101,108,108,111]",
+              },
+            },
+          },
+          {
+            opcode: "inflate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "decompress byte list [bytes] with deflate",
+            arguments: {
+              bytes: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "[243,72,205,201,201,7,0]",
+              },
+            },
+          },
+          "---",
+          // Desktop fork (extension merges): from Base
+          {
+            opcode: "convertBase",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "convert [number] from base [from] to base [to]",
+            arguments: {
+              number: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "255",
+              },
+              from: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "base",
+                defaultValue: "10",
+              },
+              to: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "base",
+                defaultValue: "16",
+              },
+            },
+          },
+          {
+            opcode: "isBase",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "is [number] a base [base] number?",
+            arguments: {
+              number: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "FF",
+              },
+              base: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "base",
+                defaultValue: "16",
+              },
+            },
+          },
         ],
         menus: {
           encode: {
@@ -212,12 +322,43 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 value: "Base64",
               },
               "URL",
+              // Desktop fork (extension merges): from HTML Encode
+              {
+                text: "HTML-safe text",
+                value: "HTML",
+              },
               {
                 text: Scratch.translate("Numbers (cloud variables)"),
                 value: "Numbers",
               },
             ],
-          }
+          },
+          compress: {
+            acceptReporters: true,
+            items: [
+              {
+                text: "Base 64",
+                value: "Base64",
+              },
+              "URL",
+              {
+                text: "byte list",
+                value: "bytes",
+              },
+              {
+                text: "UTF-16 text",
+                value: "UTF16",
+              },
+              {
+                text: "raw text",
+                value: "Raw",
+              },
+            ],
+          },
+          base: {
+            acceptReporters: true,
+            items: bases,
+          },
         },
       };
     }
@@ -228,6 +369,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           return this._btoa(string);
         case "URL":
           return encodeURIComponent(string);
+        case "HTML":
+          return string.replace(/["'&<>]/g, (a) => htmlEntities[a]);
         case "Numbers":
           return encodeNumbers(string);
       }
@@ -245,10 +388,76 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           }
         case "URL":
           return decodeURIComponent(string);
+        case "HTML":
+          return string.replace(/&(?:amp|quot|apos|gt|lt);/g, (a) => htmlCharacters[a]);
         case "Numbers":
           return decodeNumbers(string);
       }
       return "";
+    }
+    // Desktop fork (extension merges): LZ Compress's blocks (lz-string); a byte list is a JSON array of bytes
+    compress({ string, code }) {
+      const text = Scratch.Cast.toString(string);
+      switch (code) {
+        case "Raw":
+          return LZString.compress(text);
+        case "Base64":
+          return LZString.compressToBase64(text);
+        case "URL":
+          return LZString.compressToEncodedURIComponent(text);
+        case "bytes":
+          return JSON.stringify(Array.from(LZString.compressToUint8Array(text)));
+        case "UTF16":
+          return LZString.compressToUTF16(text);
+      }
+      return "";
+    }
+    decompress({ string, code }) {
+      try {
+        const text = Scratch.Cast.toString(string);
+        switch (code) {
+          case "Raw":
+            return LZString.decompress(text) || "";
+          case "Base64":
+            return LZString.decompressFromBase64(text) || "";
+          case "URL":
+            return LZString.decompressFromEncodedURIComponent(text) || "";
+          case "bytes": {
+            const array = validateArray(text);
+            if (!array.isValid) return "";
+            return LZString.decompressFromUint8Array(Uint8Array.from(array.array)) || "";
+          }
+          case "UTF16":
+            return LZString.decompressFromUTF16(text) || "";
+        }
+      } catch (e) {
+        console.error("decompress error", e);
+      }
+      return "";
+    }
+    // Desktop fork (extension merges): Prism's deflate / inflate (JS Deflate by BeatGammit)
+    deflate({ bytes }) {
+      return JSON.stringify(deflateBytes(validateArray(bytes).array));
+    }
+    inflate({ bytes }) {
+      return JSON.stringify(inflateBytes(validateArray(bytes).array));
+    }
+    // Desktop fork (extension merges): Base's blocks
+    convertBase({ number, from, to }) {
+      const text = Scratch.Cast.toString(number);
+      const fromBase = Scratch.Cast.toString(from);
+      const toBase = Scratch.Cast.toString(to);
+      if (!bases.includes(fromBase) || !bases.includes(toBase)) return "0";
+      if (!new RegExp("^[" + baseChars.substring(0, Number(fromBase)) + "]+$").test(text)) return "0";
+      // "0" because toString() always answers text
+      return parseInt(text, Number(fromBase)).toString(Number(toBase)).toUpperCase() || "0";
+    }
+    isBase({ number, base }) {
+      const baseText = Scratch.Cast.toString(base);
+      if (!bases.includes(baseText)) return false;
+      return new RegExp("^[" + baseChars.substring(0, Number(baseText)) + "]+$").test(
+        Scratch.Cast.toString(number)
+      );
     }
     _btoa(unicode) {
       let bytes = new TextEncoder().encode(unicode);

@@ -1,6 +1,11 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Variables-Expanded.js, moved into
 // the VM as a built-in extension. The code is the gallery file, except: its variable lookup finds only variables, not a sprite's list of the same name (section 125, step 5e; marked "Desktop fork"); its button hat is checked only after a monitor button changed and every frame while one is down (`pmEdgeHat`; section 128, roadmap step 6b; marked "Desktop fork (section 128)").
+// Desktop fork (extension merges): TurboWarp's "Variable and list" (qxsck/var-and-list.js) and List Tools
+// (Lily/ListTools.js) are merged in as "Variables & Lists": their list and JSON blocks moved in with their code (blocks
+// that did the same as another one left out: by-name "value of" and "set", "value of list", "first index of", "set
+// items of list to"; "set variable to color" and the monitor color block, which the Custom styles addon covers, removed),
+// marked "Desktop fork (extension merges)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -21,6 +26,17 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const Cast = Scratch.Cast;
   const vm = Scratch.vm;
   const runtime = vm.runtime;
+  // Desktop fork (extension merges): List Tools' list lookup (the stage's lists first)
+  const getVarObjectFromName = function (name, util, type) {
+    const stageTarget = runtime.getTargetForStage();
+    const target = util.target;
+    let listObject = Object.create(null);
+
+    listObject = stageTarget.lookupVariableByNameAndType(name, type);
+    if (listObject) return listObject;
+    listObject = target.lookupVariableByNameAndType(name, type);
+    if (listObject) return listObject;
+  };
   const isPM = Scratch.extensions.isPenguinMod;
 
   const menuIconURI =
@@ -62,71 +78,45 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     getInfo() {
       return {
         id: "DICandSPmonitorsPlus",
-        name: "Variables Expanded",
+        name: "Variables & Lists",
         color1: "#FF8C1A",
         color2: "#e67e17",
         color3: "#cc7015",
         menuIconURI,
         blocks: [
+          { blockType: Scratch.BlockType.LABEL, text: "Variables" },
           {
             opcode: "exists",
             blockType: Scratch.BlockType.BOOLEAN,
-            text: "does [VARIABLE] exist?",
+            text: "does variable [VARIABLE] exist?",
             arguments: {
               VARIABLE: { type: Scratch.ArgumentType.STRING, defaultValue: "my variable" }
             },
           },
           {
-            opcode: "isShowing",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: "is [VARIABLE] showing?",
+            opcode: "reportVal",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "value of variable [VARIABLE]",
             arguments: {
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
           {
-            opcode: "setVis",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "[VIS] variable [VAR]",
-            arguments: {
-              VAR: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
-              VIS: { type: Scratch.ArgumentType.STRING, menu: "VISIBLE" }
-            },
-          },
-          "---",
-          {
             opcode: "setString",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set [VARIABLE] to [STRING]",
+            text: "set variable [VARIABLE] to [STRING]",
             arguments: {
               STRING: { type: Scratch.ArgumentType.STRING, defaultValue: 0 },
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
           {
-            opcode: "setColor",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set [VARIABLE] to [COLOR]",
-            arguments: {
-              COLOR: { type: Scratch.ArgumentType.COLOR },
-              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
-            },
-          },
-          {
             opcode: "swapVars",
             blockType: Scratch.BlockType.COMMAND,
-            text: "swap [VAR1] with [VAR2]",
+            text: "swap variables [VAR1] and [VAR2]",
             arguments: {
               VAR1: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
               VAR2: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
-            },
-          },
-          {
-            opcode: "reportVal",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "value of [VARIABLE]",
-            arguments: {
-              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
           "---",
@@ -147,11 +137,223 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               VARIABLE: { type: Scratch.ArgumentType.STRING, defaultValue: "my variable 2" }
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Positioning" },
+          // Desktop fork (extension merges): from TurboWarp's "Variable and list"
+          {
+            opcode: "seriVarsToJson",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "all variables starting with [START] as JSON",
+            arguments: {
+              START: { type: Scratch.ArgumentType.STRING, defaultValue: "my " }
+            },
+          },
+          // Desktop fork (extension merges): from TurboWarp's "Variable and list" and List Tools
+          { blockType: Scratch.BlockType.LABEL, text: "Lists" },
+          {
+            opcode: "addValueInList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "add [VALUE] to list [LIST]",
+            arguments: {
+              VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "deleteOfList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "delete item [INDEX] of list [LIST]",
+            arguments: {
+              INDEX: { type: Scratch.ArgumentType.STRING, defaultValue: "1" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "deleteItems",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "delete items [NUM1] to [NUM2] of list [LIST]",
+            arguments: {
+              NUM1: { type: Scratch.ArgumentType.NUMBER, defaultValue: "1" },
+              NUM2: { type: Scratch.ArgumentType.NUMBER, defaultValue: "3" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "deleteAllOfItem",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "delete all [ITEM] in list [LIST]",
+            arguments: {
+              ITEM: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "clearList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "delete all of list [LIST]",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "replaceOfList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "replace item [INDEX] of list [LIST] with [VALUE]",
+            arguments: {
+              INDEX: { type: Scratch.ArgumentType.STRING, defaultValue: "1" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" }
+            },
+          },
+          {
+            opcode: "replaceAllOfItem",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "replace all [ITEM1] with [ITEM2] in list [LIST]",
+            arguments: {
+              ITEM1: { type: Scratch.ArgumentType.STRING, defaultValue: "apple" },
+              ITEM2: { type: Scratch.ArgumentType.STRING, defaultValue: "banana" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          "---",
+          {
+            opcode: "getValueOfList",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "item [INDEX] of list [LIST]",
+            arguments: {
+              INDEX: { type: Scratch.ArgumentType.STRING, defaultValue: "1" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "itemIndex",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "index of [INDEX] [ITEM] in list [LIST]",
+            arguments: {
+              INDEX: { type: Scratch.ArgumentType.STRING, menu: "indexType", defaultValue: "first" },
+              ITEM: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "getIndexesOfList",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "all indexes of [VALUE] in list [LIST]",
+            arguments: {
+              VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "timesItemAppears",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "# of times [ITEM] appears in list [LIST]",
+            arguments: {
+              ITEM: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" },
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "length",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "length of list [LIST]",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "listContains",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "list [LIST] contains [VALUE]?",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: "thing" }
+            },
+          },
+          {
+            opcode: "getListJoin",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "list [LIST] joined by [STRING]",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "," }
+            },
+          },
+          {
+            opcode: "seriListsToJson",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "all lists starting with [START] as JSON",
+            arguments: {
+              START: { type: Scratch.ArgumentType.STRING, defaultValue: "my " }
+            },
+          },
+          "---",
+          {
+            opcode: "orderIs",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "order of list [LIST] is [ORDER]?",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              ORDER: { type: Scratch.ArgumentType.STRING, menu: "orderTypeSort" }
+            },
+          },
+          {
+            opcode: "orderList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set order of list [LIST] to [ORDER]",
+            arguments: {
+              LIST: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              ORDER: { type: Scratch.ArgumentType.STRING, defaultValue: "reversed", menu: "orderType" }
+            },
+          },
+          {
+            opcode: "copyList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "copy list [LIST1] to list [LIST2]",
+            arguments: {
+              LIST1: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              LIST2: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "joinLists",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "add all items of list [LIST1] to list [LIST2]",
+            arguments: {
+              LIST1: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              LIST2: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          {
+            opcode: "repeatList",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "add list [LIST1] [NUM] times to list [LIST2]",
+            arguments: {
+              LIST1: { type: Scratch.ArgumentType.STRING, menu: "lists" },
+              NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: "3" },
+              LIST2: { type: Scratch.ArgumentType.STRING, menu: "lists" }
+            },
+          },
+          { blockType: Scratch.BlockType.LABEL, text: "Monitors" },
+          {
+            opcode: "setVis",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "[VIS] variable [VAR]",
+            arguments: {
+              VAR: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
+              VIS: { type: Scratch.ArgumentType.STRING, menu: "VISIBLE" }
+            },
+          },
+          {
+            opcode: "isShowing",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "is variable [VARIABLE] showing?",
+            arguments: {
+              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
+            },
+          },
           {
             opcode: "setPosition",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set position of [VARIABLE] to x: [X] y: [Y]",
+            text: "set position of [VARIABLE] monitor to x: [X] y: [Y]",
             arguments: {
               X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
@@ -161,13 +363,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "currentPos",
             blockType: Scratch.BlockType.REPORTER,
-            text: "current [POSITION] of [VARIABLE]",
+            text: "[POSITION] of [VARIABLE] monitor",
             arguments: {
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
               POSITION: { type: Scratch.ArgumentType.STRING, menu: "POSITIONS" }
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Variable Monitors" },
+          "---",
           {
             opcode: "setVariableToType",
             blockType: Scratch.BlockType.COMMAND,
@@ -185,11 +387,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Sliders" },
           {
             opcode: "setSliderMinMaxOfVaribleTo",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set slider min [MIN] and max [MAX] of [VARIABLE]",
+            text: "set slider min [MIN] and max [MAX] of [VARIABLE] monitor",
             arguments: {
               MIN: { type: Scratch.ArgumentType.NUMBER, defaultValue: -100 },
               MAX: { type: Scratch.ArgumentType.NUMBER, defaultValue: 100 },
@@ -199,13 +400,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "sliderMinMaxOfVarible",
             blockType: Scratch.BlockType.REPORTER,
-            text: "slider [MINMAX] of [VARIABLE]",
+            text: "slider [MINMAX] of [VARIABLE] monitor",
             arguments: {
               MINMAX: { type: Scratch.ArgumentType.STRING, menu: "sliderMenu" },
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Buttons" },
+          "---",
           {
             opcode: "whenButtonPressed",
             blockType: Scratch.BlockType.HAT,
@@ -226,11 +427,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               TYPE: { type: Scratch.ArgumentType.STRING, menu: "BUTTON_CLICK" }
             },
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Effects" },
+          "---",
           {
             opcode: "setDisplay",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set display name of [VARIABLE] to [NAME]",
+            text: "set display name of [VARIABLE] monitor to [NAME]",
             arguments: {
               NAME: { type: Scratch.ArgumentType.STRING, defaultValue: "my cooler variable" },
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
@@ -239,7 +440,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "setFont",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set font of [VARIABLE] to [FONT]",
+            text: "set font of [VARIABLE] monitor to [FONT]",
             arguments: {
               FONT: { type: Scratch.ArgumentType.STRING, menu: "allFonts" },
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
@@ -248,35 +449,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "setFontSize",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set font size of [VARIABLE] to [SIZE]",
+            text: "set font size of [VARIABLE] monitor to [SIZE]",
             arguments: {
               SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 15 },
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
             },
           },
           {
-            opcode: "setInpColor",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "set [THING] color of [VARIABLE] to [VALUE]",
-            arguments: {
-              VALUE: { type: Scratch.ArgumentType.COLOR },
-              THING: { type: Scratch.ArgumentType.STRING, menu: "elementMenu" },
-              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
-            },
-          },
-          "---",
-          {
-            opcode: "resetEffect",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "reset effects of [VARIABLE]",
-            arguments: {
-              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
-            },
-          },
-          {
             opcode: "setEffect",
             blockType: Scratch.BlockType.COMMAND,
-            text: "set [EFFECT] of [VARIABLE] to [AMOUNT]",
+            text: "set [EFFECT] of [VARIABLE] monitor to [AMOUNT]",
             arguments: {
               AMOUNT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 },
               EFFECT: { type: Scratch.ArgumentType.STRING, menu: "EFFECTS" },
@@ -286,15 +468,49 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             opcode: "currentEffect",
             blockType: Scratch.BlockType.REPORTER,
-            text: "current [EFFECT] of [VARIABLE]",
+            text: "[EFFECT] of [VARIABLE] monitor",
             arguments: {
               VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" },
               EFFECT: { type: Scratch.ArgumentType.STRING, menu: "EFFECTS" }
             },
           },
+          {
+            opcode: "resetEffect",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "reset effects of [VARIABLE] monitor",
+            arguments: {
+              VARIABLE: { type: Scratch.ArgumentType.STRING, menu: "variableMenu" }
+            },
+          },
         ],
         menus: {
           variableMenu: { acceptReporters: true, items: "getVariables" },
+          // Desktop fork (extension merges): from List Tools
+          lists: { acceptReporters: true, items: "_getLists" },
+          indexType: {
+            acceptReporters: true,
+            items: [
+              { text: "first", value: "first" },
+              { text: "last", value: "last" },
+              { text: "random", value: "random" },
+            ],
+          },
+          orderType: {
+            acceptReporters: false,
+            items: [
+              { text: "reversed", value: "reversed" },
+              { text: "ascending", value: "ascending" },
+              { text: "descending", value: "descending" },
+              { text: "randomized", value: "randomised" },
+            ],
+          },
+          orderTypeSort: {
+            acceptReporters: false,
+            items: [
+              { text: "ascending", value: "ascending" },
+              { text: "descending", value: "descending" },
+            ],
+          },
           allFonts: { acceptReporters: true, items: "getFonts" },
           sliderMenu: ["min", "max"],
           variableTypeCreate: ["globally", "for this sprite only"],
@@ -305,13 +521,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             acceptReporters: true,
             items: [
               "normal readout", "large readout", "slider",
-              "text", "number", "date", "month", "time", 
+              "text", "number", "date", "month", "time",
               "checkbox", "color", "button", "file", "image", "audio"
             ]
-          },
-          elementMenu: {
-            acceptReporters: true,
-            items: ["input", "border"]
           },
           EFFECTS: {
             acceptReporters: true,
@@ -580,10 +792,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const variable = util.target.lookupOrCreateVariable("", Cast.toString(args.VARIABLE));
       variable.value = args.STRING;
     }
-    setColor(args, util) {
-      const variable = util.target.lookupOrCreateVariable("", Cast.toString(args.VARIABLE));
-      variable.value = args.COLOR, util;
-    }
 
     swapVars(args, util) {
       const var1 = util.target.lookupOrCreateVariable("", Cast.toString(args.VAR1));
@@ -601,6 +809,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     makeVariable(args, util) {
       const name = Cast.toString(args.VARIABLE);
+      // Desktop fork (extension merges): no second variable with a name already in use ("set variable" makes missing
+      // ones): two of the same name made the editor drop blocks when it reloaded the workspace
+      if (this.findVariable(name, util)) return;
       if (args.TYPE === "for this sprite only") util.target.createVariable(this.generateId(), name, "", false);
       else runtime.createNewGlobalVariable(name, "");
       return this.refresh();
@@ -748,22 +959,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (varMonitor) varMonitor.style.fontSize = `${Cast.toNumber(args.SIZE)}px`;
     }
 
-    setInpColor(args, util) {
-      const varId = this.findVariable(args.VARIABLE, util);
-      const varMonitor = document.querySelector(`div[data-id="${varId}"][class*="monitor"]`);
-      if (!varMonitor) return;
-      let inputs = [
-        ...varMonitor.querySelectorAll("input"), ...varMonitor.querySelectorAll("img")
-      ];
-      const value = Cast.toString(args.VALUE);
-      if (args.THING === "input") {
-        varMonitor.style.accentColor = value;
-        Array.from(inputs).forEach(input => { input.style.background = value });
-      } else if (args.THING === "border") {
-        Array.from(inputs).forEach(input => { input.style.borderColor = value });
-      }
-    }
-
     resetEffect(args, util) {
       const varId = this.findVariable(args.VARIABLE, util);
       const varMonitor = document.querySelector(`div[data-id="${varId}"][class*="monitor"]`);
@@ -833,6 +1028,359 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         else if (setEffect.includes("scale")) return numericValue * 100;
         else return numericValue;
       } else { return defaultV }
+    }
+
+    // Desktop fork (extension merges): TurboWarp "Variable and list"'s blocks (by name; list values through
+    // pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf, section 125; random indexes from the runtime, section 155)
+    seriVarsToJson(args, util) {
+      const start = Scratch.Cast.toString(args.START);
+      const serialized = {};
+      for (const variable of Object.values(
+        util.runtime.getTargetForStage().variables
+      )) {
+        if (variable.type === "" && variable.name.startsWith(start)) {
+          serialized[variable.name.replace(start, "")] = variable.value;
+        }
+      }
+      for (const variable of Object.values(util.target.variables)) {
+        if (variable.type === "" && variable.name.startsWith(start)) {
+          serialized[variable.name.replace(start, "")] = variable.value;
+        }
+      }
+      return JSON.stringify(serialized);
+    }
+    getValueOfList(args, util) {
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (!variable) return 0;
+      const index = Scratch.Cast.toListIndex(
+        args.INDEX,
+        variable.pmGetValue().length,
+        false,
+        Scratch.vm.runtime
+      );
+      if (index === "INVALID") return "";
+      return variable.pmGetValue()[index - 1];
+    }
+    seriListsToJson(args, util) {
+      const start = Scratch.Cast.toString(args.START);
+      const serialized = {};
+      for (const variable of Object.values(
+        util.runtime.getTargetForStage().variables
+      )) {
+        if (variable.type === "list" && variable.name.startsWith(start)) {
+          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
+        }
+      }
+      for (const variable of Object.values(util.target.variables)) {
+        if (variable.type === "list" && variable.name.startsWith(start)) {
+          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
+        }
+      }
+      return JSON.stringify(serialized);
+    }
+    clearList(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (variable) {
+        variable.pmSetValue([]);
+      }
+    }
+    deleteOfList(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (variable) {
+        const index = Scratch.Cast.toListIndex(
+          args.INDEX,
+          variable.pmGetValue().length,
+          true,
+          Scratch.vm.runtime
+        );
+        if (index === "ALL") {
+          variable.pmSetValue([]);
+        } else if (index !== "INVALID") {
+          variable.pmGetValue().splice(index - 1, 1);
+          variable.pmItemsChanged();
+        }
+      }
+    }
+    addValueInList(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (variable) {
+        variable.pmGetValue().push(args.VALUE);
+        variable._monitorUpToDate = false;
+      }
+    }
+    replaceOfList(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (variable) {
+        const index = Scratch.Cast.toListIndex(
+          args.INDEX,
+          variable.pmGetValue().length,
+          false,
+          Scratch.vm.runtime
+        );
+        if (index !== "INVALID") {
+          variable.pmGetValue()[index - 1] = args.VALUE;
+          variable.pmItemsChanged();
+        }
+      }
+    }
+    getIndexesOfList(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      const value = args.VALUE;
+      if (variable) {
+        var indexes = [];
+        for (var i = 0; i < variable.pmGetValue().length; i++) {
+          if (Scratch.Cast.compare(variable.pmGetValue()[i], value) === 0)
+            indexes.push(i + 1);
+        }
+        if (indexes.length > 0) return indexes.toString();
+      }
+      return "0";
+    }
+    length(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      if (variable) {
+        return variable.pmGetValue().length;
+      }
+      return 0;
+    }
+    listContains(args, util) {
+      /** @type {VM.ListVariable} */
+      const variable = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST),
+        "list"
+      );
+      const value = args.VALUE;
+      if (variable) {
+        return variable.pmIndexOf(value) !== 0;
+      }
+      return false;
+    }
+    copyList(args, util) {
+      /** @type {VM.ListVariable} */
+      const list1 = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST1),
+        "list"
+      );
+      const list2 = util.target.lookupVariableByNameAndType(
+        Scratch.Cast.toString(args.LIST2),
+        "list"
+      );
+      if (list1 && list2) {
+        list2.pmSetValue(list1.pmGetValue().slice());
+      }
+    }
+    // Desktop fork (extension merges): List Tools' blocks (the stage's lists first; sections 125, 126, 154, 155)
+    deleteItems(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return false;
+      const listLength = list.pmGetValue().length;
+      let num1 = 0;
+      let num2 = 0;
+      if (!list) return;
+      if (args.NUM1 > args.NUM2) {
+        num1 = args.NUM2 - 1;
+        num2 = args.NUM1 - 1;
+      } else {
+        num1 = args.NUM1 - 1;
+        num2 = args.NUM2 - 1;
+      }
+      const listPart1 = list.pmGetValue().slice(0, num1);
+      const listPart2 = list.pmGetValue().slice(num2 + 1, listLength);
+      list.pmSetValue(listPart1.concat(listPart2));
+    }
+    deleteAllOfItem(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return;
+      const newList = list.pmGetValue().filter(function (model) {
+        return model !== args.ITEM;
+      });
+      list.pmSetValue(newList);
+    }
+    replaceAllOfItem(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return;
+      const listLength = list.pmGetValue().length;
+      const item1 = args.ITEM1;
+      const item2 = args.ITEM2;
+      let newList = [];
+      for (let i = 0; i < listLength; i++) {
+        if (list.pmGetValue()[i] === item1) {
+          newList.push(item2);
+        } else {
+          newList.push(list.pmGetValue()[i]);
+        }
+      }
+      list.pmSetValue(newList);
+    }
+    repeatList(args, util) {
+      const list1 = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST1),
+        util,
+        "list"
+      );
+      if (!list1) return;
+      const list2 = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST2),
+        util,
+        "list"
+      );
+      if (!list2) return;
+      const currentVal = list1.pmGetValue();
+      for (let i = 0; i < args.NUM; i++) {
+        list2.pmSetValue(list2.pmGetValue().concat(currentVal));
+      }
+    }
+    getListJoin(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return "";
+      return list.pmGetValue().join(args.STRING);
+    }
+    timesItemAppears(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return 0;
+      return list.pmGetValue().filter((model) => model == args.ITEM).length;
+    }
+    itemIndex(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return 0;
+      let indexes = [];
+      for (let index = 0; index < list.pmGetValue().length; index++) {
+        if (list.pmGetValue()[index] === args.ITEM) {
+          indexes.push(index);
+        }
+      }
+
+      // Desktop fork (section 126): the menu's values (were "_first_", "_last_", "_random_", which it never gives)
+      switch (args.INDEX) {
+        case "first":
+          return Scratch.Cast.toNumber(indexes[0] + 1);
+        case "last":
+          return Scratch.Cast.toNumber(indexes[indexes.length - 1] + 1);
+        case "random":
+          return Scratch.Cast.toNumber(
+            indexes[Math.floor(Scratch.vm.runtime.pmRandom() * indexes.length)] + 1
+          );
+        default:
+          return Scratch.Cast.toNumber(indexes[Scratch.Cast.toNumber(args.INDEX) - 1] + 1);
+      }
+    }
+    orderIs(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return false;
+
+      for (let i = 0; i < list.pmGetValue().length - 1; i++) {
+        const compare = Scratch.Cast.compare(list.pmGetValue()[i + 1], list.pmGetValue()[i]);
+        if (compare > 0 && args.ORDER === "descending") return false;
+        if (compare < 0 && args.ORDER === "ascending") return false;
+      }
+      return true;
+    }
+    orderList(args, util) {
+      const list = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST),
+        util,
+        "list"
+      );
+      if (!list) return;
+      if (args.ORDER === "reversed") {
+        list.pmGetValue().reverse();
+      } else if (args.ORDER === "randomised") {
+        const randomised = list.pmGetValue()
+          .map((value) => ({ value, sort: Scratch.vm.runtime.pmRandom() }))
+          .sort((a, b) => a.sort - b.sort)
+          .map(({ value }) => value);
+        list.pmSetValue(randomised);
+      } else if (args.ORDER === "ascending") {
+        list.pmGetValue().sort(Scratch.Cast.compare);
+      } else if (args.ORDER === "descending") {
+        list.pmGetValue().sort(Scratch.Cast.compare).reverse();
+      }
+      list.pmItemsChanged();
+    }
+    joinLists(args, util) {
+      const list1 = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST1),
+        util,
+        "list"
+      );
+      if (!list1) return;
+      const list2 = getVarObjectFromName(
+        Scratch.Cast.toString(args.LIST2),
+        util,
+        "list"
+      );
+      if (!list2) return;
+      list2.pmSetValue(list2.pmGetValue().concat(list1.pmGetValue()));
+    }
+    _getLists() {
+      // @ts-expect-error - Blockly not typed yet
+      const lists =
+        typeof Blockly === "undefined"
+          ? []
+          : Blockly.getMainWorkspace()
+              .getVariableMap()
+              .getVariablesOfType("list")
+              .map((model) => model.name);
+      if (lists.length > 0) {
+        return lists;
+      } else {
+        return [""];
+      }
     }
   }
 

@@ -1,6 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's cursor.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, except (extension merges): Pointerlock (pointerlock.js) is
+// merged in, marked "Desktop fork (extension merges)" (its section 119 hook: the mouse's pointerLocked flag and the
+// RUNTIME_STEP_END event; section 159: its page event listeners go through Scratch.vm.runtime.pmPage).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -125,6 +127,101 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let customCursorImageName = null;
 
   const canvas = Scratch.renderer.canvas;
+
+  // Desktop fork (extension merges): Pointerlock's code. Mouse x & y report the change since the previous frame while
+  // the pointer is locked.
+  const mouse = Scratch.vm.runtime.ioDevices.mouse;
+  let isLocked = false;
+  let isPointerLockEnabled = false;
+  let rect = canvas.getBoundingClientRect();
+  Scratch.vm.runtime.pmPage.addEventListener("window", "resize", () => {
+    rect = canvas.getBoundingClientRect();
+  });
+  const postMouseData = (e, isDown) => {
+    const { movementX, movementY } = e;
+    const { width, height } = rect;
+    const x = mouse._clientX + movementX;
+    const y = mouse._clientY - movementY;
+    mouse._clientX = x;
+    mouse._scratchX = mouse.runtime.stageWidth * (x / width - 0.5);
+    mouse._clientY = y;
+    mouse._scratchY = mouse.runtime.stageHeight * (y / height - 0.5);
+    if (typeof isDown === "boolean") {
+      const data = {
+        button: e.button,
+        isDown,
+      };
+      // Desktop fork (section 119): posted past the mouse's pointerLocked filter
+      data.pointerLock = true;
+      mouse.postData(data);
+    }
+  };
+  // Desktop fork (section 119): while mouse.pointerLocked is on, the mouse ignores other posted data and
+  // does not round its position (so that high framerates don't dramatically limit the project's input precision).
+  const setPointerLockEnabled = (enabled) => {
+    isPointerLockEnabled = enabled;
+    mouse.pointerLocked = enabled;
+  };
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
+    "mousedown",
+    (e) => {
+      // @ts-expect-error
+      if (canvas.contains(e.target)) {
+        if (isLocked) {
+          postMouseData(e, true);
+        } else if (isPointerLockEnabled) {
+          canvas.requestPointerLock();
+        }
+      }
+    },
+    true
+  );
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
+    "mouseup",
+    (e) => {
+      if (isLocked) {
+        postMouseData(e, false);
+        // @ts-expect-error
+      } else if (isPointerLockEnabled && canvas.contains(e.target)) {
+        canvas.requestPointerLock();
+      }
+    },
+    true
+  );
+  Scratch.vm.runtime.pmPage.addEventListener(
+    "document",
+    "mousemove",
+    (e) => {
+      if (isLocked) {
+        postMouseData(e);
+      }
+    },
+    true
+  );
+  Scratch.vm.runtime.pmPage.addEventListener("document", "pointerlockchange", () => {
+    isLocked = document.pointerLockElement === canvas;
+  });
+  Scratch.vm.runtime.pmPage.addEventListener("document", "pointerlockerror", (e) => {
+    console.error("Pointer lock error", e);
+  });
+  // Desktop fork (section 119): after each frame
+  Scratch.vm.runtime.on("RUNTIME_STEP_END", () => {
+    if (isPointerLockEnabled) {
+      const { width, height } = rect;
+      mouse._clientX = width / 2;
+      mouse._clientY = height / 2;
+      mouse._scratchX = 0;
+      mouse._scratchY = 0;
+    }
+  });
+  Scratch.vm.runtime.on("PROJECT_LOADED", () => {
+    setPointerLockEnabled(false);
+    if (isLocked) {
+      document.exitPointerLock();
+    }
+  });
   /** @type {string} */
   let currentCanvasCursor = nativeCursor;
   const updateCanvasCursor = () => {
@@ -256,8 +353,41 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("cursor"),
           },
+          "---",
+          // Desktop fork (extension merges): from Pointerlock
+          {
+            opcode: "setLocked",
+            blockType: Scratch.BlockType.COMMAND,
+            text: "set pointer lock to [enabled]",
+            arguments: {
+              enabled: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "true",
+                menu: "enabled",
+              },
+            },
+          },
+          {
+            opcode: "isLocked",
+            blockType: Scratch.BlockType.BOOLEAN,
+            text: "pointer locked?",
+          },
         ],
         menus: {
+          // Desktop fork (extension merges): from Pointerlock
+          enabled: {
+            acceptReporters: true,
+            items: [
+              {
+                text: "on",
+                value: "true",
+              },
+              {
+                text: "off",
+                value: "false",
+              },
+            ],
+          },
           cursors: {
             acceptReporters: true,
             items: [
@@ -623,6 +753,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         return customCursorImageName;
       }
       return nativeCursor;
+    }
+    // Desktop fork (extension merges): from Pointerlock
+    setLocked(args) {
+      setPointerLockEnabled(Scratch.Cast.toBoolean(args.enabled) === true);
+      if (!isPointerLockEnabled && isLocked) {
+        document.exitPointerLock();
+      }
+    }
+    isLocked() {
+      return isLocked;
     }
   }
 

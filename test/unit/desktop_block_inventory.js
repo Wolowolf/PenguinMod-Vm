@@ -205,10 +205,13 @@ class TestURL extends URL {
     }
     static revokeObjectURL () {}
 }
-const makeScope = scratch => {
+// fileRequire: the real require of a moved file's own lines above its wrapped gallery code (extension merges:
+// Encoding's libraries), which the build bundles like any VM module; inside the wrapped code require stays hidden.
+const makeScope = (scratch, fileRequire) => {
     const own = Object.create(null);
     const lookup = key => {
         if (key in own) return own[key];
+        if (key === 'require' && fileRequire) return fileRequire;
         if (key === 'URL') return TestURL;
         if (key === 'Scratch') return scratch; // window.Scratch, globalThis.Scratch
         if (key in global && !NOT_GIVEN.has(key)) return global[key];
@@ -276,7 +279,8 @@ const loadGalleryFile = source => {
             const code = readGalleryCode(source);
             const scratch = makeScratch(registered);
             // eslint-disable-next-line no-new-func
-            new Function('Scratch', '__scope', `with (__scope) {\n${code}\n}`)(scratch, makeScope(scratch));
+            new Function('Scratch', '__scope', `with (__scope) {\n${code}\n}`)(scratch, makeScope(scratch,
+                source.startsWith('src/') && require('module').createRequire(path.join(__dirname, '../..', source))));
             loadError = null;
             for (let i = 0; i < 1000 && registered.length === 0 && !loadError; i++) {
                 await new Promise(resolve => realSetTimeout(resolve, 10));

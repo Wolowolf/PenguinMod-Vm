@@ -1,5 +1,6 @@
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const TargetType = require('../../extension-support/target-type');
 const Cast = require('../../util/cast');
 const Thread = require('../../engine/thread');
 
@@ -130,6 +131,7 @@ ${blockSeparator}
 %b30>
 ${blockSeparator}
 %b2>
+%clicked>
 %b24>
 %b0>
 %b1>
@@ -361,10 +363,13 @@ class pmEventsExpansion {
 
     // order
     orderCategoryBlocks(extensionBlocks) {
-        let categoryBlocks = blocks;
+        // Desktop fork (extension merges): "sprite clicked?" goes right after the clicked hat, by its opcode: it is for
+        // sprites only, so the stage's palette leaves it out, and the numbered places count only the others
+        const clicked = extensionBlocks.find(xml => xml.includes('"pmEventsExpansion_spriteClicked"'));
+        let categoryBlocks = blocks.replace('%clicked>', () => clicked || '');
 
         let idx = 0;
-        for (const block of extensionBlocks) {
+        for (const block of extensionBlocks.filter(xml => xml !== clicked)) {
             categoryBlocks = categoryBlocks.replace('%b' + idx + '>', block);
             idx++;
         }
@@ -753,6 +758,15 @@ class pmEventsExpansion {
                         TYPE: {type: ArgumentType.STRING, menu: 'eventRules', defaultValue: 'restart'}
                     }
                 },
+                // Desktop fork (extension merges): from the removed Utilities (before that Lily's Toolbox); placed after the
+                // clicked hat by orderCategoryBlocks (%clicked in the palette template above)
+                {
+                    opcode: 'spriteClicked',
+                    text: 'sprite clicked?',
+                    blockType: BlockType.BOOLEAN,
+                    filter: [TargetType.SPRITE],
+                    disableMonitor: true
+                },
             ],
             menus: {
                 spriteName: "_spriteName",
@@ -1046,6 +1060,10 @@ class pmEventsExpansion {
         }, targetFilter);
     }
 
+    // Desktop fork (extension merges): from the removed Utilities: the mouse is down on this sprite
+    spriteClicked(args, util) {
+        return util.ioQuery('mouse', 'getIsDown') && util.target.isTouchingObject('_mouse_');
+    }
     sendWithData(args, util) {
         const broadcast = Cast.toString(args.BROADCAST);
         const data = Cast.toString(args.DATA);

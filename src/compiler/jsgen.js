@@ -1612,29 +1612,15 @@ class JSGenerator {
         case 'search.broadcast':
             return new TypedInput(`pmsReceived(${this.evaluateOnce(`new pmsBroadcast(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
 
-        // Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks (irgen.js
-        // descendDataInline). Each does what the extension's function does with the arguments the extension
+        // Desktop fork (section 149): the list and JSON blocks of Variables & Lists (irgen.js descendDataInline). Each does what the extension's function does with the arguments the extension
         // manager's wrapper gives it (helpers in jsexecute.js; inputs in the block's order, the variable found
         // inside the helper after them, as the function does). Text answers stay of unknown type, as in section 118.
-        case 'qxsck.getVar': {
-            const v = this.dataName(node.name, '', false);
-            return new TypedInput(`pmdGetVar(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
-        }
         case 'qxsck.toJson':
             return new TypedInput(`pmdToJson(runtime, thread.target, "${node.type}", ${this.exactString(this.descendInput(node.start))})`, TYPE_UNKNOWN);
-        case 'qxsck.getList': {
-            const v = this.dataName(node.name, 'list', false);
-            return new TypedInput(`pmdGetList(thread.target, ${v.site}, ${v.name})`, TYPE_UNKNOWN);
-        }
         case 'qxsck.itemOf': {
             const index = this.exactString(this.descendInput(node.index));
             const v = this.dataName(node.name, 'list', false);
             return new TypedInput(`pmdItemOf(thread.target, ${v.site}, ${index}, ${v.name})`, TYPE_UNKNOWN);
-        }
-        case 'qxsck.indexOf': {
-            const value = this.exactString(this.descendInput(node.value));
-            const v = this.dataName(node.name, 'list', false);
-            return new TypedInput(`pmdIndexOf(thread.target, ${v.site}, ${value}, ${v.name})`, TYPE_NUMBER);
         }
         case 'qxsck.indexesOf': {
             const value = this.exactString(this.descendInput(node.value));
@@ -2863,16 +2849,8 @@ class JSGenerator {
             this.source += `pmxTweenTowards(target, ${this.exactNumber(this.descendInput(node.percent))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
             break;
 
-        // Desktop fork (section 149): "Variable and list" and List Tools commands (irgen.js descendDataInline), as
-        // the extension's functions are.
-        case 'qxsck.setVar': {
-            const v = this.dataName(node.name, '', false);
-            const value = this.exactString(this.descendInput(node.value));
-            this.source += `pmdSetVar(runtime, thread.target, ${v.site}, ${v.name}, ${value});\n`;
-            // (section 151) the variable it set is not known now
-            this.forgetVariablesNamed(v.fixed);
-            break;
-        }
+        // Desktop fork (section 149): the list commands of Variables & Lists (irgen.js descendDataInline), as the
+        // extension's functions are.
         case 'qxsck.clear': {
             const v = this.dataName(node.name, 'list', false);
             this.source += `pmdClear(thread.target, ${v.site}, ${v.name});\n`;
@@ -2935,12 +2913,6 @@ class JSGenerator {
             this.source += `pmlOrder(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}");\n`;
             break;
         }
-        case 'lms.setToList': {
-            const v1 = this.dataName(node.name1, 'list', true);
-            const v2 = this.dataName(node.name2, 'list', true);
-            this.source += `pmlSetToList(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
-            break;
-        }
         case 'lms.concat': {
             const v1 = this.dataName(node.name1, 'list', true);
             const v2 = this.dataName(node.name2, 'list', true);
@@ -2957,9 +2929,14 @@ class JSGenerator {
         // Desktop fork (section 196)
         case 'search.varSet':
             this.source += `pmsVarWrite(thread.target, ${this.searchWritable(node.name)}).value = ${this.searchArgument(node.opcode, node.valueName, node.value)};\n`;
+            // Desktop fork (extension merges; section 151): the variable it set may hold another type now (as the merged
+            // "Variable and list" set did)
+            this.forgetVariablesNamed(node.name);
             break;
         case 'search.varSwap':
             this.source += `pmsVarSwap(pmsVarWrite(thread.target, ${this.searchWritable(node.name1)}), pmsVarWrite(thread.target, ${this.searchWritable(node.name2)}));\n`;
+            this.forgetVariablesNamed(node.name1);
+            this.forgetVariablesNamed(node.name2);
             break;
         case 'search.timerAdd':
             this.source += `pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).add(${this.exactNumber(this.descendInput(node.time))} * ${node.units});\n`;

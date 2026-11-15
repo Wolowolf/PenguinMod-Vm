@@ -1,7 +1,8 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's text.js as its build makes it, moved into
 // the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork" (count regex: an invalid pattern counts 0;
-// section 259: the blocks that duplicate built-in ones are removed and Text Case's extra cases are added to the case menu).
+// section 259: the blocks that duplicate built-in ones are removed and Text Case's extra cases are added to the case menu;
+// extension merges: Text Case's last two blocks, "case of" and "glitch text", moved in and Text Case removed).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -289,6 +290,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
           "---",
 
+          // Desktop fork (extension merges): from Text Case
+          {
+            opcode: "caseOf",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "case of [STRING]",
+            arguments: {
+              STRING: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "Apple",
+              },
+            },
+          },
           {
             opcode: "isCase",
             blockType: Scratch.BlockType.BOOLEAN,
@@ -325,6 +338,22 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 type: Scratch.ArgumentType.STRING,
                 menu: "textCase",
                 defaultValue: CaseParam.UPPERCASE,
+              },
+            },
+          },
+          // Desktop fork (extension merges): from Text Case
+          {
+            opcode: "glitch",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "glitch text [STRING] by [PERCENT]%",
+            arguments: {
+              STRING: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "apple",
+              },
+              PERCENT: {
+                type: Scratch.ArgumentType.NUMBER,
+                defaultValue: 10,
               },
             },
           },
@@ -640,6 +669,34 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         default:
           return string;
       }
+    }
+    // Desktop fork (extension merges): Text Case's "case from" and "glitch", with cast inputs. A letter is a
+    // character with a capital and a small form; text without letters has no case ("").
+    caseOf(args) {
+      let low = 0;
+      let up = 0;
+      for (const char of Cast.toString(args.STRING)) {
+        if (char.toLowerCase() === char.toUpperCase()) continue;
+        if (char === char.toLowerCase()) low++;
+        else up++;
+      }
+      if (low === 0 && up === 0) return "";
+      if (up === 0) return "lowercase";
+      if (low === 0) return "UPPERCASE";
+      if (up === low) return "mixed";
+      return up > low ? "mostly UPPERCASE" : "mostly lowercase";
+    }
+    glitch(args) {
+      const percent = Cast.toNumber(args.PERCENT);
+      let workingText = "";
+      for (const char of Cast.toString(args.STRING)) {
+        if (Scratch.vm.runtime.pmRandom() * 100 < percent) {
+          workingText += char === char.toUpperCase() ? char.toLowerCase() : char.toUpperCase();
+        } else {
+          workingText += char;
+        }
+      }
+      return workingText;
     }
     reverse(args) {
       return Array.from(Cast.toString(args.STRING)).reverse().join("");

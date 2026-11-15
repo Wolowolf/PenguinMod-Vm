@@ -5,6 +5,9 @@
 // marked "Desktop fork (section 128)").
 // Desktop fork (section 259): the blocks that duplicate built-in or More Sensing blocks are removed (mouse button down,
 // scrolling, single-key hat, pressed, hit, last / current key, time key pressed); "time [key] key pressed" stays as a helper.
+// Desktop fork (extension merges): Key Simulation (CubesterYT/KeySimulation.js) is merged in: "press key", "click mouse
+// button" and "move mouse" use this extension's key names and mouse buttons, and what they press also counts for its
+// own blocks (pressed keys and mouse buttons, keybinds); marked "Desktop fork (extension merges)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -72,6 +75,89 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
     const createLabel = (text) => ({ blockType: Scratch.BlockType.LABEL, text: text });
 
+    // Desktop fork (extension merges): Key Simulation's code. A key name of this extension's menu as the browser
+    // names the key ("key") and the key's place on the keyboard ("code").
+    const SIMULATED_SYMBOLS = {
+        "`": "Backquote", "~": "Backquote", "-": "Minus", "_": "Minus", "=": "Equal", "+": "Equal",
+        "[": "BracketLeft", "{": "BracketLeft", "]": "BracketRight", "}": "BracketRight", "\\": "Backslash", "|": "Backslash",
+        ";": "Semicolon", ":": "Semicolon", "'": "Quote", "\"": "Quote", ",": "Comma", "<": "Comma", ".": "Period", ">": "Period",
+        "/": "Slash", "?": "Slash", "!": "Digit1", "@": "Digit2", "#": "Digit3", "$": "Digit4", "%": "Digit5", "^": "Digit6",
+        "&": "Digit7", "*": "Digit8", "(": "Digit9", ")": "Digit0"
+    };
+    const SIMULATED_NAMES = {
+        "space": [" ", "Space"], "up arrow": ["ArrowUp", "ArrowUp"], "down arrow": ["ArrowDown", "ArrowDown"],
+        "right arrow": ["ArrowRight", "ArrowRight"], "left arrow": ["ArrowLeft", "ArrowLeft"],
+        "backspace": ["Backspace", "Backspace"], "enter": ["Enter", "Enter"], "escape": ["Escape", "Escape"], "tab": ["Tab", "Tab"],
+        "right shift": ["Shift", "ShiftRight"], "left shift": ["Shift", "ShiftLeft"],
+        "right control": ["Control", "ControlRight"], "left control": ["Control", "ControlLeft"],
+        "right alt": ["Alt", "AltRight"], "left alt": ["Alt", "AltLeft"],
+        "right windows key": ["Meta", "MetaRight"], "left windows key": ["Meta", "MetaLeft"], "context menu": ["ContextMenu", "ContextMenu"],
+        "caps lock": ["CapsLock", "CapsLock"], "scroll lock": ["ScrollLock", "ScrollLock"], "num lock": ["NumLock", "NumLock"],
+        "insert": ["Insert", "Insert"], "delete": ["Delete", "Delete"], "home": ["Home", "Home"], "end": ["End", "End"],
+        "page up": ["PageUp", "PageUp"], "page down": ["PageDown", "PageDown"],
+        "numpad: divide": ["/", "NumpadDivide"], "numpad: multiply": ["*", "NumpadMultiply"], "numpad: subtract": ["-", "NumpadSubtract"],
+        "numpad: add": ["+", "NumpadAdd"], "numpad: decimal": [".", "NumpadDecimal"], "numpad: enter": ["Enter", "NumpadEnter"]
+    };
+    const simulatedKey = (name) => {
+        if (Object.prototype.hasOwnProperty.call(SIMULATED_NAMES, name)) {
+            const [key, code] = SIMULATED_NAMES[name];
+            return { key, code };
+        }
+        const numpad = /^numpad: ([0-9])$/.exec(name);
+        if (numpad) return { key: numpad[1], code: "Numpad" + numpad[1] };
+        if (/^F([1-9]|1[0-2])$/.test(name)) return { key: name, code: name };
+        if (/^[a-zA-Z]$/.test(name)) return { key: name, code: "Key" + name.toUpperCase() };
+        if (/^[0-9]$/.test(name)) return { key: name, code: "Digit" + name };
+        if (Object.prototype.hasOwnProperty.call(SIMULATED_SYMBOLS, name)) return { key: name, code: SIMULATED_SYMBOLS[name] };
+        return { key: name, code: name };
+    };
+    // This is from the Scratch Addons gamepad addon, which normally could be a problem because it is GPLv3,
+    // but GarboMuffin wrote that code so there is no problem.
+    let getCanvasSize;
+    if (window.ResizeObserver) {
+        let canvasWidth = Scratch.vm.runtime.stageWidth;
+        let canvasHeight = Scratch.vm.runtime.stageHeight;
+        const resize = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                canvasWidth = entry.contentRect.width;
+                canvasHeight = entry.contentRect.height;
+            }
+        });
+        resize.observe(Scratch.vm.runtime.renderer.canvas);
+        getCanvasSize = () => [canvasWidth, canvasHeight];
+    } else {
+        getCanvasSize = () => {
+            const rectangle = Scratch.vm.runtime.renderer.canvas.getBoundingClientRect();
+            return [rectangle.width, rectangle.height];
+        };
+    }
+    let simulatedX = 0;
+    let simulatedY = 0;
+    const postSimulatedMouseData = (data) => {
+        const [rectangleWidth, rectangleHeight] = getCanvasSize();
+        Scratch.vm.postIOData("mouse", {
+            ...data,
+            canvasWidth: rectangleWidth,
+            canvasHeight: rectangleHeight,
+            x: (simulatedX + Scratch.vm.runtime.stageWidth / 2) * (rectangleWidth / Scratch.vm.runtime.stageWidth),
+            y: (Scratch.vm.runtime.stageHeight / 2 - simulatedY) * (rectangleHeight / Scratch.vm.runtime.stageHeight),
+        });
+    };
+    // Runs callback after the given seconds; with "and wait" the block waits until then.
+    const doLater = (seconds, andWait, callback) => {
+        const ms = Cast.toNumber(seconds) * 1000;
+        if (Cast.toString(andWait) === "and wait") {
+            return new Promise((resolve) => {
+                Scratch.vm.runtime.pmSetTimeout(() => {
+                    callback();
+                    resolve();
+                }, ms);
+            });
+        }
+        Scratch.vm.runtime.pmSetTimeout(callback, ms);
+        // don't return a Promise at all, otherwise the block waits for 1 frame
+    };
+
     function startKeyEvents(_trigger) {
         runtime.startHats("enderKeysPlusV2_eventKeysPressed", { trigger: _trigger });
         runtime.startHats("enderKeysPlusV2_eventKeybindTriggered", { trigger: _trigger });
@@ -118,22 +204,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "while" });
                 startKeyEvents("while");
             });
-            // Keys
-            Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (event) => {
-                hatsChanged(); // Desktop fork (section 128)
-                const key = format(event);
-                if (!this._keysPressed[key]) {
-                    this._keysPressed[key] = { time: Scratch.vm.runtime.pmDateNow(), code: event.code, value: event.key };
-                    startKeyEvents("when");
-                };
-            });
-            Scratch.vm.runtime.pmPage.addEventListener("window", "keyup", (event) => {
-                hatsChanged(); // Desktop fork (section 128)
-                const key = format(event);
-                startKeyEvents("after");
-                delete this._keysPressed[key];
-                this._filter();
-            });
+            // Keys (Desktop fork (extension merges): in methods, which the simulated keys use too)
+            Scratch.vm.runtime.pmPage.addEventListener("window", "keydown", (event) => this._onKeyDown(event));
+            Scratch.vm.runtime.pmPage.addEventListener("window", "keyup", (event) => this._onKeyUp(event));
             Scratch.vm.runtime.pmPage.addEventListener("window", "blur", () => {
                 hatsChanged(); // Desktop fork (section 128)
                 if (this._settings["clearOnBlur"]) {
@@ -141,19 +214,36 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     this._mouseDown = {};
                 };
             });
-            // Mouse
-            Scratch.vm.runtime.pmPage.addEventListener("window", "mousedown", (event) => {
-                hatsChanged(); // Desktop fork (section 128)
-                if (!this._mouseDown[event.button]) {
-                    this._mouseDown[event.button] = { time: Scratch.vm.runtime.pmDateNow() };
-                    runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "when" });
-                }
-            });
-            Scratch.vm.runtime.pmPage.addEventListener("window", "mouseup", (event) => {
-                hatsChanged(); // Desktop fork (section 128)
-                runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "after" });
-                delete this._mouseDown[event.button];
-            })
+            // Mouse (Desktop fork (extension merges): in methods, which the simulated clicks use too)
+            Scratch.vm.runtime.pmPage.addEventListener("window", "mousedown", (event) => this._onMouseDown(event.button));
+            Scratch.vm.runtime.pmPage.addEventListener("window", "mouseup", (event) => this._onMouseUp(event.button));
+        }
+        _onKeyDown(event) {
+            hatsChanged(); // Desktop fork (section 128)
+            const key = format(event);
+            if (!this._keysPressed[key]) {
+                this._keysPressed[key] = { time: Scratch.vm.runtime.pmDateNow(), code: event.code, value: event.key };
+                startKeyEvents("when");
+            };
+        }
+        _onKeyUp(event) {
+            hatsChanged(); // Desktop fork (section 128)
+            const key = format(event);
+            startKeyEvents("after");
+            delete this._keysPressed[key];
+            this._filter();
+        }
+        _onMouseDown(button) {
+            hatsChanged(); // Desktop fork (section 128)
+            if (!this._mouseDown[button]) {
+                this._mouseDown[button] = { time: Scratch.vm.runtime.pmDateNow() };
+                runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "when" });
+            }
+        }
+        _onMouseUp(button) {
+            hatsChanged(); // Desktop fork (section 128)
+            runtime.startHats("enderKeysPlusV2_eventMouseDown", { trigger: "after" });
+            delete this._mouseDown[button];
         }
         getInfo() {
             return {
@@ -191,6 +281,29 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         text: "time [button] mouse button down",
                         arguments: {
                             button: { type: Scratch.ArgumentType.STRING, menu: "mouseButtons" }
+                        }
+                    },
+                    "---",
+                    // Desktop fork (extension merges): from Key Simulation
+                    {
+                        opcode: "clickMouse",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "click [button] mouse button at x: [X] y: [Y] for [SECONDS] seconds and [AND_WAIT]",
+                        arguments: {
+                            button: { type: Scratch.ArgumentType.STRING, menu: "mouseButtons" },
+                            X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+                            Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+                            SECONDS: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0.1 },
+                            AND_WAIT: { type: Scratch.ArgumentType.STRING, menu: "waitMode" }
+                        }
+                    },
+                    {
+                        opcode: "moveMouse",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "move mouse to x: [X] y: [Y]",
+                        arguments: {
+                            X: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
+                            Y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 }
                         }
                     },
                     createLabel("Keys"),
@@ -250,6 +363,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                         arguments: {
                             mode: { type: Scratch.ArgumentType.STRING, menu: "returnMode" },
                             keys: { type: Scratch.ArgumentType.STRING, defaultValue: '"a", "b", "c"' }
+                        }
+                    },
+                    "---",
+                    // Desktop fork (extension merges): from Key Simulation
+                    {
+                        opcode: "pressKey",
+                        blockType: Scratch.BlockType.COMMAND,
+                        text: "press key [key] for [SECONDS] seconds and [AND_WAIT]",
+                        arguments: {
+                            key: { type: Scratch.ArgumentType.STRING, menu: "simulatedKeys", defaultValue: "space" },
+                            SECONDS: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0.1 },
+                            AND_WAIT: { type: Scratch.ArgumentType.STRING, menu: "waitMode" }
                         }
                     },
                     createLabel("Keybinding"),
@@ -488,7 +613,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     returnMode: { items: ["together & in order", "together & ignore order", "individually"] },
                     orderMode: { items: ["together & in order", "together & ignore order"] },
                     toggle: { items: ["enabled", "disabled"] },
-                    data: { items: ["all", "tags", "keybinds", "settings"] }
+                    data: { items: ["all", "tags", "keybinds", "settings"] },
+                    // Desktop fork (extension merges): from Key Simulation
+                    simulatedKeys: { items: "_getSimulatedKeysMenu", acceptReporters: true },
+                    waitMode: {
+                        acceptReporters: true,
+                        items: [
+                            { text: "continue", value: "without waiting" },
+                            { text: "wait", value: "and wait" }
+                        ]
+                    }
                 }
             };
         };
@@ -842,7 +976,37 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         }        
           
         
+        // Desktop fork (extension merges): Key Simulation's blocks. Simulated input goes to the project like real input
+        // and also into this extension's own pressed keys and mouse buttons.
+        pressKey(args) {
+            const { key, code } = simulatedKey(Cast.toString(args.key));
+            Scratch.vm.postIOData("keyboard", { key, isDown: true });
+            this._onKeyDown({ key, code });
+            return doLater(args.SECONDS, args.AND_WAIT, () => {
+                Scratch.vm.postIOData("keyboard", { key, isDown: false });
+                this._onKeyUp({ key, code });
+            });
+        }
+        clickMouse(args) {
+            const button = Cast.toNumber(args.button);
+            simulatedX = Cast.toNumber(args.X);
+            simulatedY = Cast.toNumber(args.Y);
+            postSimulatedMouseData({ isDown: true, button });
+            this._onMouseDown(button);
+            return doLater(args.SECONDS, args.AND_WAIT, () => {
+                postSimulatedMouseData({ isDown: false, button });
+                this._onMouseUp(button);
+            });
+        }
+        moveMouse(args) {
+            simulatedX = Cast.toNumber(args.X);
+            simulatedY = Cast.toNumber(args.Y);
+            postSimulatedMouseData({});
+        }
         // Menu
+        _getSimulatedKeysMenu() {
+            return this._getKeysMenu().filter(key => key !== "any" && !key.startsWith("#"));
+        }
         _getKeysMenu() {
             const tags =  this._settings["includeTags"] ? Object.keys(this._tags) : [];
             return [

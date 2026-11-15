@@ -28,7 +28,7 @@ class Mouse {
         this.cameraBound = null;
 
         /**
-         * PMDESKTOP_HOOKS (section 119): pointer lock (tw pointerlock). While true, only data posted with
+         * PMDESKTOP_HOOKS (section 119): pointer lock (tw Mouse Cursor's pointer lock blocks, merged in from Pointerlock). While true, only data posted with
          * `pointerLock: true` reaches the mouse, and getScratchX / getScratchY give the position unrounded
          * and without the camera.
          * @type {boolean}

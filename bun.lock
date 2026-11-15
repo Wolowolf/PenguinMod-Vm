@@ -28,7 +28,6 @@
         "pathfinding": "^0.4.18",
         "schema-utils": "^2.7.1",
         "scratch-translate-extension-languages": "0.0.20191118205314",
-        "simplex-noise": "^4.0.1",
         "taffydb": "^2.7.3",
         "text-encoding": "0.7.0",
         "three": "0.153.0",
@@ -1751,8 +1750,6 @@
     "side-channel": ["side-channel@1.0.4", "", { "dependencies": { "call-bind": "^1.0.0", "get-intrinsic": "^1.0.2", "object-inspect": "^1.9.0" } }, ""],
 
     "signal-exit": ["signal-exit@3.0.7", "", {}, ""],
-
-    "simplex-noise": ["simplex-noise@4.0.1", "", {}, ""],
 
     "slash": ["slash@1.0.0", "", {}, ""],
 

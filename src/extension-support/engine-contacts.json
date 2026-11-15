@@ -1,18 +1,5 @@
 {
     "Bitwise": {},
-    "CameraSensingPlusSP": {
-        "page": {
-            "document.createElement": 3,
-            "navigator.mediaDevices": 2
-        },
-        "internals": {
-            "._allDrawables": 2,
-            "._drawable": 1,
-            "._id": 1,
-            "._skin": 1,
-            "._skinId": 1
-        }
-    },
     "DICandSPmonitorsPlus": {
         "clock": {
             "setTimeout": 1
@@ -21,8 +8,11 @@
             "document.createElement": 7,
             "document.fonts": 1,
             "document.getElementById": 1,
-            "document.querySelector": 15,
+            "document.querySelector": 14,
             "document.querySelectorAll": 1
+        },
+        "internals": {
+            "._monitorUpToDate": 1
         }
     },
     "Encoding": {},
@@ -53,12 +43,18 @@
         "page": {
             "MutationObserver": 1,
             "document.createElement": 1,
+            "document.exitPointerLock": 2,
+            "document.pointerLockElement": 1,
             "renderer.canvas": 1
         },
         "internals": {
             "._allSkins": 1,
+            "._clientX": 3,
+            "._clientY": 3,
             "._colorData": 1,
             "._height": 2,
+            "._scratchX": 2,
+            "._scratchY": 2,
             "._silhouette": 1,
             "._svgImage": 2,
             "._width": 2
@@ -322,11 +318,6 @@
         }
     },
     "ShovelUtils": {},
-    "battery": {
-        "page": {
-            "navigator.getBattery": 2
-        }
-    },
     "beatSync": {
         "page": {
             "document.hidden": 3,
@@ -337,7 +328,6 @@
             "write runtime.extensionStorage": 3
         }
     },
-    "claytonhtmlencode": {},
     "clipboard": {
         "page": {
             "navigator.clipboard": 1,
@@ -357,13 +347,6 @@
     "cst1229zip": {
         "internals": {
             "write runtime.ext_cst1229zip": 1
-        }
-    },
-    "cubesterKeySimulation": {
-        "page": {
-            "ResizeObserver": 1,
-            "renderer.canvas": 2,
-            "window.ResizeObserver": 1
         }
     },
     "cubesterWindowControls": {
@@ -392,28 +375,6 @@
             "window.screenY": 1
         }
     },
-    "discordauth": {
-        "random": {
-            "crypto.getRandomValues": 1
-        },
-        "clock": {
-            "clearInterval": 3,
-            "setInterval": 1
-        },
-        "page": {
-            "document.body": 1,
-            "document.createElement": 8,
-            "document.fullscreenElement": 1,
-            "window.PMLogin": 4,
-            "window.open": 2
-        }
-    },
-    "dninwakelock": {
-        "page": {
-            "document.visibilityState": 3,
-            "navigator.wakeLock": 2
-        }
-    },
     "dogeiscutResolution": {
         "page": {
             "window.devicePixelRatio": 1,
@@ -427,13 +388,11 @@
             "navigator.userLanguage": 2
         }
     },
-    "enderKeysPlusV2": {},
-    "faceSensing": {
+    "enderKeysPlusV2": {
         "page": {
-            "window.faceDetection": 1
-        },
-        "internals": {
-            "._allDrawables": 1
+            "ResizeObserver": 1,
+            "renderer.canvas": 2,
+            "window.ResizeObserver": 1
         }
     },
     "filesExpanded": {
@@ -525,7 +484,6 @@
             "screen.width": 1
         }
     },
-    "iygPerlin": {},
     "jgPrism": {
         "page": {
             "Audio": 1,
@@ -537,7 +495,6 @@
     "jgTailgating": {},
     "jgTween": {},
     "jwProto": {},
-    "lmsData": {},
     "lmsLooksPlus": {
         "internals": {
             "._allSkins": 4,
@@ -579,13 +536,6 @@
             "write runtime.extensionStorage": 1
         }
     },
-    "mdwaltersnotifications": {
-        "page": {
-            "navigator": 1,
-            "navigator.serviceWorker": 1
-        }
-    },
-    "medericodertextcase": {},
     "midi": {
         "page": {
             "document.body": 2,
@@ -603,6 +553,9 @@
     "music": {},
     "navigatorinfo": {
         "page": {
+            "document.visibilityState": 3,
+            "navigator.getBattery": 2,
+            "navigator.wakeLock": 2,
             "window.matchMedia": 3
         }
     },
@@ -764,19 +717,6 @@
             "write runtime.pmCreditProviders": 1
         }
     },
-    "pointerlock": {
-        "page": {
-            "document.exitPointerLock": 2,
-            "document.pointerLockElement": 1,
-            "renderer.canvas": 1
-        },
-        "internals": {
-            "._clientX": 3,
-            "._clientY": 3,
-            "._scratchX": 2,
-            "._scratchY": 2
-        }
-    },
     "pooiod7Dictation": {
         "clock": {
             "setTimeout": 1
@@ -793,11 +733,6 @@
         }
     },
     "qxsckbignumber": {},
-    "qxsckvarandlist": {
-        "internals": {
-            "._monitorUpToDate": 1
-        }
-    },
     "randomutils": {},
     "runtimeoptions": {},
     "sharkpoolPrinting": {
@@ -815,7 +750,6 @@
             "document.createElement": 1
         }
     },
-    "shovellzcompresss": {},
     "speechSP": {
         "page": {
             "document.createElement": 4,
@@ -854,21 +788,27 @@
             "document.body": 1,
             "document.createElement": 7,
             "document.getElementById": 2,
-            "document.head": 1
+            "document.head": 1,
+            "navigator": 1,
+            "navigator.serviceWorker": 1
         }
     },
-    "truefantombase": {},
     "truefantommath": {},
     "truefantomnetwork": {
         "page": {
             "window.screen": 8
         }
     },
-    "utilities": {},
     "videoSensing": {
+        "page": {
+            "document.createElement": 1,
+            "window.faceDetection": 1
+        },
         "internals": {
-            "._allDrawables": 1,
-            "write runtime.ioDevices": 1
+            "._allDrawables": 3,
+            "._blocks": 1,
+            "._drawable": 2,
+            "._skinId": 2
         }
     },
     "webrtc": {

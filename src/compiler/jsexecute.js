@@ -1689,10 +1689,6 @@ runtimeFunctions.pmsTimerStop = `const pmsTimerStop = timer => {
     timer.pause();
     timer.restart();
 }`;
-runtimeFunctions.pmdGetVar = `const pmdGetVar = (target, site, name) => {
-    const variable = site.get(target, name);
-    return variable ? variable.value : "";
-}`;
 runtimeFunctions.pmdToJson = `const pmdToJson = (runtime, target, type, start) => {
     const serialized = {};
     for (const variable of Object.values(runtime.getTargetForStage().variables)) {
@@ -1706,19 +1702,6 @@ runtimeFunctions.pmdToJson = `const pmdToJson = (runtime, target, type, start) =
         }
     }
     return JSON.stringify(serialized);
-}`;
-runtimeFunctions.pmdSetVar = `const pmdSetVar = (runtime, target, site, name, value) => {
-    const variable = site.get(target, name);
-    if (variable) {
-        variable.value = value;
-        if (variable.isCloud) {
-            runtime.ioDevices.cloud.requestUpdateVariable(variable.name, variable.value);
-        }
-    }
-}`;
-runtimeFunctions.pmdGetList = `const pmdGetList = (target, site, name) => {
-    const variable = site.get(target, name);
-    return variable ? variable.pmGetValue().toString() : "";
 }`;
 runtimeFunctions.pmdItemOf = `const pmdItemOf = (target, site, index, name) => {
     const variable = site.get(target, name);
@@ -1761,13 +1744,6 @@ runtimeFunctions.pmdReplace = `const pmdReplace = (target, site, index, name, va
             variable.pmItemsChanged();
         }
     }
-}`;
-runtimeFunctions.pmdIndexOf = `const pmdIndexOf = (target, site, value, name) => {
-    const variable = site.get(target, name);
-    if (variable) {
-        return variable.pmIndexOf(value);
-    }
-    return 0;
 }`;
 runtimeFunctions.pmdIndexesOf = `const pmdIndexesOf = (target, site, value, name) => {
     const variable = site.get(target, name);
@@ -1905,13 +1881,6 @@ runtimeFunctions.pmlOrder = `const pmlOrder = (target, site, name, order) => {
         list.pmGetValue().sort(globalState.Cast.compare).reverse();
     }
     list.pmItemsChanged();
-}`;
-runtimeFunctions.pmlSetToList = `const pmlSetToList = (target, site1, site2, name1, name2) => {
-    const list1 = site1.get(target, name1);
-    if (!list1) return;
-    const list2 = site2.get(target, name2);
-    if (!list2) return;
-    list1.pmSetValue([...list2.pmGetValue()]);
 }`;
 runtimeFunctions.pmlConcat = `const pmlConcat = (target, site1, site2, name1, name2) => {
     const list1 = site1.get(target, name1);

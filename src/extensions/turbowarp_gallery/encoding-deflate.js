@@ -1,3 +1,4 @@
+// Desktop fork (extension merges): JS Deflate by BeatGammit (deflate), moved from jg_prism for Encoding's byte list blocks.
 /* constant parameters */
 var WSIZE = 32768, // Sliding Window size
     STORED_BLOCK = 0,

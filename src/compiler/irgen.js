@@ -36,19 +36,17 @@ const EXPANSION_INLINE_INPUTS = new Set([
 const EXPANSION_INLINE_STACKS = new Set([
     'pmMotionExpansion_fence', 'pmMotionExpansion_steptowards', 'pmMotionExpansion_tweentowards'
 ]);
-// Desktop fork (section 149): TurboWarp "Variable and list" and List Tools blocks compiled to inline code
-// (descendDataInlineInput / Stack).
+// Desktop fork (section 149): the list and JSON blocks of Variables & Lists (from TurboWarp's "Variable and list" and
+// List Tools; extension merges) compiled to inline code (descendDataInlineInput / Stack).
 const DATA_INLINE_INPUTS = new Set([
-    'qxsckvarandlist_getVar', 'qxsckvarandlist_seriVarsToJson', 'qxsckvarandlist_getList',
-    'qxsckvarandlist_getValueOfList', 'qxsckvarandlist_seriListsToJson', 'qxsckvarandlist_getIndexOfList',
-    'qxsckvarandlist_getIndexesOfList', 'qxsckvarandlist_length', 'qxsckvarandlist_listContains',
-    'lmsData_getListJoin', 'lmsData_timesItemAppears', 'lmsData_itemIndex', 'lmsData_orderIs'
+    'DICandSPmonitorsPlus_seriVarsToJson', 'DICandSPmonitorsPlus_getValueOfList', 'DICandSPmonitorsPlus_seriListsToJson',
+    'DICandSPmonitorsPlus_getIndexesOfList', 'DICandSPmonitorsPlus_length', 'DICandSPmonitorsPlus_listContains',
+    'DICandSPmonitorsPlus_getListJoin', 'DICandSPmonitorsPlus_timesItemAppears', 'DICandSPmonitorsPlus_itemIndex', 'DICandSPmonitorsPlus_orderIs'
 ]);
 const DATA_INLINE_STACKS = new Set([
-    'qxsckvarandlist_setVar', 'qxsckvarandlist_clearList', 'qxsckvarandlist_deleteOfList',
-    'qxsckvarandlist_addValueInList', 'qxsckvarandlist_replaceOfList', 'qxsckvarandlist_copyList',
-    'lmsData_deleteItems', 'lmsData_deleteAllOfItem', 'lmsData_replaceAllOfItem', 'lmsData_repeatList',
-    'lmsData_orderList', 'lmsData_setListToList', 'lmsData_joinLists'
+    'DICandSPmonitorsPlus_clearList', 'DICandSPmonitorsPlus_deleteOfList', 'DICandSPmonitorsPlus_addValueInList', 'DICandSPmonitorsPlus_replaceOfList', 'DICandSPmonitorsPlus_copyList',
+    'DICandSPmonitorsPlus_deleteItems', 'DICandSPmonitorsPlus_deleteAllOfItem', 'DICandSPmonitorsPlus_replaceAllOfItem', 'DICandSPmonitorsPlus_repeatList',
+    'DICandSPmonitorsPlus_orderList', 'DICandSPmonitorsPlus_joinLists'
 ]);
 // Desktop fork (section 195): blocks that search by a name fixed in the block, compiled to inline code
 // (descendNameSearchInline).
@@ -61,7 +59,7 @@ const SEARCH_PARSE_INLINE_INPUTS = new Set([
     'steve0greatnesstimers_getter', 'steve0greatnesstimers_elapsed', 'steve0greatnesstimers_is_paused'
 ]);
 const SEARCH_PARSE_INLINE_STACKS = new Set([
-    'DICandSPmonitorsPlus_setString', 'DICandSPmonitorsPlus_setColor', 'DICandSPmonitorsPlus_swapVars',
+    'DICandSPmonitorsPlus_setString', 'DICandSPmonitorsPlus_swapVars',
     'steve0greatnesstimers_add', 'steve0greatnesstimers_pause', 'steve0greatnesstimers_unpause',
     'steve0greatnesstimers_toggle', 'steve0greatnesstimers_restart', 'steve0greatnesstimers_stop'
 ]);
@@ -73,12 +71,11 @@ const CLONES_VAR_INLINE_STACKS = new Set([
     'lmsclonesplus_setVariableOfMainSprite', 'lmsclonesplus_setVariableOfClone'
 ]);
 // Desktop fork (section 196): inputs a block parses as JSON on every call; fixed text is parsed once (fixedJsonInputs).
-// 'keys': Keys+ takes the array itself. 'flat': only an array without arrays or objects in it. 'any': any array or object.
+// 'keys': Keys+ takes the array itself. 'flat': only an array without arrays or objects in it.
 const FIXED_JSON_INPUTS = {
     enderKeysPlusV2_isKeysPressed: {inputs: ['keys'], form: 'keys'},
     enderKeysPlusV2_timeKeysPressed: {inputs: ['keys'], form: 'keys'},
     enderKeysPlusV2_isKeysHit: {inputs: ['keys'], form: 'keys'},
-    utilities_parseJSON: {inputs: ['JSON_STRING'], form: 'any'},
     embintranslation_get_translation_with_data: {inputs: ['data'], form: 'flat'},
     SharkPoolSharktilities_shuffleArray: {inputs: ['WORDS'], form: 'flat'}
 };
@@ -2706,8 +2703,8 @@ class ScriptTreeGenerator {
     }
 
     /**
-     * Desktop fork (section 149): the blocks of TurboWarp's "Variable and list" (qxsckvarandlist) and List Tools
-     * (lmsData) get their own nodes instead of section 132's plain direct calls, like section 140; jsgen.js writes
+     * Desktop fork (section 149): the list and JSON blocks of Variables & Lists (from TurboWarp's "Variable and list"
+     * and List Tools; extension merges) get their own nodes instead of section 132's plain direct calls, like section 140; jsgen.js writes
      * code that does exactly what the extension's function does with the arguments the extension manager's wrapper
      * gives it, and finds the variable or list by its name once when the name is fixed in the block (jsexecute.js
      * pmdName). Inputs in the order of the block's text, checked like section 139 (coreInputsInOrder); only while
@@ -2882,9 +2879,8 @@ class ScriptTreeGenerator {
             return {kind: 'search.varSwap', name1, name2};
         }
         switch (opcode) {
-        case 'DICandSPmonitorsPlus_setString':
-        case 'DICandSPmonitorsPlus_setColor': {
-            const valueName = opcode === 'DICandSPmonitorsPlus_setString' ? 'STRING' : 'COLOR';
+        case 'DICandSPmonitorsPlus_setString': {
+            const valueName = 'STRING';
             const name = fixed('VARIABLE');
             const value = input(valueName);
             return name === null ? null : {kind: 'search.varSet', opcode, valueName, value, name};
@@ -2930,7 +2926,7 @@ class ScriptTreeGenerator {
                 continue;
             }
             if (!parsed || typeof parsed !== 'object') continue;
-            if (info.form !== 'any' && !Array.isArray(parsed)) continue;
+            if (!Array.isArray(parsed)) continue;
             if (info.form === 'flat' && parsed.some(item => item && typeof item === 'object')) continue;
             inputs[name] = {kind: 'search.fixedJson', json: JSON.stringify(parsed), bare: info.form === 'keys'};
         }
@@ -2947,57 +2943,47 @@ class ScriptTreeGenerator {
         // (a menu without reporters is a field; the wrapper turns a missing one into "undefined")
         const field = name => String(block.fields[name] ? block.fields[name].value : undefined);
         switch (block.opcode) {
-        case 'qxsckvarandlist_getVar':
-            return {kind: 'qxsck.getVar', name: input('VAR')};
-        case 'qxsckvarandlist_seriVarsToJson':
+        case 'DICandSPmonitorsPlus_seriVarsToJson':
             return {kind: 'qxsck.toJson', type: '', start: input('START')};
-        case 'qxsckvarandlist_setVar':
-            return {kind: 'qxsck.setVar', name: input('VAR'), value: input('VALUE')};
-        case 'qxsckvarandlist_getList':
-            return {kind: 'qxsck.getList', name: input('LIST')};
-        case 'qxsckvarandlist_getValueOfList':
+        case 'DICandSPmonitorsPlus_getValueOfList':
             return {kind: 'qxsck.itemOf', index: input('INDEX'), name: input('LIST')};
-        case 'qxsckvarandlist_seriListsToJson':
+        case 'DICandSPmonitorsPlus_seriListsToJson':
             return {kind: 'qxsck.toJson', type: 'list', start: input('START')};
-        case 'qxsckvarandlist_clearList':
+        case 'DICandSPmonitorsPlus_clearList':
             return {kind: 'qxsck.clear', name: input('LIST')};
-        case 'qxsckvarandlist_deleteOfList':
+        case 'DICandSPmonitorsPlus_deleteOfList':
             return {kind: 'qxsck.deleteOf', index: input('INDEX'), name: input('LIST')};
-        case 'qxsckvarandlist_addValueInList':
+        case 'DICandSPmonitorsPlus_addValueInList':
             return {kind: 'qxsck.add', value: input('VALUE'), name: input('LIST')};
-        case 'qxsckvarandlist_replaceOfList':
+        case 'DICandSPmonitorsPlus_replaceOfList':
             return {kind: 'qxsck.replace', index: input('INDEX'), name: input('LIST'), value: input('VALUE')};
-        case 'qxsckvarandlist_getIndexOfList':
-            return {kind: 'qxsck.indexOf', value: input('VALUE'), name: input('LIST')};
-        case 'qxsckvarandlist_getIndexesOfList':
+        case 'DICandSPmonitorsPlus_getIndexesOfList':
             return {kind: 'qxsck.indexesOf', value: input('VALUE'), name: input('LIST')};
-        case 'qxsckvarandlist_length':
+        case 'DICandSPmonitorsPlus_length':
             return {kind: 'qxsck.length', name: input('LIST')};
-        case 'qxsckvarandlist_listContains':
+        case 'DICandSPmonitorsPlus_listContains':
             return {kind: 'qxsck.contains', name: input('LIST'), value: input('VALUE')};
-        case 'qxsckvarandlist_copyList':
+        case 'DICandSPmonitorsPlus_copyList':
             return {kind: 'qxsck.copy', name1: input('LIST1'), name2: input('LIST2')};
-        case 'lmsData_deleteItems':
+        case 'DICandSPmonitorsPlus_deleteItems':
             return {kind: 'lms.deleteItems', num1: input('NUM1'), num2: input('NUM2'), name: input('LIST')};
-        case 'lmsData_deleteAllOfItem':
+        case 'DICandSPmonitorsPlus_deleteAllOfItem':
             return {kind: 'lms.deleteAll', item: input('ITEM'), name: input('LIST')};
-        case 'lmsData_replaceAllOfItem':
+        case 'DICandSPmonitorsPlus_replaceAllOfItem':
             return {kind: 'lms.replaceAll', item1: input('ITEM1'), item2: input('ITEM2'), name: input('LIST')};
-        case 'lmsData_repeatList':
+        case 'DICandSPmonitorsPlus_repeatList':
             return {kind: 'lms.repeat', name1: input('LIST1'), num: input('NUM'), name2: input('LIST2')};
-        case 'lmsData_getListJoin':
+        case 'DICandSPmonitorsPlus_getListJoin':
             return {kind: 'lms.join', name: input('LIST'), string: input('STRING')};
-        case 'lmsData_timesItemAppears':
+        case 'DICandSPmonitorsPlus_timesItemAppears':
             return {kind: 'lms.timesAppears', item: input('ITEM'), name: input('LIST')};
-        case 'lmsData_itemIndex':
+        case 'DICandSPmonitorsPlus_itemIndex':
             return {kind: 'lms.itemIndex', index: input('INDEX'), item: input('ITEM'), name: input('LIST')};
-        case 'lmsData_orderIs':
+        case 'DICandSPmonitorsPlus_orderIs':
             return {kind: 'lms.orderIs', name: input('LIST'), order: field('ORDER')};
-        case 'lmsData_orderList':
+        case 'DICandSPmonitorsPlus_orderList':
             return {kind: 'lms.order', name: input('LIST'), order: field('ORDER')};
-        case 'lmsData_setListToList':
-            return {kind: 'lms.setToList', name1: input('LIST1'), name2: input('LIST2')};
-        case 'lmsData_joinLists':
+        case 'DICandSPmonitorsPlus_joinLists':
             return {kind: 'lms.concat', name1: input('LIST1'), name2: input('LIST2')};
         }
         return null;

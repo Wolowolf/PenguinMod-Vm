@@ -6,7 +6,8 @@ const {test} = require('tap');
 
 const {wrapClamp} = require('../../src/util/math-util');
 
-const VideoSensing = require('../../src/extensions/scratch3_video_sensing/index.js');
+// Desktop fork (extension merges): the motion part of Video Sensing, used by the merged camera extension
+const VideoSensing = require('../../src/extensions/scratch3_video_sensing/motion.js');
 const VideoMotion = require('../../src/extensions/scratch3_video_sensing/library.js');
 
 /**

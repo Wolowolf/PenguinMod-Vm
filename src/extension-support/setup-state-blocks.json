@@ -46,10 +46,11 @@
   "cloudlink_getComState",
   "cloudlink_getComLostConnectionState",
   "cloudlink_getComFailedConnectionState",
-  "iygPerlin_GeneratePerlinNoiseV2",
   "jgTween_tweenVariableCancel",
   "jgTween_tweenPropertyCancel",
   "lmsSoundExpanded_playSoundAt",
   "lmsSoundExpanded_playSoundTo",
-  "pmTextToSpeech_speak"
+  "pmTextToSpeech_speak",
+  "randomutils_pregeneratePerlinNoise",
+  "videoSensing_videoToggle"
 ]

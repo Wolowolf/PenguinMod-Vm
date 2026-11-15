@@ -2,6 +2,8 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's MubiLop/toastnotifs.js, moved into
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
+// Desktop fork (extension merges): Notifications (mdwalters/notifications.js) is merged in as its "System notifications"
+// blocks, marked "Desktop fork (extension merges)".
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // CODE GENERATED USING mCompiler (v1.0) | Made by MubiLop
@@ -201,20 +203,58 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
        document.head.appendChild(style);
     };
  
+    // Desktop fork (extension merges): Notifications' system notification code
+    let notificationsDenied = false;
+    /** @type {Notification|null} */
+    let systemNotification = null;
+    const askForNotificationPermission = async () => {
+       try {
+          const allowedByVM = await Scratch.canNotify();
+          if (!allowedByVM) {
+             throw new Error("Denied by VM");
+          }
+          const allowedByBrowser = await Notification.requestPermission();
+          if (allowedByBrowser === "denied") {
+             throw new Error("Denied by browser");
+          }
+          notificationsDenied = false;
+          return true;
+       } catch (e) {
+          notificationsDenied = true;
+          console.warn("Could not request notification permissions", e);
+          return false;
+       }
+    };
+    const isAndroid = () => navigator.userAgent.includes("Android");
+    const getServiceWorkerRegistration = () => {
+       if (!("serviceWorker" in navigator)) return null;
+       // This is only needed on Android
+       if (!isAndroid()) return null;
+       return navigator.serviceWorker.getRegistration();
+    };
+
     class ToastNotifications {
        constructor() {
           injectStyles();
+          // Desktop fork (extension merges): from Notifications
+          Scratch.vm.runtime.on("RUNTIME_DISPOSED", () => {
+             this._closeSystemNotification();
+          });
        }
  
        getInfo() {
           return {
              id: 'toastnotifs',
-             name: 'Toast Notifs',
+             name: 'Notifications',
              color1: '#4CAF50',
              menuIconURI: icon,
              blockIconURI: assets.block,
              color1: "#905c1b",
              blocks: [{
+                   blockType: BlockType.LABEL,
+                   text: 'Toasts'
+                },
+                {
                    opcode: 'showToastNew',
                    blockType: BlockType.COMMAND,
                    text: 'show [TYPE] toast with title [TITLE] message [MESSAGE] at [POSITION]',
@@ -303,18 +343,54 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 {
                    opcode: 'resetStyles',
                    blockType: BlockType.COMMAND,
-                   text: 'reset all styles to default'
+                   text: 'reset all toast styles'
                 },
                 {
                     opcode: 'setSoundEnabled',
                     blockType: BlockType.COMMAND,
-                    text: 'set notification sounds [ENABLED]',
+                    text: 'set toast sounds [ENABLED]',
                     arguments: {
                         ENABLED: {
                             type: ArgumentType.STRING,
                             menu: 'enabledMenu'
                         }
                     }
+                },
+                // Desktop fork (extension merges): from Notifications
+                {
+                   blockType: BlockType.LABEL,
+                   text: 'System notifications'
+                },
+                {
+                   opcode: 'showSystemNotification',
+                   blockType: BlockType.COMMAND,
+                   text: 'show system notification with title [TITLE] message [MESSAGE]',
+                   arguments: {
+                      TITLE: {
+                         type: ArgumentType.STRING,
+                         defaultValue: 'Hello!'
+                      },
+                      MESSAGE: {
+                         type: ArgumentType.STRING,
+                         defaultValue: 'This is a system notification'
+                      }
+                   }
+                },
+                {
+                   opcode: 'closeSystemNotification',
+                   blockType: BlockType.COMMAND,
+                   text: 'close system notification'
+                },
+                {
+                   opcode: 'requestPermission',
+                   blockType: BlockType.COMMAND,
+                   text: 'ask for system notification permission'
+                },
+                {
+                   opcode: 'hasPermission',
+                   blockType: BlockType.BOOLEAN,
+                   text: 'system notifications allowed?',
+                   disableMonitor: true
                 }
              ],
              menus: {
@@ -524,6 +600,63 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
        setSoundEnabled({ENABLED}) {
         toastConfig.soundWhenEnabled = Cast.toString(ENABLED);
+       }
+
+       // Desktop fork (extension merges): Notifications' blocks; the title is now the block's instead of a fixed one
+       requestPermission() {
+          return askForNotificationPermission();
+       }
+
+       hasPermission() {
+          if (notificationsDenied) {
+             return false;
+          }
+          return askForNotificationPermission();
+       }
+
+       async _showSystemNotification(title, text) {
+          if (await this.hasPermission()) {
+             const options = {
+                body: text,
+             };
+             try {
+                systemNotification = new Notification(title, options);
+             } catch (e) {
+                // On Android we need to go through the service worker.
+                const registration = await getServiceWorkerRegistration();
+                if (registration) {
+                   try {
+                      await registration.showNotification(title, options);
+                   } catch (e2) {
+                      console.error("Could not show notification", e, e2);
+                   }
+                } else {
+                   console.error("Could not show notification", e);
+                }
+             }
+          }
+       }
+
+       showSystemNotification(args) {
+          this._showSystemNotification(Cast.toString(args.TITLE), Cast.toString(args.MESSAGE));
+       }
+
+       async _closeSystemNotification() {
+          if (systemNotification) {
+             systemNotification.close();
+             systemNotification = null;
+          }
+          const registration = await getServiceWorkerRegistration();
+          if (registration) {
+             const notifications = await registration.getNotifications();
+             for (const notification of notifications) {
+                notification.close();
+             }
+          }
+       }
+
+       closeSystemNotification() {
+          this._closeSystemNotification();
        }
     }
  

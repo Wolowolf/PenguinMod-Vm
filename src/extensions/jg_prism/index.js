@@ -1,10 +1,6 @@
 const formatMessage = require('format-message');
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
-const beatgammit = {
-    deflate: require('./beatgammit-deflate'),
-    inflate: require('./beatgammit-inflate')
-};
 const {
     validateArray
 } = require('../../util/json-block-utilities');
@@ -143,52 +139,6 @@ class JgPrismBlocks {
                             defaultValue: "data:text/plain;base64,SGVsbG8="
                         }
                     }
-                },
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "More Mouse Inputs"
-                // },
-                // {
-                //     blockType: BlockType.LABEL,
-                //     text: "String Character Codes"
-                // },
-                "---",
-                "---",
-                {
-                    blockType: BlockType.LABEL,
-                    text: "JS Deflate by BeatGammit"
-                },
-                {
-                    opcode: 'lib_deflate_deflateArray',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.lib_deflate_deflateArray',
-                        default: 'deflate [ARRAY]',
-                        description: 'abc'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        ARRAY: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "[]"
-                        }
-                    }
-                },
-                {
-                    opcode: 'lib_deflate_inflateArray',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.lib_deflate_inflateArray',
-                        default: 'inflate [ARRAY]',
-                        description: 'abc'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        ARRAY: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "[]"
-                        }
-                    }
                 }
             ]
         };
@@ -271,17 +221,6 @@ class JgPrismBlocks {
                 resolve('[]');
             });
         });
-    }
-
-    lib_deflate_deflateArray(args) {
-        const array = validateArray(args.ARRAY).array;
-
-        return JSON.stringify(beatgammit.deflate(array));
-    }
-    lib_deflate_inflateArray(args) {
-        const array = validateArray(args.ARRAY).array;
-
-        return JSON.stringify(beatgammit.inflate(array));
     }
 
 }

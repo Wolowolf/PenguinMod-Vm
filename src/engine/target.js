@@ -154,7 +154,9 @@ class Target extends EventEmitter {
 
         // No variable with this name exists - create it locally.
         const newVariable = Variable.create(id, name, Variable.SCALAR_TYPE, false);
-        this.variables[id] = newVariable;
+        // Desktop fork (extension merges): stored under the ID it got (Variables & Lists' by-name "set" and "swap"
+        // pass no ID: the variable was stored under "" with another ID, so a later lookup by that ID found nothing)
+        this.variables[newVariable.id] = newVariable;
         this.pmVarNamesChanged();
         return newVariable;
     }
