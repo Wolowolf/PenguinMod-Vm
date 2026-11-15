@@ -435,7 +435,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         const dropdown = document.createElement("select");
         dropdown.id = "SP-input_select";
         dropdown.setAttribute("class", askInput.getAttribute("class"));
-        dropdown.setAttribute("style", `width: 100%; background: #fff; color: #505050; border-color: #D9D9D9;`);
+        // Desktop fork (ask dropdown colours): copy the colours, border and roundness of the ask box's own input
+        // (theme, Custom styles addon or packaged game) instead of fixed white and grey
+        const inputStyle = getComputedStyle(askInput);
+        dropdown.setAttribute("style", `width: 100%; background: ${inputStyle.backgroundColor}; color: ${inputStyle.color}; border: ${Math.round(parseFloat(inputStyle.borderTopWidth))}px solid ${inputStyle.borderTopColor}; border-radius: ${inputStyle.borderTopLeftRadius} !important;`);
         input.value.forEach(item => {
           const option = document.createElement("option");
           option.value = item; option.text = item;
