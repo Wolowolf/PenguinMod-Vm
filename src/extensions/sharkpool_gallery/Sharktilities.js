@@ -308,7 +308,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     smooth(spd, lim, type, num) {
-      type = type === "sin" ? "sin" : type === "cos" ? "cos" : "tan";
+      type = type === "cos" ? "cos" : "sin"; // Desktop fork (section 266): no tan
       const speed = Scratch.Cast.toNumber(spd) / 10;
       const limit = Scratch.Cast.toNumber(lim);
       return Math[type](num * speed) * limit || 0;

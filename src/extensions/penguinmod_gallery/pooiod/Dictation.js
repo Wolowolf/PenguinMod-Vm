@@ -814,11 +814,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             return true;
         }
 
-        // A language name from the menu, or its Whisper code (e.g. "de"); anything else is ignored
+        // A language name from the menu (Desktop fork, section 266: no Whisper codes)
         setLanguage(args) {
             const value = Scratch.Cast.toString(args.LANGUAGE).toLowerCase().trim();
-            const name = LANGUAGES[value] ? value : Object.keys(LANGUAGES).find((n) => LANGUAGES[n] === value);
-            if (name) language = name;
+            if (LANGUAGES[value]) language = value;
         }
 
         // "high": Parakeet for the 24 European languages it knows (a larger download); "normal": Moonshine

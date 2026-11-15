@@ -158,16 +158,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: Scratch.translate("off"), value: "off" },
             ],
           },
-          blends: {
-            acceptReporters: true,
-            items: [
-              { text: Scratch.translate("default"), value: "default" },
-              { text: Scratch.translate("additive"), value: "additive" }, // -> additive legacy
-              { text: Scratch.translate("subtract"), value: "subtract" }, // -> subtract legacy
-              { text: Scratch.translate("multiply"), value: "multiply" },
-              { text: Scratch.translate("invert"), value: "invert" }, // -> invert legacy
-            ],
-          },
           blends2: {
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
@@ -299,16 +289,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     getBlend(args, { target }) {
-      switch (target.blendMode) {
-        case "additive legacy":
-          return "additive";
-        case "subtract legacy":
-          return "subtract";
-        case "invert legacy":
-          return "invert";
-        default:
-          return target.blendMode ?? "default";
-      }
+      return target.blendMode ?? "default"; // Desktop fork (section 266): no legacy blend modes
     }
 
 

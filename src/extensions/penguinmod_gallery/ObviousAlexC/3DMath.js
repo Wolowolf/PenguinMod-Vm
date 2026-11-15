@@ -25,7 +25,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     sinAndCos: [0, 1, 0, 1, 0, 1],
   };
   let optimized = {
-    acceptParsed: 1,
     returnParsed: 2,
   };
   let wasObject = false;
@@ -977,7 +976,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           opMode: {
             items: [
-              /*{ text: "accept parsed objects", value: "acceptParsed" },*/
               { text: "return parsed objects", value: "returnParsed" },
             ],
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
@@ -1262,10 +1260,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
       }
       if (typeof str === "object") {
-        if (optimized.acceptParsed !== 0) {
-          wasObject = true
-          return str;
-        }
+        wasObject = true; // Desktop fork (section 266): objects are always accepted (the "accept parsed objects" switch is gone)
+        return str;
       }
     }
     stringify(value) {
