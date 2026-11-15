@@ -941,11 +941,11 @@ void main() {
           TARGETS: { acceptReporters: true, items: "getTargets" },
           ALL_TARG: { acceptReporters: true, items: "getTargetsAll" },
           BEHAVIOURS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.getBehaviours(false),
           },
           ALL_BEHAVIOURS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.getBehaviours(true),
           },
           POS: ["x", "y"],
@@ -970,7 +970,7 @@ void main() {
             { text: Scratch.translate("off"), value: "off" },
           ],
           TEXTURES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("circle"), value: "circle" },
               { text: Scratch.translate("square"), value: "square" },
@@ -979,14 +979,14 @@ void main() {
             ],
           },
           COLOR_EMIT: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("start"), value: "sCol" },
               { text: Scratch.translate("end"), value: "eCol" },
             ],
           },
           BLENDING: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("default"), value: "default" },
               { text: Scratch.translate("additive"), value: "additive" },
@@ -1002,6 +1002,7 @@ void main() {
               { text: Scratch.translate("multiply"), value: "multiply" },
               { text: Scratch.translate("invert"), value: "invert" },
               { text: Scratch.translate("mask"), value: "mask" },
+              /* Desktop fork (section 265) */ { text: Scratch.translate("default behind"), value: "default behind" }, { text: Scratch.translate("erase"), value: "erase" },
             ],
           },
         },

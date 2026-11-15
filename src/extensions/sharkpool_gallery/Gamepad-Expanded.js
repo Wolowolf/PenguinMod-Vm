@@ -330,7 +330,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           padMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: "any",
@@ -355,7 +355,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           detailMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ['id', 'vendor', 'product', 'mapping']
           },
           buttonMenu: {

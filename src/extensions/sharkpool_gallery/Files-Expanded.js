@@ -794,11 +794,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             items: "getFonts",
           },
           encoding: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: "getEncodings",
           },
           automaticallyOpen: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("show modal"),
@@ -816,7 +816,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           FILE_SIZES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("formatted"),
@@ -829,7 +829,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           FILE_INFO: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("data"),
@@ -854,7 +854,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           DELETION: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("storage"),
@@ -884,15 +884,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           modalVisuals: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("border color"),
-                value: "border",
+                value: "borderColor" /* Desktop fork (section 265) */,
               },
               {
                 text: Scratch.translate("text color"),
-                value: "text",
+                value: "textColor" /* Desktop fork (section 265) */,
               },
               {
                 text: Scratch.translate("background color"),
@@ -937,7 +937,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           visualColors: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("border"),
@@ -954,7 +954,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           visualOptions: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("font size"),
@@ -979,7 +979,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           borderTypes: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("dotted"),

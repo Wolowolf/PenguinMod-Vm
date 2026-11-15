@@ -162,15 +162,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           TYPES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["latitude", "longitude", { text: "accuracy (meters)", value: "accuracy" }]
           },
           TYPES2: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["altitude", "speed"]
           },
           IP_MENU: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { "text": "country name", "value": "countryName" },
               { "text": "country code", "value": "countryCode" },
@@ -178,12 +178,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               { "text": "city", "value": "cityName" },
               { "text": "continent", "value": "continent" },
               { "text": "latitude", "value": "latitude" },
-              { "text": "longitude", "value": "longitude" }
+              { "text": "longitude", "value": "longitude" },
+              /* Desktop fork (section 265) */ { "text": "zip code", "value": "zipCode" }
             ]
           },
           UNITS: ["miles", "kilometers"],
           ACCURACY: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["high", "low"]
           }
         }

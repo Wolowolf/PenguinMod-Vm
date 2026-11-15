@@ -232,10 +232,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         menus: {
           TARGETS: { acceptReporters: true, items: "getTargets" },
           SKIN_TYPES: {
-            acceptReporters: true, items: ["svg", "url"]
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["svg", "url"]
           },
           SKIN_ATTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "width", "height", "rotation center x", "rotation center y",
               "type", "source", "users"

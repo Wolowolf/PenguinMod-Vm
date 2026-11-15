@@ -222,11 +222,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           EFFECTMENU: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this._getMenuItems(false),
           },
           RENDERMODE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("pixelated"),
@@ -239,11 +239,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           EFFECTGETMENU: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this._getMenuItems(true),
           },
           borderTypes: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("dotted"),

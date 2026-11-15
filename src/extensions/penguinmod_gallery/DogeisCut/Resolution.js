@@ -138,7 +138,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         ]
                     },
                     stageEdgeMenu: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: 'top left corner', value: 'top left corner' },
                             { text: 'top edge', value: 'top edge' },

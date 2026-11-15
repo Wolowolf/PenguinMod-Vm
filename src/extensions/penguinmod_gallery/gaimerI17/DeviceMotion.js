@@ -218,11 +218,11 @@ class gaimeriDeviceMotionExtension {
             ],
             menus: {
                 AXIS_MENU: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: ['x', 'y', 'z']
                 },
                 ROTATION_MENU: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: ['a', 'b', 'c']
                 }
             }

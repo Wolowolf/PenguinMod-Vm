@@ -127,7 +127,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           userInfo: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 value: "name",
@@ -166,7 +166,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
 
           installType: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 value: "DLC",
@@ -179,7 +179,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
 
           overlayType: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 value: "URL",

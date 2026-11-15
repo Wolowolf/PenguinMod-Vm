@@ -1744,7 +1744,7 @@ class ScriptTreeGenerator {
         case 'pen_changePenColorParamBy':
             return {
                 kind: 'pen.changeParam',
-                param: this.descendInputOfBlock(block, 'COLOR_PARAM'),
+                param: {kind: 'constant', value: block.fields.COLOR_PARAM ? block.fields.COLOR_PARAM.value : ''}, // Desktop fork (section 265): a fixed menu (field)
                 value: this.descendInputOfBlock(block, 'VALUE')
             };
         case 'pen_penDown':
@@ -1758,7 +1758,7 @@ class ScriptTreeGenerator {
         case 'pen_setPenColorParamTo':
             return {
                 kind: 'pen.setParam',
-                param: this.descendInputOfBlock(block, 'COLOR_PARAM'),
+                param: {kind: 'constant', value: block.fields.COLOR_PARAM ? block.fields.COLOR_PARAM.value : ''}, // Desktop fork (section 265): a fixed menu (field)
                 value: this.descendInputOfBlock(block, 'VALUE')
             };
         case 'pen_setPenColorToColor':
@@ -2430,7 +2430,8 @@ class ScriptTreeGenerator {
         case 'sensing_keyhit':
             return {kind: 'sensing.keyHit', key: input('KEY_OPTION')};
         case 'sensing_mousescrolling':
-            return {kind: 'sensing.scrolling', option: input('SCROLL_OPTION')};
+            // Desktop fork (section 265): SCROLL_OPTION is a fixed menu (a field)
+            return {kind: 'sensing.scrolling', option: {kind: 'constant', value: field('SCROLL_OPTION')}};
         case 'sensing_fingerdown':
             return {kind: 'sensing.finger', method: 'getIsDown', finger: input('FINGER_OPTION')};
         case 'sensing_fingertapped':
@@ -2456,7 +2457,8 @@ class ScriptTreeGenerator {
         case 'looks_sayHeight':
             return this.coreDirectCall('scratch3_looks', 'getBubbleHeight', input, []);
         case 'looks_getinputofcostume':
-            return this.coreDirectCall('scratch3_looks', 'getCostumeValue', input, ['INPUT', 'COSTUME']);
+            // Desktop fork (section 265): INPUT is a fixed menu (a field)
+            return this.coreDirectCall('scratch3_looks', 'getCostumeValue', input, ['COSTUME'], {INPUT: field('INPUT')});
         case 'sensing_getdragmode':
             return {kind: 'sensing.dragMode'};
         case 'sound_getEffectValue':
@@ -2624,7 +2626,8 @@ class ScriptTreeGenerator {
         case 'pmOperatorsExpansion_betweenNumbers':
             return {kind: 'pmInline.between', num: input('NUM'), min: input('MIN'), max: input('MAX')};
         case 'pmOperatorsExpansion_partOfRatio':
-            return {kind: 'pmInline.partOfRatio', part: input('PART'), ratio: input('RATIO')};
+            // Desktop fork (section 265): PART is a fixed menu (a field), not an input
+            return {kind: 'pmInline.partOfRatio', part: {kind: 'constant', value: block.fields.PART ? block.fields.PART.value : ''}, ratio: input('RATIO')};
         case 'pmOperatorsExpansion_simplifyRatio':
             return {kind: 'pmInline.simplifyRatio', ratio: input('RATIO')};
         case 'pmOperatorsExpansion_pi':
@@ -2649,9 +2652,10 @@ class ScriptTreeGenerator {
             return {kind: 'pmInline.distanceTo', x: input('X'), y: input('Y')};
         case 'pmMotionExpansion_spritewh': {
             // (only a fixed menu value it knows; anything else answers undefined, left to the direct call)
-            const what = input('WHAT');
-            if (what.kind !== 'constant' || ['width', 'height', 'costume width', 'costume height'].indexOf(what.value) === -1) return null;
-            return {kind: 'pmInline.spriteSize', what: what.value};
+            // Desktop fork (section 265): WHAT is a fixed menu (a field), not an input
+            const what = block.fields.WHAT ? block.fields.WHAT.value : null;
+            if (['width', 'height', 'costume width', 'costume height'].indexOf(what) === -1) return null;
+            return {kind: 'pmInline.spriteSize', what};
         }
         case 'pmSensingExpansion_packaged':
             return {kind: 'pmInline.packaged'};

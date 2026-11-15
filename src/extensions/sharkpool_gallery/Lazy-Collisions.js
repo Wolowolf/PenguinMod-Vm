@@ -102,7 +102,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             items: "_getTargets"
           },
           POSITION: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "top", "bottom",
               "left side", "right side",
@@ -111,7 +111,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           POSITION2: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["top", "bottom", "left side", "right side"]
           },
           POSITION3: ["above", "below", "beside left", "beside right"]

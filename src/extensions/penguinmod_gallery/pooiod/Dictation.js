@@ -777,8 +777,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                 ],
                 menus: {
-                    languages: { acceptReporters: true, items: Object.keys(LANGUAGES) },
-                    accuracies: { acceptReporters: true, items: ["normal", "high"] },
+                    languages: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: Object.keys(LANGUAGES) },
+                    accuracies: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["normal", "high"] },
                 },
             };
         }

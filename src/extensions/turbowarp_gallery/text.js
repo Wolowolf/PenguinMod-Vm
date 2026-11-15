@@ -392,11 +392,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           textCase: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this._initCaseMenu(),
           },
           trimMethod: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("both sides"),

@@ -241,7 +241,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           rd: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate({ id: "radius", default: "radius" }),
@@ -257,7 +257,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           cs: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate({ id: "area", default: "area" }),

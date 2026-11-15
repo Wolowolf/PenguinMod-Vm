@@ -117,7 +117,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         menus: {
           TARGETS: { acceptReporters: true, items: "_getTargets" },
           MODE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("start"), value: "start" },
               { text: Scratch.translate("stop"), value: "stop" },

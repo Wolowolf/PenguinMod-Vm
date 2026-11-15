@@ -221,7 +221,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         menus: {
           WAVES2: ["triangle", "sine", "square", "sawtooth"],
           WAVES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["triangle", "sine", "square", "sawtooth"]
           }
         },

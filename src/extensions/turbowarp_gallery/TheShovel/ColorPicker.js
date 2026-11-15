@@ -111,7 +111,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           RGBMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate({
@@ -126,7 +126,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           POSMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["X", "Y"],
           },
         },

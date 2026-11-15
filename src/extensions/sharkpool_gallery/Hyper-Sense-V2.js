@@ -344,11 +344,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             { text: Scratch.translate("sprite"), value: "sprite" }
           ],
           ASK_INPUTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: validInputs
           },
           STAGE_SCALES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("display width"), value: "display width" },
               { text: Scratch.translate("display height"), value: "display height" },
@@ -356,7 +356,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           string_types: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("numbers"), value: "numbers" },
               { text: Scratch.translate("letters"), value: "letters" },

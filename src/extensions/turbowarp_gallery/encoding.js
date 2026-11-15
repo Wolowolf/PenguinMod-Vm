@@ -315,7 +315,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           encode: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: "Base 64",
@@ -334,7 +334,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           compress: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: "Base 64",
@@ -356,7 +356,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           base: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: bases,
           },
         },

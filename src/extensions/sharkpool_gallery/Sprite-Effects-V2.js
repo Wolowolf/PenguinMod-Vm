@@ -561,7 +561,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           SPLIT_MODES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               genMenuItem("additive split", "split"),
               genMenuItem("overlay split", "overlay"),
@@ -569,15 +569,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           FLOOD_TYPES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [genMenuItem("outline"), genMenuItem("flood")]
           },
           BLUR_TYPES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [genMenuItem("motion blur", "motion"), genMenuItem("vintage blur", "vintage")]
           },
           EFFECTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               genMenuItem("blur"), genMenuItem("color"),
               genMenuItem("saturation"), genMenuItem("contrast"),
@@ -592,7 +592,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           DISTORT_PRESETS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               genMenuItem("bulge"), genMenuItem("whirl"),
               genMenuItem("ripple"),
@@ -601,18 +601,18 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           BLEND_MODES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               genMenuItem("normal"),
               genMenuItem("multiply"), genMenuItem("screen"),
               genMenuItem("overlay"), genMenuItem("exclusion"),
               genMenuItem("color-dodge"), genMenuItem("color-burn"),
               genMenuItem("hard-light"), genMenuItem("soft-light"),
-              genMenuItem("difference"), genMenuItem("luminosity")
+              genMenuItem("difference"), genMenuItem("luminosity"), /* Desktop fork (section 265) */ genMenuItem("darken"), genMenuItem("lighten"), genMenuItem("hue"), genMenuItem("saturation"), genMenuItem("color")
             ]
           },
           LIGHT_MODES: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               genMenuItem("multiply"), genMenuItem("screen"),
               genMenuItem("darken"), genMenuItem("lighten"),
@@ -620,7 +620,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               genMenuItem("hard-light"), genMenuItem("soft-light"),
               genMenuItem("difference"), genMenuItem("exclusion"),
               genMenuItem("hue"), genMenuItem("saturation"),
-              genMenuItem("color"), genMenuItem("luminosity")
+              genMenuItem("color"), genMenuItem("luminosity"), /* Desktop fork (section 265) */ genMenuItem("color-dodge"), genMenuItem("color-burn")
             ]
           }
         },

@@ -599,7 +599,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                             { text: "back", value: "3" },
                             { text: "forward", value: "4" },
                         ],
-                        acceptReporters: true
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */
                     },
                     keys: { items: "_getKeysMenu", acceptReporters: true },
                     settings: {
@@ -617,7 +617,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     // Desktop fork (extension merges): from Key Simulation
                     simulatedKeys: { items: "_getSimulatedKeysMenu", acceptReporters: true },
                     waitMode: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: "continue", value: "without waiting" },
                             { text: "wait", value: "and wait" }

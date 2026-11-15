@@ -714,7 +714,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
         ],
         menus: {
-          BODY_SHAPES: { acceptReporters: true, items: "_bodyTypes" },
+          BODY_SHAPES: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: "_bodyTypes" },
           TOGGLER: [
             { text: Scratch.translate("on"), value: "on" }, 
             { text: Scratch.translate("off"), value: "off" }, 

@@ -561,7 +561,7 @@ class pmOperatorsExpansion {
       ],
       menus: {
         part: {
-          acceptReporters: true,
+          acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           items: [
             { text: "first", value: "first" },
             { text: "last", value: "last" },

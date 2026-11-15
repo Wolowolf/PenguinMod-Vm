@@ -169,7 +169,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           blends2: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("default"), value: "default" },
               {
@@ -193,7 +193,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           props: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("width"), value: "width" },
               { text: Scratch.translate("height"), value: "height" },

@@ -916,15 +916,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "-", value: "subtract" },
               { text: "*", value: "multiply" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           quatFunctionMenu: {
             items: ["conjugate", "inverse", "normalize", "square root", "exp", "log"],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           quatPartMenu: {
             items: ["real part", "vector part", "squared magnitude"],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           axisMenu: {
             items: [
@@ -947,7 +947,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "pitch", value: "1" },
               { text: "roll", value: "2" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           axisMenu2: {
             items: [
@@ -955,7 +955,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "y", value: "1" },
               { text: "z", value: "2" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           axisMenu3: {
             items: [
@@ -980,7 +980,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               /*{ text: "accept parsed objects", value: "acceptParsed" },*/
               { text: "return parsed objects", value: "returnParsed" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           opEnable: {
             items: [
@@ -988,7 +988,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "disabled", value: "0" },
               { text: "auto", value: "2" }
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
         },
         name: "3D Math",
@@ -2211,7 +2211,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
     }
     setOpMode({ mode, enable }) {
-      optimized[mode] = enable;
+      optimized[mode] = Scratch.Cast.toNumber(enable); // Desktop fork (section 265): the menu gives text
     }
   }
   Scratch.extensions.register(new extension());

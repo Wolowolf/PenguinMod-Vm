@@ -450,7 +450,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             items: fingersMenu,
           },
           deviceMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("gyroscope"),
@@ -463,16 +463,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           coordmenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["x", "y"],
           },
           axismenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["x", "y", "z"],
           },
           // velocitymenu is poorly named.
           velocitymenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate({

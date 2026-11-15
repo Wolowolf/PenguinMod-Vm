@@ -575,7 +575,7 @@ const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNv
         ],
         menus: {
           VIDEO_STATE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: "off", value: VideoState.OFF },
               { text: "on", value: VideoState.ON },
@@ -583,29 +583,29 @@ const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNv
             ],
           },
           ATTRIBUTE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: "motion", value: VideoMotionSensing.SensingAttribute.MOTION },
               { text: "direction", value: VideoMotionSensing.SensingAttribute.DIRECTION },
             ],
           },
           SUBJECT: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: "sprite", value: VideoMotionSensing.SensingSubject.SPRITE },
               { text: "stage", value: VideoMotionSensing.SensingSubject.STAGE },
             ],
           },
           targets: { acceptReporters: true, items: "_getTargets" },
-          onOff: { acceptReporters: true, items: ["on", "off"] },
+          onOff: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["on", "off"] },
           shownHidden: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: "shown", value: "on" },
               { text: "hidden", value: "off" },
             ],
           },
-          widthHeight: { acceptReporters: true, items: ["width", "height"] },
+          widthHeight: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["width", "height"] },
           // These menus were all designed to be compatible with Scratch
           // That's why no reporters and why the values are somewhat arbitrary
           part: {

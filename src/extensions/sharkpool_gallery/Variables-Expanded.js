@@ -516,9 +516,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           variableTypeCreate: ["globally", "for this sprite only"],
           POSITIONS: ["x", "y"],
           BUTTON_CLICK: ["clicked", "held"],
-          VISIBLE: { acceptReporters: true, items: ["show", "hide"] },
+          VISIBLE: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["show", "hide"] },
           variablesTypeMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "normal readout", "large readout", "slider",
               "text", "number", "date", "month", "time",
@@ -526,11 +526,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ]
           },
           EFFECTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "blur", "saturation", "contrast", "brightness",
-              "hue", "opacity", "sepia", "invert", "direction",
-              "scale x", "scale y", "skew x", "skew y"
+              "hue", "opacity", "sepia", "invert", "grayscale", "direction", /* Desktop fork (section 265) */
+              "scale", "scale x", "scale y", "skew x", "skew y"
             ]
           },
         }

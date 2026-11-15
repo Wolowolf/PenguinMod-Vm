@@ -424,7 +424,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             items: "_getTargets",
           },
           state: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("playing"),

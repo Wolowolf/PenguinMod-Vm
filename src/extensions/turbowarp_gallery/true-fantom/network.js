@@ -433,7 +433,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
         menus: {
           content_type: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("(1) text"),

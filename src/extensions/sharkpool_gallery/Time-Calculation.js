@@ -121,14 +121,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           }
         ],
         menus: {
-          MathType: { acceptReporters: true, items: ["add", "subtract"] },
-          Round: { acceptReporters: true, items: ["rounded", "exact"] },
+          MathType: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["add", "subtract"] },
+          Round: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["rounded", "exact"] },
           Time: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["year", "month", "day", "hour", "minute", "second"]
           },
           Months: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "January", "February", "March", "April",
               "May", "June", "July", "August",

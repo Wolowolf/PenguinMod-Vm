@@ -318,7 +318,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           MOVE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("center"),
@@ -363,7 +363,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           RESIZE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "480x360",
               "640x480",

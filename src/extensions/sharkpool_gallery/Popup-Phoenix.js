@@ -1274,24 +1274,24 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           FONTS: { acceptReporters: true, items: "getFonts" },
-          POP_STYLES: { acceptReporters: true, items: this.genStyleList() },
-          INPUTS: { acceptReporters: true, items: validInputs },
-          BORDERS: { acceptReporters: true, items: validBorders },
-          EFFECTS: { acceptReporters: true, items: validEffects },
+          POP_STYLES: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: this.genStyleList() },
+          INPUTS: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: validInputs },
+          BORDERS: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: validBorders },
+          EFFECTS: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: validEffects },
           UI_ELEMENTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.genElementList(false, true, false),
           },
           UI_MAIN: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.genElementList(true, false, true),
           },
           UI_MAIN2: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.genElementList(false, false, true),
           },
           UI_SELECT: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: this.genElementList(true, true, true),
           },
           AWAITS: {
@@ -1333,7 +1333,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           EXTRA_OPTS: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               createMenuItem("focus mode", "focus"),
               createMenuItem("auto close", "autoClose"),

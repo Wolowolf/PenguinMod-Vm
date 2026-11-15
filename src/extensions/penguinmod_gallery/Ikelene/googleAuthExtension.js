@@ -285,14 +285,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 ],
                 menus: {
                     services: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: 'Google', value: 'google' },
                             { text: 'Discord', value: 'discord' },
                         ],
                     },
                     platforms: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: 'desktop app', value: 'desktop' },
                             { text: 'web page', value: 'web' },
@@ -300,7 +300,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                     yesNo: { acceptReporters: false, items: ['yes', 'no'] },
                     fields: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: 'name', value: 'name' },
                             { text: 'username', value: 'username' },

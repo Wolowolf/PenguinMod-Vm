@@ -441,11 +441,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           targets: { acceptReporters: true, items: this.getTargets(false, false) },
           targets2: { acceptReporters: true, items: this.getTargets(true, false) },
           targets3: { acceptReporters: true, items: this.getTargets(false, true) },
-          HAT_MENU: { acceptReporters: true, items: "organizeHats" },
+          HAT_MENU: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: "organizeHats" },
           keys: { acceptReporters: true, items: keysMenu },
-          contType: { acceptReporters: true, items: ["wait", "dont wait"] },
+          contType: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["wait", "dont wait"] },
           runTypes: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["forward", "reversed", "forward and reversed", "randomized"]
           }
         },
@@ -484,8 +484,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         {text: "when value greater than", value: "event_whengreaterthan"},
         {text: "when broadcast received", value: "event_whenbroadcastreceived"}
       ];
-      const startIndex = Object.keys(allHats).findIndex(k => k === "event_whenbroadcastreceived");
-      const filteredHats = Object.keys(allHats).filter((_, i) => i > startIndex).map(k => ({ text: k, value: k }));
+      // Desktop fork (section 265): every other hat, also the built-in ones registered before "when broadcast received"
+      const filteredHats = Object.keys(allHats).filter(k => !vanillaHats.some(h => h.value === k)).map(k => ({ text: k, value: k }));
       return [...vanillaHats, ...filteredHats];
     }
 

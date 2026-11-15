@@ -785,7 +785,7 @@ class pmEventsExpansion {
                 dragTypes: {acceptReporters: false, items: [{text: 'dragged', value: 'drag'}, {text: 'dropped', value: 'drop'}]},
                 targetType: {acceptReporters: false, items: [{text: 'sprite', value: 'sprite'}, {text: 'clone', value: 'clone'}]},
                 creationTypes: {acceptReporters: false, items: [{text: 'created', value: 'create'}, {text: 'deleted', value: 'delete'}]},
-                targetValues: {acceptReporters: true, items: [
+                targetValues: {acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: [
                     {text: 'name', value: 'name'},
                     {text: 'id', value: 'id'},
                     {text: 'parent id', value: 'parentId'},
@@ -799,7 +799,7 @@ class pmEventsExpansion {
                 ]},
                 costumes: {acceptReporters: false, items: '_costumes'},
                 targetsRound: {acceptReporters: true, items: '_targetsRound'},
-                eventNames: {acceptReporters: true, items: '_eventNames'}
+                eventNames: {acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: '_eventNames'}
             }
         };
     }

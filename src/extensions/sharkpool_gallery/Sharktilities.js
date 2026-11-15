@@ -209,21 +209,21 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           ROUND_MENU: { acceptReporters: true, items: ["whole number", "tenths", "hundredths", "thousandths"] },
           LETTER_TYPE_MENU: { acceptReporters: true, items: ["lowercase", "uppercase"] },
           reqMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["redraw", "project step", "toolbox update", "block refresh"]
           },
           EFFECT_MENU: {
-            acceptReporters: true,
-            items: ["color", "fisheye", "whirl", "pixelate", "mosaic", "brightness", "ghost"]
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
+            items: ["color", "fisheye", "whirl", "pixelate", "mosaic", "brightness", "ghost", /* Desktop fork (section 265) */ "saturation", "red", "green", "blue", "opaque", { text: "horizontal shear", value: "horizontal_shear" }, { text: "vertical shear", value: "vertical_shear" }, { text: "repeat X", value: "repeat_x" }, { text: "repeat Y", value: "repeat_y" }]
           },
-          mathMenu: { acceptReporters: true, items: ["sin", "cos"] },
+          mathMenu: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["sin", "cos"] },
           OPERATOR_MENU: ["+", "-", "*", "/"],
           OPERATORS: [">", "<", "="],
           STRING: ["||", "??"],
           SOUND: ["volume", "pitch", "pan"],
           RETURN: ["svg", "encoded svg", "png"],
           shuffleOption: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "random", "ascending", "descending",
               "ascending by length", "descending by length",

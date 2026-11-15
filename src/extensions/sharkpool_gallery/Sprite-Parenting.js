@@ -198,7 +198,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             items: "_getTargets",
           },
           CONTROLTYPE: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               "everything", "x and y", "direction",
               "size", "effects", "visibility"

@@ -176,7 +176,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           DATA: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("fallback"),
@@ -220,7 +220,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           ADDED_INPUT: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate({

@@ -248,11 +248,11 @@ class sharkpoolPrinting {
             ],
             menus: {
                 ALIGNMENTS: {
-                    acceptReporters: true,
-                    items: ["left", "right", "center"]
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
+                    items: ["left", "right", "center", "justify"] /* Desktop fork (section 265) */
                 },
                 BGMODE: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: ["repeat", "not repeat", "fill", "stretch"]
                 },
             }

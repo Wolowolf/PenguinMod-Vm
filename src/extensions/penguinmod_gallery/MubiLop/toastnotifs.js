@@ -395,7 +395,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
              ],
              menus: {
                 positions: {
-                   acceptReporters: true,
+                   acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                    items: [
                       'top-left',
                       'top-center',
@@ -409,7 +409,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                    ]
                 },
                 types: {
-                   acceptReporters: true,
+                   acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                    items: ['origin', 'success', 'error', 'warning', 'info']
                 },
                 styleProperties: {

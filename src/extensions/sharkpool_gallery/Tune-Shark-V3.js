@@ -870,9 +870,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             { text: Scratch.translate("highpass"), value: "highpass" },
             { text: Scratch.translate("lowpass"), value: "lowpass" },
           ],
-          singleEffectNew: { acceptReporters: true, items: simpleEffects },
+          singleEffectNew: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: simpleEffects },
           soundProps: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("length"), value: "length" },
               {
@@ -892,7 +892,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ].concat(simpleEffects, complexEffects),
           },
           soundBools: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("exists"), value: "exists" },
               { text: Scratch.translate("playing"), value: "playing" },
@@ -904,7 +904,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             ],
           },
           effectMenu: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               { text: Scratch.translate("all effects"), value: "all effects" },
             ].concat(simpleEffects, complexEffects),

@@ -940,7 +940,7 @@ class Scratch3PenBlocks {
             ],
             menus: {
                 colorParam: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: this._initColorParam()
                 },
                 layerParam: {

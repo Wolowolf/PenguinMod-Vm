@@ -195,7 +195,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
         ],
         menus: {
-          COLORS: { acceptReporters: true, items: ["hex", "rgb", "hsv", "decimal"] },
+          COLORS: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["hex", "rgb", "hsv", "decimal"] },
           COLCONV: ["rgb", "hsv", "decimal"],
           COLATTS: ["hue", "saturation", "brightness", "opacity"],
         }

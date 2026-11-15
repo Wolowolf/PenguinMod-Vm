@@ -153,7 +153,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         ],
         menus: {
           keyboardtypes: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("alphabetical"),
@@ -179,6 +179,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 text: Scratch.translate("search"),
                 value: "search",
               },
+              /* Desktop fork (section 265) */ { text: Scratch.translate("phone number"), value: "tel" },
             ],
           },
         },

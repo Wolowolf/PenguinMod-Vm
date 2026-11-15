@@ -2847,7 +2847,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "size",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           stampSquare: {
             items: [
@@ -2864,7 +2864,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: Scratch.translate("opacity"), value: "10" },
               { text: Scratch.translate("depth value"), value: "11" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           triAttribute: {
             items: [
@@ -2877,7 +2877,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: Scratch.translate("corner pinch"), value: "6" },
               { text: Scratch.translate("depth value"), value: "5" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           wholeTriAttribute: {
             items: [
@@ -2887,14 +2887,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: Scratch.translate("opacity"), value: "7" },
               { text: Scratch.translate("depth value"), value: "5" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           filterType: {
             items: [
               { text: Scratch.translate("closest"), value: "9728" },
               { text: Scratch.translate("linear"), value: "9729" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           wrapType: {
             items: [
@@ -2904,7 +2904,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
             acceptReporters: true,
           },
-          pointMenu: { items: ["1", "2", "3"], acceptReporters: true },
+          pointMenu: { items: ["1", "2", "3"], acceptReporters: false /* Desktop fork (section 265): only its own items work */ },
           onOffMenu: {
             items: [
               {
@@ -2916,7 +2916,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "off",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           costumeMenu: { items: "costumeMenuFunction", acceptReporters: true },
           penPlusCostumes: {
@@ -2946,7 +2946,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "_ClampZ",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           advancedSettingValuesMenu: {
             items: [
@@ -2972,7 +2972,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "height",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           listMenu: {
             acceptReporters: true,
@@ -2987,7 +2987,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "x", value: "0" },
               { text: "y", value: "1" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           vec3Component: {
             items: [
@@ -2995,7 +2995,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "y", value: "1" },
               { text: "z", value: "2" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           vec4Component: {
             items: [
@@ -3004,7 +3004,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: "z", value: "2" },
               { text: "w", value: "3" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           cullMode: {
             items: [
@@ -3012,7 +3012,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               { text: Scratch.translate("clock-wise"), value: "1028" },
               { text: Scratch.translate("counter clock-wise"), value: "1029" },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           spriteMenu: {
             items: "getSprites",
@@ -3029,7 +3029,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "renderTextures",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           defAttribMenu: {
             items: [
@@ -3074,7 +3074,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 value: "transparency",
               },
             ],
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
         },
         name: Scratch.translate("Pen+ V7"),
@@ -3829,7 +3829,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
       let value =
         this.triangleAttributesOfAllSprites[targetId][
-          trianglePointStart + attribute
+          trianglePointStart + Scratch.Cast.toNumber(attribute) /* Desktop fork (section 265): the menu gives text */
         ];
 
       if ((attribute >= 2 && attribute <= 4) || attribute == 7) {
@@ -4799,7 +4799,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return "";
       item = (item - 1) * 2;
       return (
-        this.programs[shader].uniformDat[uniformName][item + component] || 0
+        this.programs[shader].uniformDat[uniformName][item + Scratch.Cast.toNumber(component)] /* Desktop fork (section 265) */ || 0
       );
     }
 
@@ -4813,7 +4813,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return "";
       item = (item - 1) * 3;
       return (
-        this.programs[shader].uniformDat[uniformName][item + component] || 0
+        this.programs[shader].uniformDat[uniformName][item + Scratch.Cast.toNumber(component)] /* Desktop fork (section 265) */ || 0
       );
     }
 
@@ -4827,7 +4827,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return "";
       item = (item - 1) * 4;
       return (
-        this.programs[shader].uniformDat[uniformName][item + component] || 0
+        this.programs[shader].uniformDat[uniformName][item + Scratch.Cast.toNumber(component)] /* Desktop fork (section 265) */ || 0
       );
     }
 

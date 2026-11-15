@@ -1044,8 +1044,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.BUTTON, func: "openRecorder", text: "Make a speech sound" },
                 ],
                 menus: {
-                    voices: { acceptReporters: true, items: Object.keys(VOICES).concat(Object.keys(SUPERTONIC_VOICES)) },
-                    languages: { acceptReporters: true, items: "languageMenu" },
+                    voices: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: Object.keys(VOICES).concat(Object.keys(SUPERTONIC_VOICES)) },
+                    languages: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: "languageMenu" },
                     speeds: { acceptReporters: true, items: Object.keys(SPEEDS) },
                     pitches: { acceptReporters: true, items: Object.keys(PITCHES) },
                     sounds: { acceptReporters: true, items: "soundMenu" },

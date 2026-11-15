@@ -207,7 +207,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         ],
         menus: {
           thing: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("turbo mode"),
@@ -305,7 +305,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
 
           dimension: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("width"),

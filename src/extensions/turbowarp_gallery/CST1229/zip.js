@@ -461,7 +461,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         menus: {
           fileType: {
             // used in the open zip block
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("URL"),
@@ -487,7 +487,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           zipFileType: {
             // used in the output zip block
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("data: URL"),
@@ -513,7 +513,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           getFileType: {
             // used in the get file block
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("text"),
@@ -539,7 +539,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           writeFileType: {
             // used in the write file block
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("text"),
@@ -564,7 +564,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           compressionLevel: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("no compression (fastest)"),
@@ -582,7 +582,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           fileMeta: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("name"),
@@ -619,7 +619,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
           },
           setFileMeta: {
-            acceptReporters: true,
+            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [
               {
                 text: Scratch.translate("modified days since 2000"),

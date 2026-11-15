@@ -320,11 +320,11 @@ class Tween {
             ],
             menus: {
                 modes: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: Object.keys(EasingMethods)
                 },
                 direction: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: ["in", "out", "in out"]
                 },
                 vars: {
@@ -332,7 +332,7 @@ class Tween {
                     items: "getVariables"
                 },
                 properties: {
-                    acceptReporters: true,
+                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: ["x position", "y position", "direction", "size"]
                 }
             }

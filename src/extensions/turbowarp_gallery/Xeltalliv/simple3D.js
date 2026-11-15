@@ -5209,11 +5209,11 @@ void main() {
         items: "externalTransformsMenu",
       },
       clearLayers: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(ClearLayers),
       },
       primitives: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(Primitives),
       },
       onOff: {
@@ -5251,19 +5251,19 @@ void main() {
         items: ["off", "sharp transitions", "smooth transitions"],
       },
       cubeSide: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: ["X+", "X-", "Y+", "Y-", "Z+", "Z-"],
       },
       blending: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(Blendings),
       },
       culling: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(Cullings),
       },
       skinningTransforms: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: ["original", "current"],
       },
       renderTransforms: {
@@ -5292,7 +5292,7 @@ void main() {
         ],
       },
       matComponent: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: ["offset", "rotation"],
       },
       vectorTransforms: {
@@ -5382,19 +5382,19 @@ void main() {
         items: ["1", "2", "4", "8", "16"],
       },
       depthTest: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(DepthTests),
       },
       directions: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: ["up", "down", "left", "right", "x step"],
       },
       bufferUsage: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: ["rarely", "frequently fully", "frequently partially"],
       },
       multiSampleInterpolation: {
-        acceptReporters: true,
+        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: [
           "once at pixel center",
           "once at midpoint of covered samples",

@@ -48,11 +48,11 @@
                 ],
                 menus: {
                     modes: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: EasingMethods.map(item => ({ text: item, value: item }))
                     },
                     direction: {
-                        acceptReporters: true,
+                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             "in",
                             "out",
