@@ -694,11 +694,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
     }
 
-    getSpriteObj(name) {
-      //This is unused but I'm leaving it in for potential future blocks
-      const spriteObj = Scratch.vm.runtime.getSpriteTargetByName(name);
-      return JSON.stringify(spriteObj);
-    }
 
     getVariables() {
       const variables =

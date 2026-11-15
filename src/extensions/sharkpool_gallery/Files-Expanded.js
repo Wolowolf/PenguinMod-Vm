@@ -737,8 +737,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
             },
           },
-          /* Deprecation Marker */
-          /* Marker End */
           {
             opcode: "borderTypeSet",
             blockType: Scratch.BlockType.COMMAND,
@@ -1318,8 +1316,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return selectorOptions[args.THING];
     }
 
-    /* Deprecation Marker */
-    /* Marker End */
     imageSet(args) {
       Scratch.canFetch(encodeURI(args.IMG)).then((canFetch) => {
         if (canFetch) {

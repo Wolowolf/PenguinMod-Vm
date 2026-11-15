@@ -258,7 +258,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (thisGIF.dither === "none") obj.useQuantizer = true;
       else {
         const opts = ["bayer", "floyd", "closest"];
-        if (opts.indexOf(thisGIF.dither === -1)) thisGIF.dither = "bayer";
+        if (opts.indexOf(thisGIF.dither) === -1) thisGIF.dither = "bayer"; // Desktop fork (section 267): the check was misplaced, so every dither became bayer
         obj.dithering = thisGIF.dither;
       }
       let gif = new Animated_GIF(obj);

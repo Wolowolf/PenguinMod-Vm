@@ -2896,14 +2896,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             ],
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
-          wrapType: {
-            items: [
-              { text: Scratch.translate("clamp"), value: "33071" },
-              { text: Scratch.translate("repeat"), value: "10497" },
-              { text: Scratch.translate("mirrored"), value: "33648" },
-            ],
-            acceptReporters: true,
-          },
           pointMenu: { items: ["1", "2", "3"], acceptReporters: false /* Desktop fork (section 265): only its own items work */ },
           onOffMenu: {
             items: [
@@ -2947,15 +2939,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               },
             ],
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-          },
-          advancedSettingValuesMenu: {
-            items: [
-              {
-                text: Scratch.translate("maximum depth value"),
-                value: "depthMax",
-              },
-            ],
-            acceptReporters: false,
           },
           getCostumeDataURI_costume_Menu: {
             items: "getCostumeDataURI_costume_MenuFunction",

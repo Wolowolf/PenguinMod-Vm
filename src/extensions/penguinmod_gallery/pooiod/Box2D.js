@@ -35,9 +35,6 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 	var b2Dworld, fixDef; var mousePVec, selectedBody, prb2djaxisX, prb2djaxisY, prb2djl, prb2dju;
 	var b2Dzoom = 50; var b2Math;
 
-	var physdebugmode = false;
-	var wipblocks = physdebugmode;
-	var legacymode = false;
 
 	var positerations = 10;
 	var veliterations = 10;
@@ -92,9 +89,9 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 		getInfo() {
 			return {
 				id: 'P7BoxPhys',
-				name: physdebugmode || wipblocks ? 'Boxed Physics (debug)' : 'Boxed Physics',
-				color1: physdebugmode || wipblocks ? "#4b4a60" : "#2cb0c0",
-				color2: physdebugmode || wipblocks ? "#383747" : "#4eb88a",
+				name: 'Boxed Physics',
+				color1: "#2cb0c0",
+				color2: "#4eb88a",
 				menuIconURI: menuIconURI,
 				docsURI: this.docs,
 				blocks: [
@@ -815,26 +812,6 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 								defaultValue: "0" 
 							},
 						},
-					},
-
-					{
-						hideFromPalette: !legacymode,
-						blockType: Scratch.BlockType.LABEL,  // ---- Legacy blocks (old and not recomended for use) ----
-						text: `Legacy blocks`
-					},
-
-
-					{
-						hideFromPalette: !physdebugmode,
-						blockType: Scratch.BlockType.LABEL, // --------------------- Debug blocks ----
-						text: "Debug blocks (can brake projects)"
-					}, // the ids on any of the following can change because these are used for debugging while making the extension (not for debugging projects), so it's YOUR fault if you use them and your project brakes
-
-
-					{
-						hideFromPalette: !wipblocks,
-						blockType: Scratch.BlockType.LABEL, // --------------------- Work in progress blocks ----
-						text: "Upcoming blocks (project corruption warning)"
 					}
 				],
 				menus: {
@@ -848,7 +825,6 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 					JointType: ['Rotating', 'Spring', 'Weld', 'Slider'/*, 'Mouse'*/],
 					JointAttr: ['Motor On', 'Motor Speed', 'Max Torque', 'Limits On', 'Lower Limit', 'Upper Limit'],
 					JointAttrRead: ['Angle', 'Speed', 'Motor Torque', 'Reaction Torque', 'tension'],
-					xyp: ['x', 'y', 'point'],
 					xy: ['x', 'y'],
 					costumeType: [
 						{ text: "Convex Hull", value: "hull" },

@@ -130,13 +130,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     }
                 ],
                 menus: {
-                    axisMenu: {
-                        acceptReporters: true,
-                        items: [
-                            { text: 'x', value: 'x' },
-                            { text: 'y', value: 'y' }
-                        ]
-                    },
                     stageEdgeMenu: {
                         acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [

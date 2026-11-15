@@ -5200,14 +5200,6 @@ void main() {
         acceptReporters: false,
         items: "listsMenu",
       },
-      costumes: {
-        acceptReporters: true,
-        items: "costumesMenu",
-      },
-      externalTransforms: {
-        acceptReporters: true,
-        items: "externalTransformsMenu",
-      },
       clearLayers: {
         acceptReporters: false /* Desktop fork (section 265): only its own items work */,
         items: Object.keys(ClearLayers),
@@ -5316,10 +5308,6 @@ void main() {
       fogSpace: {
         acceptReporters: false,
         items: ["view space", "world space", "model space"],
-      },
-      renderTargetProp: {
-        acceptReporters: false,
-        items: ["width", "height"],
       },
       filetype: {
         acceptReporters: false,
@@ -5468,23 +5456,6 @@ void main() {
       all.sort();
       if (all.length == 0) return ["list"];
       return all;
-    }
-    costumesMenu() {
-      let editingTarget = vm.editingTarget;
-      if (editingTarget) return editingTarget.getCostumes().map((e) => e.name);
-      return ["costume 1"];
-    }
-    externalTransformsMenu() {
-      const out = [];
-      for (let key in externalTransforms) {
-        out.push({
-          value: key,
-          text: externalTransforms[key].name,
-        });
-      }
-      if (out.length == 0)
-        out.push({ value: "", text: "- no external sources -" });
-      return out;
     }
   }
 

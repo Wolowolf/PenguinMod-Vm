@@ -117,86 +117,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   let deltaTime = 0,
     prevFrameTime = 0;
   let soundBank = Object.create(null);
-  let settings = { flagCtrl: true, canSave: false };
+  let settings = { flagCtrl: true };
 
   class SPtuneShark3 {
     constructor() {
-      /* Deprecation Marker */
-      this.loadStorage = function (storage) {
-        if (storage === undefined) return;
-        settings = storage.settings;
-        const tempBank = structuredClone(storage.bank);
-        const sounds = Object.values(tempBank);
-
-        const getTargetName = (name) => {
-          return runtime.targets.find((t) => t.getName().replaceAll("/", "") === name);
-        };
-        const loadEndHandler = (index) => {
-          if (index >= sounds.length - 1) soundBank = tempBank;
-        };
-
-        for (let i = 0; i < sounds.length; i++) {
-          const sound = sounds[i];
-          sound.loaded = false;
-          if (sound.isVanilla) {
-            const info = sound.src
-              .substring(1, sound.src.lastIndexOf("."))
-              .split("/");
-            let target =
-              info[0] === "Stage"
-                ? runtime.getTargetForStage()
-                : getTargetName(info[0]);
-            if (target === undefined) {
-              Scratch.vm.runtime.pmPage.alert(
-                Scratch.translate(
-                  `Tune Shark 3 -- Failed to load ${info[1]} from ${info[0]}`
-                )
-              );
-              continue;
-            }
-
-            const scratchSound = target.sprite.sounds.find((i) => i.name.replaceAll("/", "") === info[1]);
-            if (scratchSound === undefined) {
-              Scratch.vm.runtime.pmPage.alert(
-                Scratch.translate(
-                  `Tune Shark 3 -- Failed to load ${info[1]} from ${info[0]}`
-                )
-              );
-              continue;
-            }
-            const buffer =
-              target.sprite.soundBank.soundPlayers[scratchSound.soundId].buffer;
-            const engine = new Pizzicato.Sound({
-              source: "buffer",
-              options: { buffer, attack: 0 },
-            });
-
-            engine.sourceNode = engine.getSourceNode();
-            sound.context = engine;
-            sound.loaded = true;
-            loadEndHandler(i);
-          } else {
-            const engine = new Pizzicato.Sound(
-              {
-                source: "file",
-                options: { path: sound.src, attack: 0 },
-              },
-              () => {
-                engine.sourceNode = engine.getSourceNode();
-                sound.context = engine;
-                sound.loaded = true;
-                loadEndHandler(i);
-              }
-            );
-          }
-        }
-      };
-      if (!Scratch.extensions.isPenguinMod) {
-        runtime.on("PROJECT_LOADED", () =>
-          this.loadStorage(runtime.extensionStorage["SPtuneShark3"])
-        );
-      }
-      /* Marker End */
 
       runtime.on("PROJECT_START", () => {
         if (settings.flagCtrl) this.ctrlSounds({ CONTROL: "stop" });
@@ -828,17 +752,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               CUT_HIGH: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 },
             },
           },
-          /* Deprecation Marker */
-          /* Marker End */
         ],
         menus: {
-          /* Deprecation Marker */
-          singleEffects: simpleEffects,
-          saveMenu: [
-            { text: Scratch.translate("save"), value: "save" },
-            { text: Scratch.translate("dont save"), value: "dont save" },
-          ],
-          /* Marker End */
           un_pauseMenu: [
             { text: Scratch.translate("pause"), value: "pause" },
             { text: Scratch.translate("unpause"), value: "unpause" },
@@ -1918,20 +1833,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    /* Deprecation Marker */
-    // PenguinMod Storage
-    serialize() {
-      if (settings.canSave) {
-        const convertedBank = JSON.parse(JSON.stringify(soundBank));
-        Object.values(convertedBank).forEach(item => delete item.context);
-        return { SPtuneShark3: { bank: convertedBank, settings } };
-      }
-      return {};
-    }
-    deserialize(data) {
-      this.loadStorage(data.SPtuneShark3);
-    }
-    /* Marker End */
   }
 
   Scratch.extensions.register(new SPtuneShark3());

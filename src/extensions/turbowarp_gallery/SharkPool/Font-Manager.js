@@ -275,10 +275,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               },
             ],
           },
-          FILES: {
-            acceptReporters: true,
-            items: FONT_EXTENSIONS.map((i) => `.${i}`),
-          },
         },
       };
     }

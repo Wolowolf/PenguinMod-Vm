@@ -336,8 +336,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               THING: {}
             }
           },
-          /* Deprecation Marker */
-          /* Marker End */
           { blockType: Scratch.BlockType.LABEL, text: "Functions" },
           "---",
           { blockType: Scratch.BlockType.XML, xml: `<block type="SPadvControl_defineFunc"><value name="NAME"><shadow type="text"><field name="TEXT">my-function</field></shadow></value><value name="ARG"><shadow type="SPadvControl_threadArgs"></shadow></value><value name="SUBSTACK"><block type="SPadvControl_returnFunc"><value name="VALUE"><shadow type="text"><field name="TEXT">value</field></shadow></value></block></value></block>` },
@@ -818,8 +816,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (branch) this.addMissKeys(util.thread, this.pushThread(branch, { ...util, target: target.sprite.clones[0] }, { stackClick: false }));
     }
 
-    /* Deprecation Marker */
-    /* Marker End */
 
     defineFunc(args, util) {
       util.thread[`SPfunction-${args.NAME}`] = this.getThisBlock(util, true, 1);

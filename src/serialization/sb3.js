@@ -1456,13 +1456,6 @@ const parseScratchObject = function (object, runtime, extensions, zip, assets, f
     }
     if (object.hasOwnProperty('customVars')) {
         for (const variable of object.customVars) {
-            if (Array.isArray(variable)) {
-                // Legacy behaviour.
-                const newVar = runtime.newVariableInstance(...variable);
-                target.variables[variable[1]] = newVar;
-                continue;
-            }
-
             /*
              {
                 type: v.type,

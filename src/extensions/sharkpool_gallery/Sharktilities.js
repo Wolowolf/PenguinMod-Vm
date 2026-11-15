@@ -200,14 +200,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               THING: { type: Scratch.ArgumentType.STRING, menu: "reqMenu" }
             }
           },
-          /* Deprecation Marker */
-          /* Marker End */
         ],
         menus: {
           TARGETS: { acceptReporters: true, items: this._getTargets(true) },
           TARGETS2: { acceptReporters: true, items: this._getTargets(false) },
-          ROUND_MENU: { acceptReporters: true, items: ["whole number", "tenths", "hundredths", "thousandths"] },
-          LETTER_TYPE_MENU: { acceptReporters: true, items: ["lowercase", "uppercase"] },
           reqMenu: {
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["redraw", "project step", "toolbox update", "block refresh"]
@@ -217,8 +213,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             items: ["color", "fisheye", "whirl", "pixelate", "mosaic", "brightness", "ghost", /* Desktop fork (section 265) */ "saturation", "red", "green", "blue", "opaque", { text: "horizontal shear", value: "horizontal_shear" }, { text: "vertical shear", value: "vertical_shear" }, { text: "repeat X", value: "repeat_x" }, { text: "repeat Y", value: "repeat_y" }]
           },
           mathMenu: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["sin", "cos"] },
-          OPERATOR_MENU: ["+", "-", "*", "/"],
-          OPERATORS: [">", "<", "="],
           STRING: ["||", "??"],
           SOUND: ["volume", "pitch", "pan"],
           RETURN: ["svg", "encoded svg", "png"],
@@ -430,11 +424,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       runtime.requestRedraw();
     }
 
-    /* Deprecation Marker */
-    // Found in More Operators
+
     typeString(r){return"||"===r.TYPE?r.STRING1||r.STRING2:"undefined"===r.STRING1||"null"===r.STRING1?r.STRING2:r.STRING1}
-    // Found in Extra Control
-    /* Marker End */
   }
 
   Scratch.extensions.register(new Sharktilities());

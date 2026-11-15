@@ -301,15 +301,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               },
             ],
           },
-          SVGPNG: {
-            acceptReporters: false,
-            items: [
-              {
-                text: "SVG",
-                value: "SVG",
-              },
-            ],
-          },
           spriteMenu: {
             acceptReporters: true,
             items: "getSprites",

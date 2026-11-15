@@ -38,15 +38,6 @@ const ColorParam = {
     TRANSPARENCY: 'transparency'
 };
 
-/**
- * Enum for layer parameter values.
- * @readonly
- * @enum {string}
- */
-const LayerParam = {
-    FRONT: 'front',
-    BACK: 'back'
-};
 
 const ItalicsParam = {
     ON: 'on',
@@ -387,26 +378,6 @@ class Scratch3PenBlocks {
         ];
     }
 
-    getLayerParam () {
-        return [
-            {
-                text: formatMessage({
-                    id: 'pen.layerMenu.front',
-                    default: 'front',
-                    description: 'label for front'
-                }),
-                value: LayerParam.FRONT
-            },
-            {
-                text: formatMessage({
-                    id: 'pen.layerMenu.back',
-                    default: 'back',
-                    description: 'label for back'
-                }),
-                value: LayerParam.BACK
-            }
-        ];
-    }
     
     getItalicsToggleParam () {
         return [
@@ -936,16 +907,11 @@ class Scratch3PenBlocks {
                         }
                     }
                 },
-                /* Legacy blocks, should not be shown in flyout */
             ],
             menus: {
                 colorParam: {
                     acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                     items: this._initColorParam()
-                },
-                layerParam: {
-                    acceptReporters: false,
-                    items: this.getLayerParam()
                 },
                 italicsToggleParam: {
                     acceptReporters: false,

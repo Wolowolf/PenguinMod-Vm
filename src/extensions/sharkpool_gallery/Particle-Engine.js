@@ -934,8 +934,6 @@ void main() {
               TARGET: { type: Scratch.ArgumentType.STRING, menu: "TARGETS" },
             },
           },
-          /* Deprecation Marker */
-          /* Marker End */
         ],
         menus: {
           TARGETS: { acceptReporters: true, items: "getTargets" },
@@ -1386,8 +1384,6 @@ void main() {
       return "{}";
     }
 
-    /* Deprecation Marker */
-    /* Marker End */
   }
 
   if (Scratch.gui)

@@ -1981,9 +1981,6 @@ class JSGenerator {
         case 'timer.get':
             return new TypedInput('runtime.ioDevices.clock.projectTimer()', TYPE_NUMBER);
 
-        case 'tw.lastKeyPressed':
-            return new TypedInput('runtime.ioDevices.keyboard.getLastKeyPressed()', TYPE_STRING);
-
         case 'var.get':
             return this.descendVariable(node.variable);
 

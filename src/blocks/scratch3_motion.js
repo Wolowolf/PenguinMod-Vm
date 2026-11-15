@@ -54,7 +54,6 @@ class Scratch3MotionBlocks {
             motion_yposition: this.getY,
             motion_direction: this.getDirection,
             motion_move_sprite_to_scene_side: this.moveToStageSide,
-            // Legacy no-op blocks:
         };
     }
 

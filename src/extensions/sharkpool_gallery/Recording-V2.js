@@ -111,8 +111,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
             },
           },
-          /* Deprecation Marker */
-          /* Marker End */
         ],
         menus: {
           TARGETS: { acceptReporters: true, items: "_getTargets" },
@@ -295,8 +293,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    /* Deprecation Marker */
-    /* Marker End */
   }
 
   Scratch.extensions.register(new SPrecording2());

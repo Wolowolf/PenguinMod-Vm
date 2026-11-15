@@ -75,15 +75,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               URL: { type: Scratch.ArgumentType.STRING, defaultValue: "https:// or data.uri" }
             }
           },
-          /* Deprecation Marker */
-          /* Marker End */
         ],
         menus: {
           COLORS: ["background", "data"],
-          /* Deprecation Marker */
-          EXPORTS: ["png", "svg"],
-          EXPORTS2: ["link", "data.uri"]
-          /* Marker End */
         }
       };
     }
@@ -133,8 +127,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       });
     }
 
-    /* Deprecation Marker */
-    /* Marker End */
   }
 
   if (Scratch.gui) Scratch.gui.getBlockly().then((SB) => {

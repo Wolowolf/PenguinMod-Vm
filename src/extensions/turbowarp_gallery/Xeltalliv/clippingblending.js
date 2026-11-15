@@ -151,13 +151,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           "---",
         ],
         menus: {
-          states: {
-            acceptReporters: true,
-            items: [
-              { text: Scratch.translate("on"), value: "on" },
-              { text: Scratch.translate("off"), value: "off" },
-            ],
-          },
           blends2: {
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: [

@@ -465,8 +465,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                    ]
                 },
                 enabledMenu: ['true', 'false'],
-                position: ['up', 'middle', 'down'],
-                yesorno: ['yes', 'no']
              }
           };
        }
