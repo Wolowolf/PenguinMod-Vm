@@ -1843,6 +1843,17 @@ class Runtime extends EventEmitter {
     _convertBlockForScratchBlocks (blockInfo, categoryInfo) {
         const extendedOpcode = `${categoryInfo.id}_${blockInfo.opcode}`;
 
+        // Desktop fork (section 278): a modular block (blockInfo.modular without `locked`) declares no text or
+        // arguments: its first two inputs are made here, so that the flyout block gets them with their shadows.
+        const modular = blockInfo.modular;
+        if (modular && modular.locked === undefined) {
+            const type = modular.shadow === 'math_number' ? ArgumentType.NUMBER :
+                (modular.shadow === 'text' ? ArgumentType.STRING : ArgumentType.BOOLEAN);
+            blockInfo.arguments = {};
+            for (let i = 1; i <= 2; i++) blockInfo.arguments[modular.prefix + i] = {type, defaultValue: ''};
+            blockInfo.text = `[${modular.prefix}1] [${modular.prefix}2]`;
+        }
+
         const blockJSON = {
             type: extendedOpcode,
             inputsInline: true,
@@ -2020,9 +2031,47 @@ class Runtime extends EventEmitter {
             };
         }
 
+        // Desktop fork (section 278): modular blocks and their single blocks are made by scratch-blocks' shared maker
+        // (Blockly.scratchBlocksUtils.modularBlock, section 277) instead of from message0 / args0: `modular` holds
+        // its settings; the GUI (containers/blocks.jsx) calls it. The base JSON is this block's JSON without its
+        // texts and inputs (the maker adds those), with the extension's icon if it has one.
+        let modularMutation = '';
+        if (modular) {
+            const base = {};
+            for (const key of Object.keys(blockJSON)) {
+                if (!/^(type|mutations|checkboxInFlyout|(message|args|lastDummyAlign)\d+)$/.test(key)) {
+                    base[key] = blockJSON[key];
+                }
+            }
+            if (iconURI) {
+                base.message0 = '%1 %2';
+                base.args0 = blockJSON.args0.slice(0, 2);
+            }
+            const symbols = Array.isArray(modular.symbols) && modular.symbols.length > 0 ? modular.symbols : null;
+            const plain = modular.shadow === 'math_number' || modular.shadow === 'text';
+            const settings = {
+                json: base,
+                prefix: modular.prefix,
+                symbols,
+                shadow: modular.shadow,
+                check: modular.check || (plain ? null : 'Boolean'),
+                min: Math.max(1, Math.floor(Number(modular.min)) || 2),
+                label: modular.label
+            };
+            if (modular.locked === undefined) {
+                const menu = symbols ? ` menuvalues="${xmlEscape.escapeAttribute(String(symbols[0][1]))}"` : '';
+                modularMutation = `<mutation inputcount="2"${menu}/>`;
+            } else {
+                // a single block keeps its own two inputs, in the order of its text
+                const text = String(maybeFormatMessage(blockText[0], extensionMessageContext));
+                settings.names = [...text.matchAll(/\[(.+?)]/g)].map(match => match[1]);
+            }
+            blockJSON.modular = {settings, lock: modular.locked};
+        }
+
         const mutation = blockInfo.isDynamic
             ? `<mutation blockInfo="${xmlEscape.escapeAttribute(JSON.stringify(blockInfo))}"/>`
-            : '';
+            : modularMutation;
         const inputs = context.inputList.join('');
         const blockId = blockInfo.isSpriteSpecific ? `id="${xmlEscape.escapeAttribute(this.vm.editingTarget.id + '_' + extendedOpcode)}"` : '';
         const blockXML = `<block type="${xmlEscape.escapeAttribute(extendedOpcode)}" ${blockId}>${mutation}${inputs}</block>`;

@@ -12,7 +12,8 @@
       "bitwiseAnd": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "bitwiseOr": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "bitwiseXor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
-      "bitwiseNot": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false}
+      "bitwiseNot": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
+      "bitwiseModular": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"modular block (section 278): a chain of the single blocks' functions"}
     }
   },
   "DICandSPmonitorsPlus": {

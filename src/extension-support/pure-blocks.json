@@ -8,6 +8,7 @@
   "Bitwise_bitwiseOr": "number",
   "Bitwise_bitwiseXor": "number",
   "Bitwise_bitwiseNot": "number",
+  "Bitwise_bitwiseModular": "number",
   "Encoding_encode": "string",
   "Encoding_decode": "string",
   "Encoding_compress": "string",

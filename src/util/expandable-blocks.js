@@ -76,7 +76,36 @@ const COMPARE_OPERATORS = new Set(['m', 'M', 'l', 'L', 'e', 'E', 'n']);
 const readCompareOperators = (mutation, count) =>
     readOperators(mutation, count, 'm').map(o => (COMPARE_OPERATORS.has(o) ? o : 'm'));
 
+/**
+ * Desktop fork (section 278): a modular block with its own symbols, for extensions (blockInfo `modular`,
+ * docs/EXTENSION-INTEGRATION.md "Modular extension blocks"). Reads the block's inputs <prefix>1..n and the symbols
+ * between them from the arguments the block's function gets, and nests them with the caller's levels.
+ * @param {object} args the block function's arguments (inputs by name and `mutation`)
+ * @param {object} options prefix (input name prefix), levels ({symbol code: precedence}, higher first),
+ *   fallback (symbol code used for a missing or unknown one; default: the first of levels), convert (applied to
+ *   each input, e.g. Cast.toNumber: only the first inputs are declared, so the extension wrapper converts only
+ *   those), rightAssociative (function(code): boolean), empty (the answer of a block without inputs)
+ * @param {function(string, *, *): *} combine works out one symbol of two values
+ * @returns {*} the answer of the chain
+ */
+const runChain = (args, options, combine) => {
+    const count = readCount(args.mutation);
+    if (count === 0) return options.empty;
+    const levels = options.levels;
+    const fallback = options.fallback || Object.keys(levels)[0];
+    const operands = [];
+    for (let i = 1; i <= count; i++) {
+        const value = args[options.prefix + i];
+        operands.push(options.convert ? options.convert(value) : value);
+    }
+    const operators = readOperators(args.mutation, count, fallback)
+        .map(o => (Object.prototype.hasOwnProperty.call(levels, o) ? o : fallback));
+    return nestInfix(operands, operators, levels, options.rightAssociative || (() => false), combine);
+};
+
 module.exports = {
+    nestInfix,
+    runChain,
     readCount,
     readOperators,
     readCompareOperators,

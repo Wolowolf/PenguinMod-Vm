@@ -1,8 +1,12 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's bitwise.js as its build makes it, moved into
 // the VM as a built-in extension. The code is the gallery file unchanged.
+// Desktop fork (section 278): its two-input blocks are single blocks of the shared modular maker (`modular` with
+// `locked`), and "bitwiseModular" is one modular block with all their symbols, worked out as a chain of the single
+// blocks' functions (order as in JavaScript: shifts and rotations, then and, then xor, then or; equal ones from the left).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const ExpandableBlocks = require('../../util/expandable-blocks');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Bitwise
 // ID: Bitwise
@@ -23,6 +27,24 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     return (number << k) | (number >>> (32 - k));
   };
 
+  // Desktop fork (section 278): the symbols of the modular block; each code is also one single block.
+  const SINGLES = {
+    r: "bitwiseRightShift",
+    l: "bitwiseLeftShift",
+    u: "bitwiseLogicalRightShift",
+    R: "bitwiseCircularRightShift",
+    L: "bitwiseCircularLeftShift",
+    a: "bitwiseAnd",
+    o: "bitwiseOr",
+    x: "bitwiseXor",
+  };
+  const MODULAR = {
+    prefix: "NUM",
+    shadow: "math_number",
+    symbols: [[">>", "r"], ["<<", "l"], [">>>", "u"], ["↻", "R"], ["↺", "L"], ["and", "a"], ["or", "o"], ["xor", "x"]],
+  };
+  const LEVELS = { o: 1, x: 2, a: 3, r: 4, l: 4, u: 4, R: 4, L: 4 };
+
   class Bitwise {
     getInfo() {
       return {
@@ -38,6 +60,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           /* eslint-disable extension/should-translate */
           {
             opcode: "bitwiseRightShift",
+            modular: { ...MODULAR, locked: "r" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[LEFT] >> [RIGHT]",
             arguments: {
@@ -53,6 +76,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseLeftShift",
+            modular: { ...MODULAR, locked: "l" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[LEFT] << [RIGHT]",
             arguments: {
@@ -68,6 +92,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseLogicalRightShift",
+            modular: { ...MODULAR, locked: "u" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[LEFT] >>> [RIGHT]",
             arguments: {
@@ -83,6 +108,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseCircularRightShift",
+            modular: { ...MODULAR, locked: "R" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[LEFT] ↻ [RIGHT]",
             arguments: {
@@ -98,6 +124,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseCircularLeftShift",
+            modular: { ...MODULAR, locked: "L" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[LEFT] ↺ [RIGHT]",
             arguments: {
@@ -115,6 +142,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "bitwiseAnd",
+            modular: { ...MODULAR, locked: "a" },
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate({
               default: "[LEFT] and [RIGHT]",
@@ -134,6 +162,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseOr",
+            modular: { ...MODULAR, locked: "o" },
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate({
               default: "[LEFT] or [RIGHT]",
@@ -153,6 +182,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "bitwiseXor",
+            modular: { ...MODULAR, locked: "x" },
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate({
               default: "[LEFT] xor [RIGHT]",
@@ -185,6 +215,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
             },
           },
+          "---",
+          {
+            opcode: "bitwiseModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: MODULAR,
+          },
         ],
       };
     }
@@ -212,6 +248,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
     bitwiseXor({ LEFT, RIGHT }) {
       return LEFT ^ RIGHT;
+    }
+    bitwiseModular(args) {
+      return ExpandableBlocks.runChain(
+        args,
+        { prefix: MODULAR.prefix, levels: LEVELS, fallback: "r", convert: Scratch.Cast.toNumber, empty: 0 },
+        (symbol, LEFT, RIGHT) => this[SINGLES[symbol]]({ LEFT, RIGHT })
+      );
     }
     bitwiseNot({ CENTRAL }) {
       return ~CENTRAL;
