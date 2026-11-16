@@ -1130,6 +1130,9 @@ class ScriptTreeGenerator {
                 code: this.descendSubstack(block, 'SUBSTACK'),
                 runsNext: false
             };
+        case 'control_expandableSwitch':
+            // Desktop fork (section 279): the single check / is / otherwise blocks' nodes
+            return this.descendExpandableSwitch(block);
         case 'control_exitCase':
             return {
                 kind: 'control.exitCase'
@@ -2270,6 +2273,32 @@ class ScriptTreeGenerator {
             }];
         }
         return whenFalse[0];
+    }
+
+    /**
+     * Desktop fork (section 279): the modular "check" block as the nodes of the single blocks: a "check" (with
+     * "otherwise") holding one "is" per branch. A branch set to "is, also run next" keeps its blocks and goes on
+     * into the branch below it.
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableSwitch (block) {
+        const {cases, hasElse, runsNext} = ExpandableBlocks.readSwitch(block.mutation);
+        const conditions = [];
+        for (let i = 1; i <= cases; i++) {
+            conditions.push({
+                kind: 'control.case',
+                condition: this.descendInputOfBlock(block, 'CASE' + i),
+                code: this.descendSubstack(block, 'SUBSTACK' + i),
+                runsNext: runsNext[i - 1]
+            });
+        }
+        return {
+            kind: 'control.switch',
+            test: this.descendInputOfBlock(block, 'CONDITION'),
+            conditions,
+            default: hasElse ? this.descendSubstack(block, 'SUBSTACK' + (cases + 1)) : []
+        };
     }
 
     /**

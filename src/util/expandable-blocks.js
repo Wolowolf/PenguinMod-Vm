@@ -103,8 +103,27 @@ const runChain = (args, options, combine) => {
     return nestInfix(operands, operators, levels, options.rightAssociative || (() => false), combine);
 };
 
+/**
+ * Desktop fork (section 279): the modular "check" block (control_expandableSwitch). Its mutation has `branches`
+ * (all branches), `ends-in-else` (the last one is "otherwise") and `menuvalues` (one character per "is" branch:
+ * i = is, n = is, also run next).
+ * @param {object} mutation the block's mutation
+ * @returns {{cases: number, hasElse: boolean, runsNext: Array<boolean>}} the "is" branches 1..cases (inputs CASEn,
+ *   SUBSTACKn) and whether SUBSTACK(cases + 1) is the "otherwise" branch
+ */
+const readSwitch = mutation => {
+    const total = Math.max(1, Math.floor(Number(mutation && mutation.branches)) || 1);
+    const hasElse = !!mutation && mutation['ends-in-else'] === 'true' && total > 1;
+    const cases = total - (hasElse ? 1 : 0);
+    const menu = String((mutation && mutation.menuvalues) || '');
+    const runsNext = [];
+    for (let i = 0; i < cases; i++) runsNext.push(menu[i] === 'n');
+    return {cases, hasElse, runsNext};
+};
+
 module.exports = {
     nestInfix,
+    readSwitch,
     runChain,
     readCount,
     readOperators,

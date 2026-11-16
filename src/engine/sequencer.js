@@ -339,6 +339,22 @@ class Sequencer {
                 const stackFrame = thread.peekStackFrame();
                 isWarpMode = stackFrame.warpMode;
 
+                // Desktop fork (section 279): the "check" blocks (scratch3_control.js). A branch of an "is" block
+                // ended: leave the check, as the compiled "break" does. A branch of a check ended: start the next
+                // one it still has to run (the branch below "is, also run next", "otherwise").
+                const pmSwitch = stackFrame.executionContext === null ? null : stackFrame.executionContext.pmSwitch;
+                if (pmSwitch) {
+                    if (pmSwitch === 1) {
+                        thread.popStack();
+                        thread.goToNextBlock();
+                        continue;
+                    }
+                    if (pmSwitch.length > 0) {
+                        this.stepToBranch(thread, pmSwitch.shift(), false);
+                        continue;
+                    }
+                }
+
                 if (stackFrame.isLoop) {
                     // The current level of the stack is marked as a loop.
                     // Return to yield for the frame/tick in general.

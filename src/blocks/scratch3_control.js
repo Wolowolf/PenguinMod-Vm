@@ -1,4 +1,5 @@
 const Cast = require('../util/cast');
+const {readSwitch} = require('../util/expandable-blocks');
 
 class Scratch3ControlBlocks {
     constructor (runtime) {
@@ -43,6 +44,13 @@ class Scratch3ControlBlocks {
             control_if_else: this.ifElse,
             // Desktop fork (section 274)
             control_expandableIf: this.expandableIf,
+            // Desktop fork (section 279): the check / is / otherwise blocks had only compiled code
+            control_switch: this.switch,
+            control_switch_default: this.switchDefault,
+            control_case: this.switchCase,
+            control_case_next: this.switchCaseNext,
+            control_exitCase: this.exitCase,
+            control_expandableSwitch: this.expandableSwitch,
             control_stop: this.stop,
             control_stop_sprite: this.stopSprite,
             control_create_clone_of: this.createClone,
@@ -267,6 +275,89 @@ class Scratch3ControlBlocks {
             }
         }
         if (hasElse) util.startBranch(branchCount, false);
+    }
+
+    /**
+     * Desktop fork (section 279): the "check" blocks for interpreted scripts, doing what the compiled JavaScript
+     * switch does: values are compared as text, the first "is" that matches runs, "is, also run next" goes on into
+     * the branch below it, "otherwise" runs when nothing matched or the branch above it runs into it.
+     * stackFrame.pmSwitch marks a check (the branches it still has to run, read by Sequencer.stepThread) and an "is"
+     * block whose branch runs (1: the check is left when that branch ends).
+     * @param {object} args Block arguments.
+     * @param {BlockUtility} util Utility for the running block.
+     */
+    switch (args, util) {
+        util.stackFrame.pmSwitch = [];
+        util.stackFrame.pmSwitchValue = this._switchText(args.CONDITION);
+        util.stackFrame.pmSwitchFalls = false;
+        util.startBranch(1, false);
+    }
+
+    switchDefault (args, util) {
+        util.stackFrame.pmSwitch = [2];
+        util.stackFrame.pmSwitchValue = this._switchText(args.CONDITION);
+        util.stackFrame.pmSwitchFalls = false;
+        util.startBranch(1, false);
+    }
+
+    // an input without a block is the text "null", as in the compiled code
+    _switchText (value) {
+        return typeof value === 'undefined' ? 'null' : Cast.toString(value);
+    }
+
+    _switchCase (args, util, runsNext) {
+        const frames = util.thread.stackFrames;
+        const check = frames.length > 1 ? frames[frames.length - 2].executionContext : null;
+        if (!check || typeof check.pmSwitchValue !== 'string') {
+            throw 'All "is" blocks must be inside of a "check" block.';
+        }
+        if (!check.pmSwitchFalls && this._switchText(args.CONDITION) !== check.pmSwitchValue) return;
+        if (runsNext) {
+            check.pmSwitchFalls = true;
+            return;
+        }
+        util.stackFrame.pmSwitch = 1;
+        util.startBranch(1, false);
+    }
+
+    switchCase (args, util) {
+        this._switchCase(args, util, false);
+    }
+
+    switchCaseNext (args, util) {
+        this._switchCase(args, util, true);
+    }
+
+    // "stop checking": leaves the nearest check, also from inside loops and other blocks in its branch
+    exitCase (args, util) {
+        const thread = util.thread;
+        const frames = thread.stackFrames;
+        let index = frames.length - 1;
+        while (index >= 0 && !(frames[index].executionContext && frames[index].executionContext.pmSwitch)) index--;
+        if (index < 0) throw 'All "stop checking" blocks must be inside of an "is" or "otherwise" branch.';
+        // an "is" block: the check is the block around it
+        if (frames[index].executionContext.pmSwitch === 1) index--;
+        while (thread.stack.length > index + 1) thread.popStack();
+        thread.goToNextBlock();
+    }
+
+    // The modular block: one "is" per branch (CASEn, SUBSTACKn), the last branch can be "otherwise"
+    expandableSwitch (args, util) {
+        const {cases, hasElse, runsNext} = readSwitch(args.mutation);
+        const value = this._switchText(args.CONDITION);
+        const branches = [];
+        let falls = false;
+        for (let i = 1; i <= cases; i++) {
+            if (!falls && this._switchText(args['CASE' + i]) !== value) continue;
+            branches.push(i);
+            falls = runsNext[i - 1];
+            if (!falls) break;
+        }
+        if (hasElse && (branches.length === 0 || falls)) branches.push(cases + 1);
+        if (branches.length === 0) return;
+        const first = branches.shift();
+        util.stackFrame.pmSwitch = branches;
+        util.startBranch(first, false);
     }
 
     stop (args, util) {

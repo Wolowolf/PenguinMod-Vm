@@ -2118,30 +2118,51 @@ class JSGenerator {
             });
             break;
         }
-        case 'control.switch':
-            this.source += `switch (${this.descendInput(node.test).asString()}) {\n`;
+        case 'control.switch': {
+            // Desktop fork (section 279): the switch has a label, so "stop checking" inside a loop in a branch
+            // leaves the check (a plain "break" left that loop), and "escape loop" in a check in a loop leaves
+            // the loop (a plain "break" left only the check): it sets a flag, leaves the outermost check since
+            // the loop, and the loop is left right after that check.
+            const label = this.localVariables.next();
+            const outerLabel = this.pmSwitchLabel;
+            const outerInfo = this.pmLoopSwitch;
+            const info = outerInfo || {label, flag: null};
+            this.pmSwitchLabel = label;
+            this.pmLoopSwitch = info;
+            this.source += `${label}: switch (${this.descendInput(node.test).asString()}) {\n`;
             this.descendStack(node.conditions, new Frame(false, 'control.switch'));
             // only add the else branch if it won't be empty
             // this makes scripts have a bit less useless noise in them
             if (node.default.length) {
                 this.source += `default:\n`;
-                this.descendStack(node.default, new Frame(false, 'control.switch'));
+                // (section 279: "stop checking" also works in the "otherwise" branch)
+                const frame = new Frame(false, 'control.switch');
+                frame.assignData({
+                    containedByCase: true
+                });
+                this.descendStack(node.default, frame);
             }
             this.source += `}\n`;
+            this.pmSwitchLabel = outerLabel;
+            this.pmLoopSwitch = outerInfo;
+            if (!outerInfo && info.flag) this.source += `if (${info.flag}) { ${info.flag} = false; break; }\n`;
             break;
+        }
         case 'control.case':
             if (this.currentFrame.parent !== 'control.switch') {
-                this.source += `throw 'All "case" blocks must be inside of a "switch" block.';\n`;
+                this.source += `throw 'All "is" blocks must be inside of a "check" block.';\n`;
                 break;
             }
             this.source += `case ${this.descendInput(node.condition).asString()}:\n`;
-            if (!node.runsNext){
+            // Desktop fork (section 279): a branch of the modular block that also runs the next one keeps its
+            // blocks and has no "break" (the single "is, also run next" block has no blocks inside)
+            if (!node.runsNext || node.code.length) {
                 const frame = new Frame(false, 'control.case');
                 frame.assignData({
                     containedByCase: true
                 });
                 this.descendStack(node.code, frame);
-                this.source += `break;\n`;
+                if (!node.runsNext) this.source += `break ${this.pmSwitchLabel};\n`;
             }
             break;
         case 'control.allAtOnce': {
@@ -2152,15 +2173,20 @@ class JSGenerator {
             break;
         }
         case 'control.exitCase':
-            if (!this.currentFrame.importantData.containedByCase) {
-                this.source += `throw 'All "exit case" blocks must be inside of a "case" block.';\n`;
+            if (!this.currentFrame.importantData.containedByCase || !this.pmSwitchLabel) {
+                this.source += `throw 'All "stop checking" blocks must be inside of an "is" or "otherwise" branch.';\n`;
                 break;
             }
-            this.source += `break;\n`;
+            this.source += `break ${this.pmSwitchLabel};\n`;
             break;
         case 'control.exitLoop': {
             const inLoop = this.currentFrame.importantData.containedByLoop;
-            if (inLoop) this.source += `break;\n`;
+            // Desktop fork (section 279): in a check inside the loop, see 'control.switch'
+            const inSwitch = inLoop ? this.pmLoopSwitch : null;
+            if (inSwitch) {
+                if (!inSwitch.flag) inSwitch.flag = this.localVariables.next();
+                this.source += `var ${inSwitch.flag} = true; break ${inSwitch.label};\n`;
+            } else if (inLoop) this.source += `break;\n`;
             else {
                 // this could be an uncompiled loop block
                 if (this.compatBranchInfo) {
@@ -3450,6 +3476,9 @@ class JSGenerator {
         else this.resetVariableInputs();
         frame.assignData(this.currentFrame);
         this.pushFrame(frame);
+        // Desktop fork (section 279): the checks around a loop are not between the loop and its "escape loop"
+        const pmLoopSwitch = this.pmLoopSwitch;
+        if (frame.isLoop) this.pmLoopSwitch = null;
 
         // Desktop fork (section 183): a run of statements that keep a plain call's setup needs it only once
         // (keepsPlainSetup): plainSetupKept says the setup of this thread is in place when the statement starts.
@@ -3476,6 +3505,7 @@ class JSGenerator {
         const knownAtEnd = known ? this.knownVariables() : null;
         this.resetVariableInputs();
         this.popFrame();
+        this.pmLoopSwitch = pmLoopSwitch;
         return knownAtEnd;
     }
 
