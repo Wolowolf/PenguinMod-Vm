@@ -117,8 +117,6 @@ const uniteReplacments = {
     'jwUnite_thing_is_number': 'sensing_thing_is_number',
     'jwUnite_if_return_else_return': 'control_if_return_else_return',
     'jwUnite_indexOfTextInText': 'operator_indexOfTextInText',
-    'jwUnite_regextest': 'sensing_regextest',
-    'jwUnite_regexmatch': 'operator_regexmatch',
     'jwUnite_replaceAll': 'operator_replaceAll',
     'jwUnite_readLineInMultilineText': 'operator_readLineInMultilineText',
     'jwUnite_newLine': 'operator_newLine',
@@ -158,12 +156,6 @@ const ExtensionPatches = {
             // handle all 1:1 blocks
             if (uniteReplacments[block.opcode]) {
                 block.opcode = uniteReplacments[block.opcode];
-                if (block.opcode === 'sensing_regextest' || block.opcode === 'operator_regexmatch') {
-                    block.inputs.regrule = [
-                        INPUT_SAME_BLOCK_SHADOW,
-                        [TEXT_PRIMITIVE, "g"]
-                    ];
-                }
             }
             blocks[blockIDs[idx]] = block;
         }

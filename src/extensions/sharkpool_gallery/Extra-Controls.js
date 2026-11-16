@@ -44,25 +44,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const runtime = vm.runtime;
   const isPM = Scratch.extensions.isPenguinMod;
 
-  const keysMenu = [
-    { text: "space", value: "space" }, { text: "up arrow", value: "up arrow" }, { text: "down arrow", value: "down arrow" },
-    { text: "right arrow", value: "right arrow" }, { text: "left arrow", value: "left arrow" },
-    { text: "a", value: "a" }, { text: "b", value: "b" }, { text: "c", value: "c" },
-    { text: "d", value: "d" }, { text: "e", value: "e" }, { text: "f", value: "f" },
-    { text: "g", value: "g" }, { text: "h", value: "h" }, { text: "i", value: "i" },
-    { text: "j", value: "j" }, { text: "k", value: "k" }, { text: "l", value: "l" },
-    { text: "m", value: "m" }, { text: "n", value: "n" }, { text: "o", value: "o" },
-    { text: "p", value: "p" }, { text: "q", value: "q" }, { text: "r", value: "r" },
-    { text: "s", value: "s" }, { text: "t", value: "t" }, { text: "u", value: "u" },
-    { text: "v", value: "v" }, { text: "w", value: "w" }, { text: "x", value: "x" },
-    { text: "y", value: "y" }, { text: "z", value: "z" }, { text: "0", value: "0" },
-    { text: "1", value: "1" }, { text: "2", value: "2" }, { text: "3", value: "3" },
-    { text: "4", value: "4" }, { text: "5", value: "5" }, { text: "6", value: "6" },
-    { text: "7", value: "7" }, { text: "8", value: "8" }, { text: "9", value: "9" }
-  ];
-
   let Thread; // defined by exports
-  let conditionStorage = Object.create(null), keybinds = Object.create(null);
+  let conditionStorage = Object.create(null);
   let hats = { ...runtime._hats }, overrideCalls = {};
 
   const regenReporters = ["SPadvControl_threadArgs"];
@@ -73,47 +56,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   };
   runtime.on("PROJECT_STOP_ALL", resetStorage);
   runtime.on("PROJECT_START", resetStorage);
-
-  const postData = (key, down) => {
-    if (key === "space") key = " ";
-    if (key.includes("arrow")) key = key.charAt(0).toUpperCase() + key.slice(1).replace(" arrow", "");
-    runtime.ioDevices.keyboard.postData({ key, isDown: down });
-  };
-  runtime.on("KEY_PRESSED", (key) => {
-    key = key.toLowerCase();
-    // Use this for compatibility with other extensions
-    if (keybinds[key] !== undefined) keybinds[key].keyV.forEach(item => postData(item, true));
-  });
-  runtime.on("AFTER_EXECUTE", () => {
-    const keys = runtime.ioDevices.keyboard._keysPressed;
-    for (let i = 0; i < Object.keys(keybinds).length; i++) {
-      const keyName = Object.keys(keybinds)[i];
-      const key = keybinds[keyName];
-      if (keys.indexOf(keyName.toLowerCase()) === -1) key.keyV.forEach(i => postData(i, false));
-    }
-  });
-
-  // Override needed for "ifRunBlock"
-  // Desktop fork (section 121): through runtime.pmRestartThreadHooks instead of replacing _restartThread
-  runtime.pmRestartThreadHooks.push((thread) => {
-    const forceStop = (t, c) => {
-      if (c && t.procedures !== null && Object.keys(t.procedures).length > 0) try { t.generator.return() } catch {}
-      t.status = 4;
-    }
-    // Check if we exist in the thread, then stop the script
-    if (thread.isCompiled) {
-      const e = thread.compatibilityStackFrame;
-      if (e !== undefined && e !== null && e.SPifThread !== undefined) forceStop(e.SPifThread, true);
-    } else {
-      for (let i = 0; i < thread.stackFrames.length; i++) {
-        const e = thread.stackFrames[i].executionContext;
-        if (e !== null && e.SPifThread !== undefined) {
-          forceStop(e.SPifThread, false);
-          break;
-        }
-      }
-    }
-  });
 
   // override needed for "get from sprite" blocks
   // Desktop fork (section 121): through runtime.pmVisualReportCaptureHooks instead of replacing visualReport
@@ -225,24 +167,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             canDragDuplicate: true, // Desktop fork (section 123)
           },
           {
-            opcode: "runType",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.LOOP,
-            text: "run [TYPE]",
-            arguments: {
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "runTypes" }
-            }
-          },
-          {
-            opcode: "asyncCode",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.CONDITIONAL,
-            text: "[ICON] run async",
-            arguments: {
-              ICON: { type: Scratch.ArgumentType.IMAGE, dataURI: getIconURI("time") }
-            }
-          },
-          {
             opcode: "simuRun",
             extensions: ["colours_control"],
             blockType: Scratch.BlockType.CONDITIONAL,
@@ -250,15 +174,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             branchCount: 2
           },
           "---",
-          {
-            opcode: "ifRunBlock",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.CONDITIONAL,
-            text: "step through blocks while [CON]",
-            arguments: {
-              CON: { type: Scratch.ArgumentType.BOOLEAN }
-            }
-          },
           {
             opcode: "doThenWhile",
             extensions: ["colours_control"],
@@ -398,41 +313,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.COMMAND,
             text: "reset forced hats"
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Key Control" },
-          {
-            opcode: "keybind",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "bind key [KEY2] to [KEY1]",
-            arguments: {
-              KEY1: { type: Scratch.ArgumentType.STRING, menu: "keys" },
-              KEY2: { type: Scratch.ArgumentType.STRING, menu: "keys" }
-            }
-          },
-          {
-            opcode: "getKeybind",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.REPORTER,
-            text: "binds of [KEY] key",
-            arguments: {
-              KEY: { type: Scratch.ArgumentType.STRING, menu: "keys" }
-            }
-          },
-          {
-            opcode: "resetKey",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "unbind all keybinds of [KEY]",
-            arguments: {
-              KEY: { type: Scratch.ArgumentType.STRING, menu: "keys" }
-            }
-          },
-          {
-            opcode: "resetBinds",
-            extensions: ["colours_control"],
-            blockType: Scratch.BlockType.COMMAND,
-            text: "reset keybinds"
-          }
         ],
         menus: {
           ACTIVATE: ["finish", "restart"],
@@ -440,12 +320,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           targets2: { acceptReporters: true, items: this.getTargets(true, false) },
           targets3: { acceptReporters: true, items: this.getTargets(false, true) },
           HAT_MENU: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: "organizeHats" },
-          keys: { acceptReporters: true, items: keysMenu },
-          contType: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["wait", "dont wait"] },
-          runTypes: {
-            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-            items: ["forward", "reversed", "forward and reversed", "randomized"]
-          }
+          contType: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["wait", "dont wait"] }
         },
       };
     }
@@ -610,70 +485,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Desktop fork (section 131): not async, so "forward" starts its branch at once; an async function answered a
     // promise, and interpreted scripts then never ran the branch (every other type answers its own promise)
-    runType(args, util) {
-      if (args.TYPE === "forward") {
-        util.startBranch(1, false);
-        return;
-      }
 
-      if (!Thread) return "Extra Controls could not access Exports!";
-      const branch = this.getThisBlock(util, true, 1);
-      if (!branch) return;
-      
-      const container = util.thread.blockContainer;
-      let stack = [], block = branch;
-      while (block !== null) {
-        stack.push(block);
-        block = container.getBlock(block).next;
-      }
-      if (args.TYPE === "reversed") stack = stack.reverse();
-      else if (args.TYPE === "randomized") stack = stack.sort(() => Scratch.vm.runtime.pmRandom() - 0.5);
-      else stack = [...stack, ...stack.reverse()];
-
-      // TODO forces interpretor version of blocks, which might not exist
-      return new Promise((resolve) => {
-        const thread = util.thread;
-        const tempThread = new Thread(stack[0]);
-        tempThread.pushStack(stack[0]);
-        tempThread.blockContainer = thread.blockContainer;
-        tempThread.target = util.target;
-        tempThread.ogTarget = thread.ogTarget ?? util.target;
-        tempThread.pushReportedValue = () => resolve();
-        tempThread.stackIndex = 0;
-        const ogPushStack = tempThread.pushStack;
-        tempThread.pushStack = function(blockId) {
-          this.stackIndex++;
-          ogPushStack.call(this, blockId);
-        };
-        runtime.threads.push(tempThread);
-        if (!tempThread.stackClick && !tempThread.updateMonitor) runtime.threadMap.set(tempThread.getId(), tempThread);
-        runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
-      });
-    }
-
-    async asyncCode(args, util) {
-      if (!Thread) return "Extra Controls could not access Exports!";
-      const branch = this.getThisBlock(util, true, 1);
-      if (!branch) return;
-      // TODO forces interpretor version of blocks, which might not exist
-      return new Promise((resolve) => {
-        const thread = util.thread;
-        const tempThread = new Thread(branch);
-        tempThread.pushStack(branch);
-        tempThread.blockContainer = thread.blockContainer;
-        tempThread.target = util.target;
-        tempThread.ogTarget = thread.ogTarget ?? util.target;
-        tempThread.pushReportedValue = () => resolve();
-        const ogPushStack = tempThread.pushStack;
-        tempThread.pushStack = function(blockId) {
-          runtime.requestRedraw();
-          ogPushStack.call(this, blockId);
-        };
-        runtime.threads.push(tempThread);
-        if (!tempThread.stackClick && !tempThread.updateMonitor) runtime.threadMap.set(tempThread.getId(), tempThread);
-        runtime._pmThreadMapChanged = true; // Desktop fork (section 255)
-      });
-    }
 
     simuRun(_, util) {
       const branches = [this.getThisBlock(util, true, 1), this.getThisBlock(util, true, 2)];
@@ -688,27 +500,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    ifRunBlock(args, util) {
-      const con = Cast.toBoolean(args.CON);
-      if (util.stackFrame.SPifThread) {
-        const thread = util.stackFrame.SPifThread;
-        if (con && runtime.isActiveThread(thread)) util.startBranch(2, true);
-        else {
-          if (thread.isCompiled) {
-            // Force Stop Custom Compiled Blocks
-            if (thread.procedures !== null && Object.keys(thread.procedures).length > 0) try { thread.generator.return() } catch {}
-          }
-          thread.status = 4; // Works better than stopThisScript() for Custom Blocks
-        }
-      } else {
-        const branch = this.getThisBlock(util, true, 1);
-        if (branch && con) {
-          util.stackFrame.SPifThread = this.pushThread(branch, util, { stackClick: false });
-          this.addMissKeys(util.thread, util.stackFrame.SPifThread);
-          util.startBranch(2, true);
-        }
-      }
-    }
 
     doThenWhile(args, util) {
       if (util.stackFrame.whileThread === undefined) {
@@ -874,23 +665,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       hats = { ...runtime._hats };
     }
 
-    keybind(args) {
-      const key1 = Cast.toString(args.KEY1);
-      const key2 = Cast.toString(args.KEY2);
-      if (key1 === key2) return;
-      if (keybinds[key1]) {
-        if (keybinds[key1].keyV.indexOf(key2) === -1) keybinds[key1].keyV.push(key2);
-      } else { keybinds[key1] = { keyV : [key2] } }
-    }
 
-    getKeybind(args) {
-      const key = keybinds[Cast.toString(args.KEY)];
-      return key ? JSON.stringify(key.keyV) : `["${args.KEY}"]`;
-    }
 
-    resetKey(args) { delete keybinds[Cast.toString(args.KEY)] }
 
-    resetBinds() { keybinds = Object.create(null) }
   }
 
   Scratch.extensions.register(new SPadvControl());

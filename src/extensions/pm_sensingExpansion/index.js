@@ -21,23 +21,6 @@ const blocks = `
         </shadow>
     </value>
 </block>
-<block type="sensing_regextest">
-    <value name="text">
-        <shadow type="text">
-            <field name="TEXT">foo bar</field>
-        </shadow>
-    </value>
-    <value name="reg">
-        <shadow type="text">
-            <field name="TEXT">foo</field>
-        </shadow>
-    </value>
-    <value name="regrule">
-        <shadow type="text">
-            <field name="TEXT">g</field>
-        </shadow>
-    </value>
-</block>
 ${blockSeparator}
 %b11>
 %b12>
@@ -71,8 +54,6 @@ ${blockSeparator}
 %b8>
 ${blockSeparator}
 <block type="sensing_getoperatingsystem"/>
-<block type="sensing_getbrowser"/>
-<block type="sensing_geturl"/>
 ${blockSeparator}
 %b3>
 %b2>
@@ -133,61 +114,6 @@ class pmSensingExpansion {
                     blockType: BlockType.COMMAND
                 },
                 {
-                    opcode: 'urlOptions',
-                    text: 'url [OPTIONS]',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        OPTIONS: {
-                            type: ArgumentType.STRING,
-                            menu: "urlSections"
-                        }
-                    }
-                },
-                {
-                    opcode: 'urlOptionsOf',
-                    text: '[OPTIONS] of url [URL]',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        OPTIONS: {
-                            type: ArgumentType.STRING,
-                            menu: "urlSections"
-                        },
-                        URL: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "https://home.penguinmod.com:3000/some/random/page?param=10#20"
-                        }
-                    }
-                },
-                {
-                    opcode: 'setUrlEnd',
-                    text: 'set url path to [PATH]',
-                    blockType: BlockType.COMMAND,
-                    arguments: {
-                        PATH: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "?parameter=10#you-can-change-these-without-refreshing"
-                        }
-                    }
-                },
-                {
-                    opcode: 'queryParamOfUrl',
-                    text: 'query parameter [PARAM] of url [URL]',
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        PARAM: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "param"
-                        },
-                        URL: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "https://penguinmod.com/?param=10"
-                        }
-                    }
-                },
-                {
                     opcode: 'packaged',
                     text: 'project packaged?',
                     blockType: BlockType.BOOLEAN,
@@ -197,12 +123,6 @@ class pmSensingExpansion {
                     opcode: 'spriteName',
                     text: 'sprite name',
                     blockType: BlockType.REPORTER,
-                    disableMonitor: true
-                },
-                {
-                    opcode: 'framed',
-                    text: 'project in iframe?',
-                    blockType: BlockType.BOOLEAN,
                     disableMonitor: true
                 },
                 {
@@ -318,21 +238,6 @@ class pmSensingExpansion {
                         }
                     ],
                     acceptReporters: true
-                },
-                urlSections: {
-                    acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-                    items: [
-                        "protocol",
-                        "host",
-                        "hostname",
-                        "port",
-                        "pathname",
-                        "search",
-                        "hash",
-                        "origin",
-                        "subdomain",
-                        "path"
-                    ].map(item => ({ text: item, value: item }))
                 }
             }
         };
@@ -368,51 +273,6 @@ class pmSensingExpansion {
         return Color.rgbToHex(colorInfo.color);
     }
 
-    // util
-    urlOptionFromObject(option, urlObject) {
-        const validOptions = [
-            "protocol",
-            "host",
-            "hostname",
-            "port",
-            "pathname",
-            "search",
-            "hash",
-            "origin",
-            "subdomain",
-            "path"
-        ];
-        if (!validOptions.includes(option)) return '';
-
-        switch (option) {
-            case 'subdomain': {
-                const origin = urlObject.origin;
-                if (origin.split('.').length <= 2) return '';
-                const splitSubdomain = origin.split('.')[0];
-                const subdomain = splitSubdomain.split('//')[1];
-                if (!subdomain) return '';
-                return subdomain.replace(/\./gmi, '');
-            }
-            case 'path': {
-                const origin = urlObject.origin;
-                if (origin.endsWith('/')) {
-                    return urlObject.href.replace(origin, '');
-                }
-                return urlObject.href.replace(origin + '/', '');
-            }
-        }
-
-        return Cast.toString(urlObject[option]);
-    }
-    validateUrl(url) {
-        let valid = true;
-        try {
-            new URL(url);
-        } catch {
-            valid = false;
-        }
-        return valid;
-    }
 
     // blocks
 
@@ -477,33 +337,7 @@ class pmSensingExpansion {
         }
     }
 
-    urlOptions(args) {
-        if (!('location' in window)) return ''; // idk how this would fail but funny
-        const option = Cast.toString(args.OPTIONS).toLowerCase();
-        return this.urlOptionFromObject(option, location);
-    }
-    urlOptionsOf(args) {
-        if (!('location' in window)) return ''; // idk how this would fail but funny
-        const option = Cast.toString(args.OPTIONS).toLowerCase();
-        const url = Cast.toString(args.URL);
-        if (!this.validateUrl(url)) return '';
-        return this.urlOptionFromObject(option, new URL(url));
-    }
 
-    setUrlEnd(args) {
-        if (!('history' in window)) return;
-        const path = Cast.toString(args.PATH);
-        const target = location.origin.endsWith('/') ? location.origin + path : location.origin + '/' + path;
-        history.replaceState('', '', target);
-    }
-    queryParamOfUrl(args) {
-        if (!('URLSearchParams' in window)) return '';
-        const url = Cast.toString(args.URL);
-        if (!this.validateUrl(url)) return '';
-        const urlObject = new URL(url);
-        const queryParams = new URLSearchParams(urlObject.search);
-        return queryParams.get(Cast.toString(args.PARAM));
-    }
 
     packaged() {
         return this.runtime.isPackagedProject;
@@ -513,10 +347,6 @@ class pmSensingExpansion {
         return util.target.getName();
     }
 
-    framed() {
-        if (!window.parent) return false;
-        return window.parent !== window;
-    }
 
     currentMillisecond() {
         return this.runtime.pmDateNow() % 1000;

@@ -100,9 +100,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     const input = container.getBlock(blockID).inputs.FILTER;
     const opcode = container.getBlock(input.block)?.opcode;
     if (!opcode) return null;
-    if (opcode.startsWith("SPspriteEffectsV2_") && !opcode.endsWith("applyCustom")) {
+    if (opcode.startsWith("SPspriteEffectsV2_")) {
       // this is safe.
-      // applyCustom is the only block that has user inputted filters
+      // Desktop fork (section 270): every filter comes from this extension's own blocks (custom filters removed)
       //filterString
     } else {
       filterString = DOMPurify.sanitize(filterString, purifySettings);
@@ -438,16 +438,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0 },
               SIZE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 },
               NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 }
-            },
-          },
-          {
-            opcode: "applyCustom",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("add custom [FILTER] with name [NAME] to [SRC]"),
-            arguments: {
-              FILTER: { type: Scratch.ArgumentType.STRING, defaultValue: Scratch.translate("svg filter") },
-              NAME: { type: Scratch.ArgumentType.STRING, defaultValue: Scratch.translate("my-filter") },
-              SRC: { type: Scratch.ArgumentType.STRING, defaultValue: "</svg>" }
             },
           },
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Lighting") },
@@ -1339,10 +1329,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return this._injectFilter(svg, "distort", filter);
     }
 
-    applyCustom(args) {
-      const svg = this._handleSVG(args.SRC);
-      return this._injectFilter(svg, Cast.toString(args.NAME), Cast.toString(args.FILTER));
-    }
 
     /* Lighting */
     applyBasicLight(args) {

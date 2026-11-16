@@ -1,6 +1,5 @@
 const Cast = require('../util/cast.js');
 const MathUtil = require('../util/math-util.js');
-const { validateRegex } = require('../util/json-block-utilities');
 
 class Scratch3OperatorsBlocks {
     constructor (runtime) {
@@ -44,7 +43,6 @@ class Scratch3OperatorsBlocks {
             operator_mod: this.mod,
             operator_round: this.round,
             operator_mathop: this.mathop,
-            operator_regexmatch: this.regexmatch,
             operator_replaceAll: this.replaceAll,
             operator_replaceFirst: this.replaceFirst,
             operator_getLettersFromIndexToIndexInTextFixed: this.getLettersFromIndexToIndexInTextFixed,
@@ -197,14 +195,6 @@ class Scratch3OperatorsBlocks {
     }
     replaceFirst (args) {
         return Cast.toString(args.text).replace(args.term, args.res);
-    }
-
-    regexmatch (args) {
-        if (!validateRegex(args.reg, args.regrule)) return "[]";
-        const regex = new RegExp(args.reg, args.regrule);
-        // Desktop fork (section 211): a number or other value is matched as text (it stopped the script with an error)
-        const matches = Cast.toString(args.text).match(regex);
-        return JSON.stringify(matches ? matches : []);
     }
 
     add (args) {

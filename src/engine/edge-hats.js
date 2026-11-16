@@ -51,9 +51,8 @@ const CORE_PURE_OPCODES = new Set([
     'operator_character_to_code', 'operator_code_to_character', 'operator_indexOfTextInText',
     'operator_lastIndexOfTextInText', 'operator_textStartsOrEndsWith', 'operator_countAppearTimes',
     'operator_textIncludesLetterFrom', 'operator_replaceAll', 'operator_replaceFirst',
-    'operator_getLettersFromIndexToIndexInTextFixed', 'operator_readLineInMultilineText', 'operator_regexmatch',
-    'sensing_thing_is_number', 'sensing_thing_has_number', 'sensing_thing_is_text', 'sensing_isUpperCase',
-    'sensing_regextest', 'sensing_distanceTo'
+    'operator_getLettersFromIndexToIndexInTextFixed', 'operator_readLineInMultilineText',
+    'sensing_thing_is_number', 'sensing_thing_has_number', 'sensing_thing_is_text', 'sensing_isUpperCase', 'sensing_distanceTo'
 ]);
 // Reporters that read one field of the sprite itself.
 const TARGET_FIELDS = {

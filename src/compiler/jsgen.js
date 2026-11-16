@@ -485,7 +485,7 @@ const LOOP_TYPES_KINDS = new Set([
     'looks.size', 'looks.costumeName', 'looks.costumeNumber', 'looks.backdropName', 'looks.backdropNumber',
     'mouse.down', 'mouse.x', 'mouse.y', 'keyboard.pressed',
     'sensing.answer', 'sensing.touching', 'sensing.touchingColor', 'sensing.colorTouchingColor',
-    'sensing.distance', 'sensing.of', 'sensing.username', 'sensing.daysSince2000', 'sensing.year',
+    'sensing.distance', 'sensing.of', 'sensing.daysSince2000', 'sensing.year',
     'sensing.month', 'sensing.date', 'sensing.dayofweek', 'sensing.hour', 'sensing.minute', 'sensing.second'
 ]);
 
@@ -630,8 +630,7 @@ const FOLDABLE_KINDS = new Set([
     'op.nand', 'op.nor', 'op.xor', 'op.xnor', 'op.constrain', 'op.lerp', 'op.advMath', 'op.stringify', 'op.boolify',
     'op.toCase', 'op.charToCode', 'op.codeToChar', 'op.indexOfText', 'op.lastIndexOfText', 'op.startsOrEndsWith',
     'op.countIn', 'op.hasLetterFrom', 'op.replaceAll', 'op.replaceFirst', 'op.lettersFromTo', 'op.readLine',
-    'op.regexMatch', 'sensing.isNumber', 'sensing.hasNumber', 'sensing.isText', 'sensing.isUpperCase',
-    'sensing.regexTest', 'sensing.distanceTo',
+    'sensing.isNumber', 'sensing.hasNumber', 'sensing.isText', 'sensing.isUpperCase', 'sensing.distanceTo',
     // Operators Expansion blocks compiled to inline code (section 140); helpers in PURE_HELPER_NAMES too
     'pmInline.isMultipleOf', 'pmInline.isInteger', 'pmInline.isPrime', 'pmInline.isEven', 'pmInline.between',
     'pmInline.partOfRatio', 'pmInline.simplifyRatio', 'pmInline.number', 'pmInline.truncate',
@@ -1266,19 +1265,6 @@ class JSGenerator {
             }
             return new TypedInput(points, TYPE_UNKNOWN);
 
-        case 'control.inlineStackOutput': {
-            // reset this.source but save it
-            const originalSource = this.source;
-            this.source = '(yield* (function*() {';
-            // descend now since descendStack modifies source
-            this.descendStack(node.code, new Frame(false, 'control.inlineStackOutput', true));
-            this.source += '})())';
-            // save edited
-            const stackSource = this.source;
-            this.source = originalSource;
-            return new TypedInput(stackSource, TYPE_UNKNOWN);
-        }
-
         case 'keyboard.pressed':
             return new TypedInput(`runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key).asSafe()})`, TYPE_BOOLEAN);
 
@@ -1469,9 +1455,6 @@ class JSGenerator {
             return new TypedInput(`coreLetters(${this.descendInput(node.from).asNumber()}, ${this.descendInput(node.to).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
         case 'op.readLine':
             return new TypedInput(`coreLine(${this.descendInput(node.line).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
-        case 'op.regexMatch':
-            // (an object named args, like the block's own function; section 211: a value that is not text is matched as text)
-            return new TypedInput(`coreRegexMatch({text: ${this.rawValue(this.descendInput(node.text))}, reg: ${this.rawValue(this.descendInput(node.reg))}, regrule: ${this.rawValue(this.descendInput(node.regrule))}})`, TYPE_STRING);
         case 'sensing.isNumber':
             return new TypedInput(`coreIsNumber(${this.rawValue(this.descendInput(node.value))})`, TYPE_BOOLEAN);
         case 'sensing.hasNumber':
@@ -1480,8 +1463,6 @@ class JSGenerator {
             return new TypedInput(`(isNaN(Number(${this.rawValue(this.descendInput(node.value))})))`, TYPE_BOOLEAN);
         case 'sensing.isUpperCase':
             return new TypedInput(`(/[A-Z]/g.test(${this.rawValue(this.descendInput(node.text))}))`, TYPE_BOOLEAN);
-        case 'sensing.regexTest':
-            return new TypedInput(`coreRegexTest(${this.rawValue(this.descendInput(node.reg))}, ${this.rawValue(this.descendInput(node.regrule))}, ${this.rawValue(this.descendInput(node.text))})`, TYPE_BOOLEAN);
         case 'sensing.directionTo':
             return new TypedInput(`coreDirectionTo(${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))}, ${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, runtime.runtimeOptions.disableDirectionClamping)`, TYPE_NUMBER_NAN);
         case 'sensing.distanceTo':
@@ -1971,10 +1952,6 @@ class JSGenerator {
             return new TypedInput(`target.isTouchingObject(${this.descendInput(node.object).asUnknown()})`, TYPE_BOOLEAN);
         case 'sensing.touchingColor':
             return new TypedInput(`target.isTouchingColor(colorToList(${this.descendInput(node.color).asColor()}))`, TYPE_BOOLEAN);
-        case 'sensing.username':
-            return new TypedInput('runtime.ioDevices.userData.getUsername()', TYPE_STRING);
-        case 'sensing.loggedin':
-            return new TypedInput('runtime.ioDevices.userData.getLoggedIn()', TYPE_BOOLEAN);
         case 'sensing.year':
             return new TypedInput(`(new Date(runtime.pmDateNow()).getFullYear())`, TYPE_NUMBER);
 

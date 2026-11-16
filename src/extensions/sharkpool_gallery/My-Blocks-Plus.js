@@ -744,6 +744,28 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       if (forceYield) compiler.ir.procedures[procedureVariant].yields = true;
       return true;
     });
+    // Desktop fork (section 270): a call of a custom block that uses "current value of" hands over one function per
+    // input that works the input out again where the call is (its variables and parameters), on thread.mbpCur while
+    // the custom block runs. An input that can pause (yield) hands over none: the parameter's value is used there.
+    runtime.pmProcedureCallJsHooks.push((compiler, node) => {
+      const procedureData = compiler.ir.procedures[node.variant];
+      if (!procedureData || !procedureData.mbpUsesCurrent || procedureData.stack === null) return false;
+      if (node.arguments.some(input => input instanceof Array)) return false;
+      const args = node.arguments.map(input => compiler.descendInput(input).asSafe());
+      const thunks = node.arguments.map(input => {
+        const source = compiler.descendInput(input).asUnknown();
+        return /\byield\b/.test(source) ? "null" : `() => (${source})`;
+      });
+      if (!compiler.isWarp && node.code === compiler.script.procedureCode) compiler.yieldNotWarp();
+      const out = compiler.localVariables.next();
+      compiler.source += `(thread.mbpCur || (thread.mbpCur = [])).push({ v: "${sanitize(node.variant)}", t: [${thunks.join(",")}] });\n`;
+      compiler.source += `let ${out};\ntry { ${out} = ${procedureData.yields ? "yield* " : ""}${compiler.procedureCallee(node.variant)}(${args.join(",")}); } finally { thread.mbpCur.pop(); }\n`;
+      const thisProcedureData = compiler.ir.procedures[compiler.script.procedureVariant];
+      if (thisProcedureData && !thisProcedureData.returns) compiler.source += `if (${out}) { return ${out}; };\n`;
+      compiler.resetVariableInputs();
+      if (typeof compiler.recordProcedureExit === "function") compiler.recordProcedureExit();
+      return true;
+    });
     runtime.registerCompiledExtensionBlocks("SPmbpCST", {
       ir: {
         setParam: (generator, block) => {
@@ -756,26 +778,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             kind: "stack", paramIndex, val: generator.descendInputOfBlock(block, "VALUE")
           };
         },
-        evalParam: (generator, block) => {
-          const node = { kind: "stack" };
-          if (!generator.thread[targetProcData]) return node;
-          const procData = generator.thread[targetProcData][generator.script.procedureCode];
-          const procedureBlock = procData?.block;
-          if (procedureBlock) {
-            const paramIndex = generator.script.arguments.lastIndexOf(block.fields.PARAM.value);
-            const argIds = JSON.parse(procedureBlock.mutation.argumentids);
-            if (paramIndex > -1) {
-              const arg = procedureBlock.inputs[argIds[paramIndex]];
-              if (arg?.block !== undefined) {
-                const input = generator.target.blocks.getBlock(arg.block);
-                node["input"] = generator.descendInput(input);
-                node["index"] = paramIndex;
-              }
-            }
-          }
-          return node;
-        },
-        getParam: (generator, block) => ({ kind: "input", param: generator.descendInputOfBlock(block, "PARAM") })
+        // Desktop fork (section 270): marks the custom block, so its callers hand over the inputs (see the call hook below)
+        currentValue: (generator, block) => {
+          const index = generator.script.arguments.lastIndexOf(block.fields.PARAM.value);
+          if (index > -1) generator.script.mbpUsesCurrent = true;
+          return { kind: "input", index };
+        }
       },
       js: {
         setParam: (node, compiler) => {
@@ -783,19 +791,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           const i = node.paramIndex;
           if (i !== undefined && i !== -1) compiler.source += `p${i} = ${val.asSafe()};\n`;
         },
-        evalParam: (node, compiler) => {
-          if (node.input === undefined) return;
-          const val = compiler.descendInput(node.input);
-          compiler.source += `p${node.index} = ${val.asUnknown()};\n`;
-        },
-        getParam: (node, compiler) => {
-          const val = compiler.descendInput(node.param).asSafe();
-          return new exp.TypedInput(`(() => {
-          let a = ${JSON.stringify(compiler.script.arguments)}, v = ${val};
-          if (typeof v !== 'string') v = (v).toString();
-          const i = a.indexOf(v);
-          return i > -1 ? arguments[i].toString() : "";
-        })()`, exp.TYPE_STRING);
+        // the newest call's input of this parameter, worked out again; the plain parameter when this call handed none over
+        currentValue: (node, compiler) => {
+          if (node.index === undefined || node.index < 0) return new exp.TypedInput('""', exp.TYPE_STRING);
+          const variant = JSON.stringify(compiler.script.procedureVariant || "");
+          const i = node.index;
+          return new exp.TypedInput(
+            `((c) => (c && c.v === ${variant} && c.t[${i}]) ? c.t[${i}]() : p${i})(thread.mbpCur && thread.mbpCur[thread.mbpCur.length - 1])`,
+            exp.TYPE_UNKNOWN
+          );
         }
       }
     });
@@ -828,8 +832,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   if (Scratch.gui) Scratch.gui.getBlockly().then(SB => {
     const recolorables = [
       "argument_reporter_string_number", "argument_reporter_boolean",
-      "SPmbpCST_setParam", "SPmbpCST_getParam",
-      "SPmbpCST_evalParam", "procedures_return",
+      "SPmbpCST_setParam", "SPmbpCST_currentValue",
+      "procedures_return",
       // penguinmod
       "procedures_definition_return", "procedures_set"
     ];
@@ -1221,7 +1225,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   // Desktop fork (section 121): VirtualMachine.prototype.toJSON (only acted outside PenguinMod),
   // Runtime.prototype.getOpcodeFunction ("procedures_call") and Sequencer.prototype.stepToProcedure are not
   // replaced any more: global custom blocks are found through the Blocks hooks in patchTarget(), so the engine's own
-  // procedures_call and stepToProcedure run them (evalParam reads the call from the thread's stack).
+  // procedures_call and stepToProcedure run them (currentValue reads the call from the thread's stack).
 
   // Internals
   // Remove unused procedures before saving
@@ -1706,24 +1710,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             },
           },
           {
-            opcode: "evalParam",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "reevaluate [PARAM]",
+            // Desktop fork (section 270): replaces "reevaluate [PARAM]" and "get [PARAM]". Works out the input the
+            // custom block was called with again each time it is used; the plain parameter keeps the value from the call.
+            opcode: "currentValue",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "current value of [PARAM]",
             extensions: ["SPmbpCST_defineColored"],
             hideFromPalette: extensionRemovable,
             arguments: {
               PARAM: { type: Scratch.ArgumentType.STRING, menu: "procedureParamMenu" }
-            },
-          },
-          {
-            opcode: "getParam",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get [PARAM]",
-            extensions: ["SPmbpCST_defineColored"],
-            allowDropAnywhere: true,
-            hideFromPalette: extensionRemovable,
-            arguments: {
-              PARAM: { type: Scratch.ArgumentType.STRING, defaultValue: "parameter name" }
             },
           },
           {
@@ -1763,7 +1758,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     getProcedureParamMenu() {
       if (
         !ScratchBlocks || !ScratchBlocks.selected || ScratchBlocks.selected.isInFlyout ||
-        (ScratchBlocks.selected.type !== "SPmbpCST_setParam" && ScratchBlocks.selected.type !== "SPmbpCST_evalParam")
+        (ScratchBlocks.selected.type !== "SPmbpCST_setParam" && ScratchBlocks.selected.type !== "SPmbpCST_currentValue")
       ) return ["parameter name"];
       let topBlock = ScratchBlocks.selected, parent = null;
       while ((parent = topBlock?.getParent())) { topBlock = parent }
@@ -1808,42 +1803,44 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       thread.stack[0] = "";
     }
 
-    evalParam(args, util) {
-      if (!Thread || !execute) {
-        console.error("My Blocks+ could not access Exports!");
-        return;
-      }
-
+    // Desktop fork (section 270): the input the custom block was called with, worked out again (interpreted scripts)
+    currentValue(args, util) {
       const thread = util.thread;
-      // Desktop fork (section 121): the call is the innermost stack frame with parameters (it used to be
-      // recorded by a replaced procedures_call)
+      const param = Scratch.Cast.toString(args.PARAM);
+      const frozen = thread.getParam(param) ?? "";
+      if (!Thread || !execute) return frozen;
+      // the call is the innermost stack frame with parameters
       let frameIndex = thread.stackFrames.length - 1;
       while (frameIndex >= 0 && thread.stackFrames[frameIndex].params === null) frameIndex--;
-      if (frameIndex < 0) return;
-      const frame = thread.stackFrames[frameIndex];
+      if (frameIndex < 0) return frozen;
       const block = thread.blockContainer.getBlock(thread.stack[frameIndex]);
-      if (!block || !block.mutation) return;
+      if (!block || !block.mutation) return frozen;
       const params = thread.blockContainer.getProcedureParamNamesIdsAndDefaults(block.mutation.proccode);
-      if (!params) return;
-      const param = Scratch.Cast.toString(args.PARAM);
+      if (!params) return frozen;
       const index = params[0].indexOf(param);
-      if (index === -1) return;
-
+      if (index === -1) return frozen;
       const blockValue = block.inputs[params[1][index]];
-      if (!blockValue) return;
-
+      if (!blockValue || !blockValue.block) return frozen;
+      const inputBlock = thread.blockContainer.getBlock(blockValue.block);
+      if (!inputBlock) return frozen;
+      // a typed-in value never changes
+      if (inputBlock.shadow) {
+        const field = Object.values(inputBlock.fields || {})[0];
+        return field ? field.value : frozen;
+      }
+      // the caller's own parameters, for an input that reads them
+      let outer = frameIndex - 1;
+      while (outer >= 0 && thread.stackFrames[outer].params === null) outer--;
+      let result = frozen, got = false;
       const tempThread = new Thread;
       tempThread.topBlock = blockValue.block;
-      tempThread.pushStack(blockValue.block)
+      tempThread.pushStack(blockValue.block);
+      if (outer >= 0) tempThread.peekStackFrame().params = Object.assign({}, thread.stackFrames[outer].params);
       tempThread.blockContainer = thread.blockContainer;
       tempThread.target = thread.target;
-      tempThread.pushReportedValue = (value) => { frame.params[param] = value };
+      tempThread.pushReportedValue = (value) => { result = value; got = true; };
       execute(runtime.sequencer, tempThread);
-    }
-
-    getParam(args, util) {
-      const param = util.thread.getParam(Scratch.Cast.toString(args.PARAM));
-      return param ?? "";
+      return got ? result : frozen;
     }
 
     stopCallerScript(_, util) {

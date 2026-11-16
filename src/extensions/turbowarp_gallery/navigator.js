@@ -111,6 +111,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             text: Scratch.translate("device memory in GB"),
           },
           {
+            // Desktop fork (section 270): moved here from Network ("network type"); answers on phones and Chromebooks,
+            // empty where the system does not tell
+            opcode: "connectionType",
+            blockType: Scratch.BlockType.REPORTER,
+            text: Scratch.translate("connection type"),
+          },
+          {
             opcode: "getPreferredColorScheme",
             blockType: Scratch.BlockType.BOOLEAN,
             text: Scratch.translate("user prefers [THEME] color scheme?"),
@@ -233,6 +240,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
         },
       };
+    }
+
+    connectionType() {
+      const types = { bluetooth: "bluetooth", cellular: "mobile data", ethernet: "cable", wifi: "wi-fi", wimax: "wimax" };
+      try {
+        return types[navigator.connection.type] || "";
+      } catch (err) {
+        return "";
+      }
     }
 
     getMemory() {

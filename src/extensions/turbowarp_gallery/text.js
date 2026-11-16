@@ -211,82 +211,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
 
           "---",
-          {
-            opcode: "replaceRegex",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate(
-              "replace regex /[REGEX]/[FLAGS] in [STRING] with [REPLACE]"
-            ),
-            arguments: {
-              REGEX: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: ".",
-              },
-              FLAGS: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "g",
-              },
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Hello world!",
-              },
-              REPLACE: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "$&$&",
-              },
-            },
-          },
-          {
-            opcode: "matchRegex",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate({
-              default:
-                "item [ITEM] of [STRING] matched by regex /[REGEX]/[FLAGS]",
-              description:
-                "/[REGEX]/ is supposed to match the syntax that some actual programming languages used for regular expressions.",
-            }),
-            arguments: {
-              ITEM: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1,
-              },
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Hello world!",
-              },
-              REGEX: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "(.) (.{2})",
-              },
-              FLAGS: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "g",
-              },
-            },
-          },
-          {
-            opcode: "countRegex",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate({
-              default: "count regex /[REGEX]/[FLAGS] in [STRING]",
-              description:
-                "/[REGEX]/ is supposed to match the syntax that some actual programming languages used for regular expressions.",
-            }),
-            arguments: {
-              STRING: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Hello world!",
-              },
-              REGEX: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "[AEIOU]",
-              },
-              FLAGS: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "i",
-              },
-            },
-          },
 
           "---",
 
@@ -453,62 +377,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return string.repeat(repeat);
     }
 
-    replaceRegex(args, util) {
-      try {
-        const string = Cast.toString(args.STRING);
-        const replacer = Cast.toString(args.REPLACE);
-        const regex = Cast.toString(args.REGEX);
-        const flags = Cast.toString(args.FLAGS);
 
-        return string.replace(new RegExp(regex, flags), replacer);
-      } catch (e) {
-        console.error(e);
-        return "";
-      }
-    }
 
-    matchRegex(args, util) {
-      try {
-        const string = Cast.toString(args.STRING);
-        const uncleanRegex = Cast.toString(args.REGEX);
-        const flags = Cast.toString(args.FLAGS);
-        const item = Cast.toNumber(args.ITEM);
-
-        // Cache the last matched string
-        if (
-          !(
-            matchCache &&
-            matchCache.string === string &&
-            matchCache.regex === uncleanRegex &&
-            matchCache.flags === flags
-          )
-        ) {
-          const newFlags = flags.includes("g") ? flags : flags + "g";
-          const regex = new RegExp(uncleanRegex, newFlags);
-
-          matchCache = {
-            string,
-            regex: uncleanRegex,
-            flags,
-            arr: string.match(regex) || [],
-          };
-        }
-        return matchCache.arr[item - 1] || "";
-      } catch (e) {
-        console.error(e);
-        // Desktop fork: forget the last match (count regex answered its count for an invalid pattern)
-        matchCache = null;
-        return "";
-      }
-    }
-
-    countRegex(args, util) {
-      // Fill cache
-      // (ITEM is casted into 0,
-      // but we don't care about the return value)
-      this.matchRegex(args, util);
-      return (matchCache && matchCache.arr.length) || 0;
-    }
 
     isCase(args, util) {
       const string = Cast.toString(args.STRING);

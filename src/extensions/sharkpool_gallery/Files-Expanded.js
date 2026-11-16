@@ -558,11 +558,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           { blockType: Scratch.BlockType.LABEL, text: "Stored Files" },
           {
-            opcode: "checkFileAPI",
-            blockType: Scratch.BlockType.BOOLEAN,
-            text: Scratch.translate("is file writing supported?"),
-          },
-          {
             opcode: "allStored",
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("all stored files"),
@@ -671,11 +666,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             },
           },
           "---",
-          {
-            opcode: "moveStorage",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("migrate files to CST's ZIP Extension"),
-          },
           {
             blockType: Scratch.BlockType.LABEL,
             text: Scratch.translate("Visuals"),
@@ -1233,14 +1223,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       return fileInfo.file.name;
     }
 
-    moveStorage() {
-      const ext = runtime.ext_cst1229zip;
-      if (ext === undefined) return;
-      ext.createEmptyAs({ NAME: "filesExpanded_storedFiles" });
-      if (ext.zipError) return;
-      const zip = ext.zips["filesExpanded_storedFiles"];
-      for (const [name, file] of Object.entries(storedFiles)) zip.file(name, file.data.data);
-    }
 
     // Extra
     findFileSize(args) {

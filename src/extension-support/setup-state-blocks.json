@@ -41,7 +41,6 @@
   "SPtuneShark3_setFlanger",
   "SPtuneShark3_setCompress",
   "SPtuneShark3_setEqualize",
-  "ShovelUtils_importProject",
   "cloudlink_returnLinkData",
   "cloudlink_getComState",
   "cloudlink_getComLostConnectionState",

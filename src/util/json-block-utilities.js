@@ -82,21 +82,5 @@ module.exports = {
         }
 
         return value;
-    },
-
-    /**
-     * Check if a regex is valid or not
-     * @param {string} value the value to convert.
-     * @param {string} regrule the regexp's ruleset
-     * @returns {boolean} If the regexp is valid
-     */
-    validateRegex: (value, regrule) => {
-        let valid = false;
-        try {
-            new RegExp(value, regrule);
-            valid = true;
-        } catch {}
-
-        return valid;
     }
 };

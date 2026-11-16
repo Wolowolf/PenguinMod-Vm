@@ -5008,14 +5008,6 @@ void main() {
       },
     },
     {
-      opcode: "getHqPen",
-      blockType: BlockType.BOOLEAN,
-      text: "high quality pen enabled?",
-      def: function () {
-        return renderer.useHighQualityRender;
-      },
-    },
-    {
       opcode: "setCanvasSize",
       blockType: BlockType.COMMAND,
       text: "set canvas [SIZE] to X: [X] Y: [Y]",

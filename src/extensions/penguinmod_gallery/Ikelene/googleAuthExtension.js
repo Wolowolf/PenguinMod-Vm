@@ -2,87 +2,44 @@
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Ikelene/googleAuthExtension.js, moved into
 // the VM as a built-in extension. Section 154: random numbers and the clock come from the runtime (Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow).
-// Desktop fork (extension merges): Discord Auth (NotHouse/DiscordAuth.js) is merged in: one "Sign-in" extension whose
-// blocks take the service (Google or Discord) from a menu. Each service keeps its own login flow from before.
+// Desktop fork (section 270): Google only again (Discord Auth, merged in by section 263, is removed).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
-// Sign-in: lets players log in with their Google or Discord account, using the game maker's own login setup
-// (Google Cloud "OAuth client"; Discord Developer Portal application). Nothing goes through anyone else's server:
+// Google Sign-in: lets players log in with their Google account, using the game maker's own login setup
+// (Google Cloud "OAuth client"). Nothing goes through anyone else's server:
 // the game talks to the service directly and keeps the player's details only in memory while it runs.
 // Desktop apps (this editor and packaged desktop games): the login opens in the player's browser and comes back to
-// an http://127.0.0.1 address on the player's PC (OAuth code with PKCE; Google: a "Desktop app" client, any free port;
-// Discord: the fixed address registered with the application).
-// Web pages: the login opens in a popup that returns to a page on the game's own site (Google: a "Web application"
-// client). Setup and a privacy policy template: the extension's documentation page.
+// an http://127.0.0.1 address on the player's PC (OAuth code with PKCE; a "Desktop app" client, any free port).
+// Web pages: the login opens in a popup that returns to a page on the game's own site (a "Web application" client). Setup and a privacy policy template: the extension's documentation page.
 (function (Scratch) {
     'use strict';
 
     const POPUP_TIMEOUT = 5 * 60 * 1000;
 
-    // Each service's addresses and the details it gives. web: 'token' = the access token comes back in the
-    // return page's address (Google); 'code' = a code exchanged for the token like on desktop (Discord).
-    const SERVICES = {
-        google: {
-            name: 'Google',
-            color: '#1a5fd0',
-            authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-            tokenUrl: 'https://oauth2.googleapis.com/token',
-            userUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
-            desktopReturn: 'http://127.0.0.1/', // the app picks a free port
-            web: 'token',
-            popup: 'width=500,height=650',
-            scope: email => (email ? 'openid profile email' : 'openid profile'),
-            extraParams: { prompt: 'select_account' },
-            details: email => (email ? 'name, picture, account ID and email address' : 'name, picture and account ID'),
-            user: (info, email) => ({
-                name: info.name || '',
-                username: '',
-                id: info.sub || '',
-                picture: info.picture || '',
-                email: email ? (info.email || '') : '',
-            }),
-            revoke: token => fetch('https://oauth2.googleapis.com/revoke', {
-                method: 'POST',
-                mode: 'no-cors',
-                body: new URLSearchParams({ token }),
-            }),
-        },
-        discord: {
-            name: 'Discord',
-            color: '#5865F2',
-            authUrl: 'https://discord.com/oauth2/authorize',
-            tokenUrl: 'https://discord.com/api/oauth2/token',
-            userUrl: 'https://discord.com/api/v10/users/@me',
-            desktopReturn: 'http://127.0.0.1:53682/discord',
-            web: 'code',
-            popup: 'width=500,height=750',
-            scope: email => (email ? 'identify email' : 'identify'),
-            extraParams: {},
-            details: email => (email ? 'username, display name, avatar, user ID and email address' : 'username, display name, avatar and user ID'),
-            user: (info, email) => ({
-                name: info.global_name || info.username || '',
-                username: info.username || '',
-                id: info.id || '',
-                picture: discordAvatarUrl(info),
-                email: email ? (info.email || '') : '',
-            }),
-            revoke: (token, clientId) => fetch('https://discord.com/api/oauth2/token/revoke', {
-                method: 'POST',
-                body: new URLSearchParams({ client_id: clientId, token, token_type_hint: 'access_token' }),
-            }),
-        },
-    };
-
-    const discordAvatarUrl = (info) => {
-        if (!info.id) return '';
-        if (info.avatar) return `https://cdn.discordapp.com/avatars/${info.id}/${info.avatar}.png`;
-        // Default avatar (accounts with the new username system).
-        let index = 0;
-        try {
-            index = Number((BigInt(info.id) >> 22n) % 6n);
-        } catch (e) { /* keep 0 */ }
-        return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+    // Google's addresses and the details it gives. On web pages the access token comes back in the return page's address.
+    const SERVICE = {
+        name: 'Google',
+        color: '#1a5fd0',
+        authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenUrl: 'https://oauth2.googleapis.com/token',
+        userUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
+        desktopReturn: 'http://127.0.0.1/', // the app picks a free port
+        popup: 'width=500,height=650',
+        scope: email => (email ? 'openid profile email' : 'openid profile'),
+        extraParams: { prompt: 'select_account' },
+        details: email => (email ? 'name, picture, account ID and email address' : 'name, picture and account ID'),
+        user: (info, email) => ({
+            name: info.name || '',
+            id: info.sub || '',
+            picture: info.picture || '',
+            email: email ? (info.email || '') : '',
+        }),
+        revoke: token => fetch('https://oauth2.googleapis.com/revoke', {
+            method: 'POST',
+            mode: 'no-cors',
+            body: new URLSearchParams({ token }),
+        }),
     };
 
     const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
@@ -179,19 +136,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     class SignIn {
         constructor() {
-            // per service: client ID and return address for each platform, and a client secret
-            this.settings = {};
-            for (const key of Object.keys(SERVICES)) {
-                this.settings[key] = {
-                    clientId: { desktop: '', web: '' },
-                    secret: '',
-                    returnAddress: { desktop: '', web: '' },
-                };
-            }
+            // client ID and return address for each platform, and a client secret
+            this.settings = {
+                clientId: { desktop: '', web: '' },
+                secret: '',
+                returnAddress: { desktop: '', web: '' },
+            };
             this.privacyUrl = '';
             this.askEmail = false;
             this.busy = false;
-            this.service = ''; // the service the player is logged in with
             this.token = '';
             this.user = null;
             this.error = '';
@@ -200,7 +153,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         getInfo() {
             return {
                 id: 'googleAuth',
-                name: 'Sign-in',
+                name: 'Google Sign-in',
                 color1: '#4F6BED',
                 color2: '#4560D6',
                 color3: '#3A51B8',
@@ -208,9 +161,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     {
                         opcode: 'setClientId',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'set [SERVICE] client ID for [PLATFORM] to [ID]',
+                        text: 'set client ID for [PLATFORM] to [ID]',
                         arguments: {
-                            SERVICE: { type: Scratch.ArgumentType.STRING, menu: 'services', defaultValue: 'google' },
                             PLATFORM: { type: Scratch.ArgumentType.STRING, menu: 'platforms', defaultValue: 'desktop' },
                             ID: { type: Scratch.ArgumentType.STRING, defaultValue: '' },
                         },
@@ -218,18 +170,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     {
                         opcode: 'setSecret',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'set [SERVICE] client secret to [SECRET]',
+                        text: 'set client secret to [SECRET]',
                         arguments: {
-                            SERVICE: { type: Scratch.ArgumentType.STRING, menu: 'services', defaultValue: 'google' },
                             SECRET: { type: Scratch.ArgumentType.STRING, defaultValue: '' },
                         },
                     },
                     {
                         opcode: 'setReturnAddress',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'set [SERVICE] return address for [PLATFORM] to [URL]',
+                        text: 'set return address for [PLATFORM] to [URL]',
                         arguments: {
-                            SERVICE: { type: Scratch.ArgumentType.STRING, menu: 'services', defaultValue: 'google' },
                             PLATFORM: { type: Scratch.ArgumentType.STRING, menu: 'platforms', defaultValue: 'web' },
                             URL: { type: Scratch.ArgumentType.STRING, defaultValue: 'https://example.com/callback.html' },
                         },
@@ -254,10 +204,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     {
                         opcode: 'login',
                         blockType: Scratch.BlockType.COMMAND,
-                        text: 'log in with [SERVICE]',
-                        arguments: {
-                            SERVICE: { type: Scratch.ArgumentType.STRING, menu: 'services', defaultValue: 'google' },
-                        },
+                        text: 'log in with Google',
                     },
                     {
                         opcode: 'isLoggedIn',
@@ -284,13 +231,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                 ],
                 menus: {
-                    services: {
-                        acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-                        items: [
-                            { text: 'Google', value: 'google' },
-                            { text: 'Discord', value: 'discord' },
-                        ],
-                    },
                     platforms: {
                         acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
@@ -303,26 +243,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         acceptReporters: false /* Desktop fork (section 265): only its own items work */,
                         items: [
                             { text: 'name', value: 'name' },
-                            { text: 'username', value: 'username' },
                             { text: 'user ID', value: 'id' },
                             { text: 'picture URL', value: 'picture' },
                             { text: 'email', value: 'email' },
-                            { text: 'service', value: 'service' },
                         ],
                     },
                 },
             };
-        }
-
-        // the settings of a service from a menu value (also its shown name, any case), or null
-        _settings(value) {
-            const key = this._serviceKey(value);
-            return key ? this.settings[key] : null;
-        }
-
-        _serviceKey(value) {
-            const text = Scratch.Cast.toString(value).trim().toLowerCase();
-            return Object.prototype.hasOwnProperty.call(SERVICES, text) ? text : '';
         }
 
         _platform(value) {
@@ -333,20 +260,17 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
 
         setClientId(args) {
-            const settings = this._settings(args.SERVICE);
             const platform = this._platform(args.PLATFORM);
-            if (settings && platform) settings.clientId[platform] = Scratch.Cast.toString(args.ID).trim();
+            if (platform) this.settings.clientId[platform] = Scratch.Cast.toString(args.ID).trim();
         }
 
         setSecret(args) {
-            const settings = this._settings(args.SERVICE);
-            if (settings) settings.secret = Scratch.Cast.toString(args.SECRET).trim();
+            this.settings.secret = Scratch.Cast.toString(args.SECRET).trim();
         }
 
         setReturnAddress(args) {
-            const settings = this._settings(args.SERVICE);
             const platform = this._platform(args.PLATFORM);
-            if (settings && platform) settings.returnAddress[platform] = Scratch.Cast.toString(args.URL).trim();
+            if (platform) this.settings.returnAddress[platform] = Scratch.Cast.toString(args.URL).trim();
         }
 
         setPrivacy(args) {
@@ -357,29 +281,23 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             this.askEmail = Scratch.Cast.toString(args.ON) === 'yes';
         }
 
-        async login(args) {
-            const key = this._serviceKey(args.SERVICE);
+        async login() {
             if (this.busy) return;
-            if (!key) {
-                this.error = 'unknown service';
-                return;
-            }
             this.busy = true;
             this.error = '';
             try {
-                const service = SERVICES[key];
-                const settings = this.settings[key];
+                const service = SERVICE;
+                const settings = this.settings;
                 const platform = desktopHelper() ? 'desktop' : 'web';
-                // Discord uses one application for both; Google needs a client of each type
-                const clientId = settings.clientId[platform] ||
-                    (key === 'discord' ? settings.clientId[platform === 'desktop' ? 'web' : 'desktop'] : '');
+                // Google needs a client of each type
+                const clientId = settings.clientId[platform];
                 if (!clientId) throw new Error(`no ${platform === 'desktop' ? 'desktop app' : 'web page'} client ID set`);
                 const returnAddress = settings.returnAddress[platform] || (platform === 'desktop' ? service.desktopReturn : '');
                 if (!isWebAddress(returnAddress)) throw new Error('no return address set');
                 const details = service.details(this.askEmail);
                 const state = randomString();
                 const verifier = randomString();
-                const codeFlow = platform === 'desktop' || service.web === 'code';
+                const codeFlow = platform === 'desktop';
                 const params = new URLSearchParams({
                     client_id: clientId,
                     redirect_uri: returnAddress,
@@ -408,7 +326,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 } else {
                     let popup = null;
                     const go = await askPlayer(service, details, this.privacyUrl, () => {
-                        popup = window.open(authUrl, `${key}Login`, service.popup);
+                        popup = window.open(authUrl, 'googleLogin', service.popup);
                     });
                     if (!go) {
                         this.error = 'cancelled';
@@ -445,11 +363,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 const userResponse = await fetch(service.userUrl, { headers: { Authorization: `Bearer ${token}` } });
                 if (!userResponse.ok) throw new Error(`${service.name} answered ${userResponse.status}`);
                 const info = await userResponse.json();
-                // logging in with another service (or again) ends the game's access with the previous login
+                // logging in again ends the game's access with the previous login
                 this._revoke();
-                this.service = key;
                 this.token = token;
-                this.user = Object.assign(service.user(info, this.askEmail), { service: service.name });
+                this.user = service.user(info, this.askEmail);
             } catch (e) {
                 this.error = e && e.message ? e.message : String(e);
             } finally {
@@ -458,10 +375,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
 
         _revoke() {
-            if (!this.token || !this.service) return;
-            const settings = this.settings[this.service];
-            const clientId = settings.clientId.desktop || settings.clientId.web;
-            SERVICES[this.service].revoke(this.token, clientId).catch(() => {});
+            if (!this.token) return;
+            SERVICE.revoke(this.token).catch(() => {});
         }
 
         isLoggedIn() {
@@ -479,9 +394,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
 
         logout() {
-            // Also ends the game's access at the service (the player stays logged in to the service itself).
+            // Also ends the game's access at Google (the player stays logged in to Google itself).
             this._revoke();
-            this.service = '';
             this.token = '';
             this.user = null;
             this.error = '';

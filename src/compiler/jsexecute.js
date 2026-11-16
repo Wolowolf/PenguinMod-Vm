@@ -590,26 +590,6 @@ runtimeFunctions.coreHasLetterFrom = `const coreHasLetterFrom = (text, letters) 
 }`;
 runtimeFunctions.coreLetters = `const coreLetters = (from, to, text) => text.substring((from ? from : 1) - 1, to ? to : 1)`;
 runtimeFunctions.coreLine = `const coreLine = (line, text) => text.split('\\n')[(line ? line : 1) - 1] || ''`;
-runtimeFunctions.coreRegexMatch = `const coreRegexMatch = args => {
-    let regex;
-    try {
-        regex = new RegExp(args.reg, args.regrule);
-    } catch (e) {
-        return '[]';
-    }
-    // Desktop fork (section 211): matched as text, like the interpreter's block now (both stopped with an error)
-    const matches = String(args.text).match(regex);
-    return JSON.stringify(matches ? matches : []);
-}`;
-runtimeFunctions.coreRegexTest = `const coreRegexTest = (reg, regrule, text) => {
-    let regex;
-    try {
-        regex = new RegExp(reg, regrule);
-    } catch (e) {
-        return false;
-    }
-    return regex.test(text);
-}`;
 runtimeFunctions.coreIsNumber = `const coreIsNumber = value => (String(value).trim().endsWith('.') ? false : !isNaN(Number(value)))`;
 runtimeFunctions.coreDirectionTo = `const coreDirectionTo = (x2, y2, x1, y1, noClamp) => {
     const dx = x2 - x1;
@@ -1896,7 +1876,7 @@ runtimeFunctions.pmlConcat = `const pmlConcat = (target, site1, site2, name1, na
 const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan", "mod", "tan",
     // section 138
     "coreNumber", "coreConstrain", "coreLerp", "coreRoot", "coreLog", "coreIndexOf", "coreLastIndexOf", "coreCountIn",
-    "coreHasLetterFrom", "coreLetters", "coreLine", "coreRegexMatch", "coreRegexTest", "coreIsNumber", "coreDistanceTo",
+    "coreHasLetterFrom", "coreLetters", "coreLine", "coreIsNumber", "coreDistanceTo",
     // section 187
     "coreSin", "coreCos",
     // section 140

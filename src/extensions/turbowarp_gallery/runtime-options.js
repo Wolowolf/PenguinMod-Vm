@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's runtime-options.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 119, step 5): the runtime's pmUsernameChangedHooks instead of wrapping userData.postData (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 270): only Turbo mode can be switched (interpolation, fencing, misc limits and high quality pen are fixed in this app), no clone limit or username blocks (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
@@ -18,14 +18,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   }
 
   const TURBO_MODE = "turbo mode";
-  const INTERPOLATION = "interpolation";
-  const REMOVE_FENCING = "remove fencing";
-  const REMOVE_MISC_LIMITS = "remove misc limits";
-  const HIGH_QUALITY_PEN = "high quality pen";
   const FRAMERATE = "framerate";
-  const CLONE_LIMIT = "clone limit";
   const STAGE_SIZE = "stage size";
-  const USERNAME = "username";
 
   /** @param {string} what */
   const emitChanged = (what) =>
@@ -33,38 +27,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       WHAT: what,
     });
 
-  /**
-   * @template T
-   * @param {T} obj
-   * @returns {T}
-   */
-  const shallowCopy = (obj) => Object.assign({}, obj);
-
-  let previousRuntimeOptions = shallowCopy(Scratch.vm.runtime.runtimeOptions);
-
   Scratch.vm.on("TURBO_MODE_OFF", () => emitChanged(TURBO_MODE));
   Scratch.vm.on("TURBO_MODE_ON", () => emitChanged(TURBO_MODE));
-  Scratch.vm.on("INTERPOLATION_CHANGED", () => emitChanged(INTERPOLATION));
-  Scratch.vm.on("RUNTIME_OPTIONS_CHANGED", (newOptions) => {
-    if (newOptions.fencing !== previousRuntimeOptions.fencing) {
-      emitChanged(REMOVE_FENCING);
-    }
-    if (newOptions.miscLimits !== previousRuntimeOptions.miscLimits) {
-      emitChanged(REMOVE_MISC_LIMITS);
-    }
-    if (newOptions.maxClones !== previousRuntimeOptions.maxClones) {
-      emitChanged(CLONE_LIMIT);
-    }
-    previousRuntimeOptions = shallowCopy(newOptions);
-  });
-  Scratch.vm.renderer.on("UseHighQualityRenderChanged", () =>
-    emitChanged(HIGH_QUALITY_PEN)
-  );
   Scratch.vm.on("FRAMERATE_CHANGED", () => emitChanged(FRAMERATE));
   Scratch.vm.on("STAGE_SIZE_CHANGED", () => emitChanged(STAGE_SIZE));
-
-  // Desktop fork (section 119)
-  Scratch.vm.runtime.pmUsernameChangedHooks.push(() => emitChanged(USERNAME));
 
   class RuntimeOptions {
     getInfo() {
@@ -77,26 +43,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         blocks: [
           {
             opcode: "getEnabled",
-            text: Scratch.translate("[thing] enabled?"),
+            // Desktop fork (section 270): only Turbo mode (the other switches are always on in this app)
+            text: Scratch.translate("turbo mode on?"),
             blockType: Scratch.BlockType.BOOLEAN,
-            arguments: {
-              thing: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: TURBO_MODE,
-                menu: "thing",
-              },
-            },
           },
           {
             opcode: "setEnabled",
-            text: Scratch.translate("set [thing] to [enabled]"),
+            text: Scratch.translate("set turbo mode to [enabled]"),
             blockType: Scratch.BlockType.COMMAND,
             arguments: {
-              thing: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: TURBO_MODE,
-                menu: "thing",
-              },
               enabled: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "true",
@@ -120,26 +75,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               fps: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "30",
-              },
-            },
-          },
-
-          "---",
-
-          {
-            opcode: "getCloneLimit",
-            text: Scratch.translate("clone limit"),
-            blockType: Scratch.BlockType.REPORTER,
-          },
-          {
-            opcode: "setCloneLimit",
-            text: Scratch.translate("set clone limit to [limit]"),
-            blockType: Scratch.BlockType.COMMAND,
-            arguments: {
-              limit: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: "300",
-                menu: "clones",
               },
             },
           },
@@ -182,20 +117,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
 
           {
-            opcode: "setUsername",
-            text: Scratch.translate("set username to [username]"),
-            blockType: Scratch.BlockType.COMMAND,
-            arguments: {
-              username: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "",
-              },
-            },
-          },
-
-          "---",
-
-          {
             opcode: "whenChange",
             blockType: Scratch.BlockType.EVENT,
             text: Scratch.translate("when [WHAT] changed"),
@@ -206,32 +127,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
         ],
         menus: {
-          thing: {
-            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-            items: [
-              {
-                text: Scratch.translate("turbo mode"),
-                value: TURBO_MODE,
-              },
-              {
-                text: Scratch.translate("interpolation"),
-                value: INTERPOLATION,
-              },
-              {
-                text: Scratch.translate("remove fencing"),
-                value: REMOVE_FENCING,
-              },
-              {
-                text: Scratch.translate("remove misc limits"),
-                value: REMOVE_MISC_LIMITS,
-              },
-              {
-                text: Scratch.translate("high quality pen"),
-                value: HIGH_QUALITY_PEN,
-              },
-            ],
-          },
-
           changeable: {
             acceptReporters: false,
             items: [
@@ -240,36 +135,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                 value: TURBO_MODE,
               },
               {
-                text: Scratch.translate("interpolation"),
-                value: INTERPOLATION,
-              },
-              {
-                text: Scratch.translate("remove fencing"),
-                value: REMOVE_FENCING,
-              },
-              {
-                text: Scratch.translate("remove misc limits"),
-                value: REMOVE_MISC_LIMITS,
-              },
-              {
-                text: Scratch.translate("high quality pen"),
-                value: HIGH_QUALITY_PEN,
-              },
-              {
                 text: Scratch.translate("framerate"),
                 value: FRAMERATE,
               },
               {
-                text: Scratch.translate("clone limit"),
-                value: CLONE_LIMIT,
-              },
-              {
                 text: Scratch.translate("stage size"),
                 value: STAGE_SIZE,
-              },
-              {
-                text: Scratch.translate("username"),
-                value: USERNAME,
               },
             ],
           },
@@ -284,22 +155,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               {
                 text: Scratch.translate("disabled"),
                 value: "false",
-              },
-            ],
-          },
-
-          clones: {
-            acceptReporters: true,
-            items: [
-              {
-                text: Scratch.translate("default ({n})", {
-                  n: "300",
-                }),
-                value: "300",
-              },
-              {
-                text: Scratch.translate("Infinity"),
-                value: "Infinity",
               },
             ],
           },
@@ -321,39 +176,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       };
     }
 
-    getEnabled({ thing }) {
-      if (thing === TURBO_MODE) {
-        return Scratch.vm.runtime.turboMode;
-      } else if (thing === INTERPOLATION) {
-        return Scratch.vm.runtime.interpolationEnabled;
-      } else if (thing === REMOVE_FENCING) {
-        return !Scratch.vm.runtime.runtimeOptions.fencing;
-      } else if (thing === REMOVE_MISC_LIMITS) {
-        return !Scratch.vm.runtime.runtimeOptions.miscLimits;
-      } else if (thing === HIGH_QUALITY_PEN) {
-        return Scratch.renderer.useHighQualityRender;
-      }
-      return false;
+    getEnabled() {
+      return Scratch.vm.runtime.turboMode;
     }
 
-    setEnabled({ thing, enabled }) {
-      enabled = Scratch.Cast.toBoolean(enabled);
-
-      if (thing === TURBO_MODE) {
-        Scratch.vm.setTurboMode(enabled);
-      } else if (thing === INTERPOLATION) {
-        Scratch.vm.setInterpolation(enabled);
-      } else if (thing === REMOVE_FENCING) {
-        Scratch.vm.setRuntimeOptions({
-          fencing: !enabled,
-        });
-      } else if (thing === REMOVE_MISC_LIMITS) {
-        Scratch.vm.setRuntimeOptions({
-          miscLimits: !enabled,
-        });
-      } else if (thing === HIGH_QUALITY_PEN) {
-        Scratch.renderer.setUseHighQualityRender(enabled);
-      }
+    setEnabled({ enabled }) {
+      Scratch.vm.setTurboMode(Scratch.Cast.toBoolean(enabled));
     }
 
     getFramerate() {
@@ -365,15 +193,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       Scratch.vm.setFramerate(fps);
     }
 
-    getCloneLimit() {
-      return Scratch.vm.runtime.runtimeOptions.maxClones;
-    }
-    setCloneLimit({ limit }) {
-      limit = Scratch.Cast.toNumber(limit);
-      Scratch.vm.setRuntimeOptions({
-        maxClones: limit,
-      });
-    }
 
     getDimension({ dimension }) {
       if (dimension === "width") {
@@ -390,11 +209,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       Scratch.vm.setStageSize(width, height);
     }
 
-    setUsername({ username }) {
-      Scratch.vm.postIOData("userData", {
-        username: Scratch.Cast.toString(username),
-      });
-    }
 
   }
 

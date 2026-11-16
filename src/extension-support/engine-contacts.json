@@ -27,7 +27,8 @@
         },
         "page": {
             "document.createElement": 2,
-            "document.querySelector": 4
+            "document.querySelector": 4,
+            "getComputedStyle": 1
         },
         "internals": {
             "._answer": 1,
@@ -86,10 +87,9 @@
         "internals": {
             "._blocks": 1,
             "._hats": 5,
-            "._keysPressed": 1,
-            "._pmThreadMapChanged": 3,
+            "._pmThreadMapChanged": 1,
             "._pushThread": 3,
-            "write runtime._pmThreadMapChanged": 3
+            "write runtime._pmThreadMapChanged": 1
         }
     },
     "SPanimations": {
@@ -257,11 +257,6 @@
         }
     },
     "SPspriteParent": {},
-    "SPsvgSheets": {
-        "page": {
-            "DOMParser": 2
-        }
-    },
     "SPtempVars": {
         "internals": {
             "write runtime.[]": 1
@@ -313,7 +308,6 @@
             "._getSoundState": 1,
             "._setBackdrop": 1,
             "._setCostume": 1,
-            "._step": 1,
             "._syncEffectsForTarget": 2
         }
     },
@@ -443,7 +437,7 @@
             "MutationObserver": 1,
             "ResizeObserver": 1,
             "document.body": 1,
-            "document.createElement": 36,
+            "document.createElement": 34,
             "document.querySelector": 1,
             "renderer.canvas": 7,
             "window.ScratchBlocks": 1,
@@ -495,14 +489,7 @@
     "jgTailgating": {},
     "jgTween": {},
     "jwProto": {},
-    "lmsLooksPlus": {
-        "internals": {
-            "._allSkins": 4,
-            "._svgImage": 4,
-            "._svgImageLoaded": 1,
-            "write renderer._allSkins": 2
-        }
-    },
+    "lmsLooksPlus": {},
     "lmsSoundExpanded": {
         "internals": {
             "._addWaitingSound": 2,
@@ -549,7 +536,6 @@
             "document.createElement": 1
         }
     },
-    "mubiloppenguinhook": {},
     "music": {},
     "navigatorinfo": {
         "page": {
@@ -685,13 +671,8 @@
     },
     "pmSensingExpansion": {
         "page": {
-            "history.replaceState": 1,
-            "location": 1,
-            "location.origin": 3,
             "navigator": 1,
-            "navigator.vibrate": 1,
-            "window": 5,
-            "window.parent": 2
+            "navigator.vibrate": 1
         },
         "internals": {
             "._drawList": 1,

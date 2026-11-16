@@ -1,11 +1,6 @@
 const formatMessage = require('format-message');
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
-const {
-    validateArray
-} = require('../../util/json-block-utilities');
-const ArrayBufferUtil = require('../../util/array buffer');
-const BufferParser = new ArrayBufferUtil();
 const Cast = require('../../util/cast');
 // const Cast = require('../../util/cast');
 
@@ -107,38 +102,6 @@ class JgPrismBlocks {
                             defaultValue: "url"
                         }
                     }
-                },
-                {
-                    opcode: 'dataUriFromArrayBuffer',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.dataUriFromArrayBuffer',
-                        default: 'convert array buffer [BUFFER] to data url',
-                        description: 'Block that returns a Data URI from an array buffer.'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        BUFFER: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "[72,101,108,108,111]"
-                        }
-                    }
-                },
-                {
-                    opcode: 'arrayBufferFromDataUri',
-                    text: formatMessage({
-                        id: 'jgRuntime.blocks.arrayBufferFromDataUri',
-                        default: 'convert data url [URL] to array buffer',
-                        description: 'Block that returns an array buffer from a Data URL.'
-                    }),
-                    blockType: BlockType.REPORTER,
-                    disableMonitor: true,
-                    arguments: {
-                        URL: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "data:text/plain;base64,SGVsbG8="
-                        }
-                    }
                 }
             ]
         };
@@ -194,34 +157,6 @@ class JgPrismBlocks {
         });
     }
 
-    dataUriFromArrayBuffer(args) {
-        const array = validateArray(args.BUFFER);
-        if (!array.isValid) return 'data:text/plain;base64,';
-        const buffer = BufferParser.arrayToBuffer(array.array);
-        let binary = '';
-        let bytes = new Uint8Array(buffer);
-        let len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-        }
-        // use "application/octet-stream", we have no idea what the buffer actually contains
-        return `data:application/octet-stream;base64,${btoa(binary)}`;
-    }
-    arrayBufferFromDataUri(args) {
-        const dataUrl = Cast.toString(args.URL);
-        return new Promise((resolve) => {
-            fetch(dataUrl).then(res => {
-                res.arrayBuffer().then(buffer => {
-                    const array = BufferParser.bufferToArray(buffer);
-                    resolve(JSON.stringify(array));
-                }).catch(() => {
-                    resolve('[]');
-                });
-            }).catch(() => {
-                resolve('[]');
-            });
-        });
-    }
 
 }
 

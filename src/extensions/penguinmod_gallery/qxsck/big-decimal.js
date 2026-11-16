@@ -375,7 +375,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             opcode: "pow",
             blockType: Scratch.BlockType.REPORTER,
-            text: "[NUM] ** [NUM2]",
+            text: "[NUM] to the power of [NUM2]",
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,
@@ -390,7 +390,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             opcode: "mod",
             blockType: Scratch.BlockType.REPORTER,
-            text: "[NUM] % [NUM2]",
+            text: "[NUM] mod [NUM2]",
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,

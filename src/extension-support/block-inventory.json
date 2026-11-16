@@ -274,9 +274,9 @@
   "SPadvControl": {
     "source": "src/extensions/sharkpool_gallery/Extra-Controls.js",
     "replaces": [],
-    "hooks": ["ScratchBlocks canDragDuplicate block option (editor)","runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmRestartThreadHooks","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
+    "hooks": ["ScratchBlocks canDragDuplicate block option (editor)","runtime.registerCompiledExtensionBlocks (breakLoop, continueLoop)","runtime.pmVisualReportCaptureHooks","runtime.pmForeignBlockHooks (blocks of other sprites)","runtime BLOCK_STACK_ERROR event (try/catch)"],
     "note": "some blocks run branches in Thread objects it makes itself (interpreter only); key listeners in the page post bound keys",
-    "state": {"conditionStorage":"shared","overrideCalls":"shared","hats":"shared","keybinds":"setting"},
+    "state": {"conditionStorage":"shared","overrideCalls":"shared","hats":"shared"},
     "blocks": {
       "waitChanged": {"type":"conditional","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":true},
       "repeatForUntil": {"type":"loop","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
@@ -286,10 +286,7 @@
       "loopTimer": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":["script"],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "newThreadAdv": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "threadArgs": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "runType": {"type":"loop","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":true,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "asyncCode": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "simuRun": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "ifRunBlock": {"type":"conditional","pure":false,"reads":["blocks","script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "doThenWhile": {"type":"loop","pure":false,"reads":["blocks","script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "ifPart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":true},
       "elsePart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":true},
@@ -303,11 +300,7 @@
       "callFunc": {"type":"command","pure":false,"reads":["script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "reportFunc": {"type":"reporter","pure":false,"reads":["script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "forceHat": {"type":"command","pure":false,"reads":[],"writes":["events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"changes runtime._hats restartExistingThreads","direct":true},
-      "resetHats": {"type":"command","pure":false,"reads":[],"writes":["events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"changes runtime._hats restartExistingThreads","direct":true},
-      "keybind": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"note":"the bound key then also presses the other key","direct":true},
-      "getKeybind": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
-      "resetKey": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "resetBinds": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true}
+      "resetHats": {"type":"command","pure":false,"reads":[],"writes":["events"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"note":"changes runtime._hats restartExistingThreads","direct":true}
     }
   },
   "SPanimations": {
@@ -359,25 +352,17 @@
       "hex2COL": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answer is an object when the SPjson extension is loaded","direct":true},
       "RGB2hex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "HSV2hex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "DEC2hex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "linearGradient": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "radialGradient": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "conicGradient": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "maker1": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "maker2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "maker3": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
+      "DEC2hex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
     }
   },
   "SPgeolocation": {
     "source": "src/extensions/sharkpool_gallery/Geolocation.js",
     "replaces": [],
     "note": "navigator.geolocation answers \"not available\" in Electron; IP blocks use api.ipify.org, free.freeipapi.com and api.first.org (through a proxy)",
-    "state": {"lastLatitude":"outside","lastLongitude":"outside","watcherID":"outside","options":"setting","IP_CACHE":"outside","IP_INFO_CACHE":"outside"},
+    "state": {"lastLatitude":"outside","lastLongitude":"outside","watcherID":"outside","options":"setting"},
     "blocks": {
       "isAvailiable": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"boolean","compiled":false},
       "getLocation": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"any","compiled":false},
-      "getIP": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":"string","compiled":false,"note":"online service; cached 30 s"},
-      "getIPInfo": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":"any","compiled":false,"note":"online service; cached"},
       "getCountryName": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"online service"},
       "calculateDistance": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "whenLocationChanged": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
@@ -443,11 +428,10 @@
   "SPmbpCST": {
     "source": "src/extensions/sharkpool_gallery/My-Blocks-Plus.js",
     "replaces": [],
-    "hooks": ["runtime.registerCompiledExtensionBlocks (setParam, evalParam, getParam)","runtime.pmProcedureCallIrHooks and pmProcedureCallJsHooks (custom branch inputs)","runtime.pmForeignBlockHooks and pmForeignProcedureHooks (global custom blocks)","runtime.pmBlockInputsHooks","runtime.pmResetCacheHooks","vm.pmSpriteDuplicatedHooks","vm.pmExportBlocksHooks","vm.pmShareBlocksHooks","vm.pmAddSpriteHooks","vm SERIALIZE event","ScratchBlocks Xml.pmBlockDom, Toolbox.pmScrollHooks, Gesture.pmDuplicateHooks and pmStartDragHooks, Procedures.pmDialogHooks, pmEditHooks and pmFlyoutHooks (editor)","ScratchBlocks per-block-type methods and Extensions.register (procedures_call, prototype, declaration, argument reporters)"],
+    "hooks": ["runtime.registerCompiledExtensionBlocks (setParam, currentValue)","runtime.pmProcedureCallIrHooks and pmProcedureCallJsHooks (custom branch inputs, inputs for \"current value of\")","runtime.pmForeignBlockHooks and pmForeignProcedureHooks (global custom blocks)","runtime.pmBlockInputsHooks","runtime.pmResetCacheHooks","vm.pmSpriteDuplicatedHooks","vm.pmExportBlocksHooks","vm.pmShareBlocksHooks","vm.pmAddSpriteHooks","vm SERIALIZE event","ScratchBlocks Xml.pmBlockDom, Toolbox.pmScrollHooks, Gesture.pmDuplicateHooks and pmStartDragHooks, Procedures.pmDialogHooks, pmEditHooks and pmFlyoutHooks (editor)","ScratchBlocks per-block-type methods and Extensions.register (procedures_call, prototype, declaration, argument reporters)"],
     "blocks": {
       "setParam": {"type":"command","pure":false,"reads":["script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true},
-      "evalParam": {"type":"command","pure":false,"reads":["blocks","script"],"writes":["script"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":true,"note":"runs the input again in a Thread it makes itself"},
-      "getParam": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true},
+      "currentValue": {"type":"reporter","pure":false,"reads":["blocks","script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"works the call's input out again: interpreted in a Thread it makes itself, compiled through the call hook (thread.mbpCur)"},
       "stopCallerScript": {"type":"command","pure":false,"reads":[],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false}
     }
   },
@@ -666,7 +650,6 @@
       "applyDither": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["cache"],"page":false,"answer":"string","compiled":false,"note":"each call numbers its filter ID with a module counter, so the text differs every time","direct":true},
       "distortionPreset": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "applyDistortion": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":true,"answer":"string","compiled":false,"note":"filter ID counter; converts images in the page and waits"},
-      "applyCustom": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["cache"],"page":false,"answer":"string","compiled":false,"note":"each call numbers its filter ID with a module counter, so the text differs every time","direct":true},
       "applyBasicLight": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":true,"answer":"string","compiled":false,"note":"filter ID counter; canvas size from the page for the canvas source","direct":true},
       "applyMapLight": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["cache"],"page":true,"answer":"string","compiled":false,"note":"filter ID counter; canvas size from the page for the canvas source","direct":true},
       "applyPattern": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["cache"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"note":"uses the filter ID counter; converts the pattern in the page and waits"},
@@ -695,22 +678,6 @@
       "updateAll": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"note":"copies the parent's position, direction, size, visibility and effects to the children","direct":true},
       "refreshLink": {"type":"command","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"direct":true},
       "refreshAll": {"type":"command","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"direct":true}
-    }
-  },
-  "SPsvgSheets": {
-    "source": "src/extensions/sharkpool_gallery/SVG-Spritesheets.js",
-    "replaces": [],
-    "state": {"svgConstruct":"shared"},
-    "blocks": {
-      "compressSVG": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "addSVG": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "removeSVG": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "eraseSheet": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "outputSheet": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
-      "getID": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "allIDs": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "getGroup": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"uses the page's DOMParser"},
-      "groupCnt": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"uses the page's DOMParser"}
     }
   },
   "SPtempVars": {
@@ -828,17 +795,13 @@
       "changeV": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
       "broadcastRun": {"type":"loop","pure":false,"reads":["threads","variables"],"writes":["script","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "setSpriteEffect": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "removeThorns": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"throws for a number input (not cast)"},
       "genShape": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"the png option draws on a page canvas and waits"},
       "unboundSound": {"type":"command","pure":false,"reads":["sprites"],"writes":["sound","sprite","sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "randomSingleInteger": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "smoothing": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"from the project timer","direct":true},
       "smoothing2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "typeString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "shuffleArray": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"random only for \"shuffle\"","direct":true},
-      "stepInter": {"type":"command","pure":false,"reads":[],"writes":["renderer","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"runs a frame step itself"},
-      "refresh": {"type":"command","pure":false,"reads":[],"writes":["blocks"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "request": {"type":"command","pure":false,"reads":[],"writes":["blocks","renderer","threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"\"project step\" runs runtime._step itself"}
+      "shuffleArray": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"random only for \"shuffle\"","direct":true}
     }
   },
   "ShovelUtils": {
@@ -849,10 +812,8 @@
       "importImage": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait","direct":true},
       "importSprite": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"does not wait","direct":true},
       "importSound": {"type":"command","pure":false,"reads":[],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"fetches the address, then adds to the editing target; does not wait","direct":true},
-      "importProject": {"type":"command","pure":false,"reads":[],"writes":["project","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"replaces the whole project (asks first in the editor)","direct":true},
       "deleteSprite": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"asks first in the editor"},
       "deleteImage": {"type":"command","pure":false,"reads":["sprites"],"writes":["sprites"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "setedtarget": {"type":"command","pure":false,"reads":["sprites"],"writes":["blocks"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"changes the editor's editing target","direct":true},
       "brightnessByColor": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "getAllSprites": {"type":"reporter","pure":false,"reads":["sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true}
     }
@@ -1128,7 +1089,6 @@
       "fileInfo": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
       "modalOpen": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["outside"],"stateWrites":[],"page":false,"answer":"boolean","compiled":false,"direct":true},
       "findFileSize": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
-      "checkFileAPI": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "allStored": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true},
       "setStoredFile": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared","setting","outside"],"page":true,"answer":null,"compiled":false},
       "storedFolder": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared","setting","outside"],"page":true,"answer":null,"compiled":false},
@@ -1136,7 +1096,6 @@
       "updateFile": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false},
       "updateFileURL": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false},
       "storedInfo": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
-      "moveStorage": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":false,"note":"writes into Zip's archives (runtime.ext_cst1229zip)","direct":true},
       "resetStyle": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"note":"file selector look (page)","direct":true},
       "borderColors": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"note":"file selector look (page)","direct":true},
       "visualsSelect": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"note":"file selector look (page)","direct":true},
@@ -1267,7 +1226,6 @@
     "note": "draws its own overlay canvas on the page after every frame (WebGL2, optionally in a Worker), reading sprites with renderer.extractDrawableScreenSpace and the camera with runtime.getCamera; render settings saved in runtime.extensionStorage",
     "state": {"this._excludedTargetIds":"setting","this._includedTargetIds":"setting","this._excludedNames":"setting","this.shadowOpacity":"setting","this.ambient":"setting","this._ambientRGB":"setting","this.bgOpacity":"setting","this.bloomAmount":"setting","this.bloomRadius":"setting","this.bloomThreshold":"setting","this.pixelated":"setting","this.pixelSize":"setting","this.contrast":"setting","this.colorTemp":"setting","this.resetLightsOnStart":"setting","this.cameraFollow":"setting","this.cameraFollowName":"setting","this.inclusionMode":"setting","this._inclusionList":"setting","this.renderThread":"setting","this.visible":"setting","this.lights":"shared","this._loadingOverlay":"cache","this._loadingFill":"cache","this._loadingStatus":"cache","this._loadingSteps":"cache","this._loadingTotalSteps":"cache","this._syncLoadingOverlay":"cache","this._docObserver":"cache","this._attachedParent":"cache","this._worker":"cache","this._displayCtx":"cache","this._mode":"cache","this._workerReady":"cache","this._workerBusy":"cache","this._pendingRender":"cache","this._lastGLBitmap":"cache","this._lastBitmapPw":"cache","this._lastBitmapPh":"cache","this.canvas":"cache","this._nextRender":"cache","this._glOffscreen":"cache","this._gl":"cache","this._glState":"cache","this._resizeObserver":"cache","this._syncRetryPending":"cache","this._cachedNativeDpr":"cache","this._cachedPw":"cache","this._cachedPh":"cache","this._uboData":"cache","this._dirty":"cache"},
     "blocks": {
-      "glSupported": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["cache"],"stateWrites":[],"page":true,"answer":"boolean","compiled":false,"direct":true},
       "renderMode": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["cache"],"stateWrites":[],"page":true,"answer":"string","compiled":false,"direct":true},
       "toggleLight": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
       "setSpriteExcluded": {"type":"command","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
@@ -1304,7 +1262,6 @@
       "settingSetContrast": {"type":"command","pure":false,"reads":[],"writes":["project"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
       "settingSetColorTemp": {"type":"command","pure":false,"reads":[],"writes":["project"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":false,"answer":null,"compiled":false,"direct":true},
       "settingSetResetLightsOnStart": {"type":"command","pure":false,"reads":[],"writes":["project"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setRenderThread": {"type":"command","pure":false,"reads":[],"writes":["project"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":true,"answer":null,"compiled":false,"direct":true},
       "settingGet": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":[],"page":false,"answer":"any","compiled":false,"direct":true},
       "settingResetAll": {"type":"command","pure":false,"reads":[],"writes":["project"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting","cache"],"page":true,"answer":null,"compiled":false,"direct":true}
     }
@@ -1424,9 +1381,7 @@
     "blocks": {
       "screenshotStage": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false},
       "dataUriOfCostume": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "dataUriFromImageUrl": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"needs an online server (api.allorigins.win)"},
-      "dataUriFromArrayBuffer": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "arrayBufferFromDataUri": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"fetch() of a data: URL"}
+      "dataUriFromImageUrl": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"needs an online server (api.allorigins.win)"}
     }
   },
   "jgTailgating": {
@@ -1474,11 +1429,7 @@
       "spriteLayerNumber": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "effectValue": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "targetCostumeNumber": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "costumeAttribute": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
-      "replaceCostumeContentNew": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false,"note":"waits for the SVG to load"},
-      "restoreCostumeContent": {"type":"command","pure":false,"reads":["sprite"],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"direct":true},
-      "costumeContent": {"type":"reporter","pure":false,"reads":["sprite","sprites"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "replaceColors": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false}
+      "costumeAttribute": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true}
     }
   },
   "lmsSoundExpanded": {
@@ -1627,22 +1578,6 @@
       "closeKeyboardBlock": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false,"direct":true}
     }
   },
-  "mubiloppenguinhook": {
-    "source": "src/extensions/penguinmod_gallery/MubiLop/penguinhook.js",
-    "replaces": [],
-    "note": "POSTs to Discord webhook addresses (online)",
-    "state": {"this.embedProperties":"shared"},
-    "blocks": {
-      "sendWebhook": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false},
-      "setHexColor": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setName": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setTitle": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setDescription": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "setFooter": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "sendWebhookWithEmbed": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":true,"answer":null,"compiled":false},
-      "sendjson": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":false,"page":true,"answer":null,"compiled":false}
-    }
-  },
   "music": {
     "replaces": [],
     "state": {"this._instrumentPlayerArrays":"cache","this._instrumentPlayerNoteArrays":"cache","this._concurrencyCounter":"shared"},
@@ -1663,6 +1598,7 @@
     "state": {"getBatteryPromise":"outside","cachedBattery":"outside","batteryError":"outside","latestEnabled":"setting","promise":"outside","wakeLock":"outside"},
     "blocks": {
       "getMemory": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
+      "connectionType": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
       "getPreferredColorScheme": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "getPreferredReducedMotion": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "getPreferredContrast": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
@@ -1990,11 +1926,9 @@
   },
   "pmEventsExpansion": {
     "replaces": [],
-    "hooks": ["runtime.pmTargetDragHooks","runtime.pmCostumeChangedHooks","vm.pmBeforeSaveHooks","vm.pmAfterSaveHooks"],
+    "hooks": ["runtime.pmTargetDragHooks","runtime.pmCostumeChangedHooks"],
     "state": {"this._frame":"shared","this._tick":"shared","this._tickType":"cache","this._animationFrame":"shared","this._hatCache":"cache","this._canvasWatched":"cache","this._lastCanvasRatio":"cache","this._otherFrame":"shared","this._eventOpcodes":"cache","target.__evex_lastValues (on each sprite)":"sprite"},
     "blocks": {
-      "everyOtherFrame": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "neverr": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "whenSpriteClicked": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "sendWithData": {"type":"command","pure":false,"reads":["variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"variables = the broadcast's \"received\" flag"},
       "receivedData": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
@@ -2015,8 +1949,6 @@
       "broadcastToTargetAndWait": {"type":"command","pure":false,"reads":["sprites","threads","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "broadcastDataToTarget": {"type":"command","pure":false,"reads":["sprites","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "broadcastDataToTargetAndWait": {"type":"command","pure":false,"reads":["sprites","threads","variables"],"writes":["threads","variables"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "beforeSave": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
-      "afterSave": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "whenScreenChanges": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "whenSpriteDragDrop": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
       "whenCostumeChanged": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"},
@@ -2081,13 +2013,8 @@
     "state": {"this.lastValues":"shared","this.loudnessArray":"outside","this.canGetLoudness":"outside","this.canVibrate":"outside"},
     "blocks": {
       "vibrateDevice": {"type":"command","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["outside"],"page":true,"answer":null,"compiled":false,"direct":true},
-      "urlOptions": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
-      "urlOptionsOf": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"pure, but checks that window exists"},
-      "setUrlEnd": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":null,"compiled":false,"direct":true},
-      "queryParamOfUrl": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"note":"pure, but checks that window exists; null when the parameter is missing"},
       "packaged": {"type":"Boolean","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "spriteName": {"type":"reporter","pure":false,"reads":["sprite"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"direct":true},
-      "framed": {"type":"Boolean","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"boolean","compiled":false,"direct":true},
       "currentMillisecond": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "pickColor": {"type":"reporter","pure":false,"reads":["renderer","stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"note":"uses the canvas size on the page","direct":true},
       "maxSpriteLayers": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
@@ -2179,18 +2106,14 @@
   "runtimeoptions": {
     "source": "src/extensions/turbowarp_gallery/runtime-options.js",
     "replaces": [],
-    "hooks": ["runtime.pmUsernameChangedHooks"],
     "note": "listens to runtime option, framerate, stage size, turbo and interpolation events for its \"when changed\" hat",
     "blocks": {
       "getEnabled": {"type":"Boolean","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "setEnabled": {"type":"command","pure":false,"reads":[],"writes":["settings"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "getFramerate": {"type":"reporter","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "setFramerate": {"type":"command","pure":false,"reads":[],"writes":["settings"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "getCloneLimit": {"type":"reporter","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "setCloneLimit": {"type":"command","pure":false,"reads":[],"writes":["settings"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "getDimension": {"type":"reporter","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "setDimensions": {"type":"command","pure":false,"reads":[],"writes":["stage size"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
-      "setUsername": {"type":"command","pure":false,"reads":[],"writes":["input"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "whenChange": {"type":"event","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false,"note":"event: started by the extension itself"}
     }
   },
@@ -2202,7 +2125,6 @@
       "addElementText": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "addElementScreenshot": {"type":"command","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false},
       "addElementImg": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false,"note":"asks the security manager"},
-      "addElementHtml": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false,"note":"asks the security manager"},
       "removeElements": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":false,"direct":true},
       "txtFont": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
       "txtColor": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
@@ -2215,8 +2137,7 @@
       "setBGImage": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":true,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":true,"answer":null,"compiled":false,"note":"asks the security manager"},
       "setBGRepeat": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
       "resetBackground": {"type":"command","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["setting"],"page":false,"answer":null,"compiled":false,"direct":true},
-      "elementCount": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true},
-      "lastHTML": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"string","compiled":false,"direct":true}
+      "elementCount": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":"number","compiled":false,"direct":true}
     }
   },
   "shovelColorPicker": {
@@ -2326,9 +2247,6 @@
     "blocks": {
       "split": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "repeat": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "replaceRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "matchRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
-      "countRegex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"uses the match cache, which only remembers the last answer (an invalid pattern clears it since section 111)"},
       "caseOf": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "isCase": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "toCase": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"pure except the \"random case\" option","direct":true},
@@ -2388,7 +2306,6 @@
     "replaces": [],
     "state": {"this.requestHeaders":"setting","this.formFields":"setting","this.responseHeaders":"outside"},
     "blocks": {
-      "network_type_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "network_generation_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"string","compiled":false,"direct":true},
       "downlink_speed_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
       "downlink_max_speed_block": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":true,"answer":"any","compiled":false,"direct":true},
@@ -2557,7 +2474,6 @@
       "stageResolutionHeight": {"type":"reporter","pure":false,"reads":["renderer"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "stageSizeWidth": {"type":"reporter","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
       "stageSizeHeight": {"type":"reporter","pure":false,"reads":["stage size"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"direct":true},
-      "getHqPen": {"type":"Boolean","pure":false,"reads":["settings"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false,"direct":true},
       "setCanvasSize": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false},
       "clearCanvasSize": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false},
       "canvasFilter": {"type":"command","pure":false,"reads":[],"writes":["renderer"],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["setting"],"stateWrites":["shared"],"page":true,"answer":null,"compiled":false,"direct":true},

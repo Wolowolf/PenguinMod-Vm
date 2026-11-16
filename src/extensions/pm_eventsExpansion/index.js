@@ -9,7 +9,6 @@ const Thread = require('../../engine/thread');
 // 128 the engine skips "while", "when changed" and "while key" while their answer was false and nothing they
 // read changed: pmEdgeHat; "every n frames" answers differently every frame):
 const EVERY_FRAME_HATS = ['whileTrueFalse', 'whenValueChanged', 'everyDuration', 'whileKeyPressed'];
-const MAX_BEFORE_SAVE_MS = 3000;
 
 const KEYBOARD_KEYS = ['space', 'up arrow', 'down arrow', 'right arrow', 'left arrow', 'enter',
     'backspace', 'delete', 'shift', 'caps lock', 'scroll lock', 'control', 'escape', 'insert', 'home', 'end',
@@ -167,11 +166,6 @@ class pmEventsExpansion {
          * @type {runtime}
          */
         this.runtime = runtime;
-        // every other frame block
-        this._otherFrame = false;
-        this.runtime.on('RUNTIME_STEP_START', () => {
-            this._everyOtherFrame();
-        });
 
         // --- from More Events / Events+ ---
         runtime.pmEventsExpansion = this;
@@ -241,34 +235,6 @@ class pmEventsExpansion {
         // costume switches (setCostume calls the hook only for a real change)
         runtime.pmCostumeChangedHooks.push(target => this._costumeChanged(target));
 
-        // before / after the project is saved
-        if (vm) {
-            const beforeSave = () => new Promise(resolve => {
-                const threads = runtime.startHats('pmEventsExpansion_beforeSave') || [];
-                if (threads.length === 0) {
-                    resolve();
-                    return;
-                }
-                // Desktop fork (section 154): the runtime's clock
-                const startTime = runtime.pmPerfNow();
-                const check = () => {
-                    if (runtime.pmPerfNow() - startTime > MAX_BEFORE_SAVE_MS ||
-                        threads.every(thread => !runtime.isActiveThread(thread))) {
-                        runtime.off('AFTER_EXECUTE', check);
-                        resolve();
-                    }
-                };
-                runtime.on('AFTER_EXECUTE', check);
-            });
-            const afterSave = () => {
-                // wait for the next frame so the saving can finish first
-                runtime.once('BEFORE_EXECUTE', () => {
-                    runtime.startHats('pmEventsExpansion_afterSave');
-                });
-            };
-            vm.pmBeforeSaveHooks.push(beforeSave);
-            vm.pmAfterSaveHooks.push(afterSave);
-        }
     }
 
     // does any script use this hat? (asked at most once per frame)
@@ -351,15 +317,6 @@ class pmEventsExpansion {
         for (const thread of threads) thread.__evex_message = name;
     }
 
-    // stepUpdates
-    _everyOtherFrame() {
-        if (this._otherFrame) {
-            this.runtime.startHats('pmEventsExpansion_everyOtherFrame');
-            this._otherFrame = false;
-        } else {
-            this._otherFrame = true;
-        }
-    }
 
     // order
     orderCategoryBlocks(extensionBlocks) {
@@ -390,26 +347,6 @@ class pmEventsExpansion {
             isDynamic: true,
             orderBlocks: this.orderCategoryBlocks,
             blocks: [
-                {
-                    opcode: 'everyOtherFrame',
-                    text: 'every other frame',
-                    blockType: BlockType.EVENT,
-                    isEdgeActivated: false,
-                    switches: [
-                        { isNoop: true },
-                        'neverr'
-                    ]
-                },
-                {
-                    opcode: 'neverr',
-                    text: 'never',
-                    blockType: BlockType.EVENT,
-                    isEdgeActivated: false,
-                    switches: [
-                        'everyOtherFrame',
-                        { isNoop: true },
-                    ]
-                },
                 {
                     opcode: 'whenSpriteClicked',
                     text: 'when [SPRITE] clicked',
@@ -661,20 +598,6 @@ class pmEventsExpansion {
                         SPRITE: {type: ArgumentType.STRING, menu: 'spriteName'},
                         DATA: {type: ArgumentType.STRING, defaultValue: 'abc'}
                     }
-                },
-                {
-                    opcode: 'beforeSave',
-                    text: 'before project saves',
-                    blockType: BlockType.EVENT,
-                    isEdgeActivated: false,
-                    shouldRestartExistingThreads: true
-                },
-                {
-                    opcode: 'afterSave',
-                    text: 'after project saves',
-                    blockType: BlockType.EVENT,
-                    isEdgeActivated: false,
-                    shouldRestartExistingThreads: true
                 },
                 {
                     opcode: 'whenScreenChanges',

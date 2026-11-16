@@ -2,7 +2,6 @@ const Cast = require('../util/cast');
 const Timer = require('../util/timer');
 const MathUtil = require('../util/math-util');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
-const { validateRegex } = require('../util/json-block-utilities');
 
 class Scratch3SensingBlocks {
     constructor (runtime) {
@@ -82,9 +81,6 @@ class Scratch3SensingBlocks {
             sensing_loud: this.isLoud,
             sensing_askandwait: this.askAndWait,
             sensing_answer: this.getAnswer,
-            sensing_username: this.getUsername,
-            sensing_loggedin: this.getLoggedIn,
-            sensing_regextest: this.regextest,
             sensing_thing_is_number: this.thing_is_number,
             sensing_thing_has_number: this.thing_has_number,
             sensing_mobile: this.mobile,
@@ -104,8 +100,6 @@ class Scratch3SensingBlocks {
             sensing_getclipboard: this.getClipboard,
             sensing_getdragmode: this.getDragMode,
             sensing_getoperatingsystem: this.getOS,
-            sensing_getbrowser: this.getBrowser,
-            sensing_geturl: this.getUrl,
             sensing_getxyoftouchingsprite: this.getXYOfTouchingSprite
         };
     }
@@ -132,40 +126,6 @@ class Scratch3SensingBlocks {
             return 'MacOS';
         }
         return 'Unknown';
-    }
-    getBrowser () {
-        if (!('userAgent' in navigator)) return 'Unknown';
-        const agent = navigator.userAgent;
-        if ('userAgentData' in navigator) {
-            const agentData = JSON.stringify(navigator.userAgentData.brands);
-            if (agentData.includes('Google Chrome')) {
-                return 'Chrome';
-            }
-            if (agentData.includes('Opera')) {
-                return 'Opera';
-            }
-            if (agentData.includes('Microsoft Edge')) {
-                return 'Edge';
-            }
-        }
-        if (agent.includes('Chrome')) {
-            return 'Chrome';
-        }
-        if (agent.includes('Firefox')) {
-            return 'Firefox';
-        }
-        // PenguinMod cannot be loaded in IE 11 (the last supported version)
-        // if (agent.includes('MSIE') || agent.includes('rv:')) {
-        //     return 'Internet Explorer';
-        // }
-        if (agent.includes('Safari')) {
-            return 'Safari';
-        }
-        return 'Unknown';
-    }
-    getUrl () {
-        if (!('href' in location)) return '';
-        return location.href;
     }
 
     setClipboard (args) {
@@ -273,14 +233,15 @@ class Scratch3SensingBlocks {
         return /\d/.test(Cast.toString(args.TEXT1));
     }
 
+    // Desktop fork (section 270): "running on a phone?": a phone or tablet system (Android, iOS, iPadOS), not just a
+    // touch screen (it was true on touch laptops)
     mobile () {
-        return typeof window !== 'undefined' && 'ontouchstart' in window;
-    }
-
-    regextest (args) {
-        if (!validateRegex(args.reg, args.regrule)) return false;
-        const regex = new RegExp(args.reg, args.regrule);
-        return regex.test(args.text);
+        if (typeof navigator === 'undefined') return false;
+        if (navigator.userAgentData && navigator.userAgentData.mobile === true) return true;
+        const agent = navigator.userAgent || '';
+        if (/Android|iPhone|iPad|iPod|Mobile/i.test(agent)) return true;
+        // iPadOS says it is a Mac; a Mac with a touch screen is an iPad
+        return /Macintosh/.test(agent) && navigator.maxTouchPoints > 1;
     }
 
     getMonitored () {
@@ -324,9 +285,6 @@ class Scratch3SensingBlocks {
                 // importing multiple monitors from the same opcode from sb2 files,
                 // something that is not currently supported in scratch 3.
                 getId: (_, fields) => getMonitorIdForBlockWithArgs('current', fields) // _${param}`
-            },
-            sensing_loggedin: {
-                getId: () => 'loggedin'
             },
         };
     }
@@ -686,13 +644,6 @@ class Scratch3SensingBlocks {
         return 0;
     }
 
-    getUsername (args, util) {
-        return util.ioQuery('userData', 'getUsername');
-    }
-
-    getLoggedIn(args, util) {
-        return util.ioQuery('userData', 'getLoggedIn');
-    }
 }
 
 module.exports = Scratch3SensingBlocks;

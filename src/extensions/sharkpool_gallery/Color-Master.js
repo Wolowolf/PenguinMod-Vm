@@ -135,64 +135,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             }
           },
           { blockType: Scratch.BlockType.LABEL, text: "Gradients" },
-          {
-            opcode: "linearGradient",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "linear gradient with colors [STRING] at angle [ANGLE]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "use-below-blocks" },
-              ANGLE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 90}
-            }
-          },
-          {
-            opcode: "radialGradient",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "radial gradient with colors [STRING] at x [x] y [y]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "use-below-blocks" },
-              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0},
-              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0}
-            }
-          },
-          {
-            opcode: "conicGradient",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "conic gradient with colors [STRING] at x [x] y [y]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "use-below-blocks" },
-              x: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0},
-              y: { type: Scratch.ArgumentType.NUMBER, defaultValue: 0}
-            }
-          },
-          {
-            opcode: "maker1",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "[COLOR], [STRING]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "hex-2" },
-              COLOR: { type: Scratch.ArgumentType.COLOR, defaultValue: "#ff0000" }
-            }
-          },
-          {
-            opcode: "maker2",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "[COLOR] at [PERCENT] %, [STRING]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "hex-2" },
-              PERCENT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 25 },
-              COLOR: { type: Scratch.ArgumentType.COLOR, defaultValue: "#ff0000" }
-            }
-          },
-          {
-            opcode: "maker3",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "[COLOR] at angle [PERCENT], [STRING]",
-            arguments: {
-              STRING: { type: Scratch.ArgumentType.STRING, defaultValue: "hex-2" },
-              PERCENT: { type: Scratch.ArgumentType.NUMBER, defaultValue: 90 },
-              COLOR: { type: Scratch.ArgumentType.COLOR, defaultValue: "#ff0000" }
-            }
-          },
         ],
         menus: {
           COLORS: { acceptReporters: false /* Desktop fork (section 265): only its own items work */, items: ["hex", "rgb", "hsv", "decimal"] },
@@ -357,17 +299,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     // Gradient blocks
-    linearGradient(args) { return `linear-gradient(${args.ANGLE - 90}deg,${args.STRING})` }
 
-    radialGradient(args) { return `radial-gradient(circle at ${args.x}% ${args.y * -1}%,${args.STRING})` }
 
-    conicGradient(args) { return `conic-gradient(at ${args.x}% ${args.y * -1}%,${args.STRING})` }
 
-    maker1(args) { return `${args.COLOR}${args.STRING ? `,${args.STRING}` : ""}` }
 
-    maker2(args) { return `${args.COLOR} ${args.PERCENT}%${args.STRING ? `,${args.STRING}` : ""}` }
 
-    maker3(args) { return `${args.COLOR} ${args.PERCENT - 90}deg${args.STRING ? `,${args.STRING}` : ""}` }
   }
 
   if (Scratch.gui) Scratch.gui.getBlockly().then((SB) => {

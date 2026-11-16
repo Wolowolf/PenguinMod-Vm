@@ -27,8 +27,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   const TO_RAD = Math.PI / 180;
   const MILE_TO_KM = 1.609344;
-  const IP_CACHE = { ip: undefined, expires: undefined };
-  const IP_INFO_CACHE = new Map();
   const proxy = "https://api.codetabs.com/v1/proxy/?quest=";
   const MOVEMENT_THRESHOLD_DEGREES = 5 * 10 ** -5; // ~ 5.5 meters
   const options = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
@@ -57,24 +55,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             text: "get [TYPE]",
             arguments: {
               TYPE: { type: Scratch.ArgumentType.STRING, menu: "TYPES" }
-            }
-          },
-          {
-            opcode: "getIP",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "my IP address",
-            disableMonitor: true
-          },
-          {
-            opcode: "getIPInfo",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "get [TYPE] from IP [IP]",
-            arguments: {
-              TYPE: { type: Scratch.ArgumentType.STRING, menu: "IP_MENU" },
-              IP: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "161.185.160.93"
-              }
             }
           },
           {
@@ -169,19 +149,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["altitude", "speed"]
           },
-          IP_MENU: {
-            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-            items: [
-              { "text": "country name", "value": "countryName" },
-              { "text": "country code", "value": "countryCode" },
-              { "text": "region", "value": "regionName" },
-              { "text": "city", "value": "cityName" },
-              { "text": "continent", "value": "continent" },
-              { "text": "latitude", "value": "latitude" },
-              { "text": "longitude", "value": "longitude" },
-              /* Desktop fork (section 265) */ { "text": "zip code", "value": "zipCode" }
-            ]
-          },
           UNITS: ["miles", "kilometers"],
           ACCURACY: {
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
@@ -256,39 +223,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     getTimeout() { return options.timeout / 1000 }
     setAccuracy(args) { options.enableHighAccuracy = Cast.toString(args.ACCURACY) === "high" }
     isHighAccuracy() { return options.enableHighAccuracy }
-
-    async getIP() {
-      if (!await Scratch.canGeolocate()) return "";
-      try {
-        if (IP_CACHE.ip === undefined || Scratch.vm.runtime.pmDateNow() > (IP_CACHE.expires || 0)) {
-          const response = await Scratch.fetch("https://api.ipify.org?format=json");
-          const data = await response.json();
-          const ip = data.ip ? data.ip : "";
-          if (ip) {
-            IP_CACHE.ip = ip;
-            IP_CACHE.expires = Scratch.vm.runtime.pmDateNow() + 30000; // 30 sec timeout
-          }
-
-          return ip;
-        }
-
-        return IP_CACHE.ip || "";
-      } catch { return "" }
-    }
-
-    async getIPInfo(args) {
-      const ip = Cast.toString(args.IP);
-      if (IP_INFO_CACHE.has(ip)) return IP_INFO_CACHE.get(ip)[args.TYPE] ?? "";
-
-      const url = `https://free.freeipapi.com/api/json/${ip}`;
-      if (!await Scratch.canFetch(url)) return "";
-      try {
-        const response = await Scratch.fetch(url);
-        const data = await response.json();
-        IP_INFO_CACHE.set(ip, data);
-        return data[args.TYPE] ?? "";
-      } catch { return "" }
-    }
 
     async getCountryName(args) {
       const url = `${proxy}https://api.first.org/data/v1/countries?q=${args.CODE}`;

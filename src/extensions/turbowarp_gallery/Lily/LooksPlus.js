@@ -29,30 +29,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   };
 
   /**
-   * @param {RenderWebGL.SVGSkin} svgSkin
-   * @returns {Promise<void>}
-   */
-  const svgSkinFinishedLoading = (svgSkin) =>
-    new Promise((resolve) => {
-      if (svgSkin._svgImageLoaded) {
-        resolve();
-        return;
-      }
-
-      const handleEvent = () => {
-        cleanup();
-        resolve();
-      };
-      const cleanup = () => {
-        svgSkin._svgImage.removeEventListener("load", handleEvent);
-        svgSkin._svgImage.removeEventListener("error", handleEvent);
-      };
-
-      svgSkin._svgImage.addEventListener("load", handleEvent);
-      svgSkin._svgImage.addEventListener("error", handleEvent);
-    });
-
-  /**
    * @param {VM.BlockUtility} util
    * @param {unknown} targetName
    */
@@ -155,78 +131,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
           "---",
 
-          {
-            opcode: "replaceCostumeContentNew",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("set svg for [COSTUME] to [CONTENT]"),
-            arguments: {
-              COSTUME: {
-                type: Scratch.ArgumentType.COSTUME,
-              },
-              CONTENT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "<svg />",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-          {
-            opcode: "restoreCostumeContent",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("restore content for [COSTUME]"),
-            arguments: {
-              COSTUME: {
-                type: Scratch.ArgumentType.COSTUME,
-              },
-            },
-            extensions: ["colours_looks"],
-          },
-          {
-            opcode: "costumeContent",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate(
-              "[CONTENT] of costume # [COSTUME] of [TARGET]"
-            ),
-            arguments: {
-              CONTENT: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "contentType",
-                defaultValue: "content",
-              },
-              COSTUME: {
-                type: Scratch.ArgumentType.NUMBER,
-                defaultValue: 1,
-              },
-              TARGET: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "spriteMenu",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
 
           "---",
 
-          {
-            opcode: "replaceColors",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("replace [COLOR1] with [COLOR2] in [SVG]"),
-            arguments: {
-              COLOR1: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#FCB1E3",
-              },
-              COLOR2: {
-                type: Scratch.ArgumentType.COLOR,
-                defaultValue: "#8ECAFF",
-              },
-              SVG: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "<svg />",
-              },
-            },
-            extensions: ["colours_looks"],
-          },
         ],
         menus: {
           effectMenu: {
@@ -285,19 +192,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               {
                 text: Scratch.translate("rotation center y"),
                 value: "rotationCenterY",
-              },
-            ],
-          },
-          contentType: {
-            acceptReporters: false,
-            items: [
-              {
-                text: Scratch.translate("content"),
-                value: "content",
-              },
-              {
-                text: Scratch.translate("dataURI"),
-                value: "dataURI",
               },
             ],
           },
@@ -380,106 +274,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return Scratch.Cast.toNumber(target.sprite.costumes.length);
     }
 
-    async replaceCostumeContentNew(args, util) {
-      const costumeIndex = this.getCostumeInput(args.COSTUME, util.target);
-      const costume = util.target.sprite.costumes[costumeIndex];
-      if (!costume) {
-        console.error("Costume doesn't exist");
-        return;
-      }
 
-      //This is here to ensure no changes are made to bitmap costumes, as changes are irreversible
-      //Check will be removed when it's possible to edit bitmap skins
-      const format = costume.asset.assetType.runtimeFormat;
-      if (format !== "svg") {
-        console.error("Costume is not vector");
-        return;
-      }
 
-      const content = args.CONTENT;
-      try {
-        renderer.updateSVGSkin(costume.skinId, Scratch.Cast.toString(content));
-        renderer._allSkins[costume.skinId].differsFromAsset = true;
-        await svgSkinFinishedLoading(renderer._allSkins[costume.skinId]);
-      } catch (e) {
-        console.error(e);
-      }
-    }
 
-    restoreCostumeContent(args, util) {
-      const costumeIndex = this.getCostumeInput(args.COSTUME, util.target);
-      const costume = util.target.sprite.costumes[costumeIndex];
-      if (!costume) {
-        console.error("Costume doesn't exist");
-        return;
-      }
-
-      if (!requireNonPackagedRuntime("restore costume content")) {
-        return;
-      }
-
-      // This is here to ensure no changes are made to bitmap costumes, as changes are irreversible
-      // Check will be removed when it's possible to edit bitmap skins
-      const format = costume.asset.assetType.runtimeFormat;
-      if (format !== "svg") {
-        console.error("Costume is not vector");
-        return;
-      }
-
-      if (!renderer._allSkins[costume.skinId].differsFromAsset) {
-        return;
-      }
-
-      try {
-        const content = costume.asset.decodeText();
-        const rotationCenterX = costume.rotationCenterX;
-        const rotationCenterY = costume.rotationCenterY;
-        renderer.updateSVGSkin(costume.skinId, content, [
-          rotationCenterX,
-          rotationCenterY,
-        ]);
-        renderer._allSkins[costume.skinId].differsFromAsset = false;
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    costumeContent(args, util) {
-      const target = getSpriteTargetByName(util, args.TARGET);
-      if (!target) {
-        console.error("Target does not exist");
-        return "";
-      }
-
-      if (!requireNonPackagedRuntime("costume content")) {
-        return "";
-      }
-
-      const costume = target.sprite.costumes[args.COSTUME - 1];
-      if (!costume) {
-        console.error("Target costume does not exist");
-        return "";
-      }
-
-      const format = args.CONTENT;
-      if (format === "content") {
-        return costume.asset.decodeText();
-      } else {
-        return costume.asset.encodeDataURI();
-      }
-    }
-
-    replaceColors(args, util) {
-      const svg = Scratch.Cast.toString(args.SVG);
-      const color1 = args.COLOR1;
-      const color2 = args.COLOR2;
-      try {
-        return svg.replace(new RegExp(color1, "gi"), color2);
-      } catch (e) {
-        // regex was invalid, don't replace anything
-        return svg;
-      }
-    }
 
     getCostumeInput(costume, target) {
       if (typeof costume === "number") {

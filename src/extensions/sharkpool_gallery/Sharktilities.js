@@ -98,14 +98,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             }
           },
           {
-            opcode: "removeThorns",
-            blockType: Scratch.BlockType.REPORTER,
-            text: "remove vector thorns from [SVG]",
-            arguments: {
-              SVG: { type: Scratch.ArgumentType.STRING, defaultValue: "<svg>" }
-            }
-          },
-          {
             opcode: "genShape",
             blockType: Scratch.BlockType.REPORTER,
             text: "make [TYPE] shape with points [POINTS] filled [COLOR] width [WIDTH] height [HEIGHT] x [X] y [Y] curve [LINE]",
@@ -180,34 +172,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               SHUFFLE_OPTION: { type: Scratch.ArgumentType.STRING, menu: "shuffleOption" }
             }
           },
-          { blockType: Scratch.BlockType.LABEL, text: "Experimental" },
-          {
-            opcode: "stepInter",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "step interpolation",
-          },
-          {
-            opcode: "refresh",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "refresh extensions",
-            isTerminal: true
-          },
-          {
-            opcode: "request",
-            blockType: Scratch.BlockType.COMMAND,
-            text: "request [THING]",
-            arguments: {
-              THING: { type: Scratch.ArgumentType.STRING, menu: "reqMenu" }
-            }
-          },
         ],
         menus: {
           TARGETS: { acceptReporters: true, items: this._getTargets(true) },
           TARGETS2: { acceptReporters: true, items: this._getTargets(false) },
-          reqMenu: {
-            acceptReporters: false /* Desktop fork (section 265): only its own items work */,
-            items: ["redraw", "project step", "toolbox update", "block refresh"]
-          },
           EFFECT_MENU: {
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
             items: ["color", "fisheye", "whirl", "pixelate", "mosaic", "brightness", "ghost", /* Desktop fork (section 265) */ "saturation", "red", "green", "blue", "opaque", { text: "horizontal shear", value: "horizontal_shear" }, { text: "vertical shear", value: "vertical_shear" }, { text: "repeat X", value: "repeat_x" }, { text: "repeat Y", value: "repeat_y" }]
@@ -310,27 +278,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     smoothing(args, util) { return this.smooth(args.SPEED, args.LIMIT, args.MATH, util.ioQuery("clock", "projectTimer")) }
     smoothing2(args) { return this.smooth(args.SPEED, args.LIMIT, args.MATH, Scratch.Cast.toNumber(args.NUM)) }
 
-    refresh() { vm.extensionManager.refreshBlocks() }
-    async request(args) {
-      if (args.THING === "redraw") runtime.requestRedraw();
-      else if (args.THING === "block refresh") vm.extensionManager.refreshBlocks();
-      else if (args.THING === "project step") await this.ignoreError(() => runtime._step()); // Desktop fork (section 146)
-      else runtime.requestToolboxExtensionsUpdate();
-    }
-    async stepInter() { await this.ignoreError(() => runtime.frameLoop.stepCallback()) } // Desktop fork (section 146)
-    // Desktop fork (section 146): the extra engine step runs right after the step this block runs in (a microtask:
-    // an engine step is one synchronous call). Run inside it, it re-entered the running script ("Generator is
-    // already running" compiled, a stack overflow interpreted), and the step's result was passed instead of a
-    // function. The block's script waits for the extra step and goes on in the next frame; its errors are ignored.
-    ignoreError(call) {
-      return new Promise((resolve) => {
-        queueMicrotask(() => {
-          try { call(); } catch {}
-          resolve();
-        });
-      });
-    }
-
     getText(args, util) {
       const target = args.SPRITE === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.SPRITE);
       if (!target || !target._customState["Scratch.looks"]) return "";
@@ -345,7 +292,6 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    removeThorns(args) { return args.SVG.replaceAll("linejoin=\"miter\"", "linejoin=\"round\"") }
 
     penLayer() {
       const penID = runtime.ext_pen?._penDrawableId;

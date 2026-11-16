@@ -466,11 +466,6 @@ class ScriptTreeGenerator {
                 args: this.descendInputOfBlock(block, 'ARGS')
             };
         
-        case 'control_inline_stack_output':
-            return {
-                kind: 'control.inlineStackOutput',
-                code: this.descendSubstack(block, 'SUBSTACK')
-            };
         case 'looks_backdropnumbername':
             if (block.fields.NUMBER_NAME.value === 'number') {
                 return {
@@ -927,14 +922,6 @@ class ScriptTreeGenerator {
             return {
                 kind: 'sensing.touching',
                 object: this.descendInputOfBlock(block, 'TOUCHINGOBJECTMENU')
-            };
-        case 'sensing_username':
-            return {
-                kind: 'sensing.username'
-            };
-        case 'sensing_loggedin': 
-            return {
-                kind: 'sensing.loggedin'
             };
         case 'operator_trueBoolean':
             return {
@@ -2377,8 +2364,6 @@ class ScriptTreeGenerator {
             return {kind: 'op.lettersFromTo', from: input('INDEX1'), to: input('INDEX2'), text: input('TEXT')};
         case 'operator_readLineInMultilineText':
             return {kind: 'op.readLine', line: input('LINE'), text: input('TEXT')};
-        case 'operator_regexmatch':
-            return {kind: 'op.regexMatch', text: input('text'), reg: input('reg'), regrule: input('regrule')};
         case 'sensing_thing_is_number':
             return {kind: 'sensing.isNumber', value: input('TEXT1')};
         case 'sensing_thing_has_number':
@@ -2387,9 +2372,6 @@ class ScriptTreeGenerator {
             return {kind: 'sensing.isText', value: input('TEXT1')};
         case 'sensing_isUpperCase':
             return {kind: 'sensing.isUpperCase', text: input('text')};
-        case 'sensing_regextest':
-            // (the block shows "test regex %2 %3 with text %1": its inputs come in that order)
-            return {kind: 'sensing.regexTest', reg: input('reg'), regrule: input('regrule'), text: input('text')};
         case 'sensing_directionTo':
             return {kind: 'sensing.directionTo', x2: input('x2'), y2: input('y2'), x1: input('x1'), y1: input('y1')};
         case 'sensing_distanceTo':

@@ -76,18 +76,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
           },
           {
-            opcode: "importProject",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("import project from [TEXT]"),
-            arguments: {
-              TEXT: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue:
-                  "https://extensions.turbowarp.org/samples/Box2D.sb3",
-              },
-            },
-          },
-          {
             opcode: "deleteSprite",
             blockType: Scratch.BlockType.COMMAND,
             text: Scratch.translate("delete sprite [SPRITE]"),
@@ -108,17 +96,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 defaultValue: "costume1",
               },
               SPRITE: {
-                type: Scratch.ArgumentType.STRING,
-                defaultValue: "Sprite1",
-              },
-            },
-          },
-          {
-            opcode: "setedtarget",
-            blockType: Scratch.BlockType.COMMAND,
-            text: Scratch.translate("set editing target to [NAME]"),
-            arguments: {
-              NAME: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "Sprite1",
               },
@@ -213,42 +190,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         });
     }
 
-    importProject({ TEXT }) {
-      if (typeof ScratchBlocks !== "undefined") {
-        // We are in the editor. Ask before loading a new project to avoid unrecoverable data loss.
-        if (
-          !Scratch.vm.runtime.pmPage.confirm(
-            `Do you want to import a project from "${TEXT}"? Everything in the current project will be permanently deleted.`
-          )
-        ) {
-          return;
-        }
-      }
-      Scratch.fetch(TEXT)
-        .then((r) => r.arrayBuffer())
-        .then((buffer) => vm.loadProject(buffer))
-        .then(() => {
-          console.log("Done");
-          vm.greenFlag();
-        })
-        .catch((error) => {
-          console.log("Error", error);
-        });
-    }
 
-    setedtarget({ NAME }) {
-      let target;
-
-      //I know this might cause sprites called "stage" to be ignored. But lets be real, who names their sprite "stage"?
-      if (NAME.toLowerCase() === "stage") {
-        target = vm.runtime.getTargetForStage();
-      } else {
-        target = vm.runtime.getSpriteTargetByName(NAME);
-      }
-      if (target) {
-        vm.setEditingTarget(target.id);
-      }
-    }
 
     /**
      * Calculate brightness value by RGB or HEX color.

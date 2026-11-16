@@ -147,11 +147,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
         blocks: [
           {
-            opcode: "network_type_block",
-            blockType: Scratch.BlockType.REPORTER,
-            text: Scratch.translate("network type"),
-          },
-          {
             opcode: "network_generation_block",
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("network generation"),
@@ -572,26 +567,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       };
     }
 
-    network_type_block() {
-      try {
-        switch (navigator.connection.type) {
-          case "bluetooth":
-            return "bluetooth";
-          case "cellular":
-            return "cellular";
-          case "ethernet":
-            return "ethernet";
-          case "wifi":
-            return "wi-fi";
-          case "wimax":
-            return "wimax";
-          default:
-            return "";
-        }
-      } catch (err) {
-        return "";
-      }
-    }
     network_generation_block() {
       try {
         switch (navigator.connection.effectiveType) {

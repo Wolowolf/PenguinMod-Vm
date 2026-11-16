@@ -87,17 +87,6 @@ class sharkpoolPrinting {
                     },
                 },
                 {
-                    opcode: "addElementHtml",
-                    blockType: BlockType.COMMAND,
-                    text: "add html [HTML]",
-                    arguments: {
-                        HTML: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "<h1>Header text</h1><p>Paragraph here</p>"
-                        }
-                    },
-                },
-                {
                     opcode: "removeElements",
                     blockType: BlockType.COMMAND,
                     text: "remove all elements",
@@ -240,11 +229,6 @@ class sharkpoolPrinting {
                     blockType: BlockType.REPORTER,
                     text: "elements in print"
                 },
-                {
-                    opcode: "lastHTML",
-                    blockType: BlockType.REPORTER,
-                    text: "last printed html"
-                },
             ],
             menus: {
                 ALIGNMENTS: {
@@ -276,25 +260,6 @@ class sharkpoolPrinting {
             this.runtime.renderer.requestSnapshot(uri => {
                 resolve(uri);
             });
-        });
-    }
-    _convertToDataURL(stringg, optMimeType) {
-        return new Promise((resolve, reject) => {
-            const config = {};
-            if (optMimeType) {
-                config.type = optMimeType;
-            }
-            const blob = new Blob([stringg], config);
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const dataUrl = reader.result;
-                resolve(dataUrl);
-            };
-            reader.onerror = (er) => {
-                reject(er);
-            };
-            reader.readAsDataURL(blob);
         });
     }
     waitForLoad(element) {
@@ -329,13 +294,6 @@ class sharkpoolPrinting {
             url = 'https://penguinmod.com/notallowed.png';
         }
         this.prepare(xmlEscape(url), "img");
-    }
-    async addElementHtml(args) {
-        const html = args.HTML;
-        const dataUrl = await this._convertToDataURL(html, 'text/html');
-        const canEmbed = await this.runtime.vm.securityManager.canEmbed(dataUrl);
-        if (!canEmbed) return;
-        this.prepare(html, "html");
     }
     removeElements() {
         this.elementsToPrint = [];
@@ -397,9 +355,6 @@ class sharkpoolPrinting {
     // Miscellaneous
     elementCount() {
         return this.elementsToPrint.length;
-    }
-    lastHTML() {
-        return this.lastHTMLtxt;
     }
 
     prepare(content, type) {

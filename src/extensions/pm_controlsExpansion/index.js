@@ -15,17 +15,6 @@ const blocks = `
         </shadow>
     </value>
 </block>
-<block type="control_inline_stack_output">
-    <value name="SUBSTACK">
-        <block type="procedures_return">
-            <value name="return">
-            	<shadow type="text">
-            		<field name="TEXT">1</field>
-            	</shadow>
-            </value>
-        </block>
-    </value>
-</block>
 <block type="control_waittick"/>
 %block3>
 ${blockSeparator}

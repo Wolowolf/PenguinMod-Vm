@@ -38,7 +38,6 @@ const Cloud = require('../io/cloud');
 const Keyboard = require('../io/keyboard');
 const Mouse = require('../io/mouse');
 const MouseWheel = require('../io/mouseWheel');
-const UserData = require('../io/userData');
 const Video = require('../io/video');
 const Touch = require('../io/touch');
 
@@ -417,7 +416,6 @@ class Runtime extends EventEmitter {
          * pmRestartThreadHooks: (thread) => a thread to use instead of restarting it, or nothing.
          * pmCostumeChangedHooks: (target) after its costume really changed. pmTargetDragHooks: (target, 'drag' | 'drop').
          * pmVisualReportHooks: (value) => the value shown in the editor's value bubble.
-         * pmUsernameChangedHooks: () after the username changed (io/userData.js).
          * pmSpriteLookupById: getSpriteTargetByName also accepts target IDs.
          * pmCloneCreatedHooks (section 120): (clone, original) at the end of makeClone, when the clone's drawable
          * exists (the targetWasCreated event comes before it).
@@ -436,7 +434,6 @@ class Runtime extends EventEmitter {
         this.pmCostumeChangedHooks = [];
         this.pmTargetDragHooks = [];
         this.pmVisualReportHooks = [];
-        this.pmUsernameChangedHooks = [];
         this.pmSpriteLookupById = false;
         this.pmCloneCreatedHooks = [];
         this.pmForeignBlockHooks = [];
@@ -537,7 +534,6 @@ class Runtime extends EventEmitter {
             keyboard: new Keyboard(this),
             mouse: new Mouse(this),
             mouseWheel: new MouseWheel(this),
-            userData: new UserData(this),
             video: new Video(this),
             touch: new Touch(this)
         };
