@@ -44,8 +44,9 @@ const nestInfix = (operands, operators, levels, isRightAssociative, combine) => 
     return parse(0);
 };
 
-// "+ - * / ^": the usual order of operations, ^ groups from the right (2 ^ 3 ^ 2 = 2 ^ 9).
-const MATH_LEVELS = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3};
+// "+ - * / mod (%) ^": the usual order of operations (mod ranks with * and /), ^ groups from the right
+// (2 ^ 3 ^ 2 = 2 ^ 9).
+const MATH_LEVELS = {'+': 1, '-': 1, '*': 2, '/': 2, '%': 2, '^': 3};
 const nestMath = (operands, operators, combine) =>
     nestInfix(operands, operators.map(o => (o in MATH_LEVELS ? o : '+')), MATH_LEVELS, o => o === '^', combine);
 

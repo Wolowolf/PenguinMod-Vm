@@ -218,7 +218,9 @@ class Scratch3OperatorsBlocks {
         const values = this._expandableInputs(args, 'NUM');
         if (values.length === 0) return 0;
         if (values.length === 1) return this.add({NUM1: values[0], NUM2: 0});
-        const functions = {'+': this.add, '-': this.subtract, '*': this.multiply, '/': this.divide, '^': this.power};
+        const functions = {
+            '+': this.add, '-': this.subtract, '*': this.multiply, '/': this.divide, '%': this.mod, '^': this.power
+        };
         const operators = ExpandableBlocks.readOperators(args.mutation, values.length, '+');
         return ExpandableBlocks.nestMath(values, operators,
             (operator, left, right) => functions[operator].call(this, {NUM1: left, NUM2: right}));

@@ -2179,7 +2179,9 @@ class ScriptTreeGenerator {
         if (operands.length === 0) return {kind: 'constant', value: 0};
         // one input: its value as a number, like "( ) + 0"
         if (operands.length === 1) return {kind: 'op.add', left: operands[0], right: {kind: 'constant', value: 0}};
-        const kinds = {'+': 'op.add', '-': 'op.subtract', '*': 'op.multiply', '/': 'op.divide', '^': 'op.power'};
+        const kinds = {
+            '+': 'op.add', '-': 'op.subtract', '*': 'op.multiply', '/': 'op.divide', '%': 'op.mod', '^': 'op.power'
+        };
         const operators = ExpandableBlocks.readOperators(block.mutation, operands.length, '+');
         return ExpandableBlocks.nestMath(operands, operators, (operator, left, right) => ({
             kind: kinds[operator], left, right
