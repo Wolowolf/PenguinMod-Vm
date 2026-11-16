@@ -621,7 +621,7 @@ const FOLDABLE_KINDS = new Set([
     'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^',
     'op.equals', 'op.greater', 'op.less', 'op.and', 'op.or', 'op.not',
     'op.join', 'op.length', 'op.letterOf', 'op.contains',
-    // the modular comparison block's identical-values test (section 274; the other modular blocks are single-block nodes)
+    // the "===" block (sections 274, 275)
     'op.strictEquals',
     // the "Operators Expansion" extension's calculations (if-falsey/truthy, pitch, atan2); they are compiled by the
     // extension itself, only the answer is worked out here
@@ -1814,9 +1814,10 @@ class JSGenerator {
             return this.unaryNumber(node.value, v => `tan(${v})`, TYPE_NUMBER_NAN, numberFacts.tan);
         case 'op.10^':
             return new TypedInput(`(10 ** ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
-        // Desktop fork (section 274): the modular comparison block's "===" (identical values; no single block)
+        // Desktop fork (sections 274, 275): the "===" block and the modular comparison's "===": the values exactly as
+        // the interpreter gives them to the block's function (a fixed "10" stays text)
         case 'op.strictEquals':
-            return new TypedInput(`(${this.descendInput(node.left).asUnknown()} === ${this.descendInput(node.right).asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(`(${this.rawValue(this.descendInput(node.left))} === ${this.rawValue(this.descendInput(node.right))})`, TYPE_BOOLEAN);
 
         case 'sensing.answer':
             return new TypedInput(`runtime.ext_scratch3_sensing._answer`, TYPE_STRING);

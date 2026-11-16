@@ -27,6 +27,7 @@ class Scratch3OperatorsBlocks {
             operator_lt: this.lt,
             operator_equals: this.equals,
             operator_notequal: this.notequals,
+            operator_strictEquals: this.strictEquals, // Desktop fork (section 275)
             operator_gt: this.gt,
             operator_ltorequal: this.ltorequal,
             operator_gtorequal: this.gtorequal,
@@ -244,12 +245,11 @@ class Scratch3OperatorsBlocks {
     expandableCompare (args) {
         const values = this._expandableInputs(args, 'INPUT');
         const operators = ExpandableBlocks.readCompareOperators(args.mutation, values.length);
-        const functions = {m: this.gt, M: this.gtorequal, l: this.lt, L: this.ltorequal, e: this.equals, n: this.notequals};
+        const functions = {m: this.gt, M: this.gtorequal, l: this.lt, L: this.ltorequal, e: this.equals, n: this.notequals,
+            E: this.strictEquals};
         for (let i = 0; i < values.length - 1; i++) {
             const operator = operators[i];
-            const holds = operator === 'E' ?
-                values[i] === values[i + 1] :
-                functions[operator].call(this, {OPERAND1: values[i], OPERAND2: values[i + 1]});
+            const holds = functions[operator].call(this, {OPERAND1: values[i], OPERAND2: values[i + 1]});
             if (!holds) return false;
         }
         return true;
@@ -281,6 +281,11 @@ class Scratch3OperatorsBlocks {
 
     equals (args) {
         return Cast.compare(args.OPERAND1, args.OPERAND2) === 0;
+    }
+
+    // Desktop fork (section 275): "===": the same value of the same type (text is case-sensitive)
+    strictEquals (args) {
+        return args.OPERAND1 === args.OPERAND2;
     }
 
     notequals (args) {

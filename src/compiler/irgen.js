@@ -546,6 +546,13 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'OPERAND1'),
                 right: this.descendInputOfBlock(block, 'OPERAND2')
             };
+        // Desktop fork (section 275)
+        case 'operator_strictEquals':
+            return {
+                kind: 'op.strictEquals',
+                left: this.descendInputOfBlock(block, 'OPERAND1'),
+                right: this.descendInputOfBlock(block, 'OPERAND2')
+            };
         case 'operator_gt':
             return {
                 kind: 'op.greater',
@@ -2213,7 +2220,7 @@ class ScriptTreeGenerator {
 
     /**
      * Desktop fork (section 274): the modular comparison block ("a < b < c" is "a < b and b < c") with the single
-     * comparison blocks' nodes (Scratch's comparison rules); "===" (identical values) has no single block.
+     * comparison blocks' nodes (Scratch's comparison rules; "===" is the single "===" block, section 275).
      * An input between two comparisons is worked out for both, as before.
      * @param {Block} block The block.
      * @returns {Node} The node.
