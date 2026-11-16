@@ -481,6 +481,7 @@ const LOOP_TYPES_KINDS = new Set([
     'op.divide', 'op.power', 'op.equals', 'op.e^', 'op.floor', 'op.greater', 'op.join', 'op.length', 'op.less',
     'op.letterOf', 'op.ln', 'op.log', 'op.log2', 'op.mod', 'op.multiply', 'op.not', 'op.or', 'op.random',
     'op.round', 'op.sign', 'op.sin', 'op.sqrt', 'op.subtract', 'op.tan', 'op.10^', 'op.true', 'op.false',
+    'op.strictEquals', // section 274
     'motion.x', 'motion.y', 'motion.direction',
     'looks.size', 'looks.costumeName', 'looks.costumeNumber', 'looks.backdropName', 'looks.backdropNumber',
     'mouse.down', 'mouse.x', 'mouse.y', 'keyboard.pressed',
@@ -620,8 +621,8 @@ const FOLDABLE_KINDS = new Set([
     'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^',
     'op.equals', 'op.greater', 'op.less', 'op.and', 'op.or', 'op.not',
     'op.join', 'op.length', 'op.letterOf', 'op.contains',
-    // PenguinMod's expandable math / and-or / compare blocks (their inputs are lists of inputs)
-    'op.expandmath', 'op.expandBool', 'op.expandCompare',
+    // the modular comparison block's identical-values test (section 274; the other modular blocks are single-block nodes)
+    'op.strictEquals',
     // the "Operators Expansion" extension's calculations (if-falsey/truthy, pitch, atan2); they are compiled by the
     // extension itself, only the answer is worked out here
     'pmOperatorsExpansion.orIfFalsey', 'pmOperatorsExpansion.ifIsTruthy', 'pmOperatorsExpansion.speedToPitch',
@@ -852,6 +853,7 @@ const KEEPS_PLAIN_SETUP_MORE = new Set([
     'list.indexOf', 'list.contents',
     'op.true', 'op.false', 'op.and', 'op.or', 'op.nand', 'op.nor', 'op.xor', 'op.xnor', 'op.asin', 'op.acos', 'op.atan',
     'op.ln', 'op.log', 'op.log2', 'op.e^', 'op.10^', 'op.power', 'op.sign', 'op.contains', 'op.letterOf', 'op.random',
+    'op.strictEquals', // section 274
     'mouse.x', 'mouse.y', 'mouse.down', 'keyboard.pressed', 'sensing.touching', 'timer.get'
 ]);
 // Whether a plain call is somewhere in a node (a pure call does no setup).
@@ -1717,12 +1719,6 @@ class JSGenerator {
         }
         case 'op.join':
             return new TypedInput(`(${this.descendInput(node.left).asString()} + ${this.descendInput(node.right).asString()})`, TYPE_STRING);
-        case "op.expandjoin": {
-            for (var i = 0; i < node.strings.length; i++) {
-                node.strings[i] = this.descendInput(node.strings[i]).asString();
-            }
-            return new TypedInput('(' + node.strings.join('+') + ')', TYPE_STRING);
-        }
         case 'op.length':
             return this.numberInput(`${this.descendInput(node.string).asString()}.length`, TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
         case 'op.less': {
@@ -1818,70 +1814,9 @@ class JSGenerator {
             return this.unaryNumber(node.value, v => `tan(${v})`, TYPE_NUMBER_NAN, numberFacts.tan);
         case 'op.10^':
             return new TypedInput(`(10 ** ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
-        case 'op.expandmath': {
-            const operations = node.operations;
-            let builder = '';
-            let powWrap = 0;
-            for (var i = 0; i < operations.length; i++) {
-                const op = operations[i];
-                const prevOp = operations[i - 1];
-                const opType = op[1];
-
-                if (opType === "^") {
-                    builder += 'Math.pow(';
-                    builder += this.descendInput(op[0]).asNumber();
-                    builder += ',';
-                    powWrap++;
-                } else {
-                    builder += this.descendInput(op[0]).asNumber();
-                    while (powWrap > 0) {
-                        builder += ')';
-                        powWrap--;
-                    }
-                    if (opType) builder += " " + opType + " ";
-                }
-            }
-            return new TypedInput('(' + builder + ')', TYPE_NUMBER_NAN);
-        }
-        case 'op.expandBool': {
-            const casted = node.bools.map((b) => this.descendInput(b).asBoolean());
-            let src = '';
-
-            if (node.isOptimized) {
-                for (let i = 0; i < casted.length; i++) src += casted[i] + node.operators[i][0];
-                if (!node.isNormal) src = `!(${src})`;
-            } else {
-                let abnormalCount = 0;
-                for (let i = 0; i < casted.length; i++) {
-                    const operator = node.operators[i];
-                    const isAbnormal = ['n', 'N', 'X'].includes(operator[1]);
-                    if (isAbnormal) {
-                        abnormalCount++;
-                        src += '!(';
-                    }
-                    src += casted[i];
-                    if (!isAbnormal && abnormalCount > 0) {
-                        abnormalCount--;
-                        src += ')';
-                    }
-                    src += operator[0];
-                }
-
-                while (abnormalCount > 0) {
-                    abnormalCount--;
-                    src += ')';
-                }
-            }
-            return new TypedInput('(' + src + ')', TYPE_BOOLEAN);
-        }
-        case 'op.expandCompare': {
-            const casted = node.bools.map((b) => this.descendInput(b).asUnknown());
-            const src = [];
-            for (let i = 0; i < casted.length - 1; i++) {
-                src.push("(" + casted[i] + node.operators[i][0] + casted[i + 1] + ")");
-            }
-            return new TypedInput('(' + src.join("&&") + ')', TYPE_BOOLEAN);
-        }
+        // Desktop fork (section 274): the modular comparison block's "===" (identical values; no single block)
+        case 'op.strictEquals':
+            return new TypedInput(`(${this.descendInput(node.left).asUnknown()} === ${this.descendInput(node.right).asUnknown()})`, TYPE_BOOLEAN);
 
         case 'sensing.answer':
             return new TypedInput(`runtime.ext_scratch3_sensing._answer`, TYPE_STRING);
@@ -2283,30 +2218,6 @@ class JSGenerator {
             if (known) this.restoreKnownVariables(joinKnownVariables(knownTrue, knownFalse));
             this.plainSetupKept = kept;
             this.plainSetupDone = false;
-            break;
-        }
-        case 'control.expandableIf': {
-            const branches = node.branches;
-            for (let i = 0; i < branches.length; i++) {
-                const branch = branches[i];
-                const isFirst = i === 0, isLast = i + 1 === branches.length;
-                const isElse = branch[0].value === null;
-
-                if (isFirst) this.source += `if `;
-                else if (isLast && isElse) this.source += `else `;
-                else this.source += `else if `;
-
-                if (branch === null) {
-                    if (isLast && isElse) this.source += `{}\n`;
-                    else this.source += `(false) {}\n`;
-                } else {
-                    if (isElse) this.source += `{\n`;
-                    else this.source += `(${this.descendInput(branch[0]).asBoolean()}) {\n`;
-
-                    if (branch[1][0]) this.descendStack(branch[1], new Frame(false, 'control.if'));
-                    this.source += `} `;
-                }
-            }
             break;
         }
         case 'control.trycatch':

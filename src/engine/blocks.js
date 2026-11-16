@@ -237,7 +237,9 @@ class Blocks {
         }
 
         // Empty C-block?
-        const input = block.inputs[inputName];
+        let input = block.inputs[inputName];
+        // Desktop fork (section 274): the modular "if" block names its first branch SUBSTACK1
+        if (typeof input === 'undefined' && branchNum === 1) input = block.inputs[inputName + '1'];
         return (typeof input === 'undefined') ? null : input.block;
     }
 

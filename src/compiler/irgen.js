@@ -9,6 +9,8 @@ const log = require('../util/log');
 const Clone = require('../util/clone');
 const {IntermediateScript, IntermediateRepresentation} = require('./intermediate');
 const compatBlocks = require('./compat-blocks');
+// Desktop fork (section 274)
+const ExpandableBlocks = require('../util/expandable-blocks');
 // Desktop fork (roadmap step 4): extension reporters and Booleans whose answer depends only on their inputs and
 // which change nothing (from block-inventory.json: "pure", no compiler code of their own), with their answer type.
 const pureExtensionBlocks = require('../extension-support/pure-blocks.json');
@@ -535,23 +537,9 @@ class ScriptTreeGenerator {
                 left: this.descendInputOfBlock(block, 'NUM1'),
                 right: this.descendInputOfBlock(block, 'NUM2')
             };
-        case 'operator_expandableMath': {
-            const menuOperators = block.mutation.menuvalues;
-            const inputCount = Number(block.mutation.inputcount);
-            const operations = [];
-            for (let i = 1; i <= inputCount; i++) {
-                const input = block.inputs["NUM" + i];
-                if (input.block == null) delete block.inputs[input.name];
-                else operations.push([
-                  this.descendInputOfBlock(block, input.name),
-                  menuOperators[i - 1]
-                ]);
-            }
-            return {
-                kind: 'op.expandmath',
-                operations
-            };
-        }
+        case 'operator_expandableMath':
+            // Desktop fork (section 274): built from the single blocks' nodes
+            return this.descendExpandableMath(block);
         case 'operator_equals':
             return {
                 kind: 'op.equals',
@@ -571,19 +559,9 @@ class ScriptTreeGenerator {
                 right: this.descendInputOfBlock(block, 'STRING2')
             };
         case "operators_expandablejoininputs":
-        case "operator_expandablejoininputs": {
-            const strings = [];
-            const inputCount = Number(block.mutation.inputcount);
-            for (let i = 1; i <= inputCount; i++) {
-                const input = block.inputs["INPUT" + i];
-                if (input.block == null) delete block.inputs[input.name];
-                else strings.push(this.descendInputOfBlock(block, input.name));
-            }
-            return {
-                kind: "op.expandjoin",
-                strings
-            };
-        }
+        case "operator_expandablejoininputs":
+            // Desktop fork (section 274): built from the single blocks' nodes
+            return this.descendExpandableJoin(block);
         case 'operator_length':
             return {
                 kind: 'op.length',
@@ -777,54 +755,10 @@ class ScriptTreeGenerator {
                 right: this.descendInputOfBlock(block, 'NUM2')
             };
         case 'operator_expandableBool':
-        case 'operator_expandableCompare': {
-            const mutation = block.mutation;
-            const menuvalues = mutation.menuvalues;
-            const isCompare = block.opcode.endsWith("Compare");
-
-            const toOperator = (value) => {
-                switch (value) {
-                    case 'n':
-                    case 'a': return '&&';
-                    case 'N':
-                    case 'o': return '||';
-                    case 'X':
-                    case 'x': return '!=';
-                    default: return '&&';
-                }
-            };
-
-            const toComparator = (value) => {
-                switch (value) {
-                    case 'l': return '<';
-                    case 'L': return '<=';
-                    case 'm': return '>';
-                    case 'M': return '>=';
-                    case 'e': return '==';
-                    case 'E': return '===';
-                    case 'n': return '!==';
-                    default: return '>';
-                }
-            };
-
-            const bools = [], operators = [];
-            for (let i = 1; i <= parseInt(mutation.inputcount); i++) {
-                bools.push(this.descendInputOfBlock(block, (isCompare ? 'INPUT' : 'BOOL') + i));
-                const operator = menuvalues[i - 1];
-                operators.push([
-                    isCompare ? toComparator(operator) : toOperator(operator),
-                    operator
-                ]);
-            }
-            operators[operators.length - 1] = ['', ''];
-
-            return {
-                kind: isCompare ? 'op.expandCompare' : 'op.expandBool',
-                isOptimized: mutation.optimize === 'true',
-                isNormal: !menuvalues.includes('n') && !menuvalues.includes('N') && !menuvalues.includes('X'),
-                bools, operators
-            };
-        }
+            // Desktop fork (section 274): built from the single blocks' nodes
+            return this.descendExpandableBool(block);
+        case 'operator_expandableCompare':
+            return this.descendExpandableCompare(block);
 
         case 'sensing_answer':
             return {
@@ -1261,36 +1195,9 @@ class ScriptTreeGenerator {
                 whenTrue: this.descendSubstack(block, 'SUBSTACK'),
                 whenFalse: this.descendSubstack(block, 'SUBSTACK2')
             };
-        case 'control_expandableIf': {
-            const branchCount = Number(block.mutation.branches);
-            const hasElse = block.mutation["ends-in-else"] === "true";
-            const branches = Array(branchCount).fill(null);
-
-            // run normally if no extra branches
-            if (branchCount < 3 && (branchCount === 1 ? true : hasElse)) {
-                return {
-                    kind: 'control.if',
-                    condition: this.descendInputOfBlock(block, 'BOOL1'),
-                    whenTrue: this.descendSubstack(block, 'SUBSTACK1'),
-                    whenFalse: hasElse ? this.descendSubstack(block, 'SUBSTACK2') : []
-                };
-            }
-
-            for (var i = 1; i < branchCount + 1; i++) {
-                const name = 'SUBSTACK' + i;
-                const boolName = 'BOOL' + i;
-                const boolValue = this.descendInputOfBlock(block, boolName);
-                if (boolValue.value === null) {
-                    boolValue.value = i === branchCount && hasElse ? null : false;
-                }
-                branches[i - 1] = [boolValue, this.descendSubstack(block, name)];
-            }
-
-            return {
-                kind: 'control.expandableIf',
-                branches
-            };
-        }
+        case 'control_expandableIf':
+            // Desktop fork (section 274): nested if / else blocks
+            return this.descendExpandableIf(block);
         case 'control_try_catch':
             return {
                 kind: 'control.trycatch',
@@ -2239,6 +2146,121 @@ class ScriptTreeGenerator {
         }
 
         return createVariableData('target', newVariable);
+    }
+
+    /**
+     * Desktop fork (section 274): the inputs of a modular operator block, NAME1 to NAMEn.
+     * @param {Block} block The block.
+     * @param {string} prefix The inputs' name without the number.
+     * @returns {Array<Node>} The inputs' nodes, in order.
+     */
+    descendExpandableInputs (block, prefix) {
+        const nodes = [];
+        const count = ExpandableBlocks.readCount(block.mutation);
+        for (let i = 1; i <= count; i++) nodes.push(this.descendInputOfBlock(block, prefix + i));
+        return nodes;
+    }
+
+    /**
+     * Desktop fork (section 274): the modular "+ - * / ^" block as nested add / subtract / multiply / divide / power
+     * nodes, in the usual order of operations, so it is compiled exactly like the single blocks.
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableMath (block) {
+        const operands = this.descendExpandableInputs(block, 'NUM');
+        if (operands.length === 0) return {kind: 'constant', value: 0};
+        // one input: its value as a number, like "( ) + 0"
+        if (operands.length === 1) return {kind: 'op.add', left: operands[0], right: {kind: 'constant', value: 0}};
+        const kinds = {'+': 'op.add', '-': 'op.subtract', '*': 'op.multiply', '/': 'op.divide', '^': 'op.power'};
+        const operators = ExpandableBlocks.readOperators(block.mutation, operands.length, '+');
+        return ExpandableBlocks.nestMath(operands, operators, (operator, left, right) => ({
+            kind: kinds[operator], left, right
+        }));
+    }
+
+    /**
+     * Desktop fork (section 274): the modular join block as nested join nodes.
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableJoin (block) {
+        const operands = this.descendExpandableInputs(block, 'INPUT');
+        if (operands.length === 0) return {kind: 'constant', value: ''};
+        let node = operands.length === 1 ?
+            {kind: 'op.join', left: operands[0], right: {kind: 'constant', value: ''}} :
+            operands[0];
+        for (let i = 1; i < operands.length; i++) node = {kind: 'op.join', left: node, right: operands[i]};
+        return node;
+    }
+
+    /**
+     * Desktop fork (section 274): the modular and / or / xor / nand / nor / xnor block as nested nodes of the single
+     * blocks (xor before and before or; the same negated operator throughout negates the whole chain once).
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableBool (block) {
+        const operands = this.descendExpandableInputs(block, 'BOOL');
+        if (operands.length === 0) return {kind: 'constant', value: false};
+        if (operands.length === 1) return {kind: 'op.not', operand: {kind: 'op.not', operand: operands[0]}};
+        const kinds = {a: 'op.and', o: 'op.or', x: 'op.xor', n: 'op.nand', N: 'op.nor', X: 'op.xnor'};
+        const operators = ExpandableBlocks.readOperators(block.mutation, operands.length, 'a');
+        return ExpandableBlocks.nestBool(operands, operators,
+            (operator, left, right) => ({kind: kinds[operator], left, right}),
+            operand => ({kind: 'op.not', operand}));
+    }
+
+    /**
+     * Desktop fork (section 274): the modular comparison block ("a < b < c" is "a < b and b < c") with the single
+     * comparison blocks' nodes (Scratch's comparison rules); "===" (identical values) has no single block.
+     * An input between two comparisons is worked out for both, as before.
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableCompare (block) {
+        const count = ExpandableBlocks.readCount(block.mutation);
+        if (count < 2) return {kind: 'constant', value: true};
+        const operators = ExpandableBlocks.readCompareOperators(block.mutation, count);
+        const not = operand => ({kind: 'op.not', operand});
+        let node = null;
+        for (let i = 1; i < count; i++) {
+            const left = this.descendInputOfBlock(block, 'INPUT' + i);
+            const right = this.descendInputOfBlock(block, 'INPUT' + (i + 1));
+            let compare;
+            switch (operators[i - 1]) {
+            case 'M': compare = not({kind: 'op.less', left, right}); break;
+            case 'l': compare = {kind: 'op.less', left, right}; break;
+            case 'L': compare = not({kind: 'op.greater', left, right}); break;
+            case 'e': compare = {kind: 'op.equals', left, right}; break;
+            case 'n': compare = not({kind: 'op.equals', left, right}); break;
+            case 'E': compare = {kind: 'op.strictEquals', left, right}; break;
+            default: compare = {kind: 'op.greater', left, right};
+            }
+            node = node ? {kind: 'op.and', left: node, right: compare} : compare;
+        }
+        return node;
+    }
+
+    /**
+     * Desktop fork (section 274): the modular if / else if / else block as nested if-else nodes.
+     * @param {Block} block The block.
+     * @returns {Node} The node.
+     */
+    descendExpandableIf (block) {
+        const branchCount = Math.max(1, Number(block.mutation && block.mutation.branches) || 1);
+        const hasElse = block.mutation && block.mutation['ends-in-else'] === 'true' && branchCount > 1;
+        const conditions = branchCount - (hasElse ? 1 : 0);
+        let whenFalse = hasElse ? this.descendSubstack(block, 'SUBSTACK' + branchCount) : [];
+        for (let i = conditions; i >= 1; i--) {
+            whenFalse = [{
+                kind: 'control.if',
+                condition: this.descendInputOfBlock(block, 'BOOL' + i),
+                whenTrue: this.descendSubstack(block, 'SUBSTACK' + i),
+                whenFalse
+            }];
+        }
+        return whenFalse[0];
     }
 
     /**

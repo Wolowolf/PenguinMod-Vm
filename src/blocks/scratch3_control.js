@@ -41,6 +41,8 @@ class Scratch3ControlBlocks {
             control_wait_until: this.waitUntil,
             control_if: this.if,
             control_if_else: this.ifElse,
+            // Desktop fork (section 274)
+            control_expandableIf: this.expandableIf,
             control_stop: this.stop,
             control_stop_sprite: this.stopSprite,
             control_create_clone_of: this.createClone,
@@ -250,6 +252,21 @@ class Scratch3ControlBlocks {
         } else {
             util.startBranch(2, false);
         }
+    }
+
+    // Desktop fork (section 274): the modular if / else if / else block, like nested "if else" blocks
+    expandableIf (args, util) {
+        const mutation = args.mutation || {};
+        const branchCount = Math.max(1, Number(mutation.branches) || 1);
+        const hasElse = mutation['ends-in-else'] === 'true' && branchCount > 1;
+        const conditions = branchCount - (hasElse ? 1 : 0);
+        for (let i = 1; i <= conditions; i++) {
+            if (Cast.toBoolean(args['BOOL' + i])) {
+                util.startBranch(i, false);
+                return;
+            }
+        }
+        if (hasElse) util.startBranch(branchCount, false);
     }
 
     stop (args, util) {

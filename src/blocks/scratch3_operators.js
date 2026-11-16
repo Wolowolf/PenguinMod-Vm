@@ -1,5 +1,7 @@
 const Cast = require('../util/cast.js');
 const MathUtil = require('../util/math-util.js');
+// Desktop fork (section 274)
+const ExpandableBlocks = require('../util/expandable-blocks');
 
 class Scratch3OperatorsBlocks {
     constructor (runtime) {
@@ -64,7 +66,12 @@ class Scratch3OperatorsBlocks {
             operator_code_to_character: this.codeToChar,
             operator_textStartsOrEndsWith: this.textStartsOrEndsWith,
             operator_countAppearTimes: this.countAppearTimes,
-            operator_textIncludesLetterFrom: this.textIncludesLetterFrom
+            operator_textIncludesLetterFrom: this.textIncludesLetterFrom,
+            // Desktop fork (section 274): the modular blocks, worked out with the single blocks' functions
+            operator_expandableMath: this.expandableMath,
+            operator_expandablejoininputs: this.expandableJoin,
+            operator_expandableBool: this.expandableBool,
+            operator_expandableCompare: this.expandableCompare
         };
     }
 
@@ -195,6 +202,57 @@ class Scratch3OperatorsBlocks {
     }
     replaceFirst (args) {
         return Cast.toString(args.text).replace(args.term, args.res);
+    }
+
+    // Desktop fork (section 274): the modular blocks with the single blocks' functions, nested like the compiler
+    // nests them (src/util/expandable-blocks.js)
+    _expandableInputs (args, prefix) {
+        const values = [];
+        const count = ExpandableBlocks.readCount(args.mutation);
+        for (let i = 1; i <= count; i++) values.push(args[prefix + i]);
+        return values;
+    }
+
+    expandableMath (args) {
+        const values = this._expandableInputs(args, 'NUM');
+        if (values.length === 0) return 0;
+        if (values.length === 1) return this.add({NUM1: values[0], NUM2: 0});
+        const functions = {'+': this.add, '-': this.subtract, '*': this.multiply, '/': this.divide, '^': this.power};
+        const operators = ExpandableBlocks.readOperators(args.mutation, values.length, '+');
+        return ExpandableBlocks.nestMath(values, operators,
+            (operator, left, right) => functions[operator].call(this, {NUM1: left, NUM2: right}));
+    }
+
+    expandableJoin (args) {
+        const values = this._expandableInputs(args, 'INPUT');
+        let result = values.length === 0 ? '' : this.join({STRING1: values[0], STRING2: ''});
+        for (let i = 1; i < values.length; i++) result = this.join({STRING1: result, STRING2: values[i]});
+        return result;
+    }
+
+    expandableBool (args) {
+        const values = this._expandableInputs(args, 'BOOL');
+        if (values.length === 0) return false;
+        if (values.length === 1) return Cast.toBoolean(values[0]);
+        const functions = {a: this.and, o: this.or, x: this.xor, n: this.nand, N: this.nor, X: this.xnor};
+        const operators = ExpandableBlocks.readOperators(args.mutation, values.length, 'a');
+        return ExpandableBlocks.nestBool(values, operators,
+            (operator, left, right) => functions[operator].call(this, {OPERAND1: left, OPERAND2: right}),
+            value => this.not({OPERAND: value}));
+    }
+
+    expandableCompare (args) {
+        const values = this._expandableInputs(args, 'INPUT');
+        const operators = ExpandableBlocks.readCompareOperators(args.mutation, values.length);
+        const functions = {m: this.gt, M: this.gtorequal, l: this.lt, L: this.ltorequal, e: this.equals, n: this.notequals};
+        for (let i = 0; i < values.length - 1; i++) {
+            const operator = operators[i];
+            const holds = operator === 'E' ?
+                values[i] === values[i + 1] :
+                functions[operator].call(this, {OPERAND1: values[i], OPERAND2: values[i + 1]});
+            if (!holds) return false;
+        }
+        return true;
     }
 
     add (args) {
