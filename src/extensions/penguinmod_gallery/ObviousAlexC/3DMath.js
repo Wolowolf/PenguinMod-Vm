@@ -1875,7 +1875,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       a = this.parse(a);
       b = this.parse(b);
       if (a && b) {
-        return this.stringify([a[0] - b[0], a[1] - b[1], a[2] - b[2]]);
+        return this.stringify([a[0] - b[0], a[1] - b[1]]); // Desktop fork (section 284): two numbers (was a third, NaN, from a[2] - b[2])
       }
       return this.stringify([0, 0]);
     }
