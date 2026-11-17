@@ -5,6 +5,10 @@
 // quaternions written [w, x, y, z] like this extension's vectors, marked "Desktop fork (section 259)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 283): V3 / V2 + - * / and the quaternion operation are singles of the shared modular maker
+// (`modular` with `locked`), each with a modular block worked out as a chain of the singles' functions; "conjugate"
+// is its own block. Marked "Desktop fork (section 283)".
+const ExpandableBlocks = require('../../../util/expandable-blocks');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // 3D Math by ObviousAlexC 
 // Normalize, angle, vector projection, and reflection blocks by LSPECTRONIZTAR
@@ -28,6 +32,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     returnParsed: 2,
   };
   let wasObject = false;
+  // Desktop fork (section 283): the modular blocks' symbols (text, code); each code is also one single block.
+  // * and / before + and -, equal ones from the left (quaternion * is not commutative: the order is kept).
+  const V3_MODULAR = { prefix: "a", shadow: "text", label: "V3:", symbols: [["+", "+"], ["-", "-"], ["*", "*"], ["/", "/"]] };
+  const V2_MODULAR = { ...V3_MODULAR, label: "V2:" };
+  const QUAT_MODULAR = { prefix: "a", shadow: "text", label: "Q:", symbols: [["+", "+"], ["-", "-"], ["*", "*"]] };
+  const CHAIN_LEVELS = { "+": 1, "-": 1, "*": 2, "/": 2 };
+  const QUAT_LEVELS = { "+": 1, "-": 1, "*": 2 };
+  const V3_SINGLES = { "+": "addV3", "-": "subV3", "*": "mulV3", "/": "divV3" };
+  const V2_SINGLES = { "+": "addV2", "-": "subV2", "*": "mulV2", "/": "divV2" };
   const circularReplacer = () => {
     const stack = new Set();
     return function replacer(_, value) {
@@ -126,6 +139,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "addV3",
+            modular: { ...V3_MODULAR, locked: "+" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] + [b]",
             arguments: {
@@ -136,6 +150,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "subV3",
+            modular: { ...V3_MODULAR, locked: "-" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] - [b]",
             arguments: {
@@ -146,6 +161,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "mulV3",
+            modular: { ...V3_MODULAR, locked: "*" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] * [b]",
             arguments: {
@@ -156,12 +172,20 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "divV3",
+            modular: { ...V3_MODULAR, locked: "/" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] / [b]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
             },
+          },
+          {
+            // Desktop fork (section 283): V3 + - * / chained
+            disableMonitor: true,
+            opcode: "v3Modular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: V3_MODULAR,
           },
           {
             disableMonitor: true,
@@ -330,6 +354,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatOperation",
+            modular: { ...QUAT_MODULAR, locked: true },
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: [a] [operation] [b]",
             arguments: {
@@ -339,6 +364,13 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
           },
           {
+            // Desktop fork (section 283): Q + - * chained
+            disableMonitor: true,
+            opcode: "quatModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: QUAT_MODULAR,
+          },
+          {
             disableMonitor: true,
             opcode: "quatScale",
             blockType: Scratch.BlockType.REPORTER,
@@ -346,6 +378,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
               s: { type: Scratch.ArgumentType.NUMBER, defaultValue: 2 },
+            },
+          },
+          {
+            // Desktop fork (section 283): was "conjugate" in the function menu
+            disableMonitor: true,
+            opcode: "quatConjugate",
+            blockType: Scratch.BlockType.REPORTER,
+            text: "Q: conjugate of [a]",
+            arguments: {
+              a: { type: Scratch.ArgumentType.STRING, defaultValue: "[1,0,0,0]" },
             },
           },
           {
@@ -463,6 +505,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "addV2",
+            modular: { ...V2_MODULAR, locked: "+" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] + [b]",
             arguments: {
@@ -473,6 +516,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "subV2",
+            modular: { ...V2_MODULAR, locked: "-" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] - [b]",
             arguments: {
@@ -483,6 +527,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "mulV2",
+            modular: { ...V2_MODULAR, locked: "*" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] * [b]",
             arguments: {
@@ -493,12 +538,20 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "divV2",
+            modular: { ...V2_MODULAR, locked: "/" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] / [b]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
             },
+          },
+          {
+            // Desktop fork (section 283): V2 + - * / chained
+            disableMonitor: true,
+            opcode: "v2Modular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: V2_MODULAR,
           },
           {
             disableMonitor: true,
@@ -910,15 +963,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         menus: {
           // Desktop fork (section 259): the quaternion blocks' menus
           quatOperationMenu: {
-            items: [
-              { text: "+", value: "add" },
-              { text: "-", value: "subtract" },
-              { text: "*", value: "multiply" },
-            ],
+            items: ["+", "-", "*"] /* Desktop fork (section 283): the modular symbols */,
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           quatFunctionMenu: {
-            items: ["conjugate", "inverse", "normalize", "square root", "exp", "log"],
+            items: ["inverse", "normalize", "square root", "exp", "log"],
             acceptReporters: false /* Desktop fork (section 265): only its own items work */,
           },
           quatPartMenu: {
@@ -1622,9 +1671,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       a = this.quatOf(a);
       b = this.quatOf(b);
       switch (Scratch.Cast.toString(operation)) {
-        case "add": return this.stringify(a.map((n, i) => n + b[i]));
-        case "subtract": return this.stringify(a.map((n, i) => n - b[i]));
-        case "multiply": return this.stringify(this.quatMultiply(a, b));
+        case "+": return this.stringify(a.map((n, i) => n + b[i]));
+        case "-": return this.stringify(a.map((n, i) => n - b[i]));
+        case "*": return this.stringify(this.quatMultiply(a, b));
       }
       return this.stringify([0, 0, 0, 0]);
     }
@@ -1632,13 +1681,30 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       s = Scratch.Cast.toNumber(s);
       return this.stringify(this.quatOf(a).map((n) => n * s));
     }
+    // Desktop fork (section 283): the modular blocks, chains of the single blocks' functions. The singles' inputs
+    // are converted to text by the extension wrapper, so each link gets text too (also the answer of the link before).
+    chainOf(args, levels, empty, combine) {
+      return ExpandableBlocks.runChain(args, { prefix: "a", levels, convert: Scratch.Cast.toString, empty },
+        (symbol, a, b) => combine(symbol, Scratch.Cast.toString(a), Scratch.Cast.toString(b)));
+    }
+    v3Modular(args) {
+      return this.chainOf(args, CHAIN_LEVELS, "[0,0,0]", (symbol, a, b) => this[V3_SINGLES[symbol]]({ a, b }));
+    }
+    v2Modular(args) {
+      return this.chainOf(args, CHAIN_LEVELS, "[0,0]", (symbol, a, b) => this[V2_SINGLES[symbol]]({ a, b }));
+    }
+    quatModular(args) {
+      return this.chainOf(args, QUAT_LEVELS, "[0,0,0,0]", (operation, a, b) => this.quatOperation({ a, operation, b }));
+    }
+    quatConjugate({ a }) {
+      const q = this.quatOf(a);
+      return this.stringify([q[0], -q[1], -q[2], -q[3]]);
+    }
     quatFunction({ function: fn, a }) {
       const q = this.quatOf(a);
       const vecMagsq = q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
       const magsq = q[0] * q[0] + vecMagsq;
       switch (Scratch.Cast.toString(fn)) {
-        case "conjugate":
-          return this.stringify([q[0], -q[1], -q[2], -q[3]]);
         case "inverse":
           return this.stringify(this.quatInverse(q));
         case "normalize":

@@ -9,11 +9,17 @@
 // Desktop fork (extension merges): Perlin Noise (the built-in iygPerlin) is merged in as the "Noise" blocks; its
 // library is required here, outside the wrapped gallery code (which hides require).
 const MersenneTwister = require('mersenne-twister');
+// Desktop fork (section 283): '50% chance of [TXT] or [TXT2]' is the single of the modular 'one of' block (shared maker,
+// `modular` with `locked`); the modular one picks each of its inputs with the same chance from runtime.pmRandom.
+const ExpandableBlocks = require('../../../util/expandable-blocks');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function(Scratch) {
 // Dado (https://icons8.com/icon/qAN1P79CQdvH/dado) icon by Icons8 (https://icons8.com/)
 
 // reminder to add a space before any block text that starts with a number
+
+// Desktop fork (section 283): the 'one of' blocks' settings (no symbols: 'or' between the inputs)
+const ONE_OF_MODULAR = { prefix: 'TXT', shadow: 'text', label: 'one of', sep: 'or' };
 
 let defaultChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 let characters = defaultChars;
@@ -159,6 +165,7 @@ class RandomUtils {
         },
         {
           opcode: 'rndtext',
+          modular: { ...ONE_OF_MODULAR, locked: '' },
           blockType: Scratch.BlockType.REPORTER,
           text: ' 50% chance of [TXT] or [TXT2]',
           arguments: {
@@ -171,6 +178,12 @@ class RandomUtils {
               defaultValue: 'world!'
             }
           }
+        },
+        {
+          // Desktop fork (section 283): one of any number of values, each with the same chance
+          opcode: 'oneOf',
+          blockType: Scratch.BlockType.REPORTER,
+          modular: ONE_OF_MODULAR
         },
         {
           opcode: 'rndchance',
@@ -317,6 +330,15 @@ class RandomUtils {
     } else {
       return args.TXT2 // 50% chance
     }
+  }
+
+  // Desktop fork (section 283): input n of the block's count, each with the same chance (for 2 inputs the same pick
+  // as rndtext for the same random number: below 0.5 the first). The single's inputs are converted to text by the
+  // extension wrapper; only the first two of this block are declared, so the picked one is converted here.
+  oneOf(args) {
+    const count = ExpandableBlocks.readCount(args.mutation);
+    if (count === 0) return '';
+    return Scratch.Cast.toString(args['TXT' + (Math.floor(Scratch.vm.runtime.pmRandom() * count) + 1)]);
   }
 
   setseed(args) {
