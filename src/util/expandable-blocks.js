@@ -104,6 +104,33 @@ const runChain = (args, options, combine) => {
 };
 
 /**
+ * Desktop fork (section 282): a modular comparison block of an extension ("a < b < c" is "a < b and b < c", like
+ * the core one): every input is worked out (they are the block function's arguments), then each two neighbours are
+ * compared with `holds` from the left; the first pair that fails answers false.
+ * @param {object} args the block function's arguments (inputs by name and `mutation`)
+ * @param {object} options prefix (input name prefix), symbols (the symbol codes), fallback (code used for a missing
+ *   or unknown one; default: the first symbol), convert (applied to each input)
+ * @param {function(string, *, *): boolean} holds compares two neighbours with one symbol
+ * @returns {boolean} whether every comparison holds (true for fewer than 2 inputs)
+ */
+const runCompareChain = (args, options, holds) => {
+    const count = readCount(args.mutation);
+    if (count < 2) return true;
+    const fallback = options.fallback || options.symbols[0];
+    const values = [];
+    for (let i = 1; i <= count; i++) {
+        const value = args[options.prefix + i];
+        values.push(options.convert ? options.convert(value) : value);
+    }
+    const operators = readOperators(args.mutation, count, fallback)
+        .map(o => (options.symbols.includes(o) ? o : fallback));
+    for (let i = 0; i < count - 1; i++) {
+        if (!holds(operators[i], values[i], values[i + 1])) return false;
+    }
+    return true;
+};
+
+/**
  * Desktop fork (section 279): the modular "check" block (control_expandableSwitch). Its mutation has `branches`
  * (all branches), `ends-in-else` (the last one is "otherwise") and `menuvalues` (one character per "is" branch:
  * i = is, n = is, also run next).
@@ -138,6 +165,7 @@ module.exports = {
     readIfReturnPairs,
     readSwitch,
     runChain,
+    runCompareChain,
     readCount,
     readOperators,
     readCompareOperators,

@@ -1100,6 +1100,7 @@
   "qxsckbignumber_div",
   "qxsckbignumber_pow",
   "qxsckbignumber_mod",
+  "qxsckbignumber_mathModular",
   "qxsckbignumber_unaryOper",
   "qxsckbignumber_random",
   "randomutils_seedednumber",

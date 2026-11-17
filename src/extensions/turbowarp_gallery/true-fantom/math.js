@@ -3,6 +3,10 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 282): "≈" and "≉" are single blocks of the shared modular maker (`modular` with `locked`), and
+// "almost_equal_modular" is their own modular comparison block (only these two symbols), chained like the core
+// comparison ("a ≈ b ≈ c" is "a ≈ b and b ≈ c") with the single blocks' functions.
+const ExpandableBlocks = require('../../../util/expandable-blocks');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Math
 // ID: truefantommath
@@ -57,6 +61,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     return false;
   };
 
+  // Desktop fork (section 282)
+  const APPROX_MODULAR = { prefix: "VALUE", shadow: "text", symbols: [["≈", "a"], ["≉", "n"]] };
   class ScratchMath {
     getInfo() {
       return {
@@ -83,6 +89,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           "---",
           {
             opcode: "almost_equal_block",
+            modular: { ...APPROX_MODULAR, locked: "a" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[A] ≈ [B]",
             arguments: {
@@ -99,6 +106,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "not_almost_equal_block",
+            modular: { ...APPROX_MODULAR, locked: "n" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[A] ≉ [B]",
             arguments: {
@@ -111,6 +119,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 defaultValue: 50,
               },
             },
+            extensions: ["colours_operators"],
+          },
+          {
+            opcode: "almost_equal_modular",
+            blockType: Scratch.BlockType.BOOLEAN,
+            modular: APPROX_MODULAR,
             extensions: ["colours_operators"],
           },
           "---",
@@ -235,6 +249,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     not_almost_equal_block({ A, B }) {
       const c = cast.compare(A, B);
       return !(c <= 0.5 && c >= -0.5);
+    }
+    // Desktop fork (section 282)
+    almost_equal_modular(args) {
+      return ExpandableBlocks.runCompareChain(
+        args,
+        { prefix: APPROX_MODULAR.prefix, symbols: ["a", "n"], convert: cast.toString },
+        (symbol, A, B) => (symbol === "n" ? this.not_almost_equal_block({ A, B }) : this.almost_equal_block({ A, B }))
+      );
     }
     exactly_cont_block({ A, B }) {
       return cast.toString(A).includes(cast.toString(B));

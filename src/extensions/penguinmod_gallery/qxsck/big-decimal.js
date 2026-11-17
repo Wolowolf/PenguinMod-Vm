@@ -6,8 +6,14 @@
 // bitwise and / or / xor / shifts / not in the two operation menus, from TurboWarp's BigInt, which was removed).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 282): the two-input maths, comparison, max / min and bitwise blocks are single blocks of the
+// shared modular maker (`modular` with `locked`), each with a modular block worked out as a chain of the single
+// blocks' functions (so big numbers keep this extension's own maths): + - * / mod ^ like the core modular maths,
+// < ≤ > ≥ = ≠ chained like the core comparison, max / min from the left, and / or / xor / << / >> in JavaScript's order.
+// "to the power of" shows "^". "[OPER] of [A] and [B]" became "A (max / min) B" and the new "A (and / or / xor / << / >>) B".
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+const ExpandableBlocks = require('../../../util/expandable-blocks');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function (Scratch) {
   "use strict";
@@ -24,7 +30,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
       "round [NUM] to [NUM2] decimal places": '四舍五入 [NUM] 到第 [NUM2] 位小数',
       "[OPER] of [NUM]": '[OPER] ( [NUM] )',
-      '[OPER] of [NUM] and [NUM2]': '[OPER] ( [NUM] , [NUM2] )',
       "pick random [NUM] to [NUM2]": '获取从 [NUM] 到 [NUM2] 的随机数',
     },
   });
@@ -59,14 +64,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     try { return BigInt(Math.trunc(x)); } catch (e) { return 0n; }
   };
   // a shift that would make a number too big to hold answers "NaN" instead of stopping the script with an error
+  // Desktop fork (section 282): the options are the symbols of the bitwise single and modular blocks
   const bitwise = (oper, a, b) => {
     try {
       switch (oper) {
-        case "bitwise and": return (a & b).toString();
-        case "bitwise or": return (a | b).toString();
-        case "bitwise xor": return (a ^ b).toString();
-        case "shift left": return (a << b).toString();
-        case "shift right": return (a >> b).toString();
+        case "and": return (a & b).toString();
+        case "or": return (a | b).toString();
+        case "xor": return (a ^ b).toString();
+        case "<<": return (a << b).toString();
+        case ">>": return (a >> b).toString();
       }
     } catch (e) {
       return "NaN";
@@ -83,6 +89,28 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
     return regex;
   };
+  // Desktop fork (section 282): the modular blocks' symbols (text, code); each code is also one single block.
+  const MATH_MODULAR = {
+    prefix: "NUM",
+    shadow: "text",
+    symbols: [["+", "+"], ["-", "-"], ["*", "*"], ["/", "/"], ["mod", "%"], ["^", "^"]],
+  };
+  const MATH_SINGLES = { "+": "add", "-": "sub", "*": "mul", "/": "div", "%": "mod", "^": "pow" };
+  const MATH_LEVELS = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "^": 3 };
+  const COMPARE_MODULAR = {
+    prefix: "NUM",
+    shadow: "text",
+    symbols: [[">", "m"], ["≥", "M"], ["<", "l"], ["≤", "L"], ["=", "e"], ["≠", "n"]],
+  };
+  const COMPARE_SINGLES = { m: "gt", M: "ge", l: "lt", L: "le", e: "eq", n: "neq" };
+  const MAXMIN_MODULAR = { prefix: "NUM", shadow: "text", symbols: [["max", "M"], ["min", "m"]] };
+  const BITWISE_MODULAR = {
+    prefix: "NUM",
+    shadow: "text",
+    symbols: [["and", "a"], ["or", "o"], ["xor", "x"], ["<<", "l"], [">>", "r"]],
+  };
+  const BITWISE_LEVELS = { o: 1, x: 2, a: 3, l: 4, r: 4 };
+  const textOf = (modular, code) => modular.symbols.find((symbol) => symbol[1] === code)[0];
   class bigNumber {
     constructor() {
       this.maxPrecision = 100;
@@ -314,6 +342,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "add",
+            modular: { ...MATH_MODULAR, locked: "+" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[NUM] + [NUM2]",
             arguments: {
@@ -329,6 +358,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "sub",
+            modular: { ...MATH_MODULAR, locked: "-" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[NUM] - [NUM2]",
             arguments: {
@@ -344,6 +374,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "mul",
+            modular: { ...MATH_MODULAR, locked: "*" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[NUM] * [NUM2]",
             arguments: {
@@ -359,6 +390,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "div",
+            modular: { ...MATH_MODULAR, locked: "/" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[NUM] / [NUM2]",
             arguments: {
@@ -374,8 +406,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "pow",
+            modular: { ...MATH_MODULAR, locked: "^" },
             blockType: Scratch.BlockType.REPORTER,
-            text: "[NUM] to the power of [NUM2]",
+            text: "[NUM] ^ [NUM2]",
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,
@@ -389,6 +422,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "mod",
+            modular: { ...MATH_MODULAR, locked: "%" },
             blockType: Scratch.BlockType.REPORTER,
             text: "[NUM] mod [NUM2]",
             arguments: {
@@ -403,11 +437,17 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
           },
           {
+            opcode: "mathModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: MATH_MODULAR,
+          },
+          {
             blockType: "label",
             text: this.formatMessage("🔎Logic"),
           },
           {
             opcode: "lt",
+            modular: { ...COMPARE_MODULAR, locked: "l" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] < [NUM2]",
             arguments: {
@@ -423,6 +463,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "le",
+            modular: { ...COMPARE_MODULAR, locked: "L" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] ≤ [NUM2]",
             arguments: {
@@ -438,6 +479,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "gt",
+            modular: { ...COMPARE_MODULAR, locked: "m" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] > [NUM2]",
             arguments: {
@@ -453,6 +495,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "ge",
+            modular: { ...COMPARE_MODULAR, locked: "M" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] ≥ [NUM2]",
             arguments: {
@@ -468,6 +511,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "eq",
+            modular: { ...COMPARE_MODULAR, locked: "e" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] = [NUM2]",
             arguments: {
@@ -483,6 +527,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "neq",
+            modular: { ...COMPARE_MODULAR, locked: "n" },
             blockType: Scratch.BlockType.BOOLEAN,
             text: "[NUM] ≠ [NUM2]",
             arguments: {
@@ -495,6 +540,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 defaultValue: "0.2",
               },
             },
+          },
+          {
+            opcode: "compareModular",
+            blockType: Scratch.BlockType.BOOLEAN,
+            modular: COMPARE_MODULAR,
           },
           {
             blockType: "label",
@@ -517,22 +567,53 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "binaryOper",
+            modular: { ...MAXMIN_MODULAR, locked: true },
             blockType: Scratch.BlockType.REPORTER,
-            text: this.formatMessage("[OPER] of [NUM] and [NUM2]"),
+            text: "[NUM] [OPER] [NUM2]",
             arguments: {
-              OPER: {
-                type: Scratch.ArgumentType.STRING,
-                menu: "binaryOper.List",
-              },
               NUM: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "-0.1",
+              },
+              OPER: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "binaryOper.List",
               },
               NUM2: {
                 type: Scratch.ArgumentType.STRING,
                 defaultValue: "0.1",
               },
             },
+          },
+          {
+            opcode: "maxMinModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: MAXMIN_MODULAR,
+          },
+          {
+            opcode: "bitwiseOper",
+            modular: { ...BITWISE_MODULAR, locked: true },
+            blockType: Scratch.BlockType.REPORTER,
+            text: "[NUM] [OPER] [NUM2]",
+            arguments: {
+              NUM: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "12",
+              },
+              OPER: {
+                type: Scratch.ArgumentType.STRING,
+                menu: "bitwiseOper.List",
+              },
+              NUM2: {
+                type: Scratch.ArgumentType.STRING,
+                defaultValue: "10",
+              },
+            },
+          },
+          {
+            opcode: "bitwiseModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: BITWISE_MODULAR,
           },
           {
             opcode: "round",
@@ -570,7 +651,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             items: ["abs", "ceil", "floor", 'trunc', 'sqrt', "bitwise not"], // Desktop fork (section 260): + bitwise not
           },
           "binaryOper.List": {
-            items: ["max", "min", "bitwise and", "bitwise or", "bitwise xor", "shift left", "shift right"], // Desktop fork (section 260): + bitwise
+            items: ["max", "min"], // Desktop fork (section 282): bitwise options moved to their own block
+          },
+          "bitwiseOper.List": {
+            items: ["and", "or", "xor", "<<", ">>"], // Desktop fork (section 282)
           },
         },
       };
@@ -604,6 +688,35 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
     mod(args) {
       return this.modFunc(args.NUM, args.NUM2);
+    }
+    // Desktop fork (section 282): the modular blocks, chains of the single blocks' functions
+    mathModular(args) {
+      return ExpandableBlocks.runChain(
+        args,
+        { prefix: MATH_MODULAR.prefix, levels: MATH_LEVELS, convert: Scratch.Cast.toString, rightAssociative: (o) => o === "^", empty: "0" },
+        (symbol, NUM, NUM2) => this[MATH_SINGLES[symbol]]({ NUM, NUM2 })
+      );
+    }
+    compareModular(args) {
+      return ExpandableBlocks.runCompareChain(
+        args,
+        { prefix: COMPARE_MODULAR.prefix, symbols: Object.keys(COMPARE_SINGLES), convert: Scratch.Cast.toString },
+        (symbol, NUM, NUM2) => this[COMPARE_SINGLES[symbol]]({ NUM, NUM2 })
+      );
+    }
+    maxMinModular(args) {
+      return ExpandableBlocks.runChain(
+        args,
+        { prefix: MAXMIN_MODULAR.prefix, levels: { M: 1, m: 1 }, convert: Scratch.Cast.toString, empty: "0" },
+        (symbol, NUM, NUM2) => this.binaryOper({ OPER: textOf(MAXMIN_MODULAR, symbol), NUM, NUM2 })
+      );
+    }
+    bitwiseModular(args) {
+      return ExpandableBlocks.runChain(
+        args,
+        { prefix: BITWISE_MODULAR.prefix, levels: BITWISE_LEVELS, fallback: "a", convert: Scratch.Cast.toString, empty: "0" },
+        (symbol, NUM, NUM2) => this.bitwiseOper({ OPER: textOf(BITWISE_MODULAR, symbol), NUM, NUM2 })
+      );
     }
 
     // Desktop fork (section 259): the comparisons compare two whole numbers directly
@@ -683,9 +796,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           return this.maxMinFunc('max', str, str2);
         case 'min':
           return this.maxMinFunc('min', str, str2);
-        default: // Desktop fork (section 260)
-          return bitwise(oper, bigIntOf(args.NUM), bigIntOf(args.NUM2));
       }
+    }
+    // Desktop fork (section 260, 282): the bitwise options, now their own block
+    bitwiseOper(args) {
+      return bitwise(args.OPER, bigIntOf(args.NUM), bigIntOf(args.NUM2));
     }
     round(args) {
       return this.roundFunc(args.NUM, args.NUM2);
