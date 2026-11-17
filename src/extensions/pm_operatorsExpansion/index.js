@@ -40,10 +40,14 @@ class pmOperatorsExpansion {
           arguments: {
             ONE: {
               type: ArgumentType.STRING,
+              // Desktop fork (section 280): passed on as it is also when interpreted (the compiled code always did);
+              // converted to text, the number 0 and "false" counted as filled in
+              exemptFromNormalization: true,
               defaultValue: "a"
             },
             TWO: {
               type: ArgumentType.STRING,
+              exemptFromNormalization: true,
               defaultValue: "b"
             }
           }
@@ -61,6 +65,7 @@ class pmOperatorsExpansion {
             },
             TWO: {
               type: ArgumentType.STRING,
+              exemptFromNormalization: true,
               defaultValue: "perfect!"
             }
           }
@@ -578,6 +583,10 @@ class pmOperatorsExpansion {
    * @returns {object} functions that create data for compiled blocks.
    */
   getCompileInfo() {
+    // Desktop fork (section 280): typed text stays text, as the interpreter passes it on. asUnknown() writes typed
+    // text that looks like a number as a number: "-2.5" was answered as the number -2.5, and "0" became the number
+    // 0, which "or else" then treated as empty. Anything else (a variable, another block) is passed on unchanged.
+    const asGiven = input => (typeof input.constantValue === 'string' ? input.asString() : input.asUnknown());
     return {
       ir: {
         orIfFalsey: (generator, block) => ({
@@ -609,8 +618,8 @@ class pmOperatorsExpansion {
           TypedInput,
           TYPE_UNKNOWN
         }) => {
-          const num1 = compiler.descendInput(node.one).asUnknown();
-          const num2 = compiler.descendInput(node.two).asUnknown();
+          const num1 = asGiven(compiler.descendInput(node.one));
+          const num2 = asGiven(compiler.descendInput(node.two));
 
           return new TypedInput(`(${num1} || ${num2})`, TYPE_UNKNOWN);
         },
@@ -619,7 +628,7 @@ class pmOperatorsExpansion {
           TYPE_UNKNOWN
         }) => {
           const num1 = compiler.descendInput(node.one).asBoolean();
-          const num2 = compiler.descendInput(node.two).asUnknown();
+          const num2 = asGiven(compiler.descendInput(node.two));
 
           return new TypedInput(`(${num1} && ${num2})`, TYPE_UNKNOWN);
         },
