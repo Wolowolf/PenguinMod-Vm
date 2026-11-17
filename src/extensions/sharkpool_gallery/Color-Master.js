@@ -7,6 +7,9 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 285): a modular "mix [A] and [B] and …" block (shared maker, `modular`): every colour has the
+// same share; for two colours the same answer as "mix [A] with [B] by (50)%". The single keeps its percentage.
+const ExpandableBlocks = require('../../util/expandable-blocks');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Color Master
 // ID: SPcolorMaster
@@ -72,6 +75,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               COLOR: { type: Scratch.ArgumentType.COLOR, defaultValue: "#ff0000" },
               COLOR2: { type: Scratch.ArgumentType.COLOR, defaultValue: "#0000ff" },
               NUM: { type: Scratch.ArgumentType.NUMBER, defaultValue: 50 }
+            }
+          },
+          {
+            // Desktop fork (section 285): any number of colours (−/+), each with the same share
+            opcode: "mixModular",
+            blockType: Scratch.BlockType.REPORTER,
+            modular: {
+              prefix: "COLOR", shadow: "colour_picker", label: "mix", sep: "and",
+              values: ["#ff0000", "#0000ff", "#00ff00", "#ffff00", "#ff00ff", "#00ffff"]
             }
           },
           {
@@ -280,6 +292,19 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         g: (off[0] * rgb0.g) + (off[1] * rgb1.g),
         b: (off[0] * rgb0.b) + (off[1] * rgb1.b)
       });
+    }
+
+    // Desktop fork (section 285): the average of the colours' red, green and blue (alpha left out, like mergeHex,
+    // whose 50% gives the same: halves of whole numbers are exact), through the same converters
+    mixModular(args) {
+      const count = ExpandableBlocks.readCount(args.mutation);
+      if (count === 0) return this.RGBA2hex({ r: 0, g: 0, b: 0 });
+      const sum = { r: 0, g: 0, b: 0 };
+      for (let i = 1; i <= count; i++) {
+        const rgb = this.hex2RGBA(Scratch.Cast.toString(args["COLOR" + i]));
+        sum.r += rgb.r; sum.g += rgb.g; sum.b += rgb.b;
+      }
+      return this.RGBA2hex({ r: sum.r / count, g: sum.g / count, b: sum.b / count });
     }
 
     invertHex(args) {

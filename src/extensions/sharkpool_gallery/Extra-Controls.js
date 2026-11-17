@@ -16,6 +16,9 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+// Desktop fork (section 285): "simultaneously run" has a modular version (shared maker, `modular` with `branches`):
+// + adds branches; all start at the same time like the single's two, and the block waits until all have finished.
+const ExpandableBlocks = require('../../util/expandable-blocks');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Extra Controls
 // ID: SPadvControl
@@ -172,6 +175,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.CONDITIONAL,
             text: "simultaneously run",
             branchCount: 2
+          },
+          {
+            // Desktop fork (section 285): any number of branches (−/+), waits until all have finished
+            opcode: "simuRunModular",
+            extensions: ["colours_control"],
+            blockType: Scratch.BlockType.CONDITIONAL,
+            branchCount: 2,
+            modular: { prefix: "SUBSTACK", branches: true, label: "simultaneously run and wait" }
           },
           "---",
           {
@@ -500,6 +511,26 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
+    // Desktop fork (section 285): the modular block starts its branches as simuRun does (each a new thread with the
+    // script's keys, the earlier ones paused until the last is pushed), skipping empty branches, and waits until
+    // none of them runs any more (checked once per frame, like "broadcast and wait").
+    simuRunModular(args, util) {
+      if (util.stackFrame.SPsimuThreads === undefined) {
+        const count = ExpandableBlocks.readCount(args.mutation);
+        const threads = [];
+        for (let i = 1; i <= count; i++) {
+          const branch = this.getThisBlock(util, true, i);
+          if (!branch) continue;
+          const newThread = this.pushThread(branch, util, { stackClick: false });
+          newThread.status = 5;
+          this.addMissKeys(util.thread, newThread);
+          threads.push(newThread);
+        }
+        threads.forEach(newThread => { newThread.status = 0; });
+        util.stackFrame.SPsimuThreads = threads;
+      }
+      if (util.stackFrame.SPsimuThreads.some(newThread => runtime.isActiveThread(newThread))) util.yieldTick();
+    }
 
     doThenWhile(args, util) {
       if (util.stackFrame.whileThread === undefined) {

@@ -288,6 +288,7 @@
       "newThreadAdv": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "threadArgs": {"type":"reporter","pure":false,"reads":["script"],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"direct":true},
       "simuRun": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
+      "simuRunModular": {"type":"conditional","pure":false,"reads":["blocks","script"],"writes":["threads"],"time":false,"random":false,"waits":true,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "doThenWhile": {"type":"loop","pure":false,"reads":["blocks","script","threads"],"writes":["script","threads"],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":null,"compiled":false},
       "ifPart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":[],"stateWrites":["shared"],"page":false,"answer":null,"compiled":true},
       "elsePart": {"type":"conditional","pure":false,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":true,"stateReads":["shared"],"stateWrites":[],"page":false,"answer":null,"compiled":true},
@@ -347,6 +348,7 @@
       "convPen": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "changeHexAtt": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "mergeHex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
+      "mixModular": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "invertHex": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false},
       "sameColor": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "randomHex": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"answer is an object when the SPjson extension is loaded","direct":true},
@@ -1622,11 +1624,13 @@
     "note": "inputs not cast",
     "blocks": {
       "line_section": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
+      "pathLength": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "ray_direction2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "vertical": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "triangle": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "triangle_s": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"adds raw inputs: text sides are joined as text first"},
       "quadrilateral": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
+      "polygon": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "graph": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "round": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"nothing for an unknown option"}
     }

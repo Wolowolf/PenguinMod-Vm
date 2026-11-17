@@ -784,6 +784,21 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Desktop fork (section 285): a modular block's `tail` text ("'s [CS]") as [text before it, argument name]
+     * pairs, one per argument.
+     * @param {string|undefined} tail the tail text
+     * @returns {Array<Array<string>>} the pairs
+     */
+    static _modularTail (tail) {
+        if (typeof tail !== 'string') return [];
+        const pairs = [];
+        const pattern = /([^[]*)\[(.+?)]/g;
+        let match;
+        while ((match = pattern.exec(tail))) pairs.push([match[1].trim(), match[2]]);
+        return pairs;
+    }
+
+    /**
      * Width of the stage, in pixels.
      * @const {number}
      */
@@ -1845,17 +1860,36 @@ class Runtime extends EventEmitter {
 
         // Desktop fork (section 278): a modular block (blockInfo.modular without `locked`) declares no text or
         // arguments: its first two inputs are made here, so that the flyout block gets them with their shadows.
+        // Desktop fork (section 285): `colour_picker` inputs; `pair` (input name prefixes, e.g. ['x', 'y']): each
+        // slot is a point of two inputs (x1, y1, x2, y2, …), the palette block starts with `min` points; `tail`
+        // (text like "'s [CS]"): the block's own declared arguments after the slots; `values`: default values of the
+        // palette inputs in order; `branches`: a C block whose slots are branches (SUBSTACK, SUBSTACK2, …).
         const modular = blockInfo.modular;
+        const modularTail = modular ? Runtime._modularTail(modular.tail) : [];
         if (modular && modular.locked === undefined) {
             const type = modular.shadow === 'math_number' ? ArgumentType.NUMBER :
-                (modular.shadow === 'text' ? ArgumentType.STRING : ArgumentType.BOOLEAN);
+                (modular.shadow === 'text' ? ArgumentType.STRING :
+                    (modular.shadow === 'colour_picker' ? ArgumentType.COLOR : ArgumentType.BOOLEAN));
+            const own = blockInfo.arguments || {};
             blockInfo.arguments = {};
-            for (let i = 1; i <= 2; i++) {
-                blockInfo.arguments[modular.prefix + i] = {type, defaultValue: ''};
-                // Desktop fork (section 281): inputs passed on as they are (like the single's)
-                if (modular.exemptFromNormalization) blockInfo.arguments[modular.prefix + i].exemptFromNormalization = true;
+            const names = [];
+            if (!modular.branches) {
+                const parts = Array.isArray(modular.pair) ? modular.pair : [modular.prefix];
+                const slots = Array.isArray(modular.pair) ? Math.max(2, Math.floor(Number(modular.min)) || 2) : 2;
+                for (let i = 1; i <= slots; i++) parts.forEach(part => names.push(part + i));
             }
-            blockInfo.text = `[${modular.prefix}1] [${modular.prefix}2]`;
+            names.forEach((name, k) => {
+                const value = Array.isArray(modular.values) && modular.values.length > 0 ?
+                    modular.values[k % modular.values.length] : '';
+                blockInfo.arguments[name] = {type, defaultValue: value};
+                // Desktop fork (section 281): inputs passed on as they are (like the single's)
+                if (modular.exemptFromNormalization) blockInfo.arguments[name].exemptFromNormalization = true;
+            });
+            modularTail.forEach(([, name]) => {
+                if (own[name]) blockInfo.arguments[name] = own[name];
+                names.push(name);
+            });
+            blockInfo.text = modular.branches ? (modular.label || ' ') : names.map(name => `[${name}]`).join(' ');
         }
 
         const blockJSON = {
@@ -2052,7 +2086,8 @@ class Runtime extends EventEmitter {
                 base.args0 = blockJSON.args0.slice(0, 2);
             }
             const symbols = Array.isArray(modular.symbols) && modular.symbols.length > 0 ? modular.symbols : null;
-            const plain = modular.shadow === 'math_number' || modular.shadow === 'text';
+            const plain = modular.shadow === 'math_number' || modular.shadow === 'text' ||
+                modular.shadow === 'colour_picker';
             const settings = {
                 json: base,
                 prefix: modular.prefix,
@@ -2063,9 +2098,16 @@ class Runtime extends EventEmitter {
                 label: modular.label,
                 sep: modular.sep
             };
+            // Desktop fork (section 285): the settings for points, tail inputs, shadow values and branches
+            if (Array.isArray(modular.pair)) settings.pair = modular.pair;
+            if (modularTail.length > 0) settings.tail = modularTail;
+            if (Array.isArray(modular.values) && modular.values.length > 0) settings.values = modular.values;
+            settings.field = {math_number: 'NUM', text: 'TEXT', colour_picker: 'COLOUR'}[modular.shadow];
+            if (modular.branches) settings.branches = true;
             if (modular.locked === undefined) {
                 const menu = symbols ? ` menuvalues="${xmlEscape.escapeAttribute(String(symbols[0][1]))}"` : '';
-                modularMutation = `<mutation inputcount="2"${menu}/>`;
+                const count = settings.pair ? Math.max(2, settings.min) : 2;
+                modularMutation = `<mutation inputcount="${count}"${menu}/>`;
             } else {
                 // a single block keeps its own two inputs, in the order of its text
                 const text = String(maybeFormatMessage(blockText[0], extensionMessageContext));
@@ -2074,6 +2116,11 @@ class Runtime extends EventEmitter {
                 if (modular.locked === true) {
                     settings.menu = settings.names.find(name => blockInfo.arguments[name] && blockInfo.arguments[name].menu);
                     settings.names = settings.names.filter(name => name !== settings.menu);
+                }
+                // Desktop fork (section 285): a single of points has as many points as its text (without the tail)
+                if (settings.pair) {
+                    settings.names = settings.names.filter(name => !modularTail.some(([, tail]) => tail === name));
+                    settings.count = Math.floor(settings.names.length / settings.pair.length);
                 }
             }
             blockJSON.modular = {settings, lock: modular.locked};
