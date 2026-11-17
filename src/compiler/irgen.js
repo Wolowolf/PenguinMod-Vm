@@ -540,6 +540,20 @@ class ScriptTreeGenerator {
         case 'operator_expandableMath':
             // Desktop fork (section 274): built from the single blocks' nodes
             return this.descendExpandableMath(block);
+        case 'control_expandableIfReturn': {
+            // Desktop fork (section 281): nested single "if then else" reporters, the last "else" innermost; inputs
+            // as the single block's (descendCoreInput)
+            let node = this.descendCoreInput(block, 'ELSE');
+            for (let i = ExpandableBlocks.readIfReturnPairs(block.mutation); i >= 1; i--) {
+                node = {
+                    kind: 'control.ifReturn',
+                    condition: this.descendCoreInput(block, `BOOL${i}`),
+                    yes: this.descendCoreInput(block, `TEXT${i}`),
+                    no: node
+                };
+            }
+            return node;
+        }
         case 'operator_equals':
             return {
                 kind: 'op.equals',

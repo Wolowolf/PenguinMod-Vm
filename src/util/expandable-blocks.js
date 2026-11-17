@@ -121,8 +121,21 @@ const readSwitch = mutation => {
     return {cases, hasElse, runsNext};
 };
 
+/**
+ * Desktop fork (section 281): the modular "if then else" reporter (control_expandableIfReturn). Its mutation's
+ * `branches` counts the "if" / "else if" pairs (inputs BOOLn, TEXTn) and the last "else" (input ELSE), like the
+ * if C-block's.
+ * @param {object} mutation the block's mutation
+ * @returns {number} the number of pairs (at least 1)
+ */
+const readIfReturnPairs = mutation => {
+    const pairs = Math.floor(Number(mutation && mutation.branches)) - 1;
+    return pairs > 0 ? pairs : 1;
+};
+
 module.exports = {
     nestInfix,
+    readIfReturnPairs,
     readSwitch,
     runChain,
     readCount,

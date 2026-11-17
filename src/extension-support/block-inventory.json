@@ -802,6 +802,7 @@
       "smoothing": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":true,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false,"note":"from the project timer","direct":true},
       "smoothing2": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"number","compiled":false},
       "typeString": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false},
+      "typeStringModular": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":false,"note":"modular block (section 281): a chain of the single block's function"},
       "shuffleArray": {"type":"reporter","pure":false,"reads":[],"writes":[],"time":false,"random":true,"waits":false,"hiddenState":false,"page":false,"answer":"string","compiled":false,"note":"random only for \"shuffle\"","direct":true}
     }
   },
@@ -1984,6 +1985,7 @@
     "state": {"this.replacers":"setting"},
     "blocks": {
       "orIfFalsey": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
+      "orIfFalseyModular": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"modular block (section 281): compiled as nested single blocks; the interpreter chains the single function"},
       "ifIsTruthy": {"type":"reporter","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"any","compiled":true,"note":"compiler code; the interpreter function does the same (section 111)"},
       "isNumberMultipleOf": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},
       "isInteger": {"type":"Boolean","pure":true,"reads":[],"writes":[],"time":false,"random":false,"waits":false,"hiddenState":false,"page":false,"answer":"boolean","compiled":false},

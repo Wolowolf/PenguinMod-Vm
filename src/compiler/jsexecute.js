@@ -680,7 +680,6 @@ runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
     const delta = runtime.ioDevices.mouseWheel.getScrollDelta();
     return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
 }`;
-runtimeFunctions.coreIfReturn = `const coreIfReturn = (condition, yes, no) => (condition ? yes : no)`;
 // Desktop fork (section 187): sin and cos of whole numbers from the premade table, a 0 worked out (it may be -0)
 // Desktop fork (section 243): the table only for whole numbers within 100 turns. The table reduces the angle exactly
 // (% 360), the interpreter's formula does not: from 66,021 on the two differ in the 10th decimal, and for huge

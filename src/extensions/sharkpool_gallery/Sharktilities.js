@@ -10,6 +10,7 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const ExpandableBlocks = require('../../util/expandable-blocks');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sharktilities
 // ID: SharkPoolSharktilities
@@ -33,6 +34,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   runtime.on("BEFORE_EXECUTE", () => runtime.startHats("SharkPoolSharktilities_whenChanged"));
   // Desktop fork (section 123): the block's canDragDuplicate makes the block library treat it like an argument reporter
+
+  // Desktop fork (section 281): "[A] [||/??] [B]" as a single block (its menu kept) and as a modular chain
+  const TYPE_MODULAR = { prefix: "STRING", symbols: [["||", "|"], ["??", "?"]], shadow: "text" };
 
   class Sharktilities {
     getInfo() {
@@ -155,6 +159,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: "Strings" },
           {
             opcode: "typeString",
+            modular: { ...TYPE_MODULAR, locked: true },
             blockType: Scratch.BlockType.REPORTER,
             text: "[STRING1] [TYPE] [STRING2]",
             arguments: {
@@ -163,6 +168,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               TYPE: { type: Scratch.ArgumentType.STRING, menu: "STRING" }
             }
           },
+          { opcode: "typeStringModular", blockType: Scratch.BlockType.REPORTER, modular: TYPE_MODULAR },
           {
             opcode: "shuffleArray",
             blockType: Scratch.BlockType.REPORTER,
@@ -372,6 +378,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
 
     typeString(r){return"||"===r.TYPE?r.STRING1||r.STRING2:"undefined"===r.STRING1||"null"===r.STRING1?r.STRING2:r.STRING1}
+    // Desktop fork (section 281): a chain of the single block's function, left to right
+    typeStringModular(args) {
+      return ExpandableBlocks.runChain(
+        args,
+        { prefix: TYPE_MODULAR.prefix, levels: { "|": 1, "?": 1 }, convert: Scratch.Cast.toString, empty: "" },
+        (symbol, STRING1, STRING2) => this.typeString({ STRING1, STRING2, TYPE: symbol === "?" ? "??" : "||" })
+      );
+    }
   }
 
   Scratch.extensions.register(new Sharktilities());

@@ -1499,7 +1499,8 @@ class JSGenerator {
         case 'sound.isPlaying':
             return new TypedInput(`runtime.ext_scratch3_sound.isSoundPlaying({SOUND_MENU: ${this.rawValue(this.descendInput(node.sound))}}, {target})`, TYPE_UNKNOWN);
         case 'control.ifReturn':
-            return new TypedInput(`coreIfReturn(${this.exactBoolean(this.descendInput(node.condition))}, ${this.rawValue(this.descendInput(node.yes))}, ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
+            // Desktop fork (section 281): only the chosen value is worked out
+            return new TypedInput(`(${this.exactBoolean(this.descendInput(node.condition))} ? ${this.rawValue(this.descendInput(node.yes))} : ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
         case 'list.asArray':
             return new TypedInput(`JSON.stringify(${this.listItems(node.list)})`, TYPE_STRING);
         // Desktop fork (section 185)

@@ -1850,7 +1850,11 @@ class Runtime extends EventEmitter {
             const type = modular.shadow === 'math_number' ? ArgumentType.NUMBER :
                 (modular.shadow === 'text' ? ArgumentType.STRING : ArgumentType.BOOLEAN);
             blockInfo.arguments = {};
-            for (let i = 1; i <= 2; i++) blockInfo.arguments[modular.prefix + i] = {type, defaultValue: ''};
+            for (let i = 1; i <= 2; i++) {
+                blockInfo.arguments[modular.prefix + i] = {type, defaultValue: ''};
+                // Desktop fork (section 281): inputs passed on as they are (like the single's)
+                if (modular.exemptFromNormalization) blockInfo.arguments[modular.prefix + i].exemptFromNormalization = true;
+            }
             blockInfo.text = `[${modular.prefix}1] [${modular.prefix}2]`;
         }
 
@@ -2056,7 +2060,8 @@ class Runtime extends EventEmitter {
                 shadow: modular.shadow,
                 check: modular.check || (plain ? null : 'Boolean'),
                 min: Math.max(1, Math.floor(Number(modular.min)) || 2),
-                label: modular.label
+                label: modular.label,
+                sep: modular.sep
             };
             if (modular.locked === undefined) {
                 const menu = symbols ? ` menuvalues="${xmlEscape.escapeAttribute(String(symbols[0][1]))}"` : '';
@@ -2065,6 +2070,11 @@ class Runtime extends EventEmitter {
                 // a single block keeps its own two inputs, in the order of its text
                 const text = String(maybeFormatMessage(blockText[0], extensionMessageContext));
                 settings.names = [...text.matchAll(/\[(.+?)]/g)].map(match => match[1]);
+                // Desktop fork (section 281): `locked: true` keeps the symbol menu, as the argument with a menu
+                if (modular.locked === true) {
+                    settings.menu = settings.names.find(name => blockInfo.arguments[name] && blockInfo.arguments[name].menu);
+                    settings.names = settings.names.filter(name => name !== settings.menu);
+                }
             }
             blockJSON.modular = {settings, lock: modular.locked};
         }

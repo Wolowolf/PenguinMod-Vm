@@ -48,6 +48,7 @@
   "SPtimeCalc_daysinmonth": "any",
   "SharkPoolSharktilities_smoothing2": "number",
   "SharkPoolSharktilities_typeString": "any",
+  "SharkPoolSharktilities_typeStringModular": "any",
   "ShovelUtils_brightnessByColor": "number",
   "cst1229zip_normalizePath": "string",
   "dogeiscutResolution_stageEdgePositionX": "number",

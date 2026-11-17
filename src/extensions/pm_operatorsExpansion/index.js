@@ -2,6 +2,10 @@ const BlockType = require("../../extension-support/block-type");
 const ArgumentType = require("../../extension-support/argument-type");
 const Cast = require("../../util/cast");
 const MathJS = require("./mathjs.js");
+const ExpandableBlocks = require("../../util/expandable-blocks");
+
+// Desktop fork (section 281): "or else" as a single block and as a modular chain "A or else B or else C…"
+const OR_ELSE = { prefix: "VALUE", shadow: "text", sep: "or else", exemptFromNormalization: true };
 
 /**
  * Operators Expansion Class
@@ -32,6 +36,7 @@ class pmOperatorsExpansion {
       blocks: [
         {
           opcode: "orIfFalsey",
+          modular: { ...OR_ELSE, locked: "" },
           text: "[ONE] or else [TWO]",
           blockType: BlockType.REPORTER,
           extensions: ["colours_operators"],
@@ -51,6 +56,14 @@ class pmOperatorsExpansion {
               defaultValue: "b"
             }
           }
+        },
+        {
+          opcode: "orIfFalseyModular",
+          blockType: BlockType.REPORTER,
+          extensions: ["colours_operators"],
+          allowDropAnywhere: true,
+          disableMonitor: true,
+          modular: OR_ELSE
         },
         {
           opcode: "ifIsTruthy",
@@ -594,6 +607,13 @@ class pmOperatorsExpansion {
           one: generator.descendInputOfBlock(block, "ONE"),
           two: generator.descendInputOfBlock(block, "TWO")
         }),
+        // Desktop fork (section 281)
+        orIfFalseyModular: (generator, block) => {
+          const values = [];
+          const count = ExpandableBlocks.readCount(block.mutation);
+          for (let i = 1; i <= count; i++) values.push(generator.descendInputOfBlock(block, "VALUE" + i));
+          return { kind: "input", values };
+        },
         ifIsTruthy: (generator, block) => ({
           kind: "input",
           one: generator.descendInputOfBlock(block, "ONE"),
@@ -622,6 +642,17 @@ class pmOperatorsExpansion {
           const num2 = asGiven(compiler.descendInput(node.two));
 
           return new TypedInput(`(${num1} || ${num2})`, TYPE_UNKNOWN);
+        },
+        // Desktop fork (section 281): nested single "or else" blocks, left to right
+        orIfFalseyModular: (node, compiler, {
+          TypedInput,
+          TYPE_UNKNOWN
+        }) => {
+          if (node.values.length === 0) return new TypedInput('""', TYPE_UNKNOWN);
+          const source = node.values
+            .map(value => asGiven(compiler.descendInput(value)))
+            .reduce((left, right) => `(${left} || ${right})`);
+          return new TypedInput(source, TYPE_UNKNOWN);
         },
         ifIsTruthy: (node, compiler, {
           TypedInput,
@@ -823,6 +854,11 @@ class pmOperatorsExpansion {
   // Desktop fork: the interpreter's versions, the same as the compiler code above (they were stubs,
   // so these blocks only worked in compiled scripts)
   orIfFalsey(args) { return args.ONE || args.TWO }
+  // Desktop fork (section 281): a chain of the single block's function, left to right
+  orIfFalseyModular(args) {
+    return ExpandableBlocks.runChain(args, { prefix: OR_ELSE.prefix, levels: { o: 1 }, empty: "" },
+      (symbol, ONE, TWO) => this.orIfFalsey({ ONE, TWO }));
+  }
   ifIsTruthy(args) { return Cast.toBoolean(args.ONE) && args.TWO }
   speedToPitch(args) { return (1200 * Math.log2(Cast.toNumber(args.SPEED))) / 10 }
   pitchToSpeed(args) { return Math.pow(2, (Cast.toNumber(args.PITCH) * 10) / 1200) }
