@@ -542,8 +542,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     getFonts() {
-      const customFonts = runtime.fontManager ? runtime.fontManager.getFonts().map((i) => ({ text: i.name, value: i.family })) : [];
-      return [ ...BUILT_IN_FONTS, ...customFonts ];
+      return [ ...BUILT_IN_FONTS, ...runtime.fontManager.getFontMenu() ];
     }
 
     refresh() {
@@ -1024,19 +1023,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     orderList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_orderList(args, util); }
     joinLists(args, util) { return sharedBlocks.DICandSPmonitorsPlus_joinLists(args, util); }
     _getLists() {
-      // @ts-expect-error - Blockly not typed yet
-      const lists =
-        typeof Blockly === "undefined"
-          ? []
-          : Blockly.getMainWorkspace()
-              .getVariableMap()
-              .getVariablesOfType("list")
-              .map((model) => model.name);
-      if (lists.length > 0) {
-        return lists;
-      } else {
-        return [""];
-      }
+      return runtime.getWorkspaceListNames(); // Desktop fork (section 306): shared with Pen+
     }
   }
 

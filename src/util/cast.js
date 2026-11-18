@@ -239,4 +239,7 @@ class Cast {
     }
 }
 
+// Desktop fork (section 306): shared with engine/list-lookup.js
+Cast.isNotActuallyZero = isNotActuallyZero;
+
 module.exports = Cast;

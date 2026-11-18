@@ -2,19 +2,10 @@ const ArgumentType = require("../../extension-support/argument-type");
 const BlockType = require("../../extension-support/block-type");
 const Cast = require("../../util/cast");
 const Color = require("../../util/color");
+// Desktop fork (section 306): the shared XML escape (util/xml-escape.js)
+const pmXmlEscape = require('../../util/xml-escape');
 
-const xmlEscape = function (unsafe) {
-    unsafe = Cast.toString(unsafe)
-    return unsafe.replace(/[<>&'"]/g, c => {
-        switch (c) {
-            case "<": return "&lt;";
-            case ">": return "&gt;";
-            case "&": return "&amp;";
-            case "'": return "&apos;";
-            case "\"": return "&quot;";
-        }
-    });
-};
+const xmlEscape = (unsafe) => pmXmlEscape(Cast.toString(unsafe));
 const delay = (ms) => {
     return new Promise((resolve) => {
         setTimeout(() => {

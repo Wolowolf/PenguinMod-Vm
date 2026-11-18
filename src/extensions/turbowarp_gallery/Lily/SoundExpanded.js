@@ -4,6 +4,7 @@
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmSoundBlocks = require('../../../blocks/scratch3_sound'); // Desktop fork (section 306): the sound blocks' sound lookup
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sound Expanded
 // Description: Adds more sound-related blocks.
@@ -612,34 +613,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     /* Utility Functions */
 
     _getSoundIndex(soundName, util) {
-      const len = util.target.sprite.sounds.length;
-      if (len === 0) {
-        return -1;
-      }
-      const index = this._getSoundIndexByName(soundName, util);
-      if (index !== -1) {
-        return index;
-      }
-      const oneIndexedIndex = parseInt(soundName, 10);
-      if (!isNaN(oneIndexedIndex)) {
-        return this._wrapClamp(oneIndexedIndex - 1, 0, len - 1);
-      }
-      return -1;
-    }
-
-    _getSoundIndexByName(soundName, util) {
-      const sounds = util.target.sprite.sounds;
-      for (let i = 0; i < sounds.length; i++) {
-        if (sounds[i].name === soundName) {
-          return i;
-        }
-      }
-      return -1;
-    }
-
-    _wrapClamp(n, min, max) {
-      const range = max - min + 1;
-      return n - Math.floor((n - min) / range) * range;
+      return pmSoundBlocks.getSoundIndex(soundName, util);
     }
 
     _populateTargetMenu() {

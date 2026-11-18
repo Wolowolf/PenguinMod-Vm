@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 306): the shared XML escape (util/xml-escape.js)
+const pmXmlEscape = require('../../util/xml-escape');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Popup Phoenix
 // ID: SPpopups
@@ -110,22 +112,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     buttons: Object.create(null),
   };
 
-  const xmlEscape = function (unsafe) {
-    return Cast.toString(unsafe).replace(new RegExp(`[<>&'"]`, "g"), (c) => {
-      switch (c) {
-        case "<":
-          return "&lt;";
-        case ">":
-          return "&gt;";
-        case "&":
-          return "&amp;";
-        case "'":
-          return "&apos;";
-        case '"':
-          return "&quot;";
-      }
-    });
-  };
+  const xmlEscape = (unsafe) => pmXmlEscape(Cast.toString(unsafe));
 
   const createLabel = (id, text) => {
     const element = document.createElement("div");
@@ -1345,12 +1332,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Helper Funcs
     getFonts() {
-      const custFonts = runtime.fontManager
-        ? runtime.fontManager
-            .getFonts()
-            .map((i) => ({ text: i.name, value: i.family }))
-        : [];
-      return [...BUILT_IN_FONTS, ...custFonts];
+      return [...BUILT_IN_FONTS, ...runtime.fontManager.getFontMenu()];
     }
 
     genElementList(addPopup, addRow, addButton) {

@@ -5,6 +5,7 @@
 // Desktop fork (section 270): Google only again (Discord Auth, merged in by section 263, is removed).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmBase64 = require('../../../util/base64-util'); // Desktop fork (section 306): the shared base64 conversions
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Google Sign-in: lets players log in with their Google account, using the game maker's own login setup
 // (Google Cloud "OAuth client"). Nothing goes through anyone else's server:
@@ -42,7 +43,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }),
     };
 
-    const base64url = (bytes) => btoa(String.fromCharCode(...bytes))
+    const base64url = (bytes) => pmBase64.uint8ArrayToBase64(bytes)
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const randomString = () => base64url(crypto.getRandomValues(new Uint8Array(32)));
     const sha256 = async (text) => new Uint8Array(

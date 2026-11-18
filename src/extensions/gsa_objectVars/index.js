@@ -36,23 +36,6 @@ class canvas {
             }));
     }
 
-    readAsImageElement(src) {
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = function () {
-                resolve(image);
-                image.onload = null;
-                image.onerror = null;
-            };
-            image.onerror = function () {
-                reject(new Error('Costume load failed. Asset could not be read.'));
-                image.onload = null;
-                image.onerror = null;
-            };
-            image.src = src;
-        });
-    }
-
     orderCategoryBlocks(blocks) {
         const button = blocks[0];
         const varBlock = blocks[1];

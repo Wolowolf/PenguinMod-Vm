@@ -96,13 +96,7 @@ class Scratch3ProcedureBlocks {
     }
 
     argumentReporterBoolean(args, util) {
-        const value = util.getParam(args.VALUE);
-        if (value === null) {
-            // When the parameter is not found in the most recent procedure
-            // call, the default is always 0.
-            return 0;
-        }
-        return value;
+        return this.argumentReporterStringNumber(args, util); // Desktop fork (section 306): the same answer
     }
 
     argumentReporterCommand(args, util) {

@@ -441,10 +441,7 @@ class Scratch3PenBlocks {
             text: id,
             value: id
         })),
-        ...this.runtime.fontManager.getFonts().map(i => ({
-            text: i.name,
-            value: i.family
-        })),
+        ...this.runtime.fontManager.getFontMenu(),
         {
             text: 'random font',
             value: RANDOM_ID
@@ -1018,7 +1015,7 @@ class Scratch3PenBlocks {
         this._drawContextToPen(ctx);
     }
 
-    // todo: should these be merged into their own function? they all have the same code...
+    // Desktop fork (section 306): the three image blocks share one body (the old todo)
     drawUriImage (args) {
         const preloaded = this.preloadedImages[args.URI];
         const possiblePromise = this._drawUriImage(args);
@@ -1027,18 +1024,10 @@ class Scratch3PenBlocks {
         }
     }
     drawUriImageWHR (args) {
-        const preloaded = this.preloadedImages[args.URI];
-        const possiblePromise = this._drawUriImage(args);
-        if (!preloaded) {
-            return possiblePromise;
-        }
+        return this.drawUriImage(args);
     }
     drawUriImageWHCX1Y1X2Y2R (args) {
-        const preloaded = this.preloadedImages[args.URI];
-        const possiblePromise = this._drawUriImage(args);
-        if (!preloaded) {
-            return possiblePromise;
-        }
+        return this.drawUriImage(args);
     }
 
     preloadUriImage ({ URI, NAME }) {

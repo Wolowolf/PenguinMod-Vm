@@ -1,6 +1,13 @@
 const JSZip = require('jszip');
 const log = require('../util/log');
 
+// Desktop fork (section 306): the descriptor takes the stored asset, its id and its md5 file name
+const takeAsset = item => asset => {
+    item.asset = asset;
+    item.assetId = asset.assetId;
+    item.md5 = `${asset.assetId}.${asset.dataFormat}`;
+};
+
 /**
  * Deserializes sound from file into storage cache so that it can
  * be loaded into the runtime.
@@ -60,11 +67,7 @@ const deserializeSound = function (sound, runtime, zip) {
         null,
         true
     ))
-        .then(asset => {
-            sound.asset = asset;
-            sound.assetId = asset.assetId;
-            sound.md5 = `${asset.assetId}.${asset.dataFormat}`;
-        });
+        .then(takeAsset(sound));
 };
 
 /**
@@ -97,11 +100,7 @@ const deserializeCostume = function (costume, runtime, zip) {
             new Uint8Array(Object.keys(costume.asset.data).map(key => costume.asset.data[key])),
             null,
             true
-        )).then(asset => {
-            costume.asset = asset;
-            costume.assetId = asset.assetId;
-            costume.md5 = `${asset.assetId}.${asset.dataFormat}`;
-        });
+        )).then(takeAsset(costume));
     }
 
     if (!zip) {
@@ -143,11 +142,7 @@ const deserializeCostume = function (costume, runtime, zip) {
             null,
             true
         ))
-        .then(asset => {
-            costume.asset = asset;
-            costume.assetId = asset.assetId;
-            costume.md5 = `${asset.assetId}.${asset.dataFormat}`;
-        });
+        .then(takeAsset(costume));
 };
 
 module.exports = {

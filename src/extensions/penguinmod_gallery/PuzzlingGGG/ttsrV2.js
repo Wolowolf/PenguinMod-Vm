@@ -4,6 +4,8 @@
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmSpeech = require('../../../extension-support/pm-speech-shared'); // Desktop fork (section 306): pack requests and credits shared by Dictation and Text To Speech
+const pmBase64 = require('../../../util/base64-util'); // Desktop fork (section 306): the shared base64 conversions
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Text To Speech
 // id: pmTextToSpeech
@@ -605,20 +607,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     // game sets pmSpeechBase: it has no installer, the packager put the files next to it.
     const packsFor = (request) => (request.engine === "supertonic" ? ["onnxruntime", "supertonic"]
         : ["onnxruntime", "pocket-voices", `pocket-${request.language}`]);
-    const packRequests = new Map();
-    const ensurePacks = (packs) => {
-        if (globalThis.pmSpeechBase) return Promise.resolve(true);
-        const key = packs.join(",");
-        if (!packRequests.has(key)) {
-            packRequests.set(key, fetch(`${BASE}install?packs=${key}`).then(async (res) => {
-                if (res.status === 404) return true;
-                const result = await res.json();
-                if (!result.ok) packRequests.delete(key); // asked again next time
-                return !!result.ok;
-            }).catch(() => { packRequests.delete(key); return false; }));
-        }
-        return packRequests.get(key);
-    };
+    const ensurePacks = pmSpeech.ensureSpeechPacks;
 
     // ------------------------------------------------------------------------------------------
     // Per-sprite settings and playback through the sprite's own sound effects
@@ -772,24 +761,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         return ENGINE_CREDITS.concat(supertonicUsed ? [SUPERTONIC_CREDIT] : [],
             Array.from(voices).filter((v) => VOICES[v]).map(pocketVoiceCredit));
     };
-    runtime.pmCreditProviders = (runtime.pmCreditProviders || []).filter((p) => p.id !== ID);
-    const provider = () => usedCredits();
-    provider.id = ID;
-    runtime.pmCreditProviders.push(provider);
-    let lastCredits = "";
-    let creditTimer = null;
-    const checkCredits = () => {
-        creditTimer = null;
-        const now = JSON.stringify(usedCredits());
-        if (now !== lastCredits) {
-            lastCredits = now;
-            runtime.emit("PM_CREDITS_CHANGED");
-        }
-    };
-    const scheduleCredits = () => { if (!creditTimer) creditTimer = setTimeout(checkCredits, 500); };
-    runtime.on("PROJECT_CHANGED", scheduleCredits);
-    runtime.on("PROJECT_LOADED", scheduleCredits);
-    scheduleCredits();
+    pmSpeech.addCreditProvider(runtime, ID, usedCredits);
 
     // ------------------------------------------------------------------------------------------
     // "Make a speech sound": makes speech once in the editor and adds it to the sprite as a sound
@@ -910,9 +882,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     const v = await voiceFor(target, { voice: { sound: chosen.loudkitSound } });
                     if (!v.voiceAudio) throw new Error("That sound is gone.");
                     const bytes = new Uint8Array(v.voiceAudio.buffer);
-                    let binary = "";
-                    for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768));
-                    clone = { key: v.voiceKey, sampleRate: 24000, samples: btoa(binary) };
+                    clone = { key: v.voiceKey, sampleRate: 24000, samples: pmBase64.uint8ArrayToBase64(bytes) };
                 }
                 const res = await fetch(`${BASE}loudkit`, { method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ text: settings.text, model: settings.model, voice: chosen.loudkit || "", clone,

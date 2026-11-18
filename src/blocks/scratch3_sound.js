@@ -375,6 +375,17 @@ class Scratch3SoundBlocks {
     }
 
     _getSoundIndex (soundName, util) {
+        return Scratch3SoundBlocks.getSoundIndex(soundName, util);
+    }
+
+    /**
+     * Desktop fork (section 306): shared with Sound Expanded. A sound's index: by name first, then as a 1-based
+     * number (wrapped); -1 when the sprite has no sounds or the text is neither.
+     * @param {*} soundName The name or number.
+     * @param {BlockUtility} util Its target is searched.
+     * @returns {number} The 0-based index, or -1.
+     */
+    static getSoundIndex (soundName, util) {
         // if the sprite has no sounds, return -1
         const len = util.target.sprite.sounds.length;
         if (len === 0) {
@@ -382,7 +393,7 @@ class Scratch3SoundBlocks {
         }
 
         // look up by name first
-        const index = this.getSoundIndexByName(soundName, util);
+        const index = util.target.getSoundIndexByName(soundName);
         if (index !== -1) {
             return index;
         }
@@ -398,14 +409,7 @@ class Scratch3SoundBlocks {
     }
 
     getSoundIndexByName (soundName, util) {
-        const sounds = util.target.sprite.sounds;
-        for (let i = 0; i < sounds.length; i++) {
-            if (sounds[i].name === soundName) {
-                return i;
-            }
-        }
-        // if there is no sound by that name, return -1
-        return -1;
+        return util.target.getSoundIndexByName(soundName); // Desktop fork (section 306): the target's lookup
     }
 
     stopAllSounds () {

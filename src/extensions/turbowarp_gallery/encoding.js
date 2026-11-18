@@ -14,6 +14,7 @@ const LZString = require('lz-string');
 const deflateBytes = require('./encoding-deflate');
 const inflateBytes = require('./encoding-inflate');
 const {validateArray} = require('../../util/json-block-utilities');
+const pmBase64 = require('../../util/base64-util'); // Desktop fork (section 306): the shared base64 conversions
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Encoding
 // ID: Encoding
@@ -460,16 +461,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       );
     }
     _btoa(unicode) {
-      let bytes = new TextEncoder().encode(unicode);
-      let binString = Array.from(bytes, (byte) =>
-        String.fromCodePoint(byte)
-      ).join("");
-      return btoa(binString);
+      return pmBase64.uint8ArrayToBase64(new TextEncoder().encode(unicode));
     }
     _atob(base64) {
-      let binString = atob(base64);
-      let bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
-      return new TextDecoder().decode(bytes);
+      return new TextDecoder().decode(pmBase64.base64ToUint8Array(base64));
     }
   }
   Scratch.extensions.register(new Encoding());

@@ -109,6 +109,14 @@ class FontManager extends EventEmitter {
     }
 
     /**
+     * Desktop fork (section 306): the custom fonts as menu items, shared by the font menus of Pen and the extensions.
+     * @returns {Array<{text: string, value: string}>} One item per font: its name, and its family with the fallback.
+     */
+    getFontMenu () {
+        return this.getFonts().map(font => ({text: font.name, value: font.family}));
+    }
+
+    /**
      * @param {number} index Corresponds to index from getFonts()
      */
     deleteFont(index) {

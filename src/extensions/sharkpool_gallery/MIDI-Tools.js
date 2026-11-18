@@ -11,6 +11,7 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmBase64 = require('../../util/base64-util'); // Desktop fork (section 306): the shared base64 conversions
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Obscuras MIDI Tools v5
 // ID: ObscurasMIDITools
@@ -446,13 +447,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     async getMidiAsBase64() {
       if (!this.midiData) return '';
-      const uint8Array = this.midiData.toArray();
-      let binary = '';
-      const len = uint8Array.byteLength;
-      for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(uint8Array[i]);
-      }
-      return btoa(binary);
+      return pmBase64.uint8ArrayToBase64(this.midiData.toArray());
     }
 
     async loadMidiFromBase64(args) {
@@ -461,12 +456,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         base64Str = base64Str.split(',')[1];
       }
       try {
-        const binaryString = atob(base64Str);
-        const len = binaryString.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
+        const bytes = pmBase64.base64ToUint8Array(base64Str);
         const Midi = await this.toneMidiReady;
         this.midiData = new Midi(bytes.buffer);
       } catch (err) {

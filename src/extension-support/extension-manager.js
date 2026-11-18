@@ -18,6 +18,7 @@ const normalizeExtensionURL = url => {
 // were moved into the VM (ID => their old gallery address); their gallery tiles still ask for that
 // address, which loads the built-in extension instead.
 const movedGalleryExtensions = require('./moved-gallery-extensions.json');
+const getExtensionIdForOpcode = require('./extension-id-for-opcode'); // Desktop fork (section 306)
 const movedGalleryIDs = new Map(Object.entries(movedGalleryExtensions)
     .map(([id, url]) => [normalizeExtensionURL(url), id]));
 const movedGalleryAddressOf = id => (Object.prototype.hasOwnProperty.call(movedGalleryExtensions, id) ?
@@ -197,21 +198,6 @@ const defaultBuiltinExtensions = {
     filesExpanded: () => import(/* webpackChunkName: "ext-filesExpanded" */ '../extensions/sharkpool_gallery/Files-Expanded'),
     speechSP: () => import(/* webpackChunkName: "ext-speechSP" */ '../extensions/sharkpool_gallery/Speech-Bubbles'),
 };
-const CORE_EXTENSIONS = [
-    'argument',
-    'colour',
-    'control',
-    'data',
-    'event',
-    'looks',
-    'math',
-    'motion',
-    'operator',
-    'procedures',
-    'sensing',
-    'sound'
-];
-
 const coreExtensionList = Object.getOwnPropertyNames(defaultBuiltinExtensions);
 
 /**
@@ -489,17 +475,7 @@ class ExtensionManager {
         this.refreshBlocks();
     }
     getExtensionIdFromOpcode(opcode) {
-        // Allowed ID characters are those matching the regular expression [\w-]: A-Z, a-z, 0-9, and hyphen ("-").
-        if (!(typeof opcode === 'string')) {
-            console.error('invalid opcode ' + opcode);
-            return '';
-        }
-        const index = opcode.indexOf('_');
-        const forbiddenSymbols = /[^\w-]/g;
-        const prefix = opcode.substring(0, index).replace(forbiddenSymbols, '-');
-        if (CORE_EXTENSIONS.indexOf(prefix) === -1) {
-            if (prefix !== '') return prefix;
-        }
+        return getExtensionIdForOpcode(opcode);
     }
     findUsedExtensions() {
         const results = [];

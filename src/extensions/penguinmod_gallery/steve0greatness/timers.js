@@ -8,6 +8,8 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 304): the timer blocks are defined once for the interpreter and the compiler (src/blocks/shared/ext-lookups.js)
 const SharedBlocks = require('../../../blocks/shared');
+// Desktop fork (section 306): the shared XML escape (util/xml-escape.js)
+const pmXmlEscape = require('../../../util/xml-escape');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /**
  * @overview
@@ -34,27 +36,7 @@ function uid_clone() {
   return id;
 }
 
-function xml_escape(unsafe) {
-    if (typeof unsafe !== 'string') {
-        if (!Array.isArray(unsafe)) {
-            console.error(`Unexptected type ${typeof unsafe} in xmlEscape at: ${new Error().stack}`);
-            return unsafe;
-        }
-        // This happens when we have hacked blocks from 2.0
-        // See #1030
-        unsafe = String(unsafe);
-    }
-
-  return unsafe.replace(/[<>&'"]/g, c => {
-    switch (c) {
-      case '<': return '&lt;';
-      case '>': return '&gt;';
-      case '&': return '&amp;';
-      case '\'': return '&apos;';
-      case '"': return '&quot;';
-    }
-  });
-}
+const xml_escape = pmXmlEscape;
 
 // Desktop fork (section 127): the timers that are not paused (deleted ones may stay in it: that only costs checks)
 const runningTimers = new Set();

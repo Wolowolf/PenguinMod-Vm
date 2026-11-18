@@ -3123,18 +3123,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
     //From lily's list tools... With permission of course.
     _getLists() {
-      const lists =
-        typeof Blockly === "undefined"
-          ? []
-          : Blockly.getMainWorkspace()
-              .getVariableMap()
-              .getVariablesOfType("list")
-              .map((model) => model.name);
-      if (lists.length > 0) {
-        return lists;
-      } else {
-        return [""];
-      }
+      return runtime.getWorkspaceListNames(); // Desktop fork (section 306): shared with Variables Expanded
     }
     //And the associated helper function
     _getVarObjectFromName(name, util, type) {

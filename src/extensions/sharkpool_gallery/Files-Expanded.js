@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+const pmBase64 = require('../../util/base64-util'); // Desktop fork (section 306): the shared base64 conversions
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Files Expanded
 // ID: filesExpanded
@@ -422,13 +423,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
    * @returns {string} base64
    */
   function bufferToBase64(buffer) {
-    var binary = "";
-    var bytes = new Uint8Array(buffer);
-    var len = bytes.byteLength;
-    for (var i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
+    return pmBase64.arrayBufferToBase64(buffer);
   }
 
   class filesExpanded {
@@ -1013,8 +1008,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Helper Funcs
     getFonts() {
-      const customFonts = runtime.fontManager ? runtime.fontManager.getFonts().map((i) => ({ text: i.name, value: i.family })) : [];
-      return [...builtInFonts, ...customFonts];
+      return [...builtInFonts, ...runtime.fontManager.getFontMenu()];
     }
 
     getEncodings(onlySafe) {

@@ -7,6 +7,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmSpeech = require('../../../extension-support/pm-speech-shared'); // Desktop fork (section 306): pack requests and credits shared by Dictation and Text To Speech
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // name: Dictation
 // id: pooiod7Dictation
@@ -566,20 +567,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     // The packs dictation needs; the app offers to download missing ones. A packaged game sets
     // pmSpeechBase: it has no installer, the packager put the files next to it.
-    const packRequests = new Map();
-    const ensurePacks = (packs) => {
-        if (globalThis.pmSpeechBase) return Promise.resolve(true);
-        const key = packs.join(",");
-        if (!packRequests.has(key)) {
-            packRequests.set(key, fetch(`${BASE}install?packs=${key}`).then(async (res) => {
-                if (res.status === 404) return true;
-                const result = await res.json();
-                if (!result.ok) packRequests.delete(key); // asked again next time
-                return !!result.ok;
-            }).catch(() => { packRequests.delete(key); return false; }));
-        }
-        return packRequests.get(key);
-    };
+    const ensurePacks = pmSpeech.ensureSpeechPacks;
 
     // ------------------------------------------------------------------------------------------
     // Listening: one at a time, in the language set last; blocks that ask while it listens get the same text
@@ -684,26 +672,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         }
         return used ? CREDITS.concat(whisperUsed ? [WHISPER_CREDIT] : [], parakeetUsed ? PARAKEET_CREDITS : []) : [];
     };
-    runtime.pmCreditProviders = (runtime.pmCreditProviders || []).filter((p) => p.id !== ID);
-    const provider = () => usedCredits();
-    provider.id = ID;
-    runtime.pmCreditProviders.push(provider);
-    let lastUsed = null;
-    let creditTimer = null;
-    const scheduleCredits = () => {
-        if (creditTimer) return;
-        creditTimer = setTimeout(() => {
-            creditTimer = null;
-            const used = JSON.stringify(usedCredits());
-            if (used !== lastUsed) {
-                lastUsed = used;
-                runtime.emit("PM_CREDITS_CHANGED");
-            }
-        }, 500);
-    };
-    runtime.on("PROJECT_CHANGED", scheduleCredits);
-    runtime.on("PROJECT_LOADED", scheduleCredits);
-    scheduleCredits();
+    pmSpeech.addCreditProvider(runtime, ID, usedCredits);
 
     // "When I hear": letters and digits only, lower case; whole words, or anywhere in the text for
     // phrases in scripts written without spaces (Chinese, Japanese, Thai)

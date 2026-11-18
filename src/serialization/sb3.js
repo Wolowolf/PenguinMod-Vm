@@ -47,22 +47,6 @@ const INPUT_BLOCK_NO_SHADOW = 2; // no shadow
 const INPUT_DIFF_BLOCK_SHADOW = 3; // obscured shadow
 // There shouldn't be a case where block is null, but shadow is present...
 
-// Constants used during deserialization of an SB3 file
-const CORE_EXTENSIONS = [
-    'argument',
-    'colour',
-    'control',
-    'data',
-    'event',
-    'looks',
-    'math',
-    'motion',
-    'operator',
-    'procedures',
-    'sensing',
-    'sound'
-];
-
 // Constants referring to 'primitive' blocks that are usually shadows,
 // or in the case of variables and lists, appear quite often in projects
 // math_number
@@ -381,26 +365,8 @@ const compressInputTree = function (block, blocks) {
     return block;
 };
 
-/**
- * Get sanitized non-core extension ID for a given sb3 opcode.
- * Note that this should never return a URL. If in the future the SB3 loader supports loading extensions by URL, this
- * ID should be used to (for example) look up the extension's full URL from a table in the SB3's JSON.
- * @param {!string} opcode The opcode to examine for extension.
- * @return {?string} The extension ID, if it exists and is not a core extension.
- */
-const getExtensionIdForOpcode = function (opcode) {
-    // Allowed ID characters are those matching the regular expression [\w-]: A-Z, a-z, 0-9, and hyphen ("-").
-    if (!(typeof opcode === 'string')) {
-        console.error('invalid opcode ' + opcode);
-        return '';
-    }
-    const index = opcode.indexOf('_');
-    const forbiddenSymbols = /[^\w-]/g;
-    const prefix = opcode.substring(0, index).replace(forbiddenSymbols, '-');
-    if (CORE_EXTENSIONS.indexOf(prefix) === -1) {
-        if (prefix !== '') return prefix;
-    }
-};
+// Desktop fork (section 306): shared with the extension manager
+const getExtensionIdForOpcode = require('../extension-support/extension-id-for-opcode');
 
 /**
  * @param {Runtime} runtime The runtime to check in

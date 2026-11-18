@@ -3,6 +3,8 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 306): the shared XML escape (util/xml-escape.js)
+const pmXmlEscape = require('../../util/xml-escape');
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Speech Bubbles
 // ID: speechSP
@@ -31,18 +33,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
   let allBubbles = {};
 
-  const xmlEscape = function (unsafe) {
-    unsafe = String(unsafe);
-    return unsafe.replace(/[<>&'"]/g, c => {
-      switch (c) {
-        case "<": return "&lt;";
-        case ">": return "&gt;";
-        case "&": return "&amp;";
-        case "'": return "&apos;";
-        case "\"": return "&quot;";
-      }
-    });
-  };
+  const xmlEscape = (unsafe) => pmXmlEscape(String(unsafe));
 
   class speechSP {
     constructor() {
@@ -284,8 +275,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     allFonts() {
-      const customFonts = runtime.fontManager ? runtime.fontManager.getFonts().map((i) => ({ text: i.name, value: i.family })) : [];
-      return [...fontMenu, ...customFonts];
+      return [...fontMenu, ...runtime.fontManager.getFontMenu()];
     }
 
     getTargets(optAll) {

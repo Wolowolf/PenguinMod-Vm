@@ -1,5 +1,6 @@
 const atob = require('atob');
-const btoa = require('btoa');
+// Desktop fork (section 306): the browser's own btoa where there is one (same text for byte strings, faster)
+const btoa = typeof globalThis.btoa === 'function' ? globalThis.btoa : require('btoa');
 
 class Base64Util {
 
@@ -24,10 +25,10 @@ class Base64Util {
      * @return {string} - the base64 encoded string.
      */
     static uint8ArrayToBase64 (array) {
+        // Desktop fork (section 306): 32 KB at a time (shared by the extensions; same text, faster for big data)
         let binary = '';
-        const len = array.byteLength;
-        for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(array[i]);
+        for (let i = 0; i < array.length; i += 0x8000) {
+            binary += String.fromCharCode.apply(null, array.subarray(i, i + 0x8000));
         }
         return btoa(binary);
     }

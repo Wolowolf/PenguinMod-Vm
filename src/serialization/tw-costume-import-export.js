@@ -27,15 +27,8 @@ const regex = new RegExp(
     `${HTML_COMMENT_START}rotationCenter:(-?[\\d\\.]+):(-?[\\d\\.]+)${HTML_COMMENT_END}$`
 );
 
-const uint8ToBase64 = function(uint8) {
-    let binary = '';
-    const chunkSize = 0x8000;
-    for (let i = 0; i < uint8.length; i += chunkSize) {
-        const chunk = uint8.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, chunk);
-    }
-    return btoa(binary);
-}
+// Desktop fork (section 306): the shared base64 conversion
+const {uint8ArrayToBase64: uint8ToBase64} = require('../util/base64-util');
 
 /**
  * @param {array} fonts array of fonts to compile

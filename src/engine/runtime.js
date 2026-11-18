@@ -22,7 +22,6 @@ const Variable = require('./variable');
 // PMDESKTOP_LISTLOOKUP (section 62)
 const listLookup = require('./list-lookup');
 const xmlEscape = require('../util/xml-escape');
-const ScratchLinkWebSocket = require('../util/scratch-link-websocket');
 const FontManager = require('./tw-font-manager');
 const { validateJSON } = require('../util/json-block-utilities');
 const Color = require('../util/color');
@@ -2500,34 +2499,6 @@ class Runtime extends EventEmitter {
     }
 
     /**
-     * Get a scratch link socket.
-     * @param {string} type Either BLE or BT
-     * @returns {ScratchLinkSocket} The scratch link socket.
-     */
-    getScratchLinkSocket (type) {
-        const factory = this._linkSocketFactory || this._defaultScratchLinkSocketFactory;
-        return factory(type);
-    }
-
-    /**
-     * Configure how ScratchLink sockets are created. Factory must consume a "type" parameter
-     * either BT or BLE.
-     * @param {Function} factory The new factory for creating ScratchLink sockets.
-     */
-    configureScratchLinkSocketFactory (factory) {
-        this._linkSocketFactory = factory;
-    }
-
-    /**
-     * The default scratch link socket creator, using websockets to the installed device manager.
-     * @param {string} type Either BLE or BT
-     * @returns {ScratchLinkSocket} The new scratch link socket (a WebSocket object)
-     */
-    _defaultScratchLinkSocketFactory (type) {
-        return new ScratchLinkWebSocket(type);
-    }
-
-    /**
      * Register an extension that communications with a hardware peripheral by id,
      * to have access to it and its peripheral functions in the future.
      * @param {string} extensionId - the id of the extension.
@@ -4313,6 +4284,22 @@ class Runtime extends EventEmitter {
         const names = this.getSpriteNames();
         for (let i = 0; i < names.length; i++) items.push({text: names[i], value: names[i]});
         return items.length > 0 ? items : [''];
+    }
+
+    /**
+     * Desktop fork (section 306): the names of the lists in the editor's workspace (Variables Expanded, Pen+);
+     * [""] when there are none or there is no editor (packaged games).
+     * @return {Array.<string>} The names.
+     */
+    getWorkspaceListNames () {
+        const lists =
+            typeof Blockly === 'undefined' ?
+                [] :
+                Blockly.getMainWorkspace()
+                    .getVariableMap()
+                    .getVariablesOfType('list')
+                    .map(model => model.name);
+        return lists.length > 0 ? lists : [''];
     }
 
     /**

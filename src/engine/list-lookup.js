@@ -30,17 +30,8 @@ const MIN_LENGTH = 32;
 const BUILD_FACTOR = 3;
 const MAX_FACTOR = 48;
 
-// The same test as in Cast and the compiled scripts' runtime.
-const isNotActuallyZero = val => {
-    if (typeof val !== 'string') return false;
-    for (let i = 0; i < val.length; i++) {
-        const code = val.charCodeAt(i);
-        if (code === 48 || code === 9) {
-            return false;
-        }
-    }
-    return true;
-};
+// The same test as in Cast and the compiled scripts' runtime (Desktop fork, section 306: Cast's own function).
+const isNotActuallyZero = Cast.isNotActuallyZero;
 
 // Adds one item at 1-based position `index` unless an earlier item already has its key.
 // Returns false for a value the table cannot hold.

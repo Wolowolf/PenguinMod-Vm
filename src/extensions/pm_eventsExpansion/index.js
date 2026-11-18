@@ -774,24 +774,7 @@ class pmEventsExpansion {
         return menu;
     }
     _broadcastMenu() {
-        const emptyMenu = [{ text: '', value: '' }];
-        const menu = [];
-        for (const target of this.runtime.targets) {
-            if (!target.isOriginal) continue;
-            if (target.isStage) {
-                menu.push({
-                    text: "stage",
-                    value: target.id
-                });
-                continue;
-            }
-            menu.push({
-                text: target.sprite.name,
-                value: target.id
-            });
-        }
-        if (menu.length <= 0) return emptyMenu;
-        return menu;
+        return this._spriteId(); // Desktop fork (section 306): the same menu
     }
 
     // menus of the blocks from More Events / Events+

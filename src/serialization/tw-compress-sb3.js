@@ -158,3 +158,5 @@ const compress = projectData => {
 };
 
 module.exports = compress;
+// Desktop fork (section 306): the packager's project minifier uses the same id pool
+module.exports.Pool = Pool;
