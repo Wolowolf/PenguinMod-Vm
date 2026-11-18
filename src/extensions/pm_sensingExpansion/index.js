@@ -2,6 +2,8 @@ const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
 const formatMessage = require('format-message');
 const Cast = require('../../util/cast');
+// Desktop fork (section 294): blocks defined once for the interpreter and the compiler
+const SharedBlocks = require('../../blocks/shared');
 const Color = require('../../util/color');
 
 const blockSeparator = '<sep gap="36"/>'; // At default scale, about 28px
@@ -74,6 +76,8 @@ class pmSensingExpansion {
          * @type {runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 294): the shared definitions' functions (src/blocks/shared/ext-expansions.js)
+        this.shared = SharedBlocks.interpreterBlocks(runtime);
 
         this.canVibrate = true;
 
@@ -243,13 +247,12 @@ class pmSensingExpansion {
         };
     }
 
-    getLastKeyPressed (_, util) {
-        return util.ioQuery('keyboard', 'getLastKeyPressed');
+    getLastKeyPressed (args, util) {
+        return this.shared.pmSensingExpansion_getLastKeyPressed(args, util);
     }
 
     getButtonIsDown (args, util) {
-        const button = Cast.toNumber(args.MOUSE_BUTTON);
-        return util.ioQuery('mouse', 'getButtonIsDown', [button]);
+        return this.shared.pmSensingExpansion_getButtonIsDown(args, util);
     }
 
     changed(args, util) {
@@ -276,8 +279,8 @@ class pmSensingExpansion {
 
     // blocks
 
-    maxSpriteLayers() {
-        return this.runtime.renderer._drawList.length - 1;
+    maxSpriteLayers (args, util) {
+        return this.shared.pmSensingExpansion_maxSpriteLayers(args, util);
     }
     averageLoudness() {
         if (!this.canGetLoudness) {
@@ -308,19 +311,11 @@ class pmSensingExpansion {
         return addedTogether / max;
     }
 
-    currentKeyPressed(_, util) {
-        const keys = util.ioQuery('keyboard', 'getAllKeysPressed');
-        const key = keys[keys.length - 1];
-        if (!key) return '';
-        return Cast.toString(key).toLowerCase();
+    currentKeyPressed (args, util) {
+        return this.shared.pmSensingExpansion_currentKeyPressed(args, util);
     }
-    amountOfTimeKeyHasBeenHeld(args, util) {
-        const key = Cast.toString(args.KEY);
-        const keyTimestamp = util.ioQuery('keyboard', 'getKeyTimestamp', [key]);
-        if (keyTimestamp === 0) return 0;
-        const currentTime = this.runtime.pmDateNow(); // Desktop fork (section 154): the runtime's clock, here and below
-        const timestamp = currentTime - keyTimestamp;
-        return timestamp / 1000;
+    amountOfTimeKeyHasBeenHeld (args, util) {
+        return this.shared.pmSensingExpansion_amountOfTimeKeyHasBeenHeld(args, util);
     }
 
     vibrateDevice() {
@@ -339,17 +334,17 @@ class pmSensingExpansion {
 
 
 
-    packaged() {
-        return this.runtime.isPackagedProject;
+    packaged (args, util) {
+        return this.shared.pmSensingExpansion_packaged(args, util);
     }
 
-    spriteName(_, util) {
-        return util.target.getName();
+    spriteName (args, util) {
+        return this.shared.pmSensingExpansion_spriteName(args, util);
     }
 
 
-    currentMillisecond() {
-        return this.runtime.pmDateNow() % 1000;
+    currentMillisecond (args, util) {
+        return this.shared.pmSensingExpansion_currentMillisecond(args, util);
     }
 
 }

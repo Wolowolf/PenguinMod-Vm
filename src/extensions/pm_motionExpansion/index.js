@@ -6,6 +6,8 @@ const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
 const Clone = require('../../util/clone');
 const Cast = require('../../util/cast');
+// Desktop fork (section 294): blocks defined once for the interpreter and the compiler
+const SharedBlocks = require('../../blocks/shared');
 
 const blockSeparator = '<sep gap="36"/>'; // At default scale, about 28px
 
@@ -82,6 +84,8 @@ class pmMotionExpansion {
          * @type {runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 294): the shared definitions' functions (src/blocks/shared/ext-expansions.js)
+        this.shared = SharedBlocks.interpreterBlocks(runtime);
 
         this.spriteHomes = {};
         this.cloneHomes = {};
@@ -338,67 +342,32 @@ class pmMotionExpansion {
         };
     }
 
-    rotationStyle(_, util) {
-        return util.target.rotationStyle;
+    rotationStyle (args, util) {
+        return this.shared.pmMotionExpansion_rotationStyle(args, util);
     }
 
-    fence(_, util) {
-        const newpos = this.runtime.renderer.getFencedPositionOfDrawable(
-            util.target.drawableID,
-            [util.target.x, util.target.y]
-        );
-        util.target.setXY(newpos[0], newpos[1]);
+    fence (args, util) {
+        return this.shared.pmMotionExpansion_fence(args, util);
     }
 
-    directionto(args, util) {
-        // Returns values from -180 to 180, like the direction reporter.
-        const x = Cast.toNumber(args.X);
-        const y = Cast.toNumber(args.Y);
-        return (180 / Math.PI) * Math.atan2(x - util.target.x, y - util.target.y);
+    directionto (args, util) {
+        return this.shared.pmMotionExpansion_directionto(args, util);
     }
 
-    distanceto(args, util) {
-        const x = Cast.toNumber(args.X);
-        const y = Cast.toNumber(args.Y);
-        return Math.sqrt((x - util.target.x) ** 2 + (y - util.target.y) ** 2);
+    distanceto (args, util) {
+        return this.shared.pmMotionExpansion_distanceto(args, util);
     }
 
-    spritewh(args, util) {
-        if (args.WHAT === "width" || args.WHAT === "height") {
-            const bounds = this.runtime.renderer.getBounds(util.target.drawableID);
-            return Math.ceil(args.WHAT === "width" ? bounds.width : bounds.height);
-        }
-        if (args.WHAT === "costume width" || args.WHAT === "costume height") {
-            const costume = util.target.sprite.costumes[util.target.currentCostume];
-            return Math.ceil(args.WHAT === "costume width" ? costume.size[0] : costume.size[1]);
-        }
+    spritewh (args, util) {
+        return this.shared.pmMotionExpansion_spritewh(args, util);
     }
 
-    steptowards(args, util) {
-        const x = Cast.toNumber(args.X);
-        const y = Cast.toNumber(args.Y);
-        const steps = Cast.toNumber(args.STEPS);
-        const val =
-            steps / Math.sqrt((x - util.target.x) ** 2 + (y - util.target.y) ** 2);
-        if (val >= 1) {
-            util.target.setXY(x, y);
-        } else {
-            util.target.setXY(
-                (x - util.target.x) * val + util.target.x,
-                (y - util.target.y) * val + util.target.y
-            );
-        }
+    steptowards (args, util) {
+        return this.shared.pmMotionExpansion_steptowards(args, util);
     }
 
-    tweentowards(args, util) {
-        const x = Cast.toNumber(args.X);
-        const y = Cast.toNumber(args.Y);
-        const val = Cast.toNumber(args.PERCENT);
-        // Essentially a smooth glide script.
-        util.target.setXY(
-            (x - util.target.x) * (val / 100) + util.target.x,
-            (y - util.target.y) * (val / 100) + util.target.y
-        );
+    tweentowards (args, util) {
+        return this.shared.pmMotionExpansion_tweentowards(args, util);
     }
 
     touchingrect(args, util) {

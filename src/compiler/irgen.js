@@ -2681,11 +2681,11 @@ class ScriptTreeGenerator {
         case 'pmOperatorsExpansion_simplifyRatio':
             return {kind: 'pmInline.simplifyRatio', ratio: input('RATIO')};
         case 'pmOperatorsExpansion_pi':
-            return {kind: 'pmInline.number', source: 'Math.PI'};
+            return {kind: 'pmInline.number', opcode: block.opcode};
         case 'pmOperatorsExpansion_euler':
-            return {kind: 'pmInline.number', source: 'Math.E'};
+            return {kind: 'pmInline.number', opcode: block.opcode};
         case 'pmOperatorsExpansion_infinity':
-            return {kind: 'pmInline.number', source: 'Infinity'};
+            return {kind: 'pmInline.number', opcode: block.opcode};
         case 'pmOperatorsExpansion_truncateNumber':
             return {kind: 'pmInline.truncate', num: input('NUM')};
         case 'pmOperatorsExpansion_textAfter':

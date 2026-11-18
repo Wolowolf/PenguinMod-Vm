@@ -5,8 +5,6 @@ const BlockType = require('../extension-support/block-type');
 const VariablePool = require('./variable-pool');
 const jsexecute = require('./jsexecute');
 const environment = require('./environment');
-// Desktop fork (section 202): inline code for small pure extension blocks
-const pureInline = require('./pure-inline');
 const numberFacts = require('./number-facts');
 // Desktop fork (section 291): what the Operators, Variables and Lists blocks do (src/blocks/shared)
 const SharedBlocks = require('../blocks/shared');
@@ -659,7 +657,8 @@ const knownValueSource = value => {
 };
 
 /**
- * Desktop fork (section 202): the arguments of a pure extension block for its inline code (pure-inline.js), each
+ * Desktop fork (section 202): the arguments of a pure extension block for its inline code (section 294: its shared
+ * definition, src/blocks/shared/ext-pure.js), each
  * as the block's function receives it after the extension manager's conversion (descendPureExtensionBlock's
  * `args`: [name, source, value known now]).
  */
@@ -1523,57 +1522,58 @@ class JSGenerator {
         }
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion blocks (irgen.js
-        // descendExpansionInlineInput). Each does what the extension's function does with the arguments the
-        // extension manager's wrapper gives it (number arguments: Cast.toNumber, text: String); helpers in
-        // jsexecute.js take them in the block's order. Text answers stay of unknown type, as in section 118.
+        // descendExpansionInlineInput), converted as the extension manager's wrapper converts them (number arguments:
+        // Cast.toNumber, text: String). Section 294: what they do is the shared definition
+        // (src/blocks/shared/ext-expansions.js), which the extensions' methods call too. Text answers stay of unknown
+        // type, as in section 118.
         case 'pmInline.isMultipleOf':
-            return new TypedInput(`((${this.exactNumber(this.descendInput(node.num))} % ${this.exactNumber(this.descendInput(node.multiple))}) === 0)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_isNumberMultipleOf', {NUM: this.exactNumber(this.descendInput(node.num)), MULTIPLE: this.exactNumber(this.descendInput(node.multiple))}), TYPE_BOOLEAN);
         case 'pmInline.isInteger':
-            return new TypedInput(`pmxIsInteger(${this.exactNumber(this.descendInput(node.num))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_isInteger', {NUM: this.exactNumber(this.descendInput(node.num))}), TYPE_BOOLEAN);
         case 'pmInline.isPrime':
-            return new TypedInput(`pmxIsPrime(${this.exactNumber(this.descendInput(node.num))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_isPrime', {NUM: this.exactNumber(this.descendInput(node.num))}), TYPE_BOOLEAN);
         case 'pmInline.isEven':
-            return new TypedInput(`(${this.exactNumber(this.descendInput(node.num))} % 2 == 0)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_isEven', {NUM: this.exactNumber(this.descendInput(node.num))}), TYPE_BOOLEAN);
         case 'pmInline.between':
-            return new TypedInput(`pmxBetween(${this.exactNumber(this.descendInput(node.num))}, ${this.exactNumber(this.descendInput(node.min))}, ${this.exactNumber(this.descendInput(node.max))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_betweenNumbers', {NUM: this.exactNumber(this.descendInput(node.num)), MIN: this.exactNumber(this.descendInput(node.min)), MAX: this.exactNumber(this.descendInput(node.max))}), TYPE_BOOLEAN);
         case 'pmInline.partOfRatio':
-            return new TypedInput(`pmxPartOfRatio(${this.exactString(this.descendInput(node.part))}, ${this.exactString(this.descendInput(node.ratio))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('pmOperatorsExpansion_partOfRatio', {PART: this.exactString(this.descendInput(node.part)), RATIO: this.exactString(this.descendInput(node.ratio))}), TYPE_UNKNOWN);
         case 'pmInline.simplifyRatio':
-            return new TypedInput(`pmxSimplifyRatio(${this.exactString(this.descendInput(node.ratio))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('pmOperatorsExpansion_simplifyRatio', {RATIO: this.exactString(this.descendInput(node.ratio))}), TYPE_UNKNOWN);
         case 'pmInline.number':
-            return new TypedInput(`(${node.source})`, TYPE_NUMBER);
+            return new TypedInput(shared(node.opcode, {}), TYPE_NUMBER);
         case 'pmInline.truncate':
-            return new TypedInput(`Math.trunc(${this.exactNumber(this.descendInput(node.num))})`, TYPE_NUMBER);
+            return new TypedInput(shared('pmOperatorsExpansion_truncateNumber', {NUM: this.exactNumber(this.descendInput(node.num))}), TYPE_NUMBER);
         case 'pmInline.textAfter':
-            return new TypedInput(`pmxTextAfter(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.base))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('pmOperatorsExpansion_textAfter', {TEXT: this.exactString(this.descendInput(node.text)), BASE: this.exactString(this.descendInput(node.base))}), TYPE_UNKNOWN);
         case 'pmInline.textBefore':
-            return new TypedInput(`pmxTextBefore(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.base))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('pmOperatorsExpansion_textBefore', {TEXT: this.exactString(this.descendInput(node.text)), BASE: this.exactString(this.descendInput(node.base))}), TYPE_UNKNOWN);
         case 'pmInline.exactlyEqual':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.one))} === ${this.exactString(this.descendInput(node.two))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmOperatorsExpansion_exactlyEqual', {ONE: this.exactString(this.descendInput(node.one)), TWO: this.exactString(this.descendInput(node.two))}), TYPE_BOOLEAN);
         case 'pmInline.rotationStyle':
-            return new TypedInput('(target.rotationStyle)', TYPE_UNKNOWN);
+            return new TypedInput(shared('pmMotionExpansion_rotationStyle', {}), TYPE_UNKNOWN);
         case 'pmInline.directionTo':
-            return new TypedInput(`pmxDirectionTo(target, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('pmMotionExpansion_directionto', {X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))}), TYPE_NUMBER_NAN);
         case 'pmInline.distanceTo':
-            return new TypedInput(`pmxDistanceTo(target, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('pmMotionExpansion_distanceto', {X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))}), TYPE_NUMBER_NAN);
         case 'pmInline.spriteSize':
-            return new TypedInput(`pmxSpriteSize(runtime, target, "${sanitize(node.what)}")`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('pmMotionExpansion_spritewh', {}, SharedBlocks.option('pmMotionExpansion_spritewh', node.what)), TYPE_NUMBER_NAN);
         case 'pmInline.packaged':
-            return new TypedInput('(runtime.isPackagedProject)', TYPE_UNKNOWN);
+            return new TypedInput(shared('pmSensingExpansion_packaged', {}), TYPE_UNKNOWN);
         case 'pmInline.spriteName':
-            return new TypedInput('(target.getName())', TYPE_UNKNOWN);
+            return new TypedInput(shared('pmSensingExpansion_spriteName', {}), TYPE_UNKNOWN);
         case 'pmInline.currentMillisecond':
-            return new TypedInput('(runtime.pmDateNow() % 1000)', TYPE_NUMBER);
+            return new TypedInput(shared('pmSensingExpansion_currentMillisecond', {}), TYPE_NUMBER);
         case 'pmInline.maxSpriteLayers':
-            return new TypedInput('(runtime.renderer._drawList.length - 1)', TYPE_NUMBER);
+            return new TypedInput(shared('pmSensingExpansion_maxSpriteLayers', {}), TYPE_NUMBER);
         case 'pmInline.currentKey':
-            return new TypedInput('pmxCurrentKey(runtime)', TYPE_UNKNOWN);
+            return new TypedInput(shared('pmSensingExpansion_currentKeyPressed', {}), TYPE_UNKNOWN);
         case 'pmInline.lastKey':
-            return new TypedInput('(runtime.ioDevices.keyboard.getLastKeyPressed())', TYPE_UNKNOWN);
+            return new TypedInput(shared('pmSensingExpansion_getLastKeyPressed', {}), TYPE_UNKNOWN);
         case 'pmInline.keyHeld':
-            return new TypedInput(`pmxKeyHeld(runtime, ${this.exactString(this.descendInput(node.key))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('pmSensingExpansion_amountOfTimeKeyHasBeenHeld', {KEY: this.exactString(this.descendInput(node.key))}), TYPE_NUMBER_NAN);
         case 'pmInline.buttonDown':
-            return new TypedInput(`(runtime.ioDevices.mouse.getButtonIsDown(${this.exactNumber(this.descendInput(node.button))}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('pmSensingExpansion_getButtonIsDown', {MOUSE_BUTTON: this.exactNumber(this.descendInput(node.button))}), TYPE_BOOLEAN);
 
         // Desktop fork (section 195): blocks that search by a name fixed in the block (irgen.js
         // descendNameSearchInline; helpers in jsexecute.js).
@@ -2716,15 +2716,15 @@ class JSGenerator {
             break;
 
         // Desktop fork (section 140): Operators, Motion and Sensing Expansion commands (irgen.js
-        // descendExpansionInlineStack), as the extension's functions are.
+        // descendExpansionInlineStack); section 294: from the shared definitions.
         case 'pmInline.fence':
-            this.source += 'pmxFence(runtime, target);\n';
+            this.source += shared('pmMotionExpansion_fence', {});
             break;
         case 'pmInline.stepTowards':
-            this.source += `pmxStepTowards(target, ${this.exactNumber(this.descendInput(node.steps))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            this.source += shared('pmMotionExpansion_steptowards', {STEPS: this.exactNumber(this.descendInput(node.steps)), X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
         case 'pmInline.tweenTowards':
-            this.source += `pmxTweenTowards(target, ${this.exactNumber(this.descendInput(node.percent))}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            this.source += shared('pmMotionExpansion_tweentowards', {PERCENT: this.exactNumber(this.descendInput(node.percent)), X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
 
         // Desktop fork (section 149): the list commands of Variables & Lists (irgen.js descendDataInline), as the
@@ -3814,10 +3814,12 @@ class JSGenerator {
             }
         }
 
-        // Desktop fork (section 202): small blocks become inline code (pure-inline.js); the direct call below stays
-        // for the rest. Switch (tests only): runtime.pmNoPureInline.
-        if (!this.target.runtime.pmNoPureInline && Object.prototype.hasOwnProperty.call(pureInline, opcode)) {
-            const inline = this.pureInlineCode(pureInline[opcode], node, args, inputs, types);
+        // Desktop fork (section 202): small blocks become inline code (section 294: their shared definitions with
+        // `pure`, src/blocks/shared/ext-pure.js); the direct call below stays for the rest. Switch (tests only):
+        // runtime.pmNoPureInline.
+        if (!this.target.runtime.pmNoPureInline && Object.prototype.hasOwnProperty.call(SharedBlocks.blocks, opcode) &&
+            SharedBlocks.blocks[opcode].pure) {
+            const inline = this.pureInlineCode(opcode, node, args, inputs, types);
             if (inline) return inline;
         }
 
@@ -3901,37 +3903,55 @@ class JSGenerator {
     }
 
     /**
-     * Desktop fork (section 202): the inline code of a small pure extension block (pure-inline.js), or null to keep
-     * the direct call: when an input is stored out of the order of the block's text (the direct call works inputs
-     * out in the order they are stored; that matters for inputs that change something, e.g. pick random), when the
-     * block has an input or field the entry does not know, or when the entry declines (e.g. a menu not fixed).
-     * @param {{order: string[], js: Function}} entry The block's entry.
+     * Desktop fork (section 202): the inline code of a small pure extension block, or null to keep the direct call:
+     * when an input is stored out of the order of the block's text (the direct call works inputs out in the order
+     * they are stored; that matters for inputs that change something, e.g. pick random), when the block has an input
+     * or field the definition does not know, or when a menu's value has no option of its own. Section 294: the code
+     * is the block's shared definition (src/blocks/shared/ext-pure.js) with each input as PureInlineArgs gives it by
+     * its kind.
+     * @param {string} opcode The block's opcode.
      * @param {*} node The "compat" node.
      * @param {Array} args [name, source, value known now] of every argument, as for the direct call.
      * @param {object} inputs The compiled inputs by name.
      * @param {Map} types The type the extension manager converts each argument to.
      * @returns {TypedInput|null} The answer.
      */
-    pureInlineCode (entry, node, args, inputs, types) {
+    pureInlineCode (opcode, node, args, inputs, types) {
+        const definition = SharedBlocks.blocks[opcode];
+        const kinds = (definition.inputs || '').split(' ').filter(Boolean).map(entry => entry.split(':'));
+        const order = definition.order ? definition.order.split(' ') : kinds.map(([name]) => name);
         let next = 0;
         for (const name of Object.keys(node.inputs)) {
-            const at = entry.order.indexOf(name);
+            const at = order.indexOf(name);
             if (at < next) return null;
             next = at + 1;
         }
         for (const name of Object.keys(node.fields)) {
-            if (entry.order.indexOf(name) === -1) return null;
+            if (order.indexOf(name) === -1) return null;
         }
         const byName = new Map();
         for (const arg of args) byName.set(arg[0], arg);
-        for (const name of entry.order) {
+        for (const name of order) {
             if (!byName.has(name)) return null;
         }
         const typedVariables = !this.target.runtime.pmNoTypedVariableArguments;
-        const result = entry.js(new PureInlineArgs(byName, inputs, types, typedVariables));
-        if (!result) return null;
-        const type = {int: TYPE_NUMBER, number: TYPE_NUMBER_NAN, boolean: TYPE_BOOLEAN}[result[1]] || TYPE_UNKNOWN;
-        return new TypedInput(`(${result[0]})`, type);
+        const a = new PureInlineArgs(byName, inputs, types, typedVariables);
+        let option;
+        if (definition.menu) {
+            const values = [];
+            for (const name of definition.menu.split(' ')) {
+                const fixed = a.fixed(name);
+                if (!fixed) return null;
+                values.push(fixed.value);
+            }
+            option = SharedBlocks.option(opcode, values.length === 1 ? values[0] : values);
+            if (option === null) return null;
+        }
+        const values = {};
+        const convert = {r: 'raw', n: 'num', s: 'str', b: 'bool', c: 'cmp'};
+        for (const [name, kind] of kinds) values[name] = a[convert[kind]](name);
+        const type = {int: TYPE_NUMBER, number: TYPE_NUMBER_NAN, boolean: TYPE_BOOLEAN}[definition.pure] || TYPE_UNKNOWN;
+        return new TypedInput(`(${shared(opcode, values, option)})`, type);
     }
 
     /**

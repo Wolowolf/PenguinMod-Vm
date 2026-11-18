@@ -14,7 +14,7 @@
  *   just before it. A helper reads only its parameters, other helpers, standard JavaScript and `globalState`
  *   (Cast, listLookup, thread.target.runtime): no `runtime`, compiled scripts' helpers cannot see it.
  * - blocks: opcode -> {inputs, js | stack, menu, options, otherwise, lowerCase, list, variable, fields, locals, skip,
- *   command}:
+ *   command, order, pure}:
  *   `inputs` "NAME:kind NAME:kind" in the block's order, kind n number, s text, b Boolean, r the value as it is
  *   (the interpreter converts with Cast.toNumber / toString / toBoolean; the compiler with its own converters to
  *   the same kind). `js` is an expression (a reporter), `stack` statements ending in a line break (a command).
@@ -29,12 +29,17 @@
  *   often as needed (the compiler gives fresh names, so two blocks in one script never clash). `skip`: a condition
  *   (fields and `target` only) under which the block does nothing; the interpreter tests it each time, the compiler
  *   when it compiles (jsgen.js then writes nothing, not even the inputs). A command with a menu has `command: true`.
+ *   Section 294 (extension blocks, shared/ext-*.js): the opcode is the extension's (`<id>_<method>`) and the
+ *   extension's method calls the function made here (`interpreterBlocks(runtime)[opcode](args, util)`), so the
+ *   interpreter converts once more what the extension manager already converted (the same value). `menu` may name
+ *   several menus ("rd CS"; the option is their values joined by a space). Kind `c`, `order` and `pure`:
+ *   shared/ext-pure.js.
  */
 const Cast = require('../../util/cast');
 const listLookup = require('../../engine/list-lookup');
 
 const FILES = [require('./operators'), require('./data'), require('./motion'), require('./looks'), require('./sound'),
-    require('./sensing'), require('./control')];
+    require('./sensing'), require('./control'), require('./ext-expansions'), require('./ext-pure')];
 
 const helpers = {};
 const blocks = {};
@@ -115,12 +120,12 @@ const helperSources = () => {
 
 /**
  * @param {string} opcode The block's opcode.
- * @param {*} value The menu field's value.
+ * @param {*} value The menu field's value (section 294: an array of the values of several menus).
  * @returns {string|null} The option of the block's menu this value picks, or null for `otherwise`.
  */
 const option = (opcode, value) => {
     const definition = blocks[opcode];
-    let key = Cast.toString(value);
+    let key = Array.isArray(value) ? value.map(Cast.toString).join(' ') : Cast.toString(value);
     if (definition.lowerCase) key = key.toLowerCase();
     return Object.prototype.hasOwnProperty.call(definition.options, key) ? key : null;
 };
@@ -181,8 +186,9 @@ const interpreterSource = opcode => {
     // (each menu option in its own braces, so its constants and a command's end stay its own)
     const write = template => (definition.stack || definition.command ? `{\n${fill(template)}return;\n}` : `return ${fill(template)};`);
     if (definition.menu) {
-        let menu = `Cast.toString(args.${definition.menu})`;
-        if (definition.lowerCase) menu += '.toLowerCase()';
+        // (section 294: several menus give their values joined by a space)
+        let menu = definition.menu.split(' ').map(name => `Cast.toString(args.${name})`).join(' + " " + ');
+        if (definition.lowerCase) menu = `(${menu}).toLowerCase()`;
         body += `switch (${menu}) {\n`;
         for (const key of Object.keys(definition.options)) {
             body += `case ${JSON.stringify(key)}: ${write(definition.options[key])}\n`;

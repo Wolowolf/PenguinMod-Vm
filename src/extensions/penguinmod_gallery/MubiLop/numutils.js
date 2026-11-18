@@ -1,8 +1,10 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's MubiLop/numutils.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork (section 294)".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+// Desktop fork (section 294): blocks defined once for the interpreter and the compiler (src/blocks/shared/ext-pure.js)
+const SharedBlocks = require('../../../blocks/shared');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Number Utilities
 // ID: numberUtilities
@@ -12,6 +14,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
 (function(Scratch) {
   'use strict';
+  // Desktop fork (section 294): the shared definitions' functions
+  const sharedBlocks = SharedBlocks.interpreterBlocks(Scratch.vm.runtime);
 
   if (!Scratch.extensions.unsandboxed) {
     throw new Error('"Number Utilities" cannot run unsandboxed.');
@@ -310,16 +314,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return Cast.toNumber(args.NUMBER).toLocaleString(locale);
     }
 
-    toFixed(args) {
-      return Cast.toNumber(args.NUMBER).toFixed(Cast.toNumber(args.DECIMALS));
+    toFixed(args, util) {
+      return sharedBlocks.numberUtilities_toFixed(args, util);
     }
 
-    toPrecision(args) {
-      return Cast.toNumber(args.NUMBER).toPrecision(Cast.toNumber(args.PRECISION));
+    toPrecision(args, util) {
+      return sharedBlocks.numberUtilities_toPrecision(args, util);
     }
 
-    toExponential(args) {
-      return Cast.toNumber(args.NUMBER).toExponential(Cast.toNumber(args.DECIMALS));
+    toExponential(args, util) {
+      return sharedBlocks.numberUtilities_toExponential(args, util);
     }
 
     formatShort(args) {
@@ -338,18 +342,16 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       }
     }
 
-    formatPercentage(args) {
-      const number = Cast.toNumber(args.NUMBER);
-      return `${(number * 100).toFixed(Cast.toNumber(args.DECIMALS))}%`;
+    formatPercentage(args, util) {
+      return sharedBlocks.numberUtilities_formatPercentage(args, util);
     }
 
-    roundNumber(args) {
-      const multiple = Cast.toNumber(args.MULTIPLE);
-      return Math.round(Cast.toNumber(args.NUMBER) / multiple) * multiple;
+    roundNumber(args, util) {
+      return sharedBlocks.numberUtilities_roundNumber(args, util);
     }
 
-    isFinite(args) {
-      return Number.isFinite(Cast.toNumber(args.NUMBER));
+    isFinite(args, util) {
+      return sharedBlocks.numberUtilities_isFinite(args, util);
     }
 
   }

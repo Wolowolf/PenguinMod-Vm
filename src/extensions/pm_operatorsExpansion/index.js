@@ -3,6 +3,8 @@ const ArgumentType = require("../../extension-support/argument-type");
 const Cast = require("../../util/cast");
 const MathJS = require("./mathjs.js");
 const ExpandableBlocks = require("../../util/expandable-blocks");
+// Desktop fork (section 294): blocks defined once for the interpreter and the compiler
+const SharedBlocks = require("../../blocks/shared");
 
 // Desktop fork (section 281): "or else" as a single block and as a modular chain "A or else B or else C…"
 const OR_ELSE = { prefix: "VALUE", shadow: "text", sep: "or else", exemptFromNormalization: true };
@@ -19,6 +21,8 @@ class pmOperatorsExpansion {
      */
     this.runtime = runtime;
     this.runtime.registerCompiledExtensionBlocks("pmOperatorsExpansion", this.getCompileInfo());
+    // Desktop fork (section 294): the shared definitions' functions (src/blocks/shared/ext-expansions.js)
+    this.shared = SharedBlocks.interpreterBlocks(runtime);
 
     this.replacers = Object.create(null);
   }
@@ -640,8 +644,8 @@ class pmOperatorsExpansion {
         }) => {
           const num1 = asGiven(compiler.descendInput(node.one));
           const num2 = asGiven(compiler.descendInput(node.two));
-
-          return new TypedInput(`(${num1} || ${num2})`, TYPE_UNKNOWN);
+          // Desktop fork (section 294): the shared definition
+          return new TypedInput(SharedBlocks.inline("pmOperatorsExpansion_orIfFalsey", { ONE: num1, TWO: num2 }), TYPE_UNKNOWN);
         },
         // Desktop fork (section 281): nested single "or else" blocks, left to right
         orIfFalseyModular: (node, compiler, {
@@ -660,22 +664,21 @@ class pmOperatorsExpansion {
         }) => {
           const num1 = compiler.descendInput(node.one).asBoolean();
           const num2 = asGiven(compiler.descendInput(node.two));
-
-          return new TypedInput(`(${num1} && ${num2})`, TYPE_UNKNOWN);
+          return new TypedInput(SharedBlocks.inline("pmOperatorsExpansion_ifIsTruthy", { ONE: num1, TWO: num2 }), TYPE_UNKNOWN);
         },
         speedToPitch: (node, compiler, {
           TypedInput,
           TYPE_NUMBER_NAN
         }) => {
           const speed = compiler.descendInput(node.speed).asNumber();
-          return new TypedInput(`((1200 * Math.log2(${speed})) / 10)`, TYPE_NUMBER_NAN);
+          return new TypedInput(SharedBlocks.inline("pmOperatorsExpansion_speedToPitch", { SPEED: speed }), TYPE_NUMBER_NAN);
         },
         pitchToSpeed: (node, compiler, {
           TypedInput,
           TYPE_NUMBER_NAN
         }) => {
           const pitch = compiler.descendInput(node.pitch).asNumber();
-          return new TypedInput(`(Math.pow(2, (${pitch} * 10) / 1200))`, TYPE_NUMBER_NAN);
+          return new TypedInput(SharedBlocks.inline("pmOperatorsExpansion_pitchToSpeed", { PITCH: pitch }), TYPE_NUMBER_NAN);
         },
         atan2: (node, compiler, {
           TypedInput,
@@ -683,90 +686,27 @@ class pmOperatorsExpansion {
         }) => {
           const x = compiler.descendInput(node.x).asNumber();
           const y = compiler.descendInput(node.y).asNumber();
-          return new TypedInput(`(Math.atan2((${y} * 180) / Math.PI, (${x} * 180) / Math.PI))`, TYPE_NUMBER_NAN);
+          return new TypedInput(SharedBlocks.inline("pmOperatorsExpansion_atan2", { X: x, Y: y }), TYPE_NUMBER_NAN);
         }
       }
     };
   }
 
-  // util
-  reduce(numerator, denominator) {
-    let gcd = function gcd(a, b) {
-      return b ? gcd(b, a % b) : a;
-    };
-    gcd = gcd(numerator, denominator);
-    return [numerator / gcd, denominator / gcd];
-  }
-  checkPrime(number) {
-    number = Math.trunc(number);
-    // Desktop fork: Infinity is not prime (the loop never ended), and divisors are only tried up to
-    // the square root (same answers; big primes took seconds)
-    if (number <= 1 || !Number.isFinite(number)) return false;
-    for (let i = 2; i * i <= number; i++) {
-      if (number % i === 0) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // useful
-  pi() {
-    return Math.PI;
-  }
-  euler() {
-    return Math.E;
-  }
-  infinity() {
-    return Infinity;
-  }
-
-  partOfRatio(args) {
-    const ratio = Cast.toString(args.RATIO);
-    const part = Cast.toString(args.PART).toLowerCase();
-
-    if (!ratio.includes(":")) return "";
-    const split = ratio.split(":");
-
-    const section = split[Number(part === "last")];
-    return Cast.toNumber(section);
-  }
-  simplifyRatio(args) {
-    const ratio = Cast.toString(args.RATIO);
-    if (!ratio.includes(":")) return "";
-    const split = ratio.split(":");
-
-    const first = Cast.toNumber(split[0]);
-    const last = Cast.toNumber(split[1]);
-
-    const reduced = this.reduce(first, last);
-
-    return `${Cast.toNumber(reduced[0])}:${Cast.toNumber(reduced[1])}`;
-  }
-
-  truncateNumber(args) {
-    const num = Cast.toNumber(args.NUM);
-    return Math.trunc(num);
-  }
-
-  isNumberMultipleOf(args) {
-    const num = Cast.toNumber(args.NUM);
-    const mult = Cast.toNumber(args.MULTIPLE);
-
-    return (num % mult) === 0;
-  }
-  isInteger(args) {
-    const num = Cast.toNumber(args.NUM);
-    return Math.trunc(num) === num;
-  }
-  isPrime(args) {
-    const num = Cast.toNumber(args.NUM);
-    return this.checkPrime(num);
-  }
-  isEven(args) {
-    const num = Cast.toNumber(args.NUM);
-    return num % 2 == 0;
-  }
+  // Desktop fork (section 294): defined once for the interpreter and the compiler (src/blocks/shared/ext-expansions.js)
+  pi(args, util) { return this.shared.pmOperatorsExpansion_pi(args, util); }
+  euler(args, util) { return this.shared.pmOperatorsExpansion_euler(args, util); }
+  infinity(args, util) { return this.shared.pmOperatorsExpansion_infinity(args, util); }
+  partOfRatio(args, util) { return this.shared.pmOperatorsExpansion_partOfRatio(args, util); }
+  simplifyRatio(args, util) { return this.shared.pmOperatorsExpansion_simplifyRatio(args, util); }
+  truncateNumber(args, util) { return this.shared.pmOperatorsExpansion_truncateNumber(args, util); }
+  isNumberMultipleOf(args, util) { return this.shared.pmOperatorsExpansion_isNumberMultipleOf(args, util); }
+  isInteger(args, util) { return this.shared.pmOperatorsExpansion_isInteger(args, util); }
+  isPrime(args, util) { return this.shared.pmOperatorsExpansion_isPrime(args, util); }
+  isEven(args, util) { return this.shared.pmOperatorsExpansion_isEven(args, util); }
+  exactlyEqual(args, util) { return this.shared.pmOperatorsExpansion_exactlyEqual(args, util); }
+  betweenNumbers(args, util) { return this.shared.pmOperatorsExpansion_betweenNumbers(args, util); }
+  textAfter(args, util) { return this.shared.pmOperatorsExpansion_textAfter(args, util); }
+  textBefore(args, util) { return this.shared.pmOperatorsExpansion_textBefore(args, util); }
 
   evaluateMath(args) {
     const equation = Cast.toString(args.EQUATION);
@@ -791,23 +731,6 @@ class pmOperatorsExpansion {
     }
     // Cast.toNumber converts NaN to 0
     return Number(answer);
-  }
-
-  exactlyEqual(args) {
-    // everyone requested this but watch literally no one use it :trollface:
-    return args.ONE === args.TWO;
-  }
-  betweenNumbers(args) {
-    const number = Cast.toNumber(args.NUM);
-    let min = Cast.toNumber(args.MIN);
-    let max = Cast.toNumber(args.MAX);
-    // check that max isnt less than min
-    if (max < min) {
-      const switchover = max;
-      max = min;
-      min = switchover;
-    }
-    return (number <= max) && (number >= min);
   }
 
   shuffleChars(args) {
@@ -835,36 +758,17 @@ class pmOperatorsExpansion {
     return text;
   }
 
-  textAfter(args) {
-    const text = Cast.toString(args.TEXT);
-    const base = Cast.toString(args.BASE);
-    const idx = base.indexOf(text);
-    if (idx < 0) return "";
-    return base.substring(idx + text.length);
-  }
-  textBefore(args) {
-    const text = Cast.toString(args.TEXT);
-    const base = Cast.toString(args.BASE);
-    const idx = base.indexOf(text);
-    if (idx < 0) return "";
-    return base.substring(0, idx);
-  }
-
-  // These blocks are compiled
-  // Desktop fork: the interpreter's versions, the same as the compiler code above (they were stubs,
-  // so these blocks only worked in compiled scripts)
-  orIfFalsey(args) { return args.ONE || args.TWO }
+  // These blocks are compiled (section 294: from their shared definitions, as the interpreter's versions)
+  orIfFalsey(args, util) { return this.shared.pmOperatorsExpansion_orIfFalsey(args, util); }
   // Desktop fork (section 281): a chain of the single block's function, left to right
   orIfFalseyModular(args) {
     return ExpandableBlocks.runChain(args, { prefix: OR_ELSE.prefix, levels: { o: 1 }, empty: "" },
       (symbol, ONE, TWO) => this.orIfFalsey({ ONE, TWO }));
   }
-  ifIsTruthy(args) { return Cast.toBoolean(args.ONE) && args.TWO }
-  speedToPitch(args) { return (1200 * Math.log2(Cast.toNumber(args.SPEED))) / 10 }
-  pitchToSpeed(args) { return Math.pow(2, (Cast.toNumber(args.PITCH) * 10) / 1200) }
-  atan2(args) {
-    return Math.atan2((Cast.toNumber(args.Y) * 180) / Math.PI, (Cast.toNumber(args.X) * 180) / Math.PI);
-  }
+  ifIsTruthy(args, util) { return this.shared.pmOperatorsExpansion_ifIsTruthy(args, util); }
+  speedToPitch(args, util) { return this.shared.pmOperatorsExpansion_speedToPitch(args, util); }
+  pitchToSpeed(args, util) { return this.shared.pmOperatorsExpansion_pitchToSpeed(args, util); }
+  atan2(args, util) { return this.shared.pmOperatorsExpansion_atan2(args, util); }
 }
 
 module.exports = pmOperatorsExpansion;

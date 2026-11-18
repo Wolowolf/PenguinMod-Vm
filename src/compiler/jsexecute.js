@@ -558,7 +558,8 @@ runtimeFunctions.toBoolean = `const toBoolean = value => {
 }`;
 
 // Desktop fork (section 291): the helpers of the shared block definitions (src/blocks/shared: Operators, Variables
-// and Lists; Motion, Looks, Sound, section 292; Sensing, Control, section 293), the same source text the interpreter's
+// and Lists; Motion, Looks, Sound, section 292; Sensing, Control, section 293; section 294: the Operators, Motion and
+// Sensing Expansion helpers pmx… and the small pure extension blocks' pmi…), the same source text the interpreter's
 // functions are made from.
 baseRuntime += SharedBlocks.baseSource();
 Object.assign(runtimeFunctions, SharedBlocks.helperSources());
@@ -774,160 +775,6 @@ const scopedEval = source => {
 };
 
 /**
- * Desktop fork (section 140): helpers for the Operators, Motion and Sensing Expansion blocks compiled to inline
- * code (jsgen.js, irgen.js descendExpansionInlineInput / Stack). Each is the extension's function with its
- * arguments already converted as the extension manager's wrapper and the function convert them; the parameters
- * are in the block's input order. Those in PURE_HELPER_NAMES read nothing but their parameters.
- */
-runtimeFunctions.pmxIsInteger = `const pmxIsInteger = num => Math.trunc(num) === num`;
-runtimeFunctions.pmxIsPrime = `const pmxIsPrime = number => {
-    number = Math.trunc(number);
-    if (number <= 1 || !Number.isFinite(number)) return false;
-    for (let i = 2; i * i <= number; i++) {
-        if (number % i === 0) return false;
-    }
-    return true;
-}`;
-runtimeFunctions.pmxBetween = `const pmxBetween = (number, min, max) => {
-    if (max < min) {
-        const switchover = max;
-        max = min;
-        min = switchover;
-    }
-    return (number <= max) && (number >= min);
-}`;
-runtimeFunctions.pmxPartOfRatio = `const pmxPartOfRatio = (part, ratio) => {
-    part = part.toLowerCase();
-    if (!ratio.includes(":")) return "";
-    const split = ratio.split(":");
-    return globalState.Cast.toNumber(split[Number(part === "last")]);
-}`;
-runtimeFunctions.pmxSimplifyRatio = `const pmxSimplifyRatio = ratio => {
-    if (!ratio.includes(":")) return "";
-    const split = ratio.split(":");
-    const first = globalState.Cast.toNumber(split[0]);
-    const last = globalState.Cast.toNumber(split[1]);
-    const gcd = (a, b) => (b ? gcd(b, a % b) : a);
-    const divisor = gcd(first, last);
-    return globalState.Cast.toNumber(first / divisor) + ":" + globalState.Cast.toNumber(last / divisor);
-}`;
-runtimeFunctions.pmxTextAfter = `const pmxTextAfter = (text, base) => {
-    const idx = base.indexOf(text);
-    if (idx < 0) return "";
-    return base.substring(idx + text.length);
-}`;
-runtimeFunctions.pmxTextBefore = `const pmxTextBefore = (text, base) => {
-    const idx = base.indexOf(text);
-    if (idx < 0) return "";
-    return base.substring(0, idx);
-}`;
-/**
- * Desktop fork (section 202): helpers of the inline code for small pure extension blocks (pure-inline.js). Each is
- * the block function's own code with its inputs already converted as the extension manager converts them; the
- * parameters are in the block's input order. A helper cannot call another one (compiled code gets only the helpers
- * its source names), so the shared parts are written out in each.
- */
-runtimeFunctions.pmiRotateRight = `const pmiRotateRight = (number, k) => (number >>> k) | (number << (32 - k))`;
-runtimeFunctions.pmiRotateLeft = `const pmiRotateLeft = (number, k) => (number << k) | (number >>> (32 - k))`;
-runtimeFunctions.pmiAlmostEqual = `const pmiAlmostEqual = (a, b) => {
-    const c = globalState.Cast.compare(a, b);
-    return c <= 0.5 && c >= -0.5;
-}`;
-runtimeFunctions.pmiScale = `const pmiScale = (a, m1, M1, m2, M2) => ((a - m1) * (M2 - m2)) / (M1 - m1) + m2`;
-// True Fantom Math's is float (isTrueInt and toNaNNumber; NaN is neither)
-runtimeFunctions.pmiIsFraction = `const pmiIsFraction = val => {
-    const n = Number(val);
-    if (Number.isNaN(n)) return false;
-    if (typeof val === "number" || typeof val === "string") return n !== Math.floor(n);
-    return typeof val !== "boolean";
-}`;
-runtimeFunctions.pmiRoundTo = `const pmiRoundTo = (number, multiple) => Math.round(number / multiple) * multiple`;
-runtimeFunctions.pmiSegmentLength = `const pmiSegmentLength = (x1, y1, x2, y2) => Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))`;
-runtimeFunctions.pmiRayDirection = `const pmiRayDirection = (x1, y1, x2, y2) => (Math.atan2(x2 - x1, y2 - y1) * 180) / Math.PI`;
-runtimeFunctions.pmiPerpendicular = `const pmiPerpendicular = (a, b) => {
-    if (isNaN(a) || isNaN(b)) return false;
-    return (a - (b - 90)) % 180 == 0;
-}`;
-// Graphics 2D's area (the shoelace sum in its loop's order) and perimeter
-runtimeFunctions.pmiTriangleArea = `const pmiTriangleArea = (x1, y1, x2, y2, x3, y3) => {
-    let area = 0;
-    area += x1 * y2;
-    area -= x2 * y1;
-    area += x2 * y3;
-    area -= x3 * y2;
-    area += x3 * y1;
-    area -= x1 * y3;
-    return Math.abs(area) / 2;
-}`;
-runtimeFunctions.pmiTrianglePerimeter = `const pmiTrianglePerimeter = (x1, y1, x2, y2, x3, y3) => {
-    let i = 0;
-    i += Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-    i += Math.sqrt(Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2));
-    i += Math.sqrt(Math.pow(x3 - x1, 2) + Math.pow(y3 - y1, 2));
-    return i;
-}`;
-runtimeFunctions.pmiHeron = `const pmiHeron = (s1, s2, s3) => {
-    const s = (s1 + s2 + s3) / 2;
-    return Math.sqrt(s * (s - s1) * (s - s2) * (s - s3));
-}`;
-runtimeFunctions.pmiQuadArea = `const pmiQuadArea = (x1, y1, x2, y2, x3, y3, x4, y4) => {
-    let area = 0;
-    area += x1 * y2;
-    area -= x2 * y1;
-    area += x2 * y3;
-    area -= x3 * y2;
-    area += x3 * y4;
-    area -= x4 * y3;
-    area += x4 * y1;
-    area -= x1 * y4;
-    return Math.abs(area) / 2;
-}`;
-runtimeFunctions.pmiQuadPerimeter = `const pmiQuadPerimeter = (x1, y1, x2, y2, x3, y3, x4, y4) => {
-    let i = 0;
-    i += Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-    i += Math.sqrt(Math.pow(x2 - x3, 2) + Math.pow(y2 - y3, 2));
-    i += Math.sqrt(Math.pow(x3 - x4, 2) + Math.pow(y3 - y4, 2));
-    i += Math.sqrt(Math.pow(x4 - x1, 2) + Math.pow(y4 - y1, 2));
-    return i;
-}`;
-runtimeFunctions.pmxDirectionTo = `const pmxDirectionTo = (target, x, y) => (180 / Math.PI) * Math.atan2(x - target.x, y - target.y)`;
-runtimeFunctions.pmxDistanceTo = `const pmxDistanceTo = (target, x, y) => Math.sqrt((x - target.x) ** 2 + (y - target.y) ** 2)`;
-runtimeFunctions.pmxSpriteSize = `const pmxSpriteSize = (runtime, target, what) => {
-    if (what === "width" || what === "height") {
-        const bounds = runtime.renderer.getBounds(target.drawableID);
-        return Math.ceil(what === "width" ? bounds.width : bounds.height);
-    }
-    const costume = target.sprite.costumes[target.currentCostume];
-    return Math.ceil(what === "costume width" ? costume.size[0] : costume.size[1]);
-}`;
-runtimeFunctions.pmxCurrentKey = `const pmxCurrentKey = runtime => {
-    const keys = runtime.ioDevices.keyboard.getAllKeysPressed();
-    const key = keys[keys.length - 1];
-    if (!key) return "";
-    return String(key).toLowerCase();
-}`;
-runtimeFunctions.pmxKeyHeld = `const pmxKeyHeld = (runtime, key) => {
-    const keyTimestamp = runtime.ioDevices.keyboard.getKeyTimestamp(key);
-    if (keyTimestamp === 0) return 0;
-    return (runtime.pmDateNow() - keyTimestamp) / 1000;
-}`;
-runtimeFunctions.pmxFence = `const pmxFence = (runtime, target) => {
-    const newpos = runtime.renderer.getFencedPositionOfDrawable(target.drawableID, [target.x, target.y]);
-    target.setXY(newpos[0], newpos[1]);
-}`;
-runtimeFunctions.pmxStepTowards = `const pmxStepTowards = (target, steps, x, y) => {
-    const val = steps / Math.sqrt((x - target.x) ** 2 + (y - target.y) ** 2);
-    if (val >= 1) {
-        target.setXY(x, y);
-    } else {
-        target.setXY((x - target.x) * val + target.x, (y - target.y) * val + target.y);
-    }
-}`;
-runtimeFunctions.pmxTweenTowards = `const pmxTweenTowards = (target, val, x, y) => {
-    target.setXY((x - target.x) * (val / 100) + target.x, (y - target.y) * (val / 100) + target.y);
-}`;
-
-/**
  * Desktop fork (section 149): helpers for the TurboWarp "Variable and list" (pmd…) and List Tools (pml…) blocks
  * compiled to inline code (jsgen.js, irgen.js descendDataInline). Each is the extension's function with its
  * arguments already converted as the extension manager's wrapper does; the parameters after `site` are in the
@@ -1072,8 +919,7 @@ runtimeFunctions.pmcSet = `const pmcSet = (target, edit, value, check, expected)
  * Desktop fork (section 195): helpers for blocks that search by a name fixed in the block (irgen.js
  * descendNameSearchInline). pmsVariable (Variables Expanded) and pmsBroadcast (Events Expansion) ask what the
  * extension asks once and keep the answer like pmdName, while the target is the same and
- * runtime.pmVarNamesVersion has not changed. pmsList (Sensing+) parses the menu's text once; the sprite is still
- * looked up on every call, nothing tells when sprites are renamed.
+ * runtime.pmVarNamesVersion has not changed.
  */
 runtimeFunctions.pmsVariable = `class pmsVariable {
     constructor (runtime, name) {
@@ -1113,29 +959,6 @@ runtimeFunctions.pmsReceived = `const pmsReceived = site => {
         site.version = site.runtime.pmVarNamesVersion;
     }
     return globalState.Cast.toBoolean(site.broadcast && site.broadcast.isSent);
-}`;
-runtimeFunctions.pmsList = `class pmsList {
-    constructor (runtime, text) {
-        this.runtime = runtime;
-        this.variableId = null;
-        this.targetName = null;
-        try {
-            const parsed = JSON.parse(text);
-            if (parsed && parsed.variableId && parsed.targetName) {
-                this.variableId = parsed.variableId;
-                this.targetName = parsed.targetName;
-            }
-        } catch (e) {
-            // as the extension: no list
-        }
-    }
-    get () {
-        if (this.targetName === null) return null;
-        const target = this.runtime.getSpriteTargetByName(this.targetName);
-        if (!target) return null;
-        const variable = target.variables[this.variableId];
-        return variable && variable.type === "list" ? variable : null;
-    }
 }`;
 /**
  * Desktop fork (section 196): more blocks that remember a search by a fixed name (irgen.js descendSearchParseInline).
@@ -1417,7 +1240,7 @@ const PURE_HELPER_NAMES = ["toBoolean", "compareGreaterThan", "compareLessThan",
     "coreHasLetterFrom", "coreLetters", "coreLine", "coreIsNumber", "coreDistanceTo",
     // section 187
     "coreSin", "coreCos",
-    // section 140
+    // section 140 (section 294: from src/blocks/shared/ext-expansions.js)
     "pmxIsInteger", "pmxIsPrime", "pmxBetween", "pmxPartOfRatio", "pmxSimplifyRatio", "pmxTextAfter", "pmxTextBefore"];
 let pureEvaluator = null;
 const evalPure = (source, runtime) => {
