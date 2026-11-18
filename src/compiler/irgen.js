@@ -2483,13 +2483,13 @@ class ScriptTreeGenerator {
             // Desktop fork (section 265): SCROLL_OPTION is a fixed menu (a field)
             return {kind: 'sensing.scrolling', option: {kind: 'constant', value: field('SCROLL_OPTION')}};
         case 'sensing_fingerdown':
-            return {kind: 'sensing.finger', method: 'getIsDown', finger: input('FINGER_OPTION')};
+            return {kind: 'sensing.finger', opcode: 'sensing_fingerdown', finger: input('FINGER_OPTION')};
         case 'sensing_fingertapped':
-            return {kind: 'sensing.finger', method: 'getIsTapped', finger: input('FINGER_OPTION')};
+            return {kind: 'sensing.finger', opcode: 'sensing_fingertapped', finger: input('FINGER_OPTION')};
         case 'sensing_fingerx':
-            return {kind: 'sensing.finger', method: 'getScratchX', finger: input('FINGER_OPTION')};
+            return {kind: 'sensing.finger', opcode: 'sensing_fingerx', finger: input('FINGER_OPTION')};
         case 'sensing_fingery':
-            return {kind: 'sensing.finger', method: 'getScratchY', finger: input('FINGER_OPTION')};
+            return {kind: 'sensing.finger', opcode: 'sensing_fingery', finger: input('FINGER_OPTION')};
         case 'sound_volume':
             return {kind: 'sound.volume'};
         case 'sound_isSoundPlaying':

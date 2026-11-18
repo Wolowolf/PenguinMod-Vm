@@ -558,7 +558,8 @@ runtimeFunctions.toBoolean = `const toBoolean = value => {
 }`;
 
 // Desktop fork (section 291): the helpers of the shared block definitions (src/blocks/shared: Operators, Variables
-// and Lists), the same source text the interpreter's functions are made from.
+// and Lists; Motion, Looks, Sound, section 292; Sensing, Control, section 293), the same source text the interpreter's
+// functions are made from.
 baseRuntime += SharedBlocks.baseSource();
 Object.assign(runtimeFunctions, SharedBlocks.helperSources());
 
@@ -568,25 +569,6 @@ Object.assign(runtimeFunctions, SharedBlocks.helperSources());
  * the block converts them; the parameters are in the block's input order. Those in PURE_HELPER_NAMES read nothing
  * but their parameters.
  */
-runtimeFunctions.coreIsNumber = `const coreIsNumber = value => (String(value).trim().endsWith('.') ? false : !isNaN(Number(value)))`;
-runtimeFunctions.coreDirectionTo = `const coreDirectionTo = (x2, y2, x1, y1, noClamp) => {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const direction = 90 - (Math.atan2(dy, dx) * 180 / Math.PI);
-    if (noClamp) return direction;
-    // MathUtil.wrapClamp(direction, -179, 180)
-    return direction - (Math.floor((direction - -179) / 360) * 360);
-}`;
-runtimeFunctions.coreDistanceTo = `const coreDistanceTo = (x1, y1, x2, y2) => {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    return Math.sqrt((dx * dx) + (dy * dy));
-}`;
-// Desktop fork (section 184): more blocks of section 138's kind, written as their functions in src/blocks are
-runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
-    const delta = runtime.ioDevices.mouseWheel.getScrollDelta();
-    return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
-}`;
 // Desktop fork (section 187): sin and cos of whole numbers from the premade table, a 0 worked out (it may be -0)
 // Desktop fork (section 243): the table only for whole numbers within 100 turns. The table reduces the angle exactly
 // (% 360), the interpreter's formula does not: from 66,021 on the two differ in the 10th decimal, and for huge
@@ -646,40 +628,6 @@ runtimeFunctions.timer = `const timer = () => {
 }`;
 
 /**
- * Returns the amount of days since January 1st, 2000.
- * @returns {number} Days since 2000.
- */
-// Date.UTC(2000, 0, 1) === 946684800000
-// Hardcoding it is marginally faster
-runtimeFunctions.daysSince2000 = `const daysSince2000 = runtime => (runtime.pmDateNow() - 946684800000) / (24 * 60 * 60 * 1000)`;
-
-/**
- * Determine distance to a sprite or point.
- * @param {string} menu The name of the sprite or location to find.
- * @returns {number} Distance to the point, or 10000 if it cannot be calculated.
- */
-runtimeFunctions.distance = `const distance = menu => {
-    const thread = globalState.thread;
-    if (thread.target.isStage) return 10000;
-
-    let targetX = 0;
-    let targetY = 0;
-    if (menu === '_mouse_') {
-        targetX = thread.target.runtime.ioDevices.mouse.getScratchX();
-        targetY = thread.target.runtime.ioDevices.mouse.getScratchY();
-    } else {
-        const distTarget = thread.target.runtime.getSpriteTargetByName(menu);
-        if (!distTarget) return 10000;
-        targetX = distTarget.x;
-        targetY = distTarget.y;
-    }
-
-    const dx = thread.target.x - targetX;
-    const dy = thread.target.y - targetY;
-    return Math.sqrt((dx * dx) + (dy * dy));
-}`;
-
-/**
  * Get a value from a list.
  * @param {Array} list The list
  * @param {*} idx The 1-indexed index in the list.
@@ -702,13 +650,6 @@ runtimeFunctions.listContainsFastest = `const listContainsFastest = (list, item)
     listLookup.searched(list, items, compared);
     return result;
 }`;
-
-/**
- * Convert a color to an RGB list
- * @param {*} color The color value to convert
- * @return {Array.<number>} [r,g,b], values between 0-255.
- */
-runtimeFunctions.colorToList = `const colorToList = color => globalState.Cast.toRgbColorList(color)`;
 
 runtimeFunctions.resolveImageURL = `const resolveImageURL = imgURL => 
     typeof imgURL === 'object' && imgURL.type === 'canvas'

@@ -7,7 +7,8 @@
  *   every compiled script that names them.
  * docs/EXTENSION-INTEGRATION.md "Shared block definitions" in the desktop repo has the rules.
  *
- * A definitions file (shared/operators.js, data.js, motion.js, looks.js, sound.js) exports {helpers, blocks}:
+ * A definitions file (shared/operators.js, data.js, motion.js, looks.js, sound.js, sensing.js, control.js) exports
+ * {helpers, blocks}:
  * - helpers: name -> source of a value (normally an arrow function), or {js, base, extra}: `base` puts it into
  *   every compiled script (jsexecute.js baseRuntime), `extra` holds helpers only it uses (name -> source), written
  *   just before it. A helper reads only its parameters, other helpers, standard JavaScript and `globalState`
@@ -32,7 +33,8 @@
 const Cast = require('../../util/cast');
 const listLookup = require('../../engine/list-lookup');
 
-const FILES = [require('./operators'), require('./data'), require('./motion'), require('./looks'), require('./sound')];
+const FILES = [require('./operators'), require('./data'), require('./motion'), require('./looks'), require('./sound'),
+    require('./sensing'), require('./control')];
 
 const helpers = {};
 const blocks = {};

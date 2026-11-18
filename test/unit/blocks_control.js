@@ -222,17 +222,17 @@ test('stop', t => {
 
 test('counter, incrCounter, clearCounter', t => {
     const rt = new Runtime();
-    const c = new Control(rt);
+    const c = rt.ext_scratch3_control;
 
     // Default value
-    t.strictEqual(c.getCounter(), 0);
+    t.strictEqual(c._shared.control_get_counter(), 0);
 
-    c.incrCounter();
-    c.incrCounter();
-    t.strictEqual(c.getCounter(), 2);
+    c._shared.control_incr_counter();
+    c._shared.control_incr_counter();
+    t.strictEqual(c._shared.control_get_counter(), 2);
 
-    c.clearCounter();
-    t.strictEqual(c.getCounter(), 0);
+    c._shared.control_clear_counter();
+    t.strictEqual(c._shared.control_get_counter(), 0);
 
     t.end();
 });

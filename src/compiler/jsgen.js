@@ -1263,9 +1263,9 @@ class JSGenerator {
         case 'constant':
             return this.safeConstantInput(node.value);
         case 'counter.get':
-            return new TypedInput('runtime.ext_scratch3_control._counter', TYPE_NUMBER);
+            return new TypedInput(shared('control_get_counter', {}), TYPE_NUMBER);
         case 'control.error':
-            return new TypedInput('runtime.ext_scratch3_control._error', TYPE_STRING);
+            return new TypedInput(shared('control_error', {}), TYPE_STRING);
         case 'control.isclone':
             return new TypedInput('(!target.isOriginal)', TYPE_BOOLEAN);
         case 'math.polygon':
@@ -1281,7 +1281,7 @@ class JSGenerator {
             return new TypedInput(points, TYPE_UNKNOWN);
 
         case 'keyboard.pressed':
-            return new TypedInput(`runtime.ioDevices.keyboard.getKeyIsDown(${this.descendInput(node.key).asSafe()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_keypressed', {KEY_OPTION: this.descendInput(node.key).asSafe()}), TYPE_BOOLEAN);
 
         case 'list.contains':
             if (this.isOptimized) {
@@ -1340,11 +1340,11 @@ class JSGenerator {
             return new TypedInput(shared('motion_yposition', {}), TYPE_NUMBER);
 
         case 'mouse.down':
-            return new TypedInput('runtime.ioDevices.mouse.getIsDown()', TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_mousedown', {}), TYPE_BOOLEAN);
         case 'mouse.x':
-            return new TypedInput('runtime.ioDevices.mouse.getScratchX()', TYPE_NUMBER);
+            return new TypedInput(shared('sensing_mousex', {}), TYPE_NUMBER);
         case 'mouse.y':
-            return new TypedInput('runtime.ioDevices.mouse.getScratchY()', TYPE_NUMBER);
+            return new TypedInput(shared('sensing_mousey', {}), TYPE_NUMBER);
 
         case 'op.true':
             return new TypedInput(shared('operator_trueBoolean', {}), TYPE_BOOLEAN);
@@ -1470,17 +1470,17 @@ class JSGenerator {
         case 'op.readLine':
             return new TypedInput(shared('operator_readLineInMultilineText', {LINE: this.descendInput(node.line).asNumber(), TEXT: this.exactString(this.descendInput(node.text))}), TYPE_STRING);
         case 'sensing.isNumber':
-            return new TypedInput(`coreIsNumber(${this.rawValue(this.descendInput(node.value))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_thing_is_number', {TEXT1: this.rawValue(this.descendInput(node.value))}), TYPE_BOOLEAN);
         case 'sensing.hasNumber':
-            return new TypedInput(`(/\\d/.test(${this.exactString(this.descendInput(node.value))}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_thing_has_number', {TEXT1: this.exactString(this.descendInput(node.value))}), TYPE_BOOLEAN);
         case 'sensing.isText':
-            return new TypedInput(`(isNaN(Number(${this.rawValue(this.descendInput(node.value))})))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_thing_is_text', {TEXT1: this.rawValue(this.descendInput(node.value))}), TYPE_BOOLEAN);
         case 'sensing.isUpperCase':
-            return new TypedInput(`(/[A-Z]/g.test(${this.rawValue(this.descendInput(node.text))}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_isUpperCase', {text: this.rawValue(this.descendInput(node.text))}), TYPE_BOOLEAN);
         case 'sensing.directionTo':
-            return new TypedInput(`coreDirectionTo(${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))}, ${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, runtime.runtimeOptions.disableDirectionClamping)`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('sensing_directionTo', {x2: this.rawValue(this.descendInput(node.x2)), y2: this.rawValue(this.descendInput(node.y2)), x1: this.rawValue(this.descendInput(node.x1)), y1: this.rawValue(this.descendInput(node.y1))}), TYPE_NUMBER_NAN);
         case 'sensing.distanceTo':
-            return new TypedInput(`coreDistanceTo(${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, ${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('sensing_distanceTo', {x1: this.rawValue(this.descendInput(node.x1)), y1: this.rawValue(this.descendInput(node.y1)), x2: this.rawValue(this.descendInput(node.x2)), y2: this.rawValue(this.descendInput(node.y2))}), TYPE_NUMBER_NAN);
         case 'looks.visible':
             return new TypedInput(shared('looks_getSpriteVisible', {}), TYPE_UNKNOWN);
         case 'looks.effectValue':
@@ -1497,25 +1497,25 @@ class JSGenerator {
         case 'looks.otherVisible':
             return new TypedInput(shared('looks_getOtherSpriteVisible', {VISIBLE_OPTION: this.rawValue(this.descendInput(node.option))}), TYPE_UNKNOWN);
         case 'sensing.mouseClicked':
-            return new TypedInput('runtime.ioDevices.mouse.getIsClicked()', TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_mouseclicked', {}), TYPE_BOOLEAN);
         case 'sensing.keyHit':
-            return new TypedInput(`runtime.ioDevices.keyboard.getKeyIsHit(${this.rawValue(this.descendInput(node.key))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_keyhit', {KEY_OPTION: this.rawValue(this.descendInput(node.key))}), TYPE_BOOLEAN);
         case 'sensing.scrolling':
-            return new TypedInput(`coreScrolling(runtime, ${this.rawValue(this.descendInput(node.option))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_mousescrolling', {SCROLL_OPTION: this.rawValue(this.descendInput(node.option))}), TYPE_BOOLEAN);
         case 'sensing.finger':
-            return new TypedInput(`runtime.ioDevices.touch.${node.method}(${this.exactNumber(this.descendInput(node.finger))} - 1)`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {FINGER_OPTION: this.exactNumber(this.descendInput(node.finger))}), TYPE_UNKNOWN);
         case 'sound.volume':
             return new TypedInput(shared('sound_volume', {}), TYPE_UNKNOWN);
         case 'sound.isPlaying':
             return new TypedInput(`runtime.ext_scratch3_sound.isSoundPlaying({SOUND_MENU: ${this.rawValue(this.descendInput(node.sound))}}, {target})`, TYPE_UNKNOWN);
         case 'control.ifReturn':
             // Desktop fork (section 281): only the chosen value is worked out
-            return new TypedInput(`(${this.exactBoolean(this.descendInput(node.condition))} ? ${this.rawValue(this.descendInput(node.yes))} : ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('control_if_return_else_return', {boolean: this.exactBoolean(this.descendInput(node.condition)), TEXT1: this.rawValue(this.descendInput(node.yes)), TEXT2: this.rawValue(this.descendInput(node.no))}), TYPE_UNKNOWN);
         case 'list.asArray':
             return new TypedInput(shared('data_listarray', {ITEMS: this.listItems(node.list)}), TYPE_STRING);
         // Desktop fork (section 185)
         case 'sensing.dragMode':
-            return new TypedInput('(target.draggable)', TYPE_UNKNOWN);
+            return new TypedInput(shared('sensing_getdragmode', {}), TYPE_UNKNOWN);
         case 'coreCall': {
             const call = this.coreDirectCallSource(node);
             this.resetVariableInputs();
@@ -1831,24 +1831,24 @@ class JSGenerator {
             return new TypedInput(shared('operator_strictEquals', {OPERAND1: this.rawValue(this.descendInput(node.left)), OPERAND2: this.rawValue(this.descendInput(node.right))}), TYPE_BOOLEAN);
 
         case 'sensing.answer':
-            return new TypedInput(`runtime.ext_scratch3_sensing._answer`, TYPE_STRING);
+            return new TypedInput(shared('sensing_answer', {}), TYPE_STRING);
         case 'sensing.colorTouchingColor':
-            return new TypedInput(`target.colorIsTouchingColor(colorToList(${this.descendInput(node.target).asColor()}), colorToList(${this.descendInput(node.mask).asColor()}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_coloristouchingcolor', {COLOR2: this.descendInput(node.target).asColor(), COLOR: this.descendInput(node.mask).asColor()}), TYPE_BOOLEAN);
         case 'sensing.date':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getDate())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'date'), TYPE_NUMBER);
         case 'sensing.dayofweek':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getDay() + 1)`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'dayofweek'), TYPE_NUMBER);
         case 'sensing.daysSince2000':
-            return new TypedInput('daysSince2000(runtime)', TYPE_NUMBER);
+            return new TypedInput(shared('sensing_dayssince2000', {}), TYPE_NUMBER);
         case 'sensing.distance':
             // TODO: on stages, this can be computed at compile time
-            return new TypedInput(`distance(${this.descendInput(node.target).asString()})`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_distanceto', {DISTANCETOMENU: this.descendInput(node.target).asString()}), TYPE_NUMBER);
         case 'sensing.hour':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getHours())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'hour'), TYPE_NUMBER);
         case 'sensing.minute':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getMinutes())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'minute'), TYPE_NUMBER);
         case 'sensing.month':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getMonth() + 1)`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'month'), TYPE_NUMBER);
         case 'sensing.of': {
             const object = this.descendInput(node.object).asString();
             const property = node.property;
@@ -1892,18 +1892,18 @@ class JSGenerator {
             return new TypedInput(`runtime.ext_scratch3_sensing.getAttributeOf({OBJECT: ${object}, PROPERTY: "${sanitize(property)}" })`, TYPE_UNKNOWN);
         }
         case 'sensing.second':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getSeconds())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'second'), TYPE_NUMBER);
         case 'sensing.timestamp':
-            return new TypedInput(`(runtime.pmDateNow())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'timestamp'), TYPE_NUMBER);
         case 'sensing.touching':
-            return new TypedInput(`target.isTouchingObject(${this.descendInput(node.object).asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_touchingobject', {TOUCHINGOBJECTMENU: this.descendInput(node.object).asUnknown()}), TYPE_BOOLEAN);
         case 'sensing.touchingColor':
-            return new TypedInput(`target.isTouchingColor(colorToList(${this.descendInput(node.color).asColor()}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('sensing_touchingcolor', {COLOR: this.descendInput(node.color).asColor()}), TYPE_BOOLEAN);
         case 'sensing.year':
-            return new TypedInput(`(new Date(runtime.pmDateNow()).getFullYear())`, TYPE_NUMBER);
+            return new TypedInput(shared('sensing_current', {}, 'year'), TYPE_NUMBER);
 
         case 'timer.get':
-            return new TypedInput('runtime.ioDevices.clock.projectTimer()', TYPE_NUMBER);
+            return new TypedInput(shared('sensing_timer', {}), TYPE_NUMBER);
 
         case 'var.get':
             return this.descendVariable(node.variable);
@@ -2094,7 +2094,7 @@ class JSGenerator {
             if (i !== undefined) this.source += `p${i} = ${val.asSafe()};\n`;
             break;
         case 'control.createClone':
-            this.source += `runtime.ext_scratch3_control._createClone(${this.descendInput(node.target).asString()}, target);\n`;
+            this.source += shared('control_create_clone_of', {CLONE_OPTION: this.descendInput(node.target).asString()});
             break;
         case 'control.deleteClone':
             this.source += 'if (!target.isOriginal) {\n';
@@ -2442,16 +2442,16 @@ class JSGenerator {
             this.source += `}\n`;
             break;
         case 'counter.clear':
-            this.source += 'runtime.ext_scratch3_control._counter = 0;\n';
+            this.source += shared('control_clear_counter', {});
             break;
         case 'counter.increment':
-            this.source += 'runtime.ext_scratch3_control._counter++;\n';
+            this.source += shared('control_incr_counter', {});
             break;
         case 'counter.decrement':
-            this.source += 'runtime.ext_scratch3_control._counter--;\n';
+            this.source += shared('control_decr_counter', {});
             break;
         case 'counter.set':
-            this.source += `runtime.ext_scratch3_control._counter = ${this.descendInput(node.value).asNumber()};\n`;
+            this.source += shared('control_set_counter', {VALUE: this.descendInput(node.value).asNumber()});
             break;
         case 'hat.edge':
             this.isInHat = true;
@@ -2708,7 +2708,7 @@ class JSGenerator {
             break;
         // Desktop fork (section 185)
         case 'sensing.setDragMode':
-            this.source += `target.setDraggable(${node.draggable});\n`;
+            this.source += shared('sensing_setdragmode', {}, node.draggable ? 'draggable' : null);
             break;
         case 'coreCall':
             this.source += `${this.coreDirectCallSource(node)};\n`;
@@ -2958,7 +2958,7 @@ class JSGenerator {
         }
 
         case 'timer.reset':
-            this.source += 'runtime.ioDevices.clock.resetProjectTimer();\n';
+            this.source += shared('sensing_resettimer', {});
             break;
 
         case 'tw.debugger':

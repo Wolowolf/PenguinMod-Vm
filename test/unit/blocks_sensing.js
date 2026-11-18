@@ -33,7 +33,7 @@ test('ask and answer with a hidden target', t => {
 
     // (3) Ask block resolves after the answer is emitted.
     promise.then(() => {
-        t.strictEqual(s.getAnswer(), expectedAnswer);
+        t.strictEqual(s._answer, expectedAnswer);
         t.end();
     });
 });
@@ -163,10 +163,10 @@ test('answer gets reset when runtime is disposed', t => {
     rt.addListener('QUESTION', () => rt.emit('ANSWER', expectedAnswer));
     const promise = s.askAndWait({QUESTION: ''}, util);
 
-    promise.then(() => t.strictEqual(s.getAnswer(), expectedAnswer))
+    promise.then(() => t.strictEqual(s._answer, expectedAnswer))
         .then(() => rt.dispose())
         .then(() => {
-            t.strictEqual(s.getAnswer(), '');
+            t.strictEqual(s._answer, '');
             t.end();
         });
 });
@@ -178,10 +178,10 @@ test('set drag mode', t => {
     const s = new Sprite(null, runtime);
     const rt = new RenderedTarget(s, runtime);
 
-    sensing.setDragMode({DRAG_MODE: 'not draggable'}, {target: rt});
+    sensing._shared.sensing_setdragmode({DRAG_MODE: 'not draggable'}, {target: rt});
     t.strictEqual(rt.draggable, false);
 
-    sensing.setDragMode({DRAG_MODE: 'draggable'}, {target: rt});
+    sensing._shared.sensing_setdragmode({DRAG_MODE: 'draggable'}, {target: rt});
     t.strictEqual(rt.draggable, true);
 
     t.end();

@@ -1,5 +1,6 @@
 const Cast = require('../util/cast');
 const {readSwitch, readIfReturnPairs} = require('../util/expandable-blocks');
+const SharedBlocks = require('./shared');
 
 class Scratch3ControlBlocks {
     constructor (runtime) {
@@ -8,6 +9,8 @@ class Scratch3ControlBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 293)
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
 
         /**
          * The "counter" block value. For compatibility with 2.0.
@@ -21,7 +24,9 @@ class Scratch3ControlBlocks {
          */
         this._error = ''; // used by compiler
 
-        this.runtime.on('RUNTIME_DISPOSED', this.clearCounter.bind(this));
+        this.runtime.on('RUNTIME_DISPOSED', () => {
+            this._counter = 0;
+        });
     }
 
     /**
@@ -29,7 +34,7 @@ class Scratch3ControlBlocks {
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
     getPrimitives () {
-        return {
+        const primitives = {
             control_repeat: this.repeat,
             control_repeat_until: this.repeatUntil,
             control_while: this.repeatWhile,
@@ -53,26 +58,23 @@ class Scratch3ControlBlocks {
             control_expandableSwitch: this.expandableSwitch,
             control_stop: this.stop,
             control_stop_sprite: this.stopSprite,
-            control_create_clone_of: this.createClone,
             control_delete_this_clone: this.deleteClone,
             control_delete_clones_of: this.deleteClonesOf,
-            control_get_counter: this.getCounter,
-            control_incr_counter: this.incrCounter,
-            control_decr_counter: this.decrCounter,
-            control_set_counter: this.setCounter,
-            control_clear_counter: this.clearCounter,
             control_all_at_once: this.allAtOnce,
             control_backToGreenFlag: this.backToGreenFlag,
             control_exitLoop: this.exitLoop,
             control_continueLoop: this.continueLoop,
-            control_if_return_else_return: this.if_return_else_return,
             // Desktop fork (section 281)
             control_expandableIfReturn: this.expandableIfReturn,
             // Desktop fork (section 261): these three had only compiled code; interpreted scripts stopped at them
             control_try_catch: this.tryCatch,
-            control_throw_error: this.throwError,
-            control_error: this.getError
+            control_throw_error: this.throwError
         };
+        // Desktop fork (section 293): the others from their shared definitions (src/blocks/shared/control.js)
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('control_')) primitives[opcode] = this._shared[opcode];
+        }
+        return primitives;
     }
 
     getMonitored () {
@@ -122,19 +124,11 @@ class Scratch3ControlBlocks {
         throw Cast.toString(args.ERROR);
     }
 
-    getError () {
-        return this._error;
-    }
-
-    if_return_else_return (args) {
-        return Cast.toBoolean(args.boolean) ? args.TEXT1 : args.TEXT2;
-    }
-
     // Desktop fork (section 281): the modular "if then else" reporter as nested single ones, the last "else" innermost
     expandableIfReturn (args) {
         let value = args.ELSE;
         for (let i = readIfReturnPairs(args.mutation); i >= 1; i--) {
-            value = this.if_return_else_return({boolean: args[`BOOL${i}`], TEXT1: args[`TEXT${i}`], TEXT2: value});
+            value = this._shared.control_if_return_else_return({boolean: args[`BOOL${i}`], TEXT1: args[`TEXT${i}`], TEXT2: value});
         }
         return value;
     }
@@ -398,9 +392,6 @@ class Scratch3ControlBlocks {
         this.runtime.stopForTarget(target);
     }
 
-    createClone (args, util) {
-        this._createClone(Cast.toString(args.CLONE_OPTION), util.target);
-    }
     _createClone (cloneOption, target) { // used by compiler
         // Set clone target
         let cloneTarget;
@@ -451,27 +442,6 @@ class Scratch3ControlBlocks {
             this.runtime.disposeTarget(clone);
             this.runtime.stopForTarget(clone);
         })
-    }
-
-    getCounter () {
-        return this._counter;
-    }
-
-    setCounter (args) {
-        const num = Cast.toNumber(args.VALUE);
-        this._counter = num;
-    }
-
-    clearCounter () {
-        this._counter = 0;
-    }
-
-    incrCounter () {
-        this._counter++;
-    }
-    
-    decrCounter () {
-        this._counter--;
     }
 
     allAtOnce (args, util) {

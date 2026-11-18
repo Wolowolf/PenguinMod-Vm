@@ -1,7 +1,7 @@
 const Cast = require('../util/cast');
 const Timer = require('../util/timer');
-const MathUtil = require('../util/math-util');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
+const SharedBlocks = require('./shared');
 
 class Scratch3SensingBlocks {
     constructor (runtime) {
@@ -10,6 +10,8 @@ class Scratch3SensingBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 293)
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
 
         /**
          * The "answer" block value.
@@ -59,49 +61,26 @@ class Scratch3SensingBlocks {
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
     getPrimitives () {
-        return {
+        const primitives = {
             sensing_objecttouchingobject: this.objectTouchingObject,
             sensing_objecttouchingclonesprite: this.objectTouchingCloneOfSprite,
-            sensing_touchingobject: this.touchingObject,
-            sensing_touchingcolor: this.touchingColor,
-            sensing_coloristouchingcolor: this.colorTouchingColor,
-            sensing_distanceto: this.distanceTo,
-            sensing_timer: this.getTimer,
-            sensing_resettimer: this.resetTimer,
             sensing_of: this.getAttributeOf,
             sensing_set_of: this.setAttributeOf,
-            sensing_mousex: this.getMouseX,
-            sensing_mousey: this.getMouseY,
-            sensing_setdragmode: this.setDragMode,
-            sensing_mousedown: this.getMouseDown,
-            sensing_keypressed: this.getKeyPressed,
-            sensing_current: this.current,
-            sensing_dayssince2000: this.daysSince2000,
             sensing_loudness: this.getLoudness,
             sensing_loud: this.isLoud,
             sensing_askandwait: this.askAndWait,
-            sensing_answer: this.getAnswer,
-            sensing_thing_is_number: this.thing_is_number,
-            sensing_thing_has_number: this.thing_has_number,
             sensing_mobile: this.mobile,
-            sensing_thing_is_text: this.thing_is_text,
             sensing_getspritewithattrib: this.getspritewithattrib,
-            sensing_directionTo: this.getDirectionToFrom,
-            sensing_distanceTo: this.getDistanceToFrom,
-            sensing_isUpperCase: this.isCharecterUppercase,
-            sensing_mouseclicked: this.mouseClicked,
-            sensing_keyhit: this.keyHit,
-            sensing_mousescrolling: this.mouseScrolling,
-            sensing_fingerdown: this.fingerDown,
-            sensing_fingertapped: this.fingerTapped,
-            sensing_fingerx: this.getFingerX,
-            sensing_fingery: this.getFingerY,
             sensing_setclipboard: this.setClipboard,
             sensing_getclipboard: this.getClipboard,
-            sensing_getdragmode: this.getDragMode,
             sensing_getoperatingsystem: this.getOS,
             sensing_getxyoftouchingsprite: this.getXYOfTouchingSprite
         };
+        // Desktop fork (section 293): the others from their shared definitions (src/blocks/shared/sensing.js)
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('sensing_')) primitives[opcode] = this._shared[opcode];
+        }
+        return primitives;
     }
 
     getOS () {
@@ -144,47 +123,6 @@ class Scratch3SensingBlocks {
         }
     }
 
-    getDragMode (_, util) {
-        return util.target.draggable;
-    }
-
-    mouseClicked (_, util) {
-        return util.ioQuery('mouse', 'getIsClicked');
-    }
-    keyHit (args, util) {
-        return util.ioQuery('keyboard', 'getKeyIsHit', [args.KEY_OPTION]);
-    }
-    mouseScrolling (args, util) {
-        const delta = util.ioQuery('mouseWheel', 'getScrollDelta');
-        const option = args.SCROLL_OPTION;
-        switch (option) {
-            case "up":
-                return delta < 0;
-            case "down":
-                return delta > 0;
-            default:
-                return false;
-        }
-    }
-
-    isCharecterUppercase (args) {
-        return (/[A-Z]/g).test(args.text);
-    }
-
-    getDirectionToFrom (args, util) {
-        const dx = args.x2 - args.x1;
-        const dy = args.y2 - args.y1;
-        return util.runtime.runtimeOptions.disableDirectionClamping ?
-            90 - MathUtil.radToDeg(Math.atan2(dy, dx)) :
-            MathUtil.wrapClamp(90 - MathUtil.radToDeg(Math.atan2(dy, dx)), -179, 180);
-    }
-
-    getDistanceToFrom (args) {
-        const dx = args.x2 - args.x1;
-        const dy = args.y2 - args.y1;
-        return Math.sqrt((dx * dx) + (dy * dy));
-    }
-
     getspritewithattrib (args, util) {
         // strip out usless data
         const sprites = util.runtime.targets.map(x => ({
@@ -207,30 +145,6 @@ class Scratch3SensingBlocks {
         }
 
         return res;
-    }
-    thing_is_number (args) {
-        // i hate js
-        // i also hate regex
-        // so im gonna do this the lazy way
-        // no. String(Number(value)) === value does infact do the job X)
-        // also what was originaly here was inificiant as hell
-
-        // jg: why dont you literally just do what "is text" did but the opposite
-        // except also account for numbers that end with . (that aint a number)
-        if (Cast.toString(args.TEXT1).trim().endsWith(".")) {
-            return false;
-        }
-        return !this.thing_is_text(args);
-    }
-    thing_is_text (args) {
-        // WHY IS NAN NOT EQUAL TO ITSELF
-        // HOW IS NAN A NUMBER
-        // because nan is how numbers say the value put into me is not a number
-        return isNaN(Number(args.TEXT1));
-    }
-
-    thing_has_number(args) {
-        return /\d/.test(Cast.toString(args.TEXT1));
     }
 
     // Desktop fork (section 270): "running on a phone?": a phone or tablet system (Android, iOS, iPadOS), not just a
@@ -357,10 +271,6 @@ class Scratch3SensingBlocks {
         });
     }
 
-    getAnswer () {
-        return this._answer;
-    }
-
     objectTouchingObject (args, util) {
         const object1 = (args.FULLTOUCHINGOBJECTMENU) === "_myself_" ? util.target.getName() : args.FULLTOUCHINGOBJECTMENU;
         const object2 = args.SPRITETOUCHINGOBJECTMENU;
@@ -399,10 +309,6 @@ class Scratch3SensingBlocks {
         return originalSprite.isTouchingObject(object2, true);
     }
 
-    touchingObject (args, util) {
-        return util.target.isTouchingObject(args.TOUCHINGOBJECTMENU);
-    }
-
     getXYOfTouchingSprite (args, util) {
         const object = args.SPRITE;
         if (object === '_mouse_') {
@@ -419,109 +325,12 @@ class Scratch3SensingBlocks {
         return point[0];
     }
 
-    touchingColor (args, util) {
-        const color = Cast.toRgbColorList(args.COLOR);
-        return util.target.isTouchingColor(color);
+    getTimer (args, util) { // called by Pen Plus
+        return this._shared.sensing_timer(args, util);
     }
 
-    colorTouchingColor (args, util) {
-        const maskColor = Cast.toRgbColorList(args.COLOR);
-        const targetColor = Cast.toRgbColorList(args.COLOR2);
-        return util.target.colorIsTouchingColor(targetColor, maskColor);
-    }
-
-    distanceTo (args, util) {
-        if (util.target.isStage) return 10000;
-
-        let targetX = 0;
-        let targetY = 0;
-        if (args.DISTANCETOMENU === '_mouse_') {
-            targetX = util.ioQuery('mouse', 'getScratchX');
-            targetY = util.ioQuery('mouse', 'getScratchY');
-        } else {
-            args.DISTANCETOMENU = Cast.toString(args.DISTANCETOMENU);
-            const distTarget = this.runtime.getSpriteTargetByName(
-                args.DISTANCETOMENU
-            );
-            if (!distTarget) return 10000;
-            targetX = distTarget.x;
-            targetY = distTarget.y;
-        }
-
-        const dx = util.target.x - targetX;
-        const dy = util.target.y - targetY;
-        return Math.sqrt((dx * dx) + (dy * dy));
-    }
-
-    setDragMode (args, util) {
-        util.target.setDraggable(args.DRAG_MODE === 'draggable');
-    }
-
-    getTimer (args, util) {
-        return util.ioQuery('clock', 'projectTimer');
-    }
-
-    resetTimer (args, util) {
-        util.ioQuery('clock', 'resetProjectTimer');
-    }
-
-    getMouseX (args, util) {
-        return util.ioQuery('mouse', 'getScratchX');
-    }
-
-    getMouseY (args, util) {
-        return util.ioQuery('mouse', 'getScratchY');
-    }
-
-    getMouseDown (args, util) {
-        return util.ioQuery('mouse', 'getIsDown');
-    }
-
-    getFingerX (args, util) {
-        return util.ioQuery('touch', 'getScratchX', [Cast.toNumber(args.FINGER_OPTION) - 1]);
-    }
-
-    getFingerY (args, util) {
-        return util.ioQuery('touch', 'getScratchY', [Cast.toNumber(args.FINGER_OPTION) - 1]);
-    }
-
-    fingerDown (args, util) {
-        return util.ioQuery('touch', 'getIsDown', [Cast.toNumber(args.FINGER_OPTION) - 1]);
-    }
-
-    fingerTapped (args, util) {
-        return util.ioQuery('touch', 'getIsTapped', [Cast.toNumber(args.FINGER_OPTION) - 1]);
-    }
-
-    current (args) {
-        const menuOption = Cast.toString(args.CURRENTMENU).toLowerCase();
-        // Desktop fork (section 155): the runtime's clock (runtime.pmDateNow), here and in daysSince2000
-        const date = new Date(this.runtime.pmDateNow());
-        switch (menuOption) {
-        case 'year': return date.getFullYear();
-        case 'month': return date.getMonth() + 1; // getMonth is zero-based
-        case 'date': return date.getDate();
-        case 'dayofweek': return date.getDay() + 1; // getDay is zero-based, Sun=0
-        case 'hour': return date.getHours();
-        case 'minute': return date.getMinutes();
-        case 'second': return date.getSeconds();
-        case 'timestamp': return this.runtime.pmDateNow();
-        }
-        return 0;
-    }
-
-    getKeyPressed (args, util) {
-        return util.ioQuery('keyboard', 'getKeyIsDown', [args.KEY_OPTION]);
-    }
-
-    daysSince2000 () {
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const start = new Date(2000, 0, 1); // Months are 0-indexed.
-        const today = new Date(this.runtime.pmDateNow());
-        const dstAdjust = today.getTimezoneOffset() - start.getTimezoneOffset();
-        let mSecsSinceStart = today.valueOf() - start.valueOf();
-        mSecsSinceStart += ((today.getTimezoneOffset() - dstAdjust) * 60 * 1000);
-        return mSecsSinceStart / msPerDay;
+    getAnswer () { // called by Hyper Sense V2
+        return this._shared.sensing_answer();
     }
 
     getLoudness () {
