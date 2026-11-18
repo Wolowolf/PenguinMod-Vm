@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the SharkPool gallery's Recording-V2.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged except where marked "Desktop fork".
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
@@ -34,12 +34,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       this.isRecording = false;
       this.recording = "";
       this.recordCache_ = null;
-      this.audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
       this.mediaStream = null;
       this.audioRecorder = null;
       this.analyzerNode = null;
       this.audioChunks = [];
+    }
+
+    // Desktop fork (section 308): the editor's sound engine's AudioContext instead of one of its own
+    // (it only feeds the microphone into the loudness analyser, which is not connected to the speakers)
+    get audioContext() {
+      return runtime.audioEngine.audioContext;
     }
 
     getInfo() {
