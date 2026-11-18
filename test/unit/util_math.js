@@ -35,13 +35,6 @@ test('wrapClamp', t => {
     t.end();
 });
 
-test('tan', t => {
-    t.strictEqual(math.tan(90), Infinity);
-    t.strictEqual(math.tan(180), 0);
-    t.strictEqual(math.tan(-90), -Infinity);
-    t.strictEqual(math.tan(33), 0.6494075932);
-    t.end();
-});
 
 test('reducedSortOrdering', t => {
     t.deepEqual(math.reducedSortOrdering([5, 18, 6, 3]), [1, 3, 2, 0]);

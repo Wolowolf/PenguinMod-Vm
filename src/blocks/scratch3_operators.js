@@ -1,7 +1,8 @@
 const Cast = require('../util/cast.js');
-const MathUtil = require('../util/math-util.js');
 // Desktop fork (section 274)
 const ExpandableBlocks = require('../util/expandable-blocks');
+// Desktop fork (section 291): what each Operators block does is in shared/operators.js, used by the compiler too
+const SharedBlocks = require('./shared');
 
 class Scratch3OperatorsBlocks {
     constructor (runtime) {
@@ -10,199 +11,25 @@ class Scratch3OperatorsBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
     }
 
     /**
      * Retrieve the block primitives implemented by this package.
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
-    //
     getPrimitives () {
-        return {
-            operator_add: this.add,
-            operator_subtract: this.subtract,
-            operator_multiply: this.multiply,
-            operator_divide: this.divide,
-            operator_power: this.power,
-            operator_lt: this.lt,
-            operator_equals: this.equals,
-            operator_notequal: this.notequals,
-            operator_strictEquals: this.strictEquals, // Desktop fork (section 275)
-            operator_gt: this.gt,
-            operator_ltorequal: this.ltorequal,
-            operator_gtorequal: this.gtorequal,
-            operator_and: this.and,
-            operator_nand: this.nand,
-            operator_nor: this.nor,
-            operator_xor: this.xor,
-            operator_xnor: this.xnor,
-            operator_or: this.or,
-            operator_not: this.not,
-            operator_random: this.random,
-            operator_join: this.join,
-            operator_letter_of: this.letterOf,
-            operator_length: this.length,
-            operator_contains: this.contains,
-            operator_mod: this.mod,
-            operator_round: this.round,
-            operator_mathop: this.mathop,
-            operator_replaceAll: this.replaceAll,
-            operator_replaceFirst: this.replaceFirst,
-            operator_getLettersFromIndexToIndexInTextFixed: this.getLettersFromIndexToIndexInTextFixed,
-            operator_readLineInMultilineText: this.readLineInMultilineText,
-            operator_newLine: this.newLine,
-            operator_tabCharacter: this.tabCharacter,
-            operator_stringify: this.stringify,
-            operator_boolify: this.boolify,
-            operator_lerpFunc: this.lerpFunc,
-            operator_advMathExpanded: this.advMathExpanded,
-            operator_constrainnumber: this.constrainnumber,
-            operator_trueBoolean: this.true,
-            operator_falseBoolean: this.false,
-            operator_randomBoolean: this.randomBoolean,
-            operator_indexOfTextInText: this.indexOfTextInText,
-            operator_lastIndexOfTextInText: this.lastIndexOfTextInText,
-            operator_toUpperLowerCase: this.toCase,
-            operator_character_to_code: this.charToCode,
-            operator_code_to_character: this.codeToChar,
-            operator_textStartsOrEndsWith: this.textStartsOrEndsWith,
-            operator_countAppearTimes: this.countAppearTimes,
-            operator_textIncludesLetterFrom: this.textIncludesLetterFrom,
+        const primitives = {
             // Desktop fork (section 274): the modular blocks, worked out with the single blocks' functions
             operator_expandableMath: this.expandableMath,
             operator_expandablejoininputs: this.expandableJoin,
             operator_expandableBool: this.expandableBool,
             operator_expandableCompare: this.expandableCompare
         };
-    }
-
-    charToCode (args) {
-        const char = Cast.toString(args.ONE);
-        if (!char) return NaN;
-        return char.charCodeAt(0);
-    }
-    codeToChar (args) {
-        const code = Cast.toNumber(args.ONE);
-        return String.fromCharCode(code);
-    }
-
-    toCase (args) {
-        const text = Cast.toString(args.TEXT);
-        switch (args.OPTION) {
-        case 'upper':
-            return text.toUpperCase();
-        case 'lower':
-            return text.toLowerCase();
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('operator_')) primitives[opcode] = this._shared[opcode];
         }
-    }
-
-    indexOfTextInText (args) {
-        const lookfor = Cast.toString(args.TEXT1);
-        const searchin = Cast.toString(args.TEXT2);
-        let index = 0;
-        if (searchin.includes(lookfor)) {
-            index = searchin.indexOf(lookfor) + 1;
-        }
-        return index;
-    }
-
-    lastIndexOfTextInText (args) {
-        const lookfor = Cast.toString(args.TEXT1);
-        const searchin = Cast.toString(args.TEXT2);
-        let index = 0;
-        if (searchin.includes(lookfor)) {
-            index = searchin.lastIndexOf(lookfor) + 1;
-        }
-        return index;
-    }
-
-    textStartsOrEndsWith (args) {
-        const text = Cast.toString(args.TEXT1);
-        const startsOrEnds = Cast.toString(args.OPTION);
-        const withh = Cast.toString(args.TEXT2);
-        return (startsOrEnds === "starts") ? (text.startsWith(withh)) : (text.endsWith(withh));
-    }
-
-    countAppearTimes (args) {
-        const text = Cast.toString(args.TEXT2);
-        const otherText = Cast.toString(args.TEXT1);
-
-        const aray = text.split(otherText);
-        if (aray.length <= 1) {
-            return 0;
-        }
-
-        return aray.length - 1;
-    }
-
-    textIncludesLetterFrom (args) {
-        const text = Cast.toString(args.TEXT1);
-        const from = Cast.toString(args.TEXT2);
-
-        let includes = false;
-
-        const aray = from.split("");
-        aray.forEach(i => {
-            if (text.includes(i)) includes = true;
-        })
-
-        return includes;
-    }
-
-    true () { return true; }
-    false () { return false; }
-    // Desktop fork (section 155): random numbers come from the runtime (runtime.pmRandom), here and in random
-    randomBoolean () { return Boolean(Math.round(this.runtime.pmRandom())); }
-
-    constrainnumber (args) {
-        return Math.min(Math.max(args.min, args.inp), args.max);
-    }
-
-    lerpFunc (args) {
-        const one = Cast.toNumber(args.ONE);
-        const two = Cast.toNumber(args.TWO);
-        const amount = Cast.toNumber(args.AMOUNT);
-        return ((two - one) * amount) + one;
-    }
-    advMathExpanded (args) {
-        const one = Cast.toNumber(args.ONE);
-        const two = Cast.toNumber(args.TWO);
-        const three = Cast.toNumber(args.THREE);
-        const operator = Cast.toString(args.OPTION);
-        switch (operator) {
-            case "root": return one * Math.pow(three, 1 / two);
-            case "log": return one * Math.log(three) / Math.log(two);
-            default: return 0;
-        }
-    }
-
-    stringify (args) { return Cast.toString(args.ONE); }
-
-    boolify (args) { return Cast.toBoolean(args.ONE); }
-
-    newLine () { return "\n"; }
-
-    tabCharacter () { return "\t"; }
-
-    readLineInMultilineText (args) {
-        const line = (Cast.toNumber(args.LINE) ? Cast.toNumber(args.LINE) : 1) - 1;
-        const text = Cast.toString(args.TEXT);
-        const readline = text.split("\n")[line] || "";
-        return readline;
-    }
-
-    getLettersFromIndexToIndexInTextFixed (args) {
-        const index1 = (Cast.toNumber(args.INDEX1) ? Cast.toNumber(args.INDEX1) : 1) - 1;
-        const index2 = (Cast.toNumber(args.INDEX2) ? Cast.toNumber(args.INDEX2) : 1);
-        const string = Cast.toString(args.TEXT);
-        const substring = string.substring(index1, index2);
-        return substring;
-    }
-    replaceAll (args) {
-        return Cast.toString(args.text).replaceAll(args.term, args.res);
-    }
-    replaceFirst (args) {
-        return Cast.toString(args.text).replace(args.term, args.res);
+        return primitives;
     }
 
     // Desktop fork (section 274): the modular blocks with the single blocks' functions, nested like the compiler
@@ -215,206 +42,57 @@ class Scratch3OperatorsBlocks {
     }
 
     expandableMath (args) {
+        const shared = this._shared;
         const values = this._expandableInputs(args, 'NUM');
         if (values.length === 0) return 0;
-        if (values.length === 1) return this.add({NUM1: values[0], NUM2: 0});
+        if (values.length === 1) return shared.operator_add({NUM1: values[0], NUM2: 0});
         const functions = {
-            '+': this.add, '-': this.subtract, '*': this.multiply, '/': this.divide, '%': this.mod, '^': this.power
+            '+': shared.operator_add, '-': shared.operator_subtract, '*': shared.operator_multiply,
+            '/': shared.operator_divide, '%': shared.operator_mod, '^': shared.operator_power
         };
         const operators = ExpandableBlocks.readOperators(args.mutation, values.length, '+');
         return ExpandableBlocks.nestMath(values, operators,
-            (operator, left, right) => functions[operator].call(this, {NUM1: left, NUM2: right}));
+            (operator, left, right) => functions[operator]({NUM1: left, NUM2: right}));
     }
 
     expandableJoin (args) {
+        const join = this._shared.operator_join;
         const values = this._expandableInputs(args, 'INPUT');
-        let result = values.length === 0 ? '' : this.join({STRING1: values[0], STRING2: ''});
-        for (let i = 1; i < values.length; i++) result = this.join({STRING1: result, STRING2: values[i]});
+        let result = values.length === 0 ? '' : join({STRING1: values[0], STRING2: ''});
+        for (let i = 1; i < values.length; i++) result = join({STRING1: result, STRING2: values[i]});
         return result;
     }
 
     expandableBool (args) {
+        const shared = this._shared;
         const values = this._expandableInputs(args, 'BOOL');
         if (values.length === 0) return false;
         if (values.length === 1) return Cast.toBoolean(values[0]);
-        const functions = {a: this.and, o: this.or, x: this.xor, n: this.nand, N: this.nor, X: this.xnor};
+        const functions = {
+            a: shared.operator_and, o: shared.operator_or, x: shared.operator_xor,
+            n: shared.operator_nand, N: shared.operator_nor, X: shared.operator_xnor
+        };
         const operators = ExpandableBlocks.readOperators(args.mutation, values.length, 'a');
         return ExpandableBlocks.nestBool(values, operators,
-            (operator, left, right) => functions[operator].call(this, {OPERAND1: left, OPERAND2: right}),
-            value => this.not({OPERAND: value}));
+            (operator, left, right) => functions[operator]({OPERAND1: left, OPERAND2: right}),
+            value => shared.operator_not({OPERAND: value}));
     }
 
     expandableCompare (args) {
+        const shared = this._shared;
         const values = this._expandableInputs(args, 'INPUT');
         const operators = ExpandableBlocks.readCompareOperators(args.mutation, values.length);
-        const functions = {m: this.gt, M: this.gtorequal, l: this.lt, L: this.ltorequal, e: this.equals, n: this.notequals,
-            E: this.strictEquals};
+        const functions = {
+            m: shared.operator_gt, M: shared.operator_gtorequal, l: shared.operator_lt,
+            L: shared.operator_ltorequal, e: shared.operator_equals, n: shared.operator_notequal,
+            E: shared.operator_strictEquals
+        };
         for (let i = 0; i < values.length - 1; i++) {
-            const operator = operators[i];
-            const holds = functions[operator].call(this, {OPERAND1: values[i], OPERAND2: values[i + 1]});
+            const holds = functions[operators[i]]({OPERAND1: values[i], OPERAND2: values[i + 1]});
             if (!holds) return false;
         }
         return true;
     }
-
-    add (args) {
-        return Cast.toNumber(args.NUM1) + Cast.toNumber(args.NUM2);
-    }
-
-    subtract (args) {
-        return Cast.toNumber(args.NUM1) - Cast.toNumber(args.NUM2);
-    }
-
-    multiply (args) {
-        return Cast.toNumber(args.NUM1) * Cast.toNumber(args.NUM2);
-    }
-
-    divide (args) {
-        return Cast.toNumber(args.NUM1) / Cast.toNumber(args.NUM2);
-    }
-
-    power (args) {
-        return Math.pow(Cast.toNumber(args.NUM1), Cast.toNumber(args.NUM2));
-    }
-
-    lt (args) {
-        return Cast.compare(args.OPERAND1, args.OPERAND2) < 0;
-    }
-
-    equals (args) {
-        return Cast.compare(args.OPERAND1, args.OPERAND2) === 0;
-    }
-
-    // Desktop fork (section 275): "===": the same value of the same type (text is case-sensitive)
-    strictEquals (args) {
-        return args.OPERAND1 === args.OPERAND2;
-    }
-
-    notequals (args) {
-        return !this.equals(args);
-    }
-
-    gt (args) {
-        return Cast.compare(args.OPERAND1, args.OPERAND2) > 0;
-    }
-
-    gtorequal (args) {
-        return !this.lt(args);
-    }
-
-    ltorequal (args) {
-        return !this.gt(args);
-    }
-
-    and (args) {
-        return Cast.toBoolean(args.OPERAND1) && Cast.toBoolean(args.OPERAND2);
-    }
-    
-    nand (args) {
-        return !(Cast.toBoolean(args.OPERAND1) && Cast.toBoolean(args.OPERAND2));
-    }
-
-    nor (args) {
-        return !(Cast.toBoolean(args.OPERAND1) || Cast.toBoolean(args.OPERAND2));
-    }
-
-    xor (args) {
-        const op1 = Cast.toBoolean(args.OPERAND1);
-        const op2 = Cast.toBoolean(args.OPERAND2);
-        return (op1 ? !op2 : op2);
-    }
-
-    xnor (args) {
-        return !this.xor(args);
-    }
-
-    or (args) {
-        return Cast.toBoolean(args.OPERAND1) || Cast.toBoolean(args.OPERAND2);
-    }
-
-    not (args) {
-        return !Cast.toBoolean(args.OPERAND);
-    }
-
-    random (args) {
-        return this._random(args.FROM, args.TO);
-    }
-    _random (from, to) { // used by compiler
-        const nFrom = Cast.toNumber(from);
-        const nTo = Cast.toNumber(to);
-        const low = nFrom <= nTo ? nFrom : nTo;
-        const high = nFrom <= nTo ? nTo : nFrom;
-        if (low === high) return low;
-        // If both arguments are ints, truncate the result to an int.
-        if (Cast.isInt(from) && Cast.isInt(to)) {
-            return low + Math.floor(this.runtime.pmRandom() * ((high + 1) - low));
-        }
-        return (this.runtime.pmRandom() * (high - low)) + low;
-    }
-
-    join (args) {
-        return Cast.toString(args.STRING1) + Cast.toString(args.STRING2);
-    }
-
-    letterOf (args) {
-        const index = Cast.toNumber(args.LETTER) - 1;
-        const str = Cast.toString(args.STRING);
-        // Out of bounds?
-        if (index < 0 || index >= str.length) {
-            return '';
-        }
-        return str.charAt(index);
-    }
-
-    length (args) {
-        return Cast.toString(args.STRING).length;
-    }
-
-    contains (args) {
-        const format = function (string) {
-            return Cast.toString(string).toLowerCase();
-        };
-        return format(args.STRING1).includes(format(args.STRING2));
-    }
-
-    mod (args) {
-        const n = Cast.toNumber(args.NUM1);
-        const modulus = Cast.toNumber(args.NUM2);
-        let result = n % modulus;
-        // Scratch mod uses floored division instead of truncated division.
-        if (result / modulus < 0) result += modulus;
-        return result;
-    }
-
-    round (args) {
-        return Math.round(Cast.toNumber(args.NUM));
-    }
-
-    mathop (args) {
-        const operator = Cast.toString(args.OPERATOR).toLowerCase();
-        const n = Cast.toNumber(args.NUM);
-        switch (operator) {
-        case 'abs': return Math.abs(n);
-        case 'floor': return Math.floor(n);
-        case 'ceiling': return Math.ceil(n);
-        // Desktop fork (section 211): the menu's "sign" had no case here, so interpreted scripts got 0 (compiled: Math.sign)
-        case 'sign': return Math.sign(n);
-        case 'sqrt': return Math.sqrt(n);
-        case 'sin': return Math.round(Math.sin((Math.PI * n) / 180) * 1e10) / 1e10;
-        case 'cos': return Math.round(Math.cos((Math.PI * n) / 180) * 1e10) / 1e10;
-        case 'tan': return MathUtil.tan(n);
-        case 'asin': return (Math.asin(n) * 180) / Math.PI;
-        case 'acos': return (Math.acos(n) * 180) / Math.PI;
-        case 'atan': return (Math.atan(n) * 180) / Math.PI;
-        case 'ln': return Math.log(n);
-        case 'log': return Math.log(n) / Math.LN10;
-        case 'log2': return Math.log2(n);
-        case 'e ^': return Math.exp(n);
-        case '10 ^': return Math.pow(10, n);
-        }
-        return 0;
-    }
-    
 }
 
 module.exports = Scratch3OperatorsBlocks;

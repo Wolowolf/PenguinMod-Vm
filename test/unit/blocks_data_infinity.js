@@ -18,47 +18,47 @@ const util = {
 test('List with postive infinity primitive contains postive infinity', t => {
     lists.list = {value: [Infinity]};
     let args = {ITEM: Infinity, LIST: {name: 'list'}};
-    let contains = blocks.listContainsItem(args, util);
+    let contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[Infinity] contains Infinity');
 
     lists.list = {value: [Infinity]};
     args = {ITEM: 'Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[Infinity] contains "Infinity"');
 
     lists.list = {value: [Infinity]};
     args = {ITEM: 'INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[Infinity] contains "INFINITY"');
 
     lists.list = {value: ['Infinity']};
     args = {ITEM: Infinity, LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["Infinity"] contains Infinity');
 
     lists.list = {value: ['Infinity']};
     args = {ITEM: 'Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["Infinity"] contains "Infinity"');
 
     lists.list = {value: ['Infinity']};
     args = {ITEM: 'INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["Infinity"] contains "INFINITY"');
 
     lists.list = {value: ['INFINITY']};
     args = {ITEM: Infinity, LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["INFINITY"] contains Infinity');
 
     lists.list = {value: ['INFINITY']};
     args = {ITEM: 'Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["INFINITY"] contains "Infinity"');
 
     lists.list = {value: ['INFINITY']};
     args = {ITEM: 'INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["INFINITY"] contains "INFINITY"');
 
     t.end();
@@ -67,47 +67,47 @@ test('List with postive infinity primitive contains postive infinity', t => {
 test('List with negative infinity primitive contains negative infinity', t => {
     lists.list = {value: [-Infinity]};
     let args = {ITEM: -Infinity, LIST: {name: 'list'}};
-    let contains = blocks.listContainsItem(args, util);
+    let contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[-Infinity] contains -Infinity');
 
     lists.list = {value: [-Infinity]};
     args = {ITEM: '-Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[-Infinity] contains "-Infinity"');
 
     lists.list = {value: [-Infinity]};
     args = {ITEM: '-INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '[-Infinity] contains "-INFINITY"');
 
     lists.list = {value: ['-Infinity']};
     args = {ITEM: -Infinity, LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-Infinity"] contains -Infinity');
 
     lists.list = {value: ['-Infinity']};
     args = {ITEM: '-Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-Infinity"] contains "-Infinity"');
 
     lists.list = {value: ['-Infinity']};
     args = {ITEM: '-INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-Infinity"] contains "-INFINITY"');
 
     lists.list = {value: ['-INFINITY']};
     args = {ITEM: -Infinity, LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-INFINITY"] contains -Infinity');
 
     lists.list = {value: ['-INFINITY']};
     args = {ITEM: '-Infinity', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-INFINITY"] contains "-Infinity"');
 
     lists.list = {value: ['-INFINITY']};
     args = {ITEM: '-INFINITY', LIST: {name: 'list'}};
-    contains = blocks.listContainsItem(args, util);
+    contains = blocks._shared.data_listcontainsitem(args, util);
     t.strictEqual(contains, true, '["-INFINITY"] contains "-INFINITY"');
 
     t.end();

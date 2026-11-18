@@ -8,6 +8,8 @@ const Color = require('../util/color');
 const log = require('../util/log');
 const Clone = require('../util/clone');
 const {IntermediateScript, IntermediateRepresentation} = require('./intermediate');
+// Desktop fork (section 291)
+const SharedBlocks = require('../blocks/shared');
 const compatBlocks = require('./compat-blocks');
 // Desktop fork (section 274)
 const ExpandableBlocks = require('../util/expandable-blocks');
@@ -2403,10 +2405,10 @@ class ScriptTreeGenerator {
             if (option !== 'root' && option !== 'log') return null;
             return {kind: 'op.advMath', option, one: input('ONE'), two: input('TWO'), three: input('THREE')};
         }
+        // (section 291: their value from the shared definition)
         case 'operator_newLine':
-            return {kind: 'constant', value: '\n'};
         case 'operator_tabCharacter':
-            return {kind: 'constant', value: '\t'};
+            return {kind: 'constant', value: SharedBlocks.value(block.opcode)};
         case 'operator_stringify':
             return {kind: 'op.stringify', value: input('ONE')};
         case 'operator_boolify':

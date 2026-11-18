@@ -1,8 +1,9 @@
-const Cast = require('../util/cast');
 // PMDESKTOP_LISTLOOKUP (section 62): list blocks use the engine's own item storage (listLookup.items)
 // so that lists keep their lookup table; see engine/list-lookup.js.
 const listLookup = require('../engine/list-lookup');
 const { validateArray } = require('../util/json-block-utilities');
+// Desktop fork (section 291): what most Variables and Lists blocks do is in shared/data.js, used by the compiler too
+const SharedBlocks = require('./shared');
 
 class Scratch3DataBlocks {
     constructor (runtime) {
@@ -11,6 +12,7 @@ class Scratch3DataBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
     }
 
     /**
@@ -18,32 +20,19 @@ class Scratch3DataBlocks {
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
     getPrimitives () {
-        return {
+        const primitives = {
             data_variable: this.getVariable,
             data_setvariableto: this.setVariableTo,
             data_changevariableby: this.changeVariableBy,
-            data_hidevariable: this.hideVariable,
-            data_showvariable: this.showVariable,
             data_listcontents: this.getListContents,
-            data_addtolist: this.addToList,
-            data_deleteoflist: this.deleteOfList,
-            data_deletealloflist: this.deleteAllOfList,
-            data_insertatlist: this.insertAtList,
-            data_replaceitemoflist: this.replaceItemOfList,
-            data_itemoflist: this.getItemOfList,
-            data_itemnumoflist: this.getItemNumOfList,
-            data_lengthoflist: this.lengthOfList,
-            data_listcontainsitem: this.listContainsItem,
-            data_hidelist: this.hideList,
-            data_showlist: this.showList,
-            data_reverselist: this.data_reverselist,
-            data_itemexistslist: this.data_itemexistslist,
-            data_listisempty: this.data_listisempty,
-            data_listarray: this.data_listarray,
             data_arraylist: this.data_arraylist,
             data_listforeachnum: this.data_listforeachnum,
             data_listforeachitem: this.data_listforeachitem
         };
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('data_') && !primitives[opcode]) primitives[opcode] = this._shared[opcode];
+        }
+        return primitives;
     }
 
     getVariable (args, util) {
@@ -65,40 +54,13 @@ class Scratch3DataBlocks {
     changeVariableBy (args, util) {
         const variable = util.target.lookupOrCreateVariable(
             args.VARIABLE.id, args.VARIABLE.name);
-        const castedValue = Cast.toNumber(variable.value);
-        const dValue = Cast.toNumber(args.VALUE);
-        const newValue = castedValue + dValue;
+        // (section 291: the "+" block's own function, as the compiler builds this block from it)
+        const newValue = this._shared.operator_add({NUM1: variable.value, NUM2: args.VALUE});
         variable.value = newValue;
 
         if (variable.isCloud) {
             util.ioQuery('cloud', 'requestUpdateVariable', [variable.name, newValue]);
         }
-    }
-
-    changeMonitorVisibility (id, visible) {
-        // Send the monitor blocks an event like the flyout checkbox event.
-        // This both updates the monitor state and changes the isMonitored block flag.
-        this.runtime.monitorBlocks.changeBlock({
-            id: id, // Monitor blocks for variables are the variable ID.
-            element: 'checkbox', // Mimic checkbox event from flyout.
-            value: visible
-        }, this.runtime);
-    }
-
-    showVariable (args) {
-        this.changeMonitorVisibility(args.VARIABLE.id, true);
-    }
-
-    hideVariable (args) {
-        this.changeMonitorVisibility(args.VARIABLE.id, false);
-    }
-
-    showList (args) {
-        this.changeMonitorVisibility(args.LIST.id, true);
-    }
-
-    hideList (args) {
-        this.changeMonitorVisibility(args.LIST.id, false);
     }
 
     getListContents (args, util) {
@@ -114,191 +76,9 @@ class Scratch3DataBlocks {
             list._monitorUpToDate = true;
             return listLookup.items(list).slice();
         }
-        const items = listLookup.items(list);
-
-        // Determine if the list is all single letters.
-        // If it is, report contents joined together with no separator.
-        // If it's not, report contents joined together with a space.
-        let allSingleLetters = true;
-        for (let i = 0; i < items.length; i++) {
-            const listItem = items[i];
-            if (!((typeof listItem === 'string') &&
-                  (listItem.length === 1))) {
-                allSingleLetters = false;
-                break;
-            }
-        }
-        if (allSingleLetters) {
-            return items.join('');
-        }
-        return items.join(' ');
-
+        return this._shared.data_listcontents(args, util);
     }
 
-    addToList (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        listLookup.items(list).push(args.ITEM);
-        list._monitorUpToDate = false;
-    }
-
-    deleteOfList (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const items = listLookup.items(list);
-        // Desktop fork (section 155): "random" uses the runtime's random numbers, here and below
-        const index = Cast.toListIndex(args.INDEX, items.length, true, util.runtime);
-        if (index === Cast.LIST_INVALID) {
-            return;
-        } else if (index === Cast.LIST_ALL) {
-            listLookup.setItems(list, []);
-            return;
-        }
-        items.splice(index - 1, 1);
-        listLookup.changed(list);
-        list._monitorUpToDate = false;
-    }
-
-    deleteAllOfList (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        listLookup.setItems(list, []);
-        return;
-    }
-
-    insertAtList (args, util) {
-        const item = args.ITEM;
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length + 1, false, util.runtime);
-        if (index === Cast.LIST_INVALID) {
-            return;
-        }
-        items.splice(index - 1, 0, item);
-        listLookup.changed(list);
-        list._monitorUpToDate = false;
-    }
-
-    replaceItemOfList (args, util) {
-        const item = args.ITEM;
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length, false, util.runtime);
-        if (index === Cast.LIST_INVALID) {
-            return;
-        }
-        items[index - 1] = item;
-        listLookup.changed(list);
-        list._monitorUpToDate = false;
-    }
-
-    getItemOfList (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const items = listLookup.items(list);
-        const index = Cast.toListIndex(args.INDEX, items.length, false, util.runtime);
-        if (index === Cast.LIST_INVALID) {
-            return '';
-        }
-        return items[index - 1];
-    }
-
-    getItemNumOfList (args, util) {
-        const item = args.ITEM;
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-
-        const items = listLookup.items(list);
-        if (items.length >= listLookup.MIN_LENGTH) {
-            const found = listLookup.lookup(list, items, item);
-            if (found !== -1) return found;
-        }
-
-        // Go through the list items one-by-one using Cast.compare. This is for
-        // cases like checking if 123 is contained in a list [4, 7, '123'] --
-        // Scratch considers 123 and '123' to be equal.
-        for (let i = 0; i < items.length; i++) {
-            if (Cast.compare(items[i], item) === 0) {
-                listLookup.searched(list, items, i + 1);
-                return i + 1;
-            }
-        }
-        listLookup.searched(list, items, items.length);
-
-        // We don't bother using .indexOf() at all, because it would end up with
-        // edge cases such as the index of '123' in [4, 7, 123, '123', 9].
-        // If we use indexOf(), this block would return 4 instead of 3, because
-        // indexOf() sees the first occurence of the string 123 as the fourth
-        // item in the list. With Scratch, this would be confusing -- after all,
-        // '123' and 123 look the same, so one would expect the block to say
-        // that the first occurrence of '123' (or 123) to be the third item.
-
-        // Default to 0 if there's no match. Since Scratch lists are 1-indexed,
-        // we don't have to worry about this conflicting with the "this item is
-        // the first value" number (in JS that is 0, but in Scratch it's 1).
-        return 0;
-    }
-
-    lengthOfList (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        return listLookup.items(list).length;
-    }
-
-    listContainsItem (args, util) {
-        const item = args.ITEM;
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const items = listLookup.items(list);
-        if (items.length >= listLookup.MIN_LENGTH) {
-            const found = listLookup.lookup(list, items, item);
-            if (found !== -1) return found !== 0;
-        }
-        const strictIndex = items.indexOf(item);
-        if (strictIndex >= 0) {
-            listLookup.searched(list, items, strictIndex + 1);
-            return true;
-        }
-        // Try using Scratch comparison operator on each item.
-        // (Scratch considers the string '123' equal to the number 123).
-        for (let i = 0; i < items.length; i++) {
-            if (Cast.compare(items[i], item) === 0) {
-                listLookup.searched(list, items, i + 1);
-                return true;
-            }
-        }
-        listLookup.searched(list, items, items.length);
-        return false;
-    }
-
-    data_reverselist (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        listLookup.items(list).reverse();
-        listLookup.changed(list);
-        list._monitorUpToDate = false;
-    }
-    data_itemexistslist (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        const index = Cast.toListIndex(args.INDEX, listLookup.items(list).length, false, util.runtime);
-        if (index === Cast.LIST_INVALID) {
-            return false;
-        }
-        return true;
-    }
-    data_listisempty (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        return listLookup.items(list).length < 1;
-    }
-    data_listarray (args, util) {
-        const list = util.target.lookupOrCreateList(
-            args.LIST.id, args.LIST.name);
-        return JSON.stringify(listLookup.items(list));
-    }
     data_arraylist (args, util) {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);

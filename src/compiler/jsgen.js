@@ -8,6 +8,9 @@ const environment = require('./environment');
 // Desktop fork (section 202): inline code for small pure extension blocks
 const pureInline = require('./pure-inline');
 const numberFacts = require('./number-facts');
+// Desktop fork (section 291): what the Operators, Variables and Lists blocks do (src/blocks/shared)
+const SharedBlocks = require('../blocks/shared');
+const shared = SharedBlocks.inline;
 
 // Imported for JSDoc types, not to actually use
 // eslint-disable-next-line no-unused-vars
@@ -1169,6 +1172,16 @@ class JSGenerator {
     }
 
     /**
+     * Desktop fork (section 291): the JavaScript of one of the "(…) of" maths block's options (src/blocks/shared).
+     * @param {string} option The option ("abs", "sin", …).
+     * @param {string} value The number input's JavaScript.
+     * @returns {string} The JavaScript.
+     */
+    mathop (option, value) {
+        return shared('operator_mathop', {NUM: value}, option);
+    }
+
+    /**
      * Desktop fork (section 246): a calculation with one number input, written as before, with the kinds its rule
      * gives.
      * @param {object} valueNode The input's node.
@@ -1186,16 +1199,16 @@ class JSGenerator {
      * Desktop fork (section 246): the same with two number inputs (left written before right is looked at, as
      * before).
      * @param {object} node The node (left, right).
-     * @param {string} operator The JavaScript operator.
+     * @param {string} opcode The shared block (section 291) with inputs NUM1 and NUM2.
      * @param {function(number, number): number} rule Kinds of the inputs -> kinds of the result.
      * @returns {TypedInput} The input.
      */
-    binaryNumber (node, operator, rule) {
+    binaryNumber (node, opcode, rule) {
         const left = this.descendInput(node.left);
         const leftSource = left.asNumber();
         const leftKinds = numberKinds(left);
         const right = this.descendInput(node.right);
-        return this.numberInput(`(${leftSource} ${operator} ${right.asNumber()})`, TYPE_NUMBER_NAN,
+        return this.numberInput(shared(opcode, {NUM1: leftSource, NUM2: right.asNumber()}), TYPE_NUMBER_NAN,
             rule(leftKinds, numberKinds(right)));
     }
 
@@ -1275,10 +1288,10 @@ class JSGenerator {
                 // pm: we can use a better function here
                 return new TypedInput(`listContainsFastest(${this.referenceVariable(node.list)}, ${this.descendInput(node.item).asUnknown()})`, TYPE_BOOLEAN);
             }
-            return new TypedInput(`listContains(${this.referenceVariable(node.list)}, ${this.descendInput(node.item).asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('data_listcontainsitem', {LIST: this.referenceVariable(node.list), ITEM: this.descendInput(node.item).asUnknown()}), TYPE_BOOLEAN);
         case 'list.contents':
             // Desktop fork (section 187): as the block's function, single letters join without spaces
-            return new TypedInput(`coreListContents(${this.listItems(node.list)})`, TYPE_STRING);
+            return new TypedInput(shared('data_listcontents', {ITEMS: this.listItems(node.list)}), TYPE_STRING);
         case 'list.get': {
             const index = this.descendInput(node.index);
             if (environment.supportsNullishCoalescing) {
@@ -1290,14 +1303,14 @@ class JSGenerator {
                 }
             }
             // Desktop fork (section 187): no shortcut here, it gave "" for 1.5, "random" and "any"
-            return new TypedInput(`listGet(${this.listItems(node.list)}, ${index.asUnknown()})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('data_itemoflist', {ITEMS: this.listItems(node.list), INDEX: index.asUnknown()}), TYPE_UNKNOWN);
         }
         case 'list.indexOf':
-            return new TypedInput(`listIndexOf(${this.referenceVariable(node.list)}, ${this.descendInput(node.item).asUnknown()})`, TYPE_NUMBER);
+            return new TypedInput(shared('data_itemnumoflist', {LIST: this.referenceVariable(node.list), ITEM: this.descendInput(node.item).asUnknown()}), TYPE_NUMBER);
         case 'list.amountOf':
             return new TypedInput(`${this.listItems(node.list)}.filter((x) => x == ${this.descendInput(node.value).asUnknown()}).length`, TYPE_NUMBER);
         case 'list.length':
-            return this.numberInput(`${this.listItems(node.list)}.length`, TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
+            return this.numberInput(shared('data_lengthoflist', {ITEMS: this.listItems(node.list)}), TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
 
         case 'list.filteritem':
             return new TypedInput('(thread._listFilterItem ?? [""])[(thread._listFilterItem ?? [""]).length - 1]', TYPE_UNKNOWN);
@@ -1335,13 +1348,13 @@ class JSGenerator {
             return new TypedInput('runtime.ioDevices.mouse.getScratchY()', TYPE_NUMBER);
 
         case 'op.true':
-            return new TypedInput('(true)', TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_trueBoolean', {}), TYPE_BOOLEAN);
         case 'op.false':
-            return new TypedInput('(false)', TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_falseBoolean', {}), TYPE_BOOLEAN);
         case 'op.randbool':
             // Desktop fork (section 155): random numbers and the clock come from the runtime (runtime.pmRandom,
             // runtime.pmDateNow) in every core block below too
-            return new TypedInput('(Boolean(Math.round(runtime.pmRandom())))', TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_randomBoolean', {}), TYPE_BOOLEAN);
 
         case 'pmEventsExpansion.broadcastFunction':
             // we need to do function otherwise this block would be stupidly long
@@ -1415,48 +1428,48 @@ class JSGenerator {
         // interpreter gives it (Cast conversions written out exactly; helpers in jsexecute.js take the inputs in the
         // block's order, so they are worked out in the same order). Answer types only where they always hold.
         case 'op.nand':
-            return new TypedInput(`((!${this.exactBoolean(this.descendInput(node.left))} | !${this.exactBoolean(this.descendInput(node.right))}) !== 0)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_nand', {OPERAND1: this.exactBoolean(this.descendInput(node.left)), OPERAND2: this.exactBoolean(this.descendInput(node.right))}), TYPE_BOOLEAN);
         case 'op.nor':
-            return new TypedInput(`((!${this.exactBoolean(this.descendInput(node.left))} & !${this.exactBoolean(this.descendInput(node.right))}) !== 0)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_nor', {OPERAND1: this.exactBoolean(this.descendInput(node.left)), OPERAND2: this.exactBoolean(this.descendInput(node.right))}), TYPE_BOOLEAN);
         case 'op.xor':
-            return new TypedInput(`(!${this.exactBoolean(this.descendInput(node.left))} !== !${this.exactBoolean(this.descendInput(node.right))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_xor', {OPERAND1: this.exactBoolean(this.descendInput(node.left)), OPERAND2: this.exactBoolean(this.descendInput(node.right))}), TYPE_BOOLEAN);
         case 'op.xnor':
-            return new TypedInput(`(!${this.exactBoolean(this.descendInput(node.left))} === !${this.exactBoolean(this.descendInput(node.right))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_xnor', {OPERAND1: this.exactBoolean(this.descendInput(node.left)), OPERAND2: this.exactBoolean(this.descendInput(node.right))}), TYPE_BOOLEAN);
         case 'op.constrain':
-            return new TypedInput(`coreConstrain(${this.rawValue(this.descendInput(node.value))}, ${this.rawValue(this.descendInput(node.min))}, ${this.rawValue(this.descendInput(node.max))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_constrainnumber', {inp: this.rawValue(this.descendInput(node.value)), min: this.rawValue(this.descendInput(node.min)), max: this.rawValue(this.descendInput(node.max))}), TYPE_NUMBER_NAN);
         case 'op.lerp':
-            return new TypedInput(`coreLerp(${this.exactNumber(this.descendInput(node.from))}, ${this.exactNumber(this.descendInput(node.to))}, ${this.exactNumber(this.descendInput(node.amount))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_lerpFunc', {ONE: this.exactNumber(this.descendInput(node.from)), TWO: this.exactNumber(this.descendInput(node.to)), AMOUNT: this.exactNumber(this.descendInput(node.amount))}), TYPE_NUMBER_NAN);
         case 'op.advMath':
-            return new TypedInput(`${node.option === 'root' ? 'coreRoot' : 'coreLog'}(${this.exactNumber(this.descendInput(node.one))}, ${this.exactNumber(this.descendInput(node.two))}, ${this.exactNumber(this.descendInput(node.three))})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_advMathExpanded', {ONE: this.exactNumber(this.descendInput(node.one)), TWO: this.exactNumber(this.descendInput(node.two)), THREE: this.exactNumber(this.descendInput(node.three))}, node.option), TYPE_NUMBER_NAN);
         case 'op.stringify':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.value))})`, TYPE_STRING);
+            return new TypedInput(shared('operator_stringify', {ONE: this.exactString(this.descendInput(node.value))}), TYPE_STRING);
         case 'op.boolify':
-            return new TypedInput(`(${this.exactBoolean(this.descendInput(node.value))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_boolify', {ONE: this.exactBoolean(this.descendInput(node.value))}), TYPE_BOOLEAN);
         case 'op.toCase':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.upper ? 'toUpperCase' : 'toLowerCase'}())`, TYPE_STRING);
+            return new TypedInput(shared('operator_toUpperLowerCase', {TEXT: this.exactString(this.descendInput(node.text))}, node.upper ? 'upper' : 'lower'), TYPE_STRING);
         case 'op.charToCode':
             // ("" gives NaN, as the block's own check does)
-            return new TypedInput(`(${this.exactString(this.descendInput(node.value))}.charCodeAt(0))`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_character_to_code', {ONE: this.exactString(this.descendInput(node.value))}), TYPE_NUMBER_NAN);
         case 'op.codeToChar':
-            return new TypedInput(`String.fromCharCode(${this.exactNumber(this.descendInput(node.value))})`, TYPE_STRING);
+            return new TypedInput(shared('operator_code_to_character', {ONE: this.exactNumber(this.descendInput(node.value))}), TYPE_STRING);
         case 'op.indexOfText':
-            return new TypedInput(`coreIndexOf(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+            return new TypedInput(shared('operator_indexOfTextInText', {TEXT1: this.exactString(this.descendInput(node.find)), TEXT2: this.exactString(this.descendInput(node.text))}), TYPE_NUMBER);
         case 'op.lastIndexOfText':
-            return new TypedInput(`coreLastIndexOf(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+            return new TypedInput(shared('operator_lastIndexOfTextInText', {TEXT1: this.exactString(this.descendInput(node.find)), TEXT2: this.exactString(this.descendInput(node.text))}), TYPE_NUMBER);
         case 'op.startsOrEndsWith':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.starts ? 'startsWith' : 'endsWith'}(${this.exactString(this.descendInput(node.part))}))`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_textStartsOrEndsWith', {TEXT1: this.exactString(this.descendInput(node.text)), TEXT2: this.exactString(this.descendInput(node.part))}, node.starts ? 'starts' : null), TYPE_BOOLEAN);
         case 'op.countIn':
-            return new TypedInput(`coreCountIn(${this.exactString(this.descendInput(node.find))}, ${this.exactString(this.descendInput(node.text))})`, TYPE_NUMBER);
+            return new TypedInput(shared('operator_countAppearTimes', {TEXT1: this.exactString(this.descendInput(node.find)), TEXT2: this.exactString(this.descendInput(node.text))}), TYPE_NUMBER);
         case 'op.hasLetterFrom':
-            return new TypedInput(`coreHasLetterFrom(${this.exactString(this.descendInput(node.text))}, ${this.exactString(this.descendInput(node.letters))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_textIncludesLetterFrom', {TEXT1: this.exactString(this.descendInput(node.text)), TEXT2: this.exactString(this.descendInput(node.letters))}), TYPE_BOOLEAN);
         case 'op.replaceAll':
         case 'op.replaceFirst':
-            return new TypedInput(`(${this.exactString(this.descendInput(node.text))}.${node.kind === 'op.replaceAll' ? 'replaceAll' : 'replace'}(${this.rawValue(this.descendInput(node.term))}, ${this.rawValue(this.descendInput(node.res))}))`, TYPE_STRING);
+            return new TypedInput(shared(node.kind === 'op.replaceAll' ? 'operator_replaceAll' : 'operator_replaceFirst', {text: this.exactString(this.descendInput(node.text)), term: this.rawValue(this.descendInput(node.term)), res: this.rawValue(this.descendInput(node.res))}), TYPE_STRING);
         case 'op.lettersFromTo':
             // (asNumber's 0 for -0 changes nothing: the block uses 1 for both)
-            return new TypedInput(`coreLetters(${this.descendInput(node.from).asNumber()}, ${this.descendInput(node.to).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
+            return new TypedInput(shared('operator_getLettersFromIndexToIndexInTextFixed', {INDEX1: this.descendInput(node.from).asNumber(), INDEX2: this.descendInput(node.to).asNumber(), TEXT: this.exactString(this.descendInput(node.text))}), TYPE_STRING);
         case 'op.readLine':
-            return new TypedInput(`coreLine(${this.descendInput(node.line).asNumber()}, ${this.exactString(this.descendInput(node.text))})`, TYPE_STRING);
+            return new TypedInput(shared('operator_readLineInMultilineText', {LINE: this.descendInput(node.line).asNumber(), TEXT: this.exactString(this.descendInput(node.text))}), TYPE_STRING);
         case 'sensing.isNumber':
             return new TypedInput(`coreIsNumber(${this.rawValue(this.descendInput(node.value))})`, TYPE_BOOLEAN);
         case 'sensing.hasNumber':
@@ -1480,9 +1493,9 @@ class JSGenerator {
         case 'looks.stretch':
             return new TypedInput(`(target._getRenderedDirectionAndScale().stretch[${node.index}])`, TYPE_UNKNOWN);
         case 'list.itemExists':
-            return new TypedInput(`coreItemExists(${this.rawValue(this.descendInput(node.index))}, ${this.listItems(node.list)}.length)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('data_itemexistslist', {INDEX: this.rawValue(this.descendInput(node.index)), ITEMS: this.listItems(node.list)}), TYPE_BOOLEAN);
         case 'list.isEmpty':
-            return new TypedInput(`(${this.listItems(node.list)}.length < 1)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('data_listisempty', {ITEMS: this.listItems(node.list)}), TYPE_BOOLEAN);
         // Desktop fork (section 184)
         case 'looks.otherVisible':
             return new TypedInput(`coreOtherVisible(runtime, target, ${this.rawValue(this.descendInput(node.option))})`, TYPE_UNKNOWN);
@@ -1502,7 +1515,7 @@ class JSGenerator {
             // Desktop fork (section 281): only the chosen value is worked out
             return new TypedInput(`(${this.exactBoolean(this.descendInput(node.condition))} ? ${this.rawValue(this.descendInput(node.yes))} : ${this.rawValue(this.descendInput(node.no))})`, TYPE_UNKNOWN);
         case 'list.asArray':
-            return new TypedInput(`JSON.stringify(${this.listItems(node.list)})`, TYPE_STRING);
+            return new TypedInput(shared('data_listarray', {ITEMS: this.listItems(node.list)}), TYPE_STRING);
         // Desktop fork (section 185)
         case 'sensing.dragMode':
             return new TypedInput('(target.draggable)', TYPE_UNKNOWN);
@@ -1642,37 +1655,37 @@ class JSGenerator {
         }
 
         case 'op.abs':
-            return this.unaryNumber(node.value, v => `Math.abs(${v})`, TYPE_NUMBER, numberFacts.abs);
+            return this.unaryNumber(node.value, v => this.mathop('abs', v), TYPE_NUMBER, numberFacts.abs);
         case 'op.acos':
             // Needs to be marked as NaN because Math.acos(1.0001) === NaN
-            return new TypedInput(`((Math.acos(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER_NAN);
+            return new TypedInput(this.mathop('acos', this.descendInput(node.value).asNumber()), TYPE_NUMBER_NAN);
         case 'op.add':
             // Can be NaN: Infinity + -Infinity (section 246: only when the inputs can be those)
-            return this.binaryNumber(node, '+', numberFacts.add);
+            return this.binaryNumber(node, 'operator_add', numberFacts.add);
         case 'op.and':
-            return new TypedInput(`(${this.descendInput(node.left).asBoolean()} && ${this.descendInput(node.right).asBoolean()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_and', {OPERAND1: this.descendInput(node.left).asBoolean(), OPERAND2: this.descendInput(node.right).asBoolean()}), TYPE_BOOLEAN);
         case 'op.asin':
             // Needs to be marked as NaN because Math.asin(1.0001) === NaN
-            return new TypedInput(`((Math.asin(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER_NAN);
+            return new TypedInput(this.mathop('asin', this.descendInput(node.value).asNumber()), TYPE_NUMBER_NAN);
         case 'op.atan':
-            return new TypedInput(`((Math.atan(${this.descendInput(node.value).asNumber()}) * 180) / Math.PI)`, TYPE_NUMBER);
+            return new TypedInput(this.mathop('atan', this.descendInput(node.value).asNumber()), TYPE_NUMBER);
         case 'op.ceiling':
-            return this.unaryNumber(node.value, v => `Math.ceil(${v})`, TYPE_NUMBER, numberFacts.ceiling);
+            return this.unaryNumber(node.value, v => this.mathop('ceiling', v), TYPE_NUMBER, numberFacts.ceiling);
         case 'op.contains':
-            return new TypedInput(`(${this.descendInput(node.string).asString()}.toLowerCase().indexOf(${this.descendInput(node.contains).asString()}.toLowerCase()) !== -1)`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_contains', {STRING1: this.descendInput(node.string).asString(), STRING2: this.descendInput(node.contains).asString()}), TYPE_BOOLEAN);
         case 'op.cos':
             // pm: optimizations allow us to use a premade list for sin values on integers
             if (this.isOptimized) {
                 // Desktop fork (section 187): the input is worked out once
                 return new TypedInput(`coreCos(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
-            return new TypedInput(`(Math.round(Math.cos((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
+            return new TypedInput(this.mathop('cos', this.descendInput(node.value).asNumber()), TYPE_NUMBER_NAN);
         case 'op.divide':
             // Can be NaN: 0 / 0, Infinity / Infinity (section 246: only when the inputs can be those)
-            return this.binaryNumber(node, '/', numberFacts.divide);
+            return this.binaryNumber(node, 'operator_divide', numberFacts.divide);
         case 'op.power':
             // Needs to be marked as NaN because -1 ** 0.5 === NaN
-            return new TypedInput(`(Math.pow(${this.descendInput(node.left).asNumber()}, ${this.descendInput(node.right).asNumber()}))`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_power', {NUM1: this.descendInput(node.left).asNumber(), NUM2: this.descendInput(node.right).asNumber()}), TYPE_NUMBER_NAN);
         case 'op.equals': {
             const left = this.descendInput(node.left);
             const right = this.descendInput(node.right);
@@ -1694,12 +1707,12 @@ class JSGenerator {
                 return new TypedInput(`(${left.asNumber()} === ${right.asNumber()})`, TYPE_BOOLEAN);
             }
             // No compile-time optimizations possible - use fallback method.
-            return new TypedInput(`compareEqual(${left.asUnknown()}, ${right.asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_equals', {OPERAND1: left.asUnknown(), OPERAND2: right.asUnknown()}), TYPE_BOOLEAN);
         }
         case 'op.e^':
-            return new TypedInput(`Math.exp(${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return new TypedInput(this.mathop('e ^', this.descendInput(node.value).asNumber()), TYPE_NUMBER);
         case 'op.floor':
-            return this.unaryNumber(node.value, v => `Math.floor(${v})`, TYPE_NUMBER, numberFacts.floor);
+            return this.unaryNumber(node.value, v => this.mathop('floor', v), TYPE_NUMBER, numberFacts.floor);
         case 'op.greater': {
             const left = this.descendInput(node.left);
             const right = this.descendInput(node.right);
@@ -1716,12 +1729,12 @@ class JSGenerator {
                 return new TypedInput(`(${left.asString()}.toLowerCase() > ${right.asString()}.toLowerCase())`, TYPE_BOOLEAN);
             }
             // No compile-time optimizations possible - use fallback method.
-            return new TypedInput(`compareGreaterThan(${left.asUnknown()}, ${right.asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_gt', {OPERAND1: left.asUnknown(), OPERAND2: right.asUnknown()}), TYPE_BOOLEAN);
         }
         case 'op.join':
-            return new TypedInput(`(${this.descendInput(node.left).asString()} + ${this.descendInput(node.right).asString()})`, TYPE_STRING);
+            return new TypedInput(shared('operator_join', {STRING1: this.descendInput(node.left).asString(), STRING2: this.descendInput(node.right).asString()}), TYPE_STRING);
         case 'op.length':
-            return this.numberInput(`${this.descendInput(node.string).asString()}.length`, TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
+            return this.numberInput(shared('operator_length', {STRING: this.descendInput(node.string).asString()}), TYPE_NUMBER, numberFacts.ZERO | numberFacts.PINT);
         case 'op.less': {
             const left = this.descendInput(node.left);
             const right = this.descendInput(node.right);
@@ -1738,17 +1751,17 @@ class JSGenerator {
                 return new TypedInput(`(${left.asString()}.toLowerCase() < ${right.asString()}.toLowerCase())`, TYPE_BOOLEAN);
             }
             // No compile-time optimizations possible - use fallback method.
-            return new TypedInput(`compareLessThan(${left.asUnknown()}, ${right.asUnknown()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_lt', {OPERAND1: left.asUnknown(), OPERAND2: right.asUnknown()}), TYPE_BOOLEAN);
         }
         case 'op.letterOf':
-            return new TypedInput(`((${this.descendInput(node.string).asString()})[(${this.descendInput(node.letter).asNumber()} | 0) - 1] || "")`, TYPE_STRING);
+            return new TypedInput(shared('operator_letter_of', {STRING: this.descendInput(node.string).asString(), LETTER: this.descendInput(node.letter).asNumber()}), TYPE_STRING);
         case 'op.ln':
             // Can be NaN: Math.log(-1) (section 246: only when the input can be below 0)
-            return this.unaryNumber(node.value, v => `Math.log(${v})`, TYPE_NUMBER_NAN, numberFacts.log);
+            return this.unaryNumber(node.value, v => this.mathop('ln', v), TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.log':
-            return this.unaryNumber(node.value, v => `(Math.log(${v}) / Math.LN10)`, TYPE_NUMBER_NAN, numberFacts.log);
+            return this.unaryNumber(node.value, v => this.mathop('log', v), TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.log2':
-            return this.unaryNumber(node.value, v => `Math.log2(${v})`, TYPE_NUMBER_NAN, numberFacts.log);
+            return this.unaryNumber(node.value, v => this.mathop('log2', v), TYPE_NUMBER_NAN, numberFacts.log);
         case 'op.mod':
         {
             this.descendedIntoModulo = true;
@@ -1765,15 +1778,15 @@ class JSGenerator {
                 return new TypedInput(`((modTemp = (${left}) % ${ms}) ${m > 0 ? '<' : '>'} 0 && modTemp / ${ms} < 0 ? modTemp + ${ms} : modTemp)`, TYPE_NUMBER_NAN);
             }
             // Needs to be marked as NaN because mod(0, 0) (and others) == NaN
-            return new TypedInput(`mod(${left}, ${right.asNumber()})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_mod', {NUM1: left, NUM2: right.asNumber()}), TYPE_NUMBER_NAN);
         }
         case 'op.multiply':
             // Can be NaN: Infinity * 0 (section 246: only when the inputs can be those)
-            return this.binaryNumber(node, '*', numberFacts.multiply);
+            return this.binaryNumber(node, 'operator_multiply', numberFacts.multiply);
         case 'op.not':
-            return new TypedInput(`!${this.descendInput(node.operand).asBoolean()}`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_not', {OPERAND: this.descendInput(node.operand).asBoolean()}), TYPE_BOOLEAN);
         case 'op.or':
-            return new TypedInput(`(${this.descendInput(node.left).asBoolean()} || ${this.descendInput(node.right).asBoolean()})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_or', {OPERAND1: this.descendInput(node.left).asBoolean(), OPERAND2: this.descendInput(node.right).asBoolean()}), TYPE_BOOLEAN);
         case 'op.random':
             if (node.useInts) {
                 // Both inputs are ints, so we know neither are NaN
@@ -1791,34 +1804,34 @@ class JSGenerator {
             if (node.useFloats) {
                 return new TypedInput(`randomFloat(runtime, ${this.descendInput(node.low).asNumber()}, ${this.descendInput(node.high).asNumber()})`, TYPE_NUMBER_NAN);
             }
-            return new TypedInput(`runtime.ext_scratch3_operators._random(${this.descendInput(node.low).asUnknown()}, ${this.descendInput(node.high).asUnknown()})`, TYPE_NUMBER_NAN);
+            return new TypedInput(shared('operator_random', {FROM: this.descendInput(node.low).asUnknown(), TO: this.descendInput(node.high).asUnknown()}), TYPE_NUMBER_NAN);
         case 'op.round':
-            return this.unaryNumber(node.value, v => `Math.round(${v})`, TYPE_NUMBER, numberFacts.round);
+            return this.unaryNumber(node.value, v => shared('operator_round', {NUM: v}), TYPE_NUMBER, numberFacts.round);
         case 'op.sign':
-            return this.unaryNumber(node.value, v => `Math.sign(${v})`, TYPE_NUMBER, numberFacts.sign);
+            return this.unaryNumber(node.value, v => this.mathop('sign', v), TYPE_NUMBER, numberFacts.sign);
         case 'op.sin':
             // pm: optimizations allow us to use a premade list for sin values on integers
             if (this.isOptimized) {
                 // Desktop fork (section 187): the input is worked out once
                 return new TypedInput(`coreSin(runtime, ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER_NAN);
             }
-            return new TypedInput(`(Math.round(Math.sin((Math.PI * ${this.descendInput(node.value).asNumber()}) / 180) * 1e10) / 1e10)`, TYPE_NUMBER_NAN);
+            return new TypedInput(this.mathop('sin', this.descendInput(node.value).asNumber()), TYPE_NUMBER_NAN);
         case 'op.sqrt':
             // Can be NaN: Math.sqrt(-1) (section 246: only when the input can be below 0)
-            return this.unaryNumber(node.value, v => `Math.sqrt(${v})`, TYPE_NUMBER_NAN, numberFacts.sqrt);
+            return this.unaryNumber(node.value, v => this.mathop('sqrt', v), TYPE_NUMBER_NAN, numberFacts.sqrt);
         case 'op.subtract':
             // Can be NaN: Infinity - Infinity (section 246: only when the inputs can be those)
-            return this.binaryNumber(node, '-', numberFacts.subtract);
+            return this.binaryNumber(node, 'operator_subtract', numberFacts.subtract);
         case 'op.tan':
             // (section 246: the angle is reduced below 360 first, so only an infinite one gives NaN; sin and cos keep
             // their type: PI * a huge number is Infinity, whose sine is NaN)
-            return this.unaryNumber(node.value, v => `tan(${v})`, TYPE_NUMBER_NAN, numberFacts.tan);
+            return this.unaryNumber(node.value, v => this.mathop('tan', v), TYPE_NUMBER_NAN, numberFacts.tan);
         case 'op.10^':
-            return new TypedInput(`(10 ** ${this.descendInput(node.value).asNumber()})`, TYPE_NUMBER);
+            return new TypedInput(this.mathop('10 ^', this.descendInput(node.value).asNumber()), TYPE_NUMBER);
         // Desktop fork (sections 274, 275): the "===" block and the modular comparison's "===": the values exactly as
         // the interpreter gives them to the block's function (a fixed "10" stays text)
         case 'op.strictEquals':
-            return new TypedInput(`(${this.rawValue(this.descendInput(node.left))} === ${this.rawValue(this.descendInput(node.right))})`, TYPE_BOOLEAN);
+            return new TypedInput(shared('operator_strictEquals', {OPERAND1: this.rawValue(this.descendInput(node.left)), OPERAND2: this.rawValue(this.descendInput(node.right))}), TYPE_BOOLEAN);
 
         case 'sensing.answer':
             return new TypedInput(`runtime.ext_scratch3_sensing._answer`, TYPE_STRING);
@@ -2498,8 +2511,7 @@ class JSGenerator {
         }
         case 'list.add': {
             const list = this.referenceVariable(node.list);
-            this.source += `${this.listItems(node.list)}.push(${this.descendInput(node.item).asSafe()});\n`;
-            this.source += `${list}._monitorUpToDate = false;\n`;
+            this.source += shared('data_addtolist', {ITEMS: this.listItems(node.list), ITEM: this.descendInput(node.item).asSafe(), LIST: list});
             break;
         }
         case 'list.delete': {
@@ -2520,7 +2532,7 @@ class JSGenerator {
                 }
                 // do not need a special case for all as that is handled in IR generation (list.deleteAll)
             }
-            this.source += `listDelete(${list}, ${index.asUnknown()});\n`;
+            this.source += shared('data_deleteoflist', {LIST: list, INDEX: index.asUnknown()});
             break;
         }
         case 'list.deleteAll':
@@ -2535,7 +2547,7 @@ class JSGenerator {
             break;
         }
         case 'list.hide':
-            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.list.id)}", element: "checkbox", value: false }, runtime);\n`;
+            this.source += shared('data_hidelist', {ID: `"${sanitize(node.list.id)}"`});
             break;
         case 'list.insert': {
             const list = this.referenceVariable(node.list);
@@ -2547,14 +2559,14 @@ class JSGenerator {
                 this.source += `${list}._monitorUpToDate = false;\n`;
                 break;
             }
-            this.source += `listInsert(${list}, ${index.asUnknown()}, ${item.asSafe()});\n`;
+            this.source += shared('data_insertatlist', {LIST: list, INDEX: index.asUnknown(), ITEM: item.asSafe()});
             break;
         }
         case 'list.replace':
-            this.source += `listReplace(${this.referenceVariable(node.list)}, ${this.descendInput(node.index).asUnknown()}, ${this.descendInput(node.item).asSafe()});\n`;
+            this.source += shared('data_replaceitemoflist', {LIST: this.referenceVariable(node.list), INDEX: this.descendInput(node.index).asUnknown(), ITEM: this.descendInput(node.item).asSafe()});
             break;
         case 'list.show':
-            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.list.id)}", element: "checkbox", value: true }, runtime);\n`;
+            this.source += shared('data_showlist', {ID: `"${sanitize(node.list.id)}"`});
             break;
 
         case 'list.filter':
@@ -2720,9 +2732,7 @@ class JSGenerator {
         }
         case 'list.reverse': {
             const list = this.referenceVariable(node.list);
-            this.source += `${this.listItems(node.list)}.reverse();\n`;
-            this.source += this.listChanged(node.list);
-            this.source += `${list}._monitorUpToDate = false;\n`;
+            this.source += shared('data_reverselist', {ITEMS: this.listItems(node.list), CHANGED: this.listChanged(node.list), LIST: list});
             break;
         }
         // Desktop fork (section 184)
@@ -2998,7 +3008,7 @@ class JSGenerator {
             break;
 
         case 'var.hide':
-            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: false }, runtime);\n`;
+            this.source += shared('data_hidevariable', {ID: `"${sanitize(node.variable.id)}"`});
             break;
         case 'var.set': {
             const variable = this.descendVariable(node.variable);
@@ -3020,7 +3030,7 @@ class JSGenerator {
             break;
         }
         case 'var.show':
-            this.source += `runtime.monitorBlocks.changeBlock({ id: "${sanitize(node.variable.id)}", element: "checkbox", value: true }, runtime);\n`;
+            this.source += shared('data_showvariable', {ID: `"${sanitize(node.variable.id)}"`});
             break;
 
         case 'visualReport': {

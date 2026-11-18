@@ -46,25 +46,6 @@ class MathUtil {
 
 
     /**
-     * Convert a value from tan function in degrees.
-     * @param {!number} angle in degrees
-     * @return {!number} Correct tan value
-     */
-    static tan (angle) {
-        angle = angle % 360;
-        switch (angle) {
-        case -270:
-        case 90:
-            return Infinity;
-        case -90:
-        case 270:
-            return -Infinity;
-        default:
-            return Math.round(Math.tan((Math.PI * angle) / 180) * 1e10) / 1e10;
-        }
-    }
-
-    /**
      * Given an array of unique numbers,
      * returns a reduced array such that each element of the reduced array
      * represents the position of that element in a sorted version of the
