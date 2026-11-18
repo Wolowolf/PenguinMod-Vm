@@ -288,9 +288,7 @@ class PenguinModCamera {
         };
     }
     getBindableTargets() {
-        const targets = this.runtime.targets
-            .filter(target => !target.isStage && target.isOriginal && target.id !== this.runtime.vm.editingTarget)
-            .map(target => target.getName());
+        const targets = this.runtime.getSpriteNames();
         return [].concat([
             { text: 'this sprite', value: '__MYSELF__' },
             { text: 'mouse-pointer', value: '__MOUSEPOINTER__' },

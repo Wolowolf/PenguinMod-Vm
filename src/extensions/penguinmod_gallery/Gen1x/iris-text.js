@@ -5984,17 +5984,8 @@ Enjoy!! :D
                 text: 'myself',
                 value: '_myself_'
             }];
-            const names = new Set();
-            for (const target of runtime.targets) {
-                if (target.isStage || target.isOriginal === false) continue;
-                const name = target.getName();
-                if (!names.has(name)) {
-                    names.add(name);
-                    items.push({
-                        text: name,
-                        value: name
-                    });
-                }
+            for (const name of new Set(runtime.getSpriteNames())) {
+                items.push({ text: name, value: name });
             }
             return items;
         }
@@ -6040,9 +6031,7 @@ Enjoy!! :D
             }
             if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return;
             const sprite = Scratch.Cast.toString(args.SPRITE);
-            const target = sprite === '_myself_' ?
-                util.target :
-                runtime.getSpriteTargetByName(sprite);
+            const target = runtime.getTargetFromMenu(sprite, util.target);
             if (!target || !applyTextSettings(getState(target), settings)) return;
             schedulePaint(target, getState(target));
         }
@@ -6066,9 +6055,7 @@ Enjoy!! :D
 
         setSmoothingForThisSprite(args, util) {
             const sprite = Scratch.Cast.toString(args.SPRITE);
-            const target = sprite === '_myself_' ?
-                util.target :
-                runtime.getSpriteTargetByName(sprite);
+            const target = runtime.getTargetFromMenu(sprite, util.target);
             if (!target) return;
             const state = getState(target);
             const smoothing = Scratch.Cast.toString(args.ENABLED).toLowerCase() === 'on';

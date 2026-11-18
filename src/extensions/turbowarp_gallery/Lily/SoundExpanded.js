@@ -583,9 +583,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     getSoundEffect(args, util) {
-      let target = Scratch.vm.runtime.getSpriteTargetByName(args.TARGET);
-      if (args.TARGET === "_myself_") target = util.target;
-      if (args.TARGET === "_stage_") target = runtime.getTargetForStage();
+      const target = runtime.getTargetFromMenu(args.TARGET, util.target, true);
       const effects = target.soundEffects;
       if (!effects) return 0;
       return effects[args.EFFECT];
@@ -645,11 +643,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     _populateTargetMenu() {
-      const targets = Scratch.vm.runtime.targets
-        .filter((target) => target.isOriginal && !target.isStage)
-        .map((target) => target.getName());
-
-      return targets;
+      return Scratch.vm.runtime.getSpriteNames();
     }
 
     _getTargets() {

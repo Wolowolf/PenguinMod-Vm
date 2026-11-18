@@ -3159,12 +3159,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       return renderTextures;
     }
     getSprites() {
-      const sprites = [];
-      for (const target of vm.runtime.targets) {
-        if (target.isOriginal && !target.isStage) {
-          sprites.push(target.getName());
-        }
-      }
+      const sprites = vm.runtime.getSpriteNames();
       if (sprites.length === 0) {
         return [
           {

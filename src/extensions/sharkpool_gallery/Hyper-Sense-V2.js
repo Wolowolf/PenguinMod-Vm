@@ -372,15 +372,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const spriteNames = [];
       if (mouse) { spriteNames.push({ text: Scratch.translate("mouse-pointer"), value: "_mouse_" }) }
       if (myself) { spriteNames.push({ text: Scratch.translate("myself"), value: "_myself_" }) }
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) {
-          const targetName = target.getName();
-          spriteNames.push({ text: targetName, value: targetName });
-        }
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     toProperKey(event, reverse) {
@@ -405,8 +397,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     getTarget(name, util, checkMouse, checkMyself) {
       if (checkMouse && name === "_mouse_") return "_mouse_";
-      if (checkMyself && name === "_myself_") return util.target;
-      return runtime.getSpriteTargetByName(name);
+      return runtime.getTargetFromMenu(name, checkMyself ? util.target : null);
     }
 
     updateAskMonitor() {

@@ -728,9 +728,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     /** @returns {VM.Target|undefined} */
     _getTargetFromMenu(targetName, util) {
-      if (targetName === "_myself_") return util.target;
-      if (targetName === "_stage_") return runtime.getTargetForStage();
-      return Scratch.vm.runtime.getSpriteTargetByName(targetName);
+      return runtime.getTargetFromMenu(targetName, util.target, true);
     }
 
     _getTargets() {
@@ -738,9 +736,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         { text: "myself", value: "_myself_" },
         { text: "Stage", value: "_stage_" },
       ];
-      const targets = Scratch.vm.runtime.targets
-        .filter((target) => target.isOriginal && !target.isStage)
-        .map((target) => target.getName());
+      const targets = Scratch.vm.runtime.getSpriteNames();
       spriteNames = spriteNames.concat(targets);
       return spriteNames;
     }

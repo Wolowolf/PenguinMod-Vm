@@ -138,11 +138,10 @@ class TailgatingExtension {
     if (this.runtime.vm.editingTarget && !this.runtime.vm.editingTarget.isStage) {
       sprites.push({ text: 'this sprite', value: '_myself_' });
     }
-    for (const target of this.runtime.targets) {
-      if (!target.isOriginal) continue;
-      if (target.isStage) continue;
-      if (this.runtime.vm.editingTarget && this.runtime.vm.editingTarget.id === target.id) continue;
-      const name = target.getName();
+    const editing = this.runtime.vm.editingTarget;
+    const editingName = editing && !editing.isStage ? editing.getName() : null;
+    for (const name of this.runtime.getSpriteNames()) {
+      if (name === editingName) continue;
       sprites.push({
         text: name,
         value: name
@@ -155,7 +154,7 @@ class TailgatingExtension {
   startTrackingSprite(args, util) {
     const spriteName = Cast.toString(args.SPRITE);
     const trackerName = Cast.toString(args.NAME);
-    const pickedSprite = spriteName === '_myself_' ? util.target : this.runtime.getSpriteTargetByName(spriteName);
+    const pickedSprite = this.runtime.getTargetFromMenu(spriteName, util.target);
     if (!pickedSprite) return;
     this.trackers[trackerName] = pickedSprite;
     this.positions[trackerName] = [];

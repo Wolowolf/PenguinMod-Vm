@@ -135,12 +135,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Helper Funcs
     _getTargets() {
-      const spriteNames = [];
-      const targets = runtime.targets;
-      for (let i = 0; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) spriteNames.push(target.getName());
-      }
+      const spriteNames = runtime.getSpriteNames(true);
       return spriteNames.length > 0 ? spriteNames : [""];
     }
 

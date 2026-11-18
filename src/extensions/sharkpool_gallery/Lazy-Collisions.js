@@ -123,18 +123,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     _getTargets() {
       const spriteNames = [];
       spriteNames.push({ text: "myself", value: "_myself_" })
-      const targets = Scratch.vm.runtime.targets;
-      for (let index = 1; index < targets.length; index++) {
-        const target = targets[index];
-        const targetName = target.getName();
-        if (target.isOriginal) spriteNames.push({ text: targetName, value: targetName });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return Scratch.vm.runtime.getSpriteMenu(spriteNames);
     }
 
     getArgBounds(target1, target2, util) {
-      let thisTarget = target2 === "_myself_" ? util.target : runtime.getSpriteTargetByName(target2);
-      let target = target1 === "_myself_" ? util.target : runtime.getSpriteTargetByName(target1);
+      let thisTarget = runtime.getTargetFromMenu(target2, util.target);
+      let target = runtime.getTargetFromMenu(target1, util.target);
       if (!thisTarget) thisTarget = runtime.getTargetById(target2);
       if (!target) target = runtime.getTargetById(target1);
       if (!target || !thisTarget) return undefined;
@@ -221,7 +215,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     findID(args, util) {
       if (!patched) patchGetTarget();
-      const target = args.TARGET === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.TARGET);
+      const target = runtime.getTargetFromMenu(args.TARGET, util.target);
       if (!target) return "";
       const clones = target.sprite.clones;
       let newTarget = [];

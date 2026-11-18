@@ -346,13 +346,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { text: "All Sprites", value: "_all_" }, { text: "All Main Sprites", value: "_all_2" }, { text: "All Clones", value: "_all_3" }
         );
       }  
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        const name = target.getName();
-        if (target.isOriginal) spriteNames.push({ text: name, value: name });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     organizeHats() {
@@ -572,7 +566,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       const branch = util.thread.ogTarget !== undefined ? util.thread.ogTarget.blocks.getBranch(util.thread.peekStack(), 1) :
         this.getThisBlock(util, true, 1);
       const name = Cast.toString(args.SPRITE);
-      let newTarget = name === "_stage_" ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(name);
+      let newTarget = runtime.getTargetFromMenu(name, null, true);
       let targets = runtime.targets, thread;
       if (!branch) return;
       if (name.startsWith("_all_")) {
@@ -601,7 +595,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     asClone(args, util) {
       const thisSprite = util.thread.ogTarget !== undefined ? util.thread.ogTarget : util.target;
-      const target = args.SPRITE === "_myself_" ? thisSprite : runtime.getSpriteTargetByName(args.SPRITE);
+      const target = runtime.getTargetFromMenu(args.SPRITE, thisSprite);
       if (!target) return;
       const clones = target.sprite.clones;
       const branch = this.getThisBlock(util, true, 1);
@@ -625,7 +619,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     async getInSprite(args, util) {
       const block = this.getThisBlock(util, false);
-      const newTarget = args.SPRITE === "_stage_" ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(args.SPRITE);
+      const newTarget = runtime.getTargetFromMenu(args.SPRITE, null, true);
       if (!newTarget || !block?.inputs.THING) return "";
       const thing = util.thread.blockContainer.getBlock(block.inputs.THING.block);
       return await this.genFakeCode(thing, util, newTarget) ?? "";

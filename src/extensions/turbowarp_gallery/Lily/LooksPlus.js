@@ -298,23 +298,19 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     getSprites() {
       const spriteNames = [];
-      const targets = Scratch.vm.runtime.targets;
       const editingTarget = Scratch.vm.runtime.getEditingTarget();
-      for (let index = 1; index < targets.length; index++) {
-        const target = targets[index];
-        if (target.isOriginal) {
-          const targetName = target.getName();
-          if (target === editingTarget) {
-            spriteNames.unshift({
-              text: "this sprite",
-              value: targetName,
-            });
-          } else {
-            spriteNames.push({
-              text: targetName,
-              value: targetName,
-            });
-          }
+      const editingName = editingTarget && !editingTarget.isStage ? editingTarget.getName() : null;
+      for (const targetName of Scratch.vm.runtime.getSpriteNames()) {
+        if (targetName === editingName) {
+          spriteNames.unshift({
+            text: "this sprite",
+            value: targetName,
+          });
+        } else {
+          spriteNames.push({
+            text: targetName,
+            value: targetName,
+          });
         }
       }
       if (spriteNames.length > 0) {

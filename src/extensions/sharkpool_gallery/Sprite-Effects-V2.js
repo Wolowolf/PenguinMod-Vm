@@ -643,12 +643,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         { text: Scratch.translate("Stage"), value: "_stage_" }
       ];
 
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) spriteNames.push({ text: target.getName(), value: target.getName() });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     _getTargetAssetSVG(target) {
@@ -875,10 +870,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     targetAsSVG(args, util) {
       let target = args.TARGET;
       if (target === "_canvas_") return CANVAS_SVG;
-      if (target === "_myself_") return this._getTargetAssetSVG(util.target);
-      if (target === "_stage_") return this._getTargetAssetSVG(runtime.getTargetForStage());
-
-      target = runtime.getSpriteTargetByName(target);
+      target = runtime.getTargetFromMenu(target, util.target, true);
       if (!target) return "<svg></svg>";
       return this._getTargetAssetSVG(target);
     }

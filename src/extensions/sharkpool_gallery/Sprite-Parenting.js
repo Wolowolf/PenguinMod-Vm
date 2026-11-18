@@ -217,14 +217,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     addSprite(args, util) {
       const link = this.links[args.LINK];
       if (!link) this.links[args.LINK] = {};
-      const target = args.NAME === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.NAME);
+      const target = runtime.getTargetFromMenu(args.NAME, util.target);
       if (target) this.links[args.LINK][target.id] = [target, target.x, target.y];
     }
 
     removeSprite(args, util) {
       const link = this.links[args.LINK];
       if (link) {
-        const target = args.NAME === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.NAME);
+        const target = runtime.getTargetFromMenu(args.NAME, util.target);
         if (target) delete this.links[args.LINK][target.id];
       }
     }
@@ -248,7 +248,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     linkMaster(args, util) {
       const link = this.links[args.LINK];
       if (!link) this.links[args.LINK] = {};
-      const target = args.NAME === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.NAME);
+      const target = runtime.getTargetFromMenu(args.NAME, util.target);
       if (target) {
         this.links[args.LINK].SPlinkMaster = {
           sprite: target.getName(),
@@ -349,12 +349,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     _getTargets() {
       const spriteNames = [];
       spriteNames.push({ text : "myself", value: "_myself_" });
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) spriteNames.push({ text: target.getName(), value: target.getName() });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
   }
 

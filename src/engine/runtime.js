@@ -4287,6 +4287,48 @@ class Runtime extends EventEmitter {
     }
 
     /**
+     * Desktop fork (section 299): shared by the extensions' sprite menus.
+     * Names of the original sprites (no clones), in target order.
+     * @param {boolean} [withStage] Also include the stage's name (where the stage is: first).
+     * @return {Array.<string>} The names.
+     */
+    getSpriteNames (withStage) {
+        const names = [];
+        for (let i = 0; i < this.targets.length; i++) {
+            const target = this.targets[i];
+            if (!target.isOriginal || (target.isStage && !withStage)) continue;
+            names.push(target.getName());
+        }
+        return names;
+    }
+
+    /**
+     * Desktop fork (section 299): an extension's sprite menu: the given items (myself, stage, all, ...), then one
+     * {text, value} item per original sprite, named like the sprite; [""] when that is empty.
+     * @param {Array} [before] Items before the sprites.
+     * @return {Array} The menu items.
+     */
+    getSpriteMenu (before) {
+        const items = before ? before.slice() : [];
+        const names = this.getSpriteNames();
+        for (let i = 0; i < names.length; i++) items.push({text: names[i], value: names[i]});
+        return items.length > 0 ? items : [''];
+    }
+
+    /**
+     * Desktop fork (section 299): the target a sprite menu's value stands for, shared by the extensions.
+     * @param {*} value The menu value: "_myself_", "_stage_" or a sprite name.
+     * @param {?Target} [myself] Returned for "_myself_"; leave it out where "_myself_" is looked up as a sprite name.
+     * @param {boolean} [withStage] Whether "_stage_" is the stage (otherwise it is looked up as a sprite name).
+     * @return {?Target} The target, if found.
+     */
+    getTargetFromMenu (value, myself, withStage) {
+        if (myself && value === '_myself_') return myself;
+        if (withStage && value === '_stage_') return this.getTargetForStage();
+        return this.getSpriteTargetByName(value);
+    }
+
+    /**
      * Get a target by its drawable id.
      * @param {number} drawableID drawable id of target to find
      * @return {?Target} The target, if found

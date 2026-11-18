@@ -205,12 +205,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     _getTargets(ind) {
       const spriteNames = [{ text: "myself", value: "_myself_" }];
       if (ind) spriteNames.push({ text: "Stage", value: "_stage_" });
-      const targets = runtime.targets;
-      for (let index = 1; index < targets.length; index++) {
-        const target = targets[index];
-        if (target.isOriginal) spriteNames.push({ text: target.getName(), value: target.getName() });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     whenChanged(args, util) {
@@ -239,7 +234,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     setSpriteEffect(args, util) {
       let target = args.SPRITE;
-      target = target === "_myself_" ? util.target : target === "_stage_" ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(target);
+      target = runtime.getTargetFromMenu(target, util.target, true);
       if (!target) return;
       target.setEffect(args.EFFECT, Scratch.Cast.toNumber(args.VALUE));
     }
@@ -285,7 +280,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     smoothing2(args) { return this.smooth(args.SPEED, args.LIMIT, args.MATH, Scratch.Cast.toNumber(args.NUM)) }
 
     getText(args, util) {
-      const target = args.SPRITE === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.SPRITE);
+      const target = runtime.getTargetFromMenu(args.SPRITE, util.target);
       if (!target || !target._customState["Scratch.looks"]) return "";
       return target._customState["Scratch.looks"].text;
     }
@@ -293,7 +288,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     setTargetCostume(args, util) {
       if (args.SPRITE === "_stage_") runtime.ext_scratch3_looks._setBackdrop(runtime.getTargetForStage(), args.NUM);
       else {
-        const target = args.SPRITE === "_myself_" ? util.target : runtime.getSpriteTargetByName(args.SPRITE);
+        const target = runtime.getTargetFromMenu(args.SPRITE, util.target);
         if (target) runtime.ext_scratch3_looks._setCostume(target, args.NUM);
       }
     }
@@ -355,7 +350,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     unboundSound(args, util) {
       let target = args.SPRITE;
-      target = target === "_myself_" ? util.target : target === "_stage_" ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(target);
+      target = runtime.getTargetFromMenu(target, util.target, true);
       if (!target) return;
       if (args.EFFECT === "volume") return this._updateVolume(Scratch.Cast.toNumber(args.VALUE), target);
       else return this._updateEffect(args, target);

@@ -291,12 +291,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     getTargets(optAll) {
       const spriteNames = [{ text: "myself", value: "_myself_" }];
       if (optAll) spriteNames.push({ text: "all sprites", value: "_all_" });
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) spriteNames.push({ text: target.getName(), value: target.getName() });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     getEffects(enable) {

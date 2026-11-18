@@ -637,12 +637,7 @@ const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNv
         { text: "myself", value: "_myself_" },
         { text: "Stage", value: "_stage_" },
       ];
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal) spriteNames.push({ text: target.getName(), value: target.getName() });
-      }
-      return spriteNames;
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     // ----- Camera -----
@@ -678,7 +673,7 @@ const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNv
         if (videoDevice._drawable !== -1) renderer.updateDrawableVisible(videoDevice._drawable, show);
         return;
       }
-      const target = name === "_myself_" ? util.target : runtime.getSpriteTargetByName(name);
+      const target = runtime.getTargetFromMenu(name, util.target);
       if (!target || target.isStage) return;
       const drawableID = target.drawableID;
       if (show) {

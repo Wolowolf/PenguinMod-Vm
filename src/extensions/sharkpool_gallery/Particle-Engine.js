@@ -1011,13 +1011,7 @@ void main() {
     // Helper Funcs
     getTargets() {
       const items = [{ text: Scratch.translate("Stage"), value: "_stage_" }];
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        if (target.isOriginal)
-          items.push({ text: target.getName(), value: target.getName() });
-      }
-      return items.length > 0 ? items : [""];
+      return runtime.getSpriteMenu(items);
     }
 
     getTargetsAll() {
@@ -1070,8 +1064,7 @@ void main() {
 
     getSprite(name) {
       if (name === "_all_") return "_all_";
-      if (name === "_stage_") return runtime.getTargetForStage();
-      return runtime.getSpriteTargetByName(name);
+      return runtime.getTargetFromMenu(name, null, true);
     }
 
     // Block Funcs

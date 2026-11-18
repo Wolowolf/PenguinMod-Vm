@@ -803,10 +803,7 @@ class pmEventsExpansion {
             {text: 'main sprites', value: '_main_'},
             {text: 'Stage', value: '_stage_'}
         ];
-        for (const target of this.runtime.targets) {
-            if (target.isOriginal && !target.isStage) menu.push({text: target.getName(), value: target.getName()});
-        }
-        return menu;
+        return this.runtime.getSpriteMenu(menu);
     }
     _eventNames() {
         const events = Object.assign({}, CORE_EVENTS);
@@ -832,9 +829,7 @@ class pmEventsExpansion {
     // every clone of a sprite (the stage has just itself)
     _clonesOf(sprite) {
         sprite = Cast.toString(sprite);
-        const target = sprite === "_stage_" ?
-            this.runtime.getTargetForStage()
-            : this.runtime.getSpriteTargetByName(sprite);
+        const target = this.runtime.getTargetFromMenu(sprite, null, true);
         return target && target.sprite ? target.sprite.clones : [];
     }
     _startOnClones(broadcast, sprite, data, util) {
@@ -876,9 +871,7 @@ class pmEventsExpansion {
     _matchingTarget(name, util) {
         name = Cast.toString(name);
         if (name === "_all_" || name === "_clone_" || name === "_main_") return name;
-        if (name === "_myself_") return util.target;
-        if (name === "_stage_") return this.runtime.getTargetForStage();
-        return this.runtime.getSpriteTargetByName(name);
+        return this.runtime.getTargetFromMenu(name, util.target, true);
     }
     _variablesJSON(variables) {
         const mapped = Object.create(null);
@@ -1006,9 +999,7 @@ class pmEventsExpansion {
         if (broadcastVar) broadcastVar.isSent = true;
 
         const sprite = Cast.toString(args.SPRITE);
-        const target = sprite === "_stage_" ?
-            this.runtime.getTargetForStage()
-            : this.runtime.getSpriteTargetByName(sprite);
+        const target = this.runtime.getTargetFromMenu(sprite, null, true);
         util.startHats("event_whenbroadcastreceived", {
             BROADCAST_OPTION: broadcast
         }, target);

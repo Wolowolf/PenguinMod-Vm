@@ -780,7 +780,7 @@ self.onmessage = ({ data: msg }) => {
             const spriteListContainer = document.createElement('div');
             spriteListContainer.style.cssText = 'display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;padding:4px 8px;';
 
-            const allSprites = [...new Set(Scratch.vm.runtime.targets.filter(t => !t.isStage && t.isOriginal).map(t => t.sprite.name))];
+            const allSprites = [...new Set(Scratch.vm.runtime.getSpriteNames())];
 
             const rebuildSpriteList = () => {
                 spriteListContainer.innerHTML = '';

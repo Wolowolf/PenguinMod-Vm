@@ -214,11 +214,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     getAllSprites() {
       // 0znzw, since shovel did not add it yet.
-      let sprites = [];
-      for (const target of vm.runtime.targets) {
-        if (target.isOriginal) sprites.push(target.sprite.name);
-      }
-      return JSON.stringify(sprites);
+      return JSON.stringify(vm.runtime.getSpriteNames(true));
     }
   }
   Scratch.extensions.register(new ShovelUtils());

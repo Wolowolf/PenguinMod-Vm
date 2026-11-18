@@ -159,20 +159,12 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     getTarget(name, util) {
-      if (name === "_myself_") return util.target;
-      if (name === "_stage_") return runtime.getTargetForStage();
-      return runtime.getSpriteTargetByName(name);
+      return runtime.getTargetFromMenu(name, util.target, true);
     }
 
     getTargets() {
       const spriteNames = [{ text: "myself", value: "_myself_" }, { text: "Stage", value: "_stage_" }];
-      const targets = runtime.targets;
-      for (let i = 1; i < targets.length; i++) {
-        const target = targets[i];
-        const name = target.getName();
-        if (target.isOriginal) spriteNames.push({ text: name, value: name });
-      }
-      return spriteNames.length > 0 ? spriteNames : [""];
+      return runtime.getSpriteMenu(spriteNames);
     }
 
     // Block Funcs

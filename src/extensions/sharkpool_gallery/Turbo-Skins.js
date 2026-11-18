@@ -248,18 +248,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     // Helper Funcs
     getTargets() {
       const items = [{ text: "myself", value: "_myself_" }, { text: "Stage", value: "_stage_" }];
-      const targets = runtime.targets;
-      for (let index = 1; index < targets.length; index++) {
-        const target = targets[index];
-        if (target.isOriginal) items.push({ text: target.getName(), value: target.getName() });
-      }
-      return items.length > 0 ? items : [""];
+      return runtime.getSpriteMenu(items);
     }
 
     getSprite(name, util) {
-      if (name === "_myself_") return util.target;
-      if (name === "_stage_") return runtime.getTargetForStage();
-      return runtime.getSpriteTargetByName(name);
+      return runtime.getTargetFromMenu(name, util.target, true);
     }
 
     // Block Funcs
