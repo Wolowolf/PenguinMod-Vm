@@ -5,6 +5,8 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 (function(Scratch) {
     'use strict';
@@ -490,7 +492,7 @@ self.onmessage = ({ data: msg }) => {
             const ScratchBlocks = window.ScratchBlocks;
             if (!ScratchBlocks || !ScratchBlocks.customPrompt) {
                 const op = parseFloat(Scratch.vm.runtime.pmPage.prompt('Overlay Opacity (0-1):', this.shadowOpacity));
-                if (!isNaN(op)) this.shadowOpacity = Math.max(0, Math.min(1, op));
+                if (!isNaN(op)) this.shadowOpacity = pmMathUtil.clamp(op, 0, 1);
                 const amb = Scratch.vm.runtime.pmPage.prompt('Ambient color (hex):', this.ambient);
                 if (amb) {
                     this.ambient = amb;
@@ -1518,7 +1520,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         _checkTouchingLight(target, li, sensitivity) {
-            const s = Math.min(100, Math.max(0, sensitivity)) / 100;
+            const s = pmMathUtil.clamp(sensitivity, 0, 100) / 100;
             const sx = target.x;
             const sy = target.y;
             const lx = li.x;
@@ -1550,13 +1552,13 @@ self.onmessage = ({ data: msg }) => {
             if (!li) return false;
             const target = this._resolveTarget(Scratch.Cast.toString(args.SPRITE), util);
             if (!target) return false;
-            const sensitivity = Math.min(100, Math.max(0, Scratch.Cast.toNumber(args.SENSITIVITY)));
+            const sensitivity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.SENSITIVITY), 0, 100);
             return this._checkTouchingLight(target, li, sensitivity);
         }
 
         hexToRgb(hex) {
-            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return m ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255] : [1, 1, 1];
+            const c = pmColor.strictHexToRgb(hex); // Desktop fork (section 297): shared Color toolkit
+            return c ? [c.r / 255, c.g / 255, c.b / 255] : [1, 1, 1];
         }
 
         _getCameraState() {
@@ -1852,13 +1854,13 @@ self.onmessage = ({ data: msg }) => {
         }
 
         settingSetShadowOpacity(args) {
-            this.shadowOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
+            this.shadowOpacity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.OPACITY), 0, 1);
             this._saveRenderSettings();
             this._markDirty();
         }
 
         settingSetBgOpacity(args) {
-            this.bgOpacity = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.OPACITY)));
+            this.bgOpacity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.OPACITY), 0, 1);
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -1877,13 +1879,13 @@ self.onmessage = ({ data: msg }) => {
         }
 
         settingSetBloomRadius(args) {
-            this.bloomRadius = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.VALUE)));
+            this.bloomRadius = pmMathUtil.clamp(Scratch.Cast.toNumber(args.VALUE), 0, 1);
             this._saveRenderSettings();
             this._markDirty();
         }
 
         settingSetBloomThreshold(args) {
-            this.bloomThreshold = Math.max(0, Math.min(1, Scratch.Cast.toNumber(args.VALUE)));
+            this.bloomThreshold = pmMathUtil.clamp(Scratch.Cast.toNumber(args.VALUE), 0, 1);
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -1909,7 +1911,7 @@ self.onmessage = ({ data: msg }) => {
         }
 
         settingSetColorTemp(args) {
-            this.colorTemp = Math.max(-1, Math.min(1, Scratch.Cast.toNumber(args.VALUE)));
+            this.colorTemp = pmMathUtil.clamp(Scratch.Cast.toNumber(args.VALUE), -1, 1);
             this._saveRenderSettings();
             this._markDirty();
         }
@@ -2624,12 +2626,12 @@ self.onmessage = ({ data: msg }) => {
         }
 
         setShadowOpacity(args) {
-            this.shadowOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
+            this.shadowOpacity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.OPACITY), 0, 100) / 100;
             this._markDirty();
         }
 
         setBgOpacity(args) {
-            this.bgOpacity = Math.max(0, Math.min(100, Scratch.Cast.toNumber(args.OPACITY))) / 100;
+            this.bgOpacity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.OPACITY), 0, 100) / 100;
             this._markDirty();
         }
 

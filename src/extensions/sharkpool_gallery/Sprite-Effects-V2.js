@@ -7,6 +7,7 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmColor = require('../../util/color'); // Desktop fork (section 297): the shared colour toolkit
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sprite Effects V2
 // ID: SPspriteEffectsV2
@@ -776,10 +777,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     _hexValueMap(hex) {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      const a = parseInt(hex.slice(7, 9), 16);
+      const { r, g, b, a } = pmColor.hexPairs(hex, 1); // Desktop fork (section 297): shared Color toolkit
       return [
         r / 255, 0, 0, 0, 0,
         0, g / 255, 0, 0, 0,

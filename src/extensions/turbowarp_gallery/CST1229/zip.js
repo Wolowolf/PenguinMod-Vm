@@ -4,6 +4,7 @@
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 const packedLibrary = require('../../../extension-support/packed-library'); // section 295: the shared unpacker
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Zip
 // ID: cst1229zip
@@ -823,7 +824,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!this.zip) return "";
       try {
         COMPRESSION = Scratch.Cast.toNumber(COMPRESSION);
-        COMPRESSION = Math.max(Math.min(Math.round(COMPRESSION), 9), 0);
+        COMPRESSION = pmMathUtil.clamp(Math.round(COMPRESSION), 0, 9);
 
         const compType = COMPRESSION === 0 ? "STORE" : "DEFLATE";
         const options = {

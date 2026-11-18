@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Video sharing (v2.5.2) by pooiod7
 
@@ -39,9 +40,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     function getTheme() {
       function standardizeColor(color) {
         if (color.startsWith('#')) {
-          let r = parseInt(color.slice(1, 3), 16);
-          let g = parseInt(color.slice(3, 5), 16);
-          let b = parseInt(color.slice(5, 7), 16);
+          let {r, g, b} = pmColor.hexPairs(color, 1); // Desktop fork (section 297): shared Color toolkit
           return `rgb(${r}, ${g}, ${b})`;
         } else if (color.startsWith('rgb')) {
           return color;

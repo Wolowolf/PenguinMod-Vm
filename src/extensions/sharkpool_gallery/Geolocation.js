@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Geolocation
 // ID: SPgeolocation
@@ -244,7 +245,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
       // Desktop fork: the angle (radians) is turned into degrees for the 60 nautical miles per degree below;
       // it was multiplied by TO_RAD, giving about 0.0003 of the real distance. Clamped: rounding can go past 1.
-      dist = Math.acos(Math.min(1, Math.max(-1, dist)));
+      dist = Math.acos(pmMathUtil.clamp(dist, -1, 1));
       dist *= 180 / Math.PI;
       dist = dist * 60 * 1.1515;
 

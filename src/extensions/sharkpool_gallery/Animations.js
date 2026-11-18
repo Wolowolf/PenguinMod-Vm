@@ -7,6 +7,7 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 158): the animations are saved and restored through runtime.pmRegisterState (marked by the
 // name).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Animations
 // ID: SPanimations
@@ -529,16 +530,16 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     addAllFrames(args, util) {
       const costumes = util.target.getCostumes();
-      const start = Math.min(costumes.length, Math.max(1, Math.round(Scratch.Cast.toNumber(args.COS1))));
-      const end = Math.min(costumes.length, Math.max(start, Math.round(Scratch.Cast.toNumber(args.COS2))));
+      const start = pmMathUtil.clamp(Math.round(Scratch.Cast.toNumber(args.COS1)), 1, costumes.length);
+      const end = pmMathUtil.clamp(Math.round(Scratch.Cast.toNumber(args.COS2)), start, costumes.length);
       const anim = this.getAnim(args.NAME, util);
       for (let i = start - 1; i < end; i++) anim.frames.push(costumes[i].name);
     }
 
     removeAllFrames(args, util) {
       const costumes = util.target.getCostumes();
-      const start = Math.min(costumes.length, Math.max(1, Math.round(Scratch.Cast.toNumber(args.COS1))));
-      const end = Math.min(costumes.length, Math.max(start, Math.round(Scratch.Cast.toNumber(args.COS2))));
+      const start = pmMathUtil.clamp(Math.round(Scratch.Cast.toNumber(args.COS1)), 1, costumes.length);
+      const end = pmMathUtil.clamp(Math.round(Scratch.Cast.toNumber(args.COS2)), start, costumes.length);
       const anim = this.getAnim(args.NAME, util);
       anim.frames.splice(start - 1, end - (start - 1));
     }

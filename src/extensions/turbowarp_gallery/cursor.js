@@ -5,6 +5,7 @@
 // RUNTIME_STEP_END event; section 159: its page event listeners go through Scratch.vm.runtime.pmPage).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Mouse Cursor
 // ID: MouseCursor
@@ -726,7 +727,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
       if (encodedCostume) {
         const [percentX, percentY] = parseTuple(args.position).map(
-          (i) => Math.max(0, Math.min(100, i)) / 100
+          (i) => pmMathUtil.clamp(i, 0, 100) / 100
         );
         const x = percentX * encodedCostume.width;
         const y = percentY * encodedCostume.height;

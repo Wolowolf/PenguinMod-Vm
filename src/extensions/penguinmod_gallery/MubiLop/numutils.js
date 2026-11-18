@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 294): blocks defined once for the interpreter and the compiler (src/blocks/shared/ext-pure.js)
 const SharedBlocks = require('../../../blocks/shared');
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Number Utilities
 // ID: numberUtilities
@@ -327,7 +328,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     }
 
     formatShort(args) {
-      const decimals = Math.max(0, Math.min(100, Cast.toNumber(args.DECIMALS)));
+      const decimals = pmMathUtil.clamp(Cast.toNumber(args.DECIMALS), 0, 100);
       return toShortNotation(Cast.toNumber(args.NUMBER), decimals);
     }
 

@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Video
 // ID: lmsVideo
@@ -704,7 +705,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       if (!videoSkin) return;
 
       const value = Cast.toNumber(args.VALUE);
-      videoSkin.videoVolume = Math.min(1, Math.max(0, value / 100));
+      videoSkin.videoVolume = pmMathUtil.clamp(value / 100, 0, 1);
       videoSkin.updateVolume();
     }
 

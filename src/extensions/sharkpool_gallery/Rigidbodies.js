@@ -7,6 +7,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Rigidbodies
 // ID: SPrigidBody
@@ -907,7 +908,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     setCircAccuracy(args) {
       const body = this.getBody(args.OCT_SHAPE);
       if (!body) return;
-      body.setPolygonSides(Math.max(Rigidbody.MIN_POLY_SIDES, Math.min(100, Cast.toNumber(args.VALUE))));
+      body.setPolygonSides(pmMathUtil.clamp(Cast.toNumber(args.VALUE), Rigidbody.MIN_POLY_SIDES, 100));
       updateAllBodyMonitors();
     }
 

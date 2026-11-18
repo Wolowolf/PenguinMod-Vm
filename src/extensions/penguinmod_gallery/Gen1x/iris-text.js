@@ -11,6 +11,8 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmEasing = require('../../../extension-support/easing'); // Desktop fork (section 296): shared with jg_tween
+const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -53,7 +55,7 @@ Enjoy!! :D
     const WIPE_DIRECTION_RIGHT_LEFT = 'right-left';
 
     function clampPercent(value) {
-        return Math.max(0, Math.min(100, value));
+        return pmMathUtil.clamp(value, 0, 100);
     }
 
     function clampPercentToUnit(value) {
@@ -3450,15 +3452,14 @@ Enjoy!! :D
         let r = 0, g = 0, b = 0, a = alpha == null ? 1 : alpha;
         if (typeof color === 'string' && color[0] === '#') {
             const hex = color.slice(1);
-            if (hex.length === 3) {
-                r = parseInt(hex[0] + hex[0], 16) / 255;
-                g = parseInt(hex[1] + hex[1], 16) / 255;
-                b = parseInt(hex[2] + hex[2], 16) / 255;
-            } else if (hex.length === 6 || hex.length === 8) {
-                r = parseInt(hex.slice(0, 2), 16) / 255;
-                g = parseInt(hex.slice(2, 4), 16) / 255;
-                b = parseInt(hex.slice(4, 6), 16) / 255;
-                if (hex.length === 8) a *= parseInt(hex.slice(6, 8), 16) / 255;
+            // Desktop fork (section 297): the channels come from the shared Color.hexPairs
+            const c = hex.length === 3 ? pmColor.hexPairs(hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]) :
+                (hex.length === 6 || hex.length === 8) ? pmColor.hexPairs(hex) : null;
+            if (c) {
+                r = c.r / 255;
+                g = c.g / 255;
+                b = c.b / 255;
+                if (hex.length === 8) a *= c.a / 255;
             }
         } else if (typeof color === 'string') {
             const m = color.match(/rgba?\(([^)]+)\)/);
@@ -3517,7 +3518,7 @@ Enjoy!! :D
                 flat[i * 4 + 3] = c[3];
             }
             gl.uniform4fv(uni.u_gradStopsBase, flat);
-            gl.uniform1i(uni.u_gradCount, Math.max(1, Math.min(colors.length, 8)));
+            gl.uniform1i(uni.u_gradCount, pmMathUtil.clamp(colors.length, 1, 8));
             gl.uniform2f(uni.u_gradLocalOrigin, drawX, drawY);
             gl.uniform2f(uni.u_gradGlyphSize, w, h);
 
@@ -7049,7 +7050,7 @@ Enjoy!! :D
 
         blurMarkup(args) {
             const text = Scratch.Cast.toString(args.TEXT);
-            const intensity = Math.min(100, Math.max(0, Scratch.Cast.toNumber(args.INTENSITY)));
+            const intensity = pmMathUtil.clamp(Scratch.Cast.toNumber(args.INTENSITY), 0, 100);
             return `[blur=${intensity}]${text}[/blur]`;
         }
 

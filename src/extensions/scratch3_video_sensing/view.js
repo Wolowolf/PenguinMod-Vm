@@ -1,4 +1,5 @@
 const {motionVector} = require('./math');
+const MathUtil = require('../../util/math-util'); // Desktop fork (section 297): shared clamp
 
 const WIDTH = 480;
 const HEIGHT = 360;
@@ -321,8 +322,8 @@ class VideoMotionView {
 
                 eachAddress(address => {
                     const {gradX, gradY, gradT} = this._grads(address);
-                    C2 += (Math.max(Math.min(gradX / 0x0f, 1), -1)) * (gradT / 0xff);
-                    C1 += (Math.max(Math.min(gradY / 0x0f, 1), -1)) * (gradT / 0xff);
+                    C2 += MathUtil.clamp(gradX / 0x0f, -1, 1) * (gradT / 0xff);
+                    C1 += MathUtil.clamp(gradY / 0x0f, -1, 1) * (gradT / 0xff);
                     n += 1;
                 });
 
@@ -356,8 +357,8 @@ class VideoMotionView {
 
                 eachAddress(address => {
                     const {gradX, gradY} = this._grads(address);
-                    C2 += Math.max(Math.min(gradX / 0x1f, 1), -1);
-                    C1 += Math.max(Math.min(gradY / 0x1f, 1), -1);
+                    C2 += MathUtil.clamp(gradX / 0x1f, -1, 1);
+                    C1 += MathUtil.clamp(gradY / 0x1f, -1, 1);
                     n += 1;
                 });
 

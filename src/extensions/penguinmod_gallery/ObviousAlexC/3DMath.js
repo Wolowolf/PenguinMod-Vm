@@ -9,6 +9,7 @@
 // (`modular` with `locked`), each with a modular block worked out as a chain of the singles' functions; "conjugate"
 // is its own block. Marked "Desktop fork (section 283)".
 const ExpandableBlocks = require('../../../util/expandable-blocks');
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // 3D Math by ObviousAlexC 
 // Normalize, angle, vector projection, and reflection blocks by LSPECTRONIZTAR
@@ -1965,7 +1966,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const m = Math.sqrt(magA2 * magB2);
 
       const ratio = dot / m;
-      const clamped = Math.max(-1, Math.min(1, ratio)); // clamp to valid range for acos
+      const clamped = pmMathUtil.clamp(ratio, -1, 1); // clamp to valid range for acos
       const result = Math.trunc((Math.acos(clamped) * r2d) * 1000) / 1000;
       return isNaN(result) ? 90 : result;
     }

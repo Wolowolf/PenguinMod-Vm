@@ -10,6 +10,7 @@
 // pmCancelAnimationFrame (marked by the name).
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Obscuras MIDI Tools v5
 // ID: ObscurasMIDITools
@@ -407,7 +408,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     _getEffectiveNote(midiVal) {
-      return Math.max(0, Math.min(127, midiVal + this._transposeSemintones));
+      return pmMathUtil.clamp(midiVal + this._transposeSemintones, 0, 127);
     }
 
     async importMidiUrl(args) {
@@ -588,7 +589,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     setPlaybackRate(args) {
-      this._playbackRate = Math.max(0.1, Math.min(4.0, Scratch.Cast.toNumber(args.RATE)));
+      this._playbackRate = pmMathUtil.clamp(Scratch.Cast.toNumber(args.RATE), 0.1, 4.0);
       if (this._isPlaying && !this._isPaused) {
         const current = this.getCurrentTime();
         this._elapsedBeforePause = current;

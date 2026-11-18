@@ -86,6 +86,33 @@ class Color {
     }
 
     /**
+     * Desktop fork (section 297): read the two-digit hex channels of a colour string from `start`
+     * (no checks: each channel is parseInt of its pair, NaN where the pair is missing or not hex).
+     * Shared by extensions that read "#RRGGBB" / "#RRGGBBAA" themselves.
+     * @param {string} hex the colour string.
+     * @param {number} [start] index of the first digit (1 to skip a "#").
+     * @return {{r: number, g: number, b: number, a: number}} the channels in [0,255] or NaN.
+     */
+    static hexPairs (hex, start = 0) {
+        return {
+            r: parseInt(hex.slice(start, start + 2), 16),
+            g: parseInt(hex.slice(start + 2, start + 4), 16),
+            b: parseInt(hex.slice(start + 4, start + 6), 16),
+            a: parseInt(hex.slice(start + 6, start + 8), 16)
+        };
+    }
+
+    /**
+     * Desktop fork (section 297): strict "#RRGGBB" / "RRGGBB" (any case) to an RGB object, null for anything else.
+     * @param {string} hex the colour string.
+     * @return {?RGBObject} the colour, or null.
+     */
+    static strictHexToRgb (hex) {
+        const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return m ? {r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16)} : null;
+    }
+
+    /**
      * Convert an RGB color object to a hex color.
      * @param {RGBObject} rgb - {r: red [0,255], g: green [0,255], b: blue [0,255]}.
      * @return {!string} Hex representation of the color.

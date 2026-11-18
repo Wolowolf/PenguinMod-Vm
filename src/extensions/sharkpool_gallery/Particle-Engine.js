@@ -9,6 +9,7 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Particle Engine
 // ID: SPpartEngine
@@ -208,7 +209,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   const createParticleRGB = (color) => {
     const rgb = Cast.toRgbColorList(color.val);
     return [
-      rgb.map((c) => Math.max(Math.min(rng(c, color.inf), 255), 0)),
+      rgb.map((c) => pmMathUtil.clamp(rng(c, color.inf), 0, 255)),
       color.val,
     ];
   };
@@ -487,7 +488,7 @@ void main() {
 
         const fadeIn = ind * (1 / fIn);
         const fadeOut = (conLife - ind) * (1 / fOut);
-        const opacity = Math.max(Math.min(fadeIn, fadeOut, 1), 0);
+        const opacity = pmMathUtil.clamp(Math.min(fadeIn, fadeOut), 0, 1);
 
         const tintKey = life.toFixed(4);
         let tint = tintCache.get(tintKey);
@@ -495,7 +496,7 @@ void main() {
           tint = createTint(
             sCol[0],
             eCol[0],
-            Math.max(0, Math.min(ind / conLife, 1))
+            pmMathUtil.clamp(ind / conLife, 0, 1)
           );
           tintCache.set(tintKey, tint);
         }

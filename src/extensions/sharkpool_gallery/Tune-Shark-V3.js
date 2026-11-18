@@ -7,6 +7,7 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Tune Shark V3
 // ID: SPtuneShark3
@@ -104,7 +105,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
   ];
 
   const clamp = (min, max, value) => {
-    return Math.max(min, Math.min(max, value));
+    return pmMathUtil.clamp(value, min, max); // Desktop fork (section 297): shared clamp
   };
 
   const compareObjects = (obj1, obj2) => {

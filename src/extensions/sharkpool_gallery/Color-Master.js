@@ -10,6 +10,8 @@
 // Desktop fork (section 285): a modular "mix [A] and [B] and …" block (shared maker, `modular`): every colour has the
 // same share; for two colours the same answer as "mix [A] with [B] by (50)%". The single keeps its percentage.
 const ExpandableBlocks = require('../../util/expandable-blocks');
+const pmColor = require('../../util/color'); // Desktop fork (section 297): the shared colour toolkit
+const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Color Master
 // ID: SPcolorMaster
@@ -168,11 +170,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     // Converters
     hex2RGBA(hex) {
       hex = hex.startsWith("#") ? hex.slice(1) : hex;
-      let alpha = 255;
-      if (hex.length === 8) alpha = parseInt(hex.slice(6, 8), 16);
-      return {
-        r: parseInt(hex.slice(0, 2), 16), g: parseInt(hex.slice(2, 4), 16), b: parseInt(hex.slice(4, 6), 16), a: alpha,
-      };
+      const c = pmColor.hexPairs(hex); // Desktop fork (section 297): shared Color toolkit
+      return { r: c.r, g: c.g, b: c.b, a: hex.length === 8 ? c.a : 255 };
     }
 
     RGBA2hex(rgb) {
@@ -209,14 +208,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     hex2DEC(hex) {
-      const rgb = this.hex2RGBA(hex);
-      return (rgb.r << 16) + (rgb.g << 8) + rgb.b;
+      return pmColor.rgbToDecimal(this.hex2RGBA(hex));
     }
 
     dec2Hex(dec) {
-      if (dec < 0) dec += 0xFFFFFF + 1;
-      let hex = Math.round(Number(dec)).toString(16);
-      return `#${"000000".substr(0, 6 - hex.length)}${hex}`;
+      return pmColor.decimalToHex(dec);
     }
 
     // Color blocks
@@ -265,7 +261,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       let color = Scratch.Cast.toString(args.COLOR);
       if (args.ATT === "opacity") {
         const rgbaColor = this.hex2RGBA(color);
-        rgbaColor.a = Math.max(0, Math.min(255, ((changeAMT - 100)* -2.55)));
+        rgbaColor.a = pmMathUtil.clamp((changeAMT - 100) * -2.55, 0, 255);
         color = this.RGBA2hex(rgbaColor);
       } else {
         const rgbaColor = this.hex2RGBA(color);
@@ -274,9 +270,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           hsvColor.h = (hsvColor.h + changeAMT) % 360;
           hsvColor.h = hsvColor.h < 0 ? 360 + hsvColor.h : hsvColor.h;
         } else if (args.ATT === "saturation") {
-          hsvColor.s = Math.max(0, Math.min(1, hsvColor.s + (changeAMT - 100) / 100));
+          hsvColor.s = pmMathUtil.clamp(hsvColor.s + (changeAMT - 100) / 100, 0, 1);
         } else if (args.ATT === "brightness") {
-          hsvColor.v = Math.max(0, Math.min(1, hsvColor.v + (changeAMT - 100) / 100));
+          hsvColor.v = pmMathUtil.clamp(hsvColor.v + (changeAMT - 100) / 100, 0, 1);
         }
         color = this.hsv2hex(hsvColor);
       }

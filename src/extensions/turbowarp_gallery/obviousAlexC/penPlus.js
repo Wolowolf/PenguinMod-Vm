@@ -7,6 +7,8 @@
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Pen Plus V7
 // ID: penP
@@ -461,15 +463,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           //100 since that is what scratch users are accustomed to.
           //R
           case 2:
-            valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
+            valuetoSet = pmMathUtil.clamp(value, 0, 100) * 0.01;
             break;
           //G
           case 3:
-            valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
+            valuetoSet = pmMathUtil.clamp(value, 0, 100) * 0.01;
             break;
           //B
           case 4:
-            valuetoSet = Math.min(Math.max(value, 0), 100) * 0.01;
+            valuetoSet = pmMathUtil.clamp(value, 0, 100) * 0.01;
             break;
 
           //Clamp to 0 so we can't go behind the stage.
@@ -500,7 +502,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           //Transparency
           //Same story as color
           case 7:
-            valuetoSet = Math.min(Math.max(value, 0), 1000) * 0.01;
+            valuetoSet = pmMathUtil.clamp(value, 0, 1000) * 0.01;
             break;
 
           //Just break if value isn't valid
@@ -777,14 +779,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     colorLib = {
       hexToRgb: (hex) => {
         if (typeof hex == "string") {
-          const splitHex = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
-            hex
-          );
-          return {
-            r: parseInt(splitHex[1], 16),
-            g: parseInt(splitHex[2], 16),
-            b: parseInt(splitHex[3], 16),
-          };
+          const c = pmColor.strictHexToRgb(hex); // Desktop fork (section 297): shared Color toolkit
+          return { r: c.r, g: c.g, b: c.b };
         }
         hex = Scratch.Cast.toNumber(hex);
         return {
@@ -795,9 +791,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       },
 
       rgbtoSColor: ({ R, G, B }) => {
-        R = Math.min(Math.max(R, 0), 100) * 2.55;
-        G = Math.min(Math.max(G, 0), 100) * 2.55;
-        B = Math.min(Math.max(B, 0), 100) * 2.55;
+        R = pmMathUtil.clamp(R, 0, 100) * 2.55;
+        G = pmMathUtil.clamp(G, 0, 100) * 2.55;
+        B = pmMathUtil.clamp(B, 0, 100) * 2.55;
         return (Math.ceil(R) * 256 + Math.ceil(G)) * 256 + Math.ceil(B);
       },
     };
@@ -3655,7 +3651,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       //Prevent it from setting the z to a color value;
       if (attributeNum >= 7 && attributeNum != 11) {
         this.squareAttributesOfAllSprites[curTarget.id][attributeNum] =
-          Math.min(Math.max(valuetoSet, 0), 100) * 0.01;
+          pmMathUtil.clamp(valuetoSet, 0, 100) * 0.01;
         return;
       }
 
@@ -3917,8 +3913,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     HSV2RGB({ H, S, V }) {
       S = S / 100;
       V = V / 100;
-      S = Math.min(Math.max(S, 0), 1);
-      V = Math.min(Math.max(V, 0), 1);
+      S = pmMathUtil.clamp(S, 0, 1);
+      V = pmMathUtil.clamp(V, 0, 1);
       H = H % 360;
       const C = V * S;
       const X = C * (1 - Math.abs(((H / 60) % 2) - 1));

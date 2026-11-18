@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Sound Expanded
 // Description: Adds more sound-related blocks.
@@ -592,7 +593,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
     setProjectVolume(args) {
       const value = Scratch.Cast.toNumber(args.VALUE) / 100;
-      const newVolume = Scratch.Cast.toNumber(Math.max(Math.min(value, 1), 0));
+      const newVolume = Scratch.Cast.toNumber(pmMathUtil.clamp(value, 0, 1));
       runtime.audioEngine.inputNode.gain.value = newVolume;
     }
 
@@ -600,7 +601,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
       const value = Scratch.Cast.toNumber(args.VALUE) / 100;
       const volume = runtime.audioEngine.inputNode.gain.value;
       const newVolume = Scratch.Cast.toNumber(
-        Math.max(Math.min(volume + value, 1), 0)
+        pmMathUtil.clamp(volume + value, 0, 1)
       );
       runtime.audioEngine.inputNode.gain.value = newVolume;
     }

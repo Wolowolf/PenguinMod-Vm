@@ -5,6 +5,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
+const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Simple 3D
 // ID: xeltallivSimple3D
@@ -314,8 +315,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
    * @returns {boolean}
    */
   const hasOwn = (obj, name) => Object.prototype.hasOwnProperty.call(obj, name);
-  const clamp = (value, min, max) =>
-    value > max ? max : value < min ? min : value;
+  const clamp = pmMathUtil.clamp; // Desktop fork (section 297): shared clamp (every caller passes numbers outside -0)
 
   class Buffer {
     constructor(type) {
@@ -4135,7 +4135,7 @@ void main() {
       },
       def: function ({ FONT, SIZE }) {
         FONT = Cast.toString(FONT);
-        SIZE = Math.min(Math.max(Cast.toNumber(SIZE), 1), 1000);
+        SIZE = pmMathUtil.clamp(Cast.toNumber(SIZE), 1, 1000);
         return `${SIZE}px ${FONT}`;
       },
     },
