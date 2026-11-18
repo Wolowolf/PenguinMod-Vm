@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/iris-text.js, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 180): its mask fallback waits for a costume's SVG; (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 180): its mask fallback waits for a costume's SVG; (section 120, step 5): its skins are made with renderer.createCustomSkin instead of writing _allSkins; (section 303): it draws on the renderer's own WebGL context into its own skin texture (IrisSkin) and builds its shaders with the renderer's loader (marked "Desktop fork").
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -14,6 +14,7 @@ const pmEasing = require('../../../extension-support/easing'); // Desktop fork (
 const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
+const pmGlProgram = require('../../../util/gl-program'); // Desktop fork (section 303): the renderer's shader loader
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -2837,20 +2838,20 @@ Enjoy!! :D
             pinnedKeys.add(glyphCacheKey(op.text, op.font['font-family'], op.font['font-size'], op.font['font-weight'], op.font['font-style']));
         }
         pinGlyphKeysForFrame(pinnedKeys);
-        let canvas;
+        let skin;
         try {
-            canvas = compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY);
+            skin = compositeGlyphsToSkinWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY);
         } finally {
             unpinGlyphKeysForFrame(pinnedKeys);
         }
-        if (!canvas) {
+        if (!skin) {
             if (!webglUnavailableLogged) {
                 webglUnavailableLogged = true;
                 console.error('[Iris Text] WebGL2 is not available in this environment; text cannot be rendered.');
             }
             return;
         }
-        pushCanvasToDrawable(target, canvas, docW, docH, originX, anchorY != null ? anchorY : originY);
+        pushSkinToDrawable(target, skin, docW, docH, originX, anchorY != null ? anchorY : originY);
     }
 
     const loadedDocumentFonts = new Set();
@@ -3274,35 +3275,6 @@ Enjoy!! :D
         fragColor = vec4(patternColor.rgb * outA, outA);
     }`;
 
-    function glCompileShader(gl, type, source) {
-        const shader = gl.createShader(type);
-        gl.shaderSource(shader, source);
-        gl.compileShader(shader);
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            const info = gl.getShaderInfoLog(shader);
-            gl.deleteShader(shader);
-            throw new Error('could not compile shader: ' + info);
-        }
-        return shader;
-    }
-
-    function glLinkProgram(gl, vsSource, fsSource) {
-        const vs = glCompileShader(gl, gl.VERTEX_SHADER, vsSource);
-        const fs = glCompileShader(gl, gl.FRAGMENT_SHADER, fsSource);
-        const program = gl.createProgram();
-        gl.attachShader(program, vs);
-        gl.attachShader(program, fs);
-        gl.linkProgram(program);
-        gl.deleteShader(vs);
-        gl.deleteShader(fs);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            const info = gl.getProgramInfoLog(program);
-            gl.deleteProgram(program);
-            throw new Error('could not link program: ' + info);
-        }
-        return program;
-    }
-
     function glUniformLocations(gl, program, names) {
         const locations = {};
         for (const name of names) locations[name] = gl.getUniformLocation(program, name);
@@ -3313,19 +3285,89 @@ Enjoy!! :D
     let glCompositorFailed = false;
     let webglUnavailableLogged = false;
 
+    // Desktop fork (section 303): the compositor draws on the stage renderer's own WebGL2 context, into a scratch
+    // texture that is then copied into the text's skin texture (IrisSkin below), all on the GPU, instead of on a second
+    // context whose picture was copied into a 2D canvas and from there into a bitmap skin. It works inside a renderer draw region: begin() saves
+    // the GL state it changes and sets what its own context had by default, end() puts the saved state back.
     function createGLCompositor() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 1;
-        canvas.height = 1;
-        const gl = canvas.getContext('webgl2', {
-            alpha: true,
-            premultipliedAlpha: true,
-            antialias: false,
-            preserveDrawingBuffer: false,
-            depth: false,
-            stencil: false
-        });
-        if (!gl) return null;
+        const renderer = runtime.renderer;
+        const gl = renderer && renderer.gl;
+        if (!gl || typeof WebGL2RenderingContext === 'undefined' || !(gl instanceof WebGL2RenderingContext)) return null;
+        const glLinkProgram = (g, vsSource, fsSource) => pmGlProgram.createProgram(renderer, g, vsSource, fsSource);
+        const framebuffer = gl.createFramebuffer();
+        // the picture is drawn into this scratch texture, then copied into the skin's texture turned over (copyFramebuffer)
+        const copyFramebuffer = gl.createFramebuffer();
+        const scratchTexture = gl.createTexture();
+        const scratchSize = [0, 0];
+        const scratch = (width, height) => {
+            gl.bindTexture(gl.TEXTURE_2D, scratchTexture);
+            if (scratchSize[0] !== width || scratchSize[1] !== height) {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                scratchSize[0] = width;
+                scratchSize[1] = height;
+            }
+            return scratchTexture;
+        };
+        const saved = {};
+        const capabilities = [gl.BLEND, gl.SCISSOR_TEST, gl.STENCIL_TEST, gl.DEPTH_TEST, gl.CULL_FACE];
+        const region = {
+            enter: () => {
+                saved.drawFramebuffer = gl.getParameter(gl.DRAW_FRAMEBUFFER_BINDING);
+                saved.readFramebuffer = gl.getParameter(gl.READ_FRAMEBUFFER_BINDING);
+                saved.viewport = gl.getParameter(gl.VIEWPORT);
+                saved.enabled = capabilities.map(c => gl.isEnabled(c));
+                saved.blend = [gl.BLEND_SRC_RGB, gl.BLEND_DST_RGB, gl.BLEND_SRC_ALPHA, gl.BLEND_DST_ALPHA,
+                    gl.BLEND_EQUATION_RGB, gl.BLEND_EQUATION_ALPHA].map(p => gl.getParameter(p));
+                saved.colorMask = gl.getParameter(gl.COLOR_WRITEMASK);
+                saved.clearColor = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+                saved.program = gl.getParameter(gl.CURRENT_PROGRAM);
+                saved.vao = gl.getParameter(gl.VERTEX_ARRAY_BINDING);
+                saved.arrayBuffer = gl.getParameter(gl.ARRAY_BUFFER_BINDING);
+                saved.activeTexture = gl.getParameter(gl.ACTIVE_TEXTURE);
+                saved.textures = [0, 1].map(unit => {
+                    gl.activeTexture(gl.TEXTURE0 + unit);
+                    return gl.getParameter(gl.TEXTURE_BINDING_2D);
+                });
+                saved.unpack = [gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, gl.UNPACK_FLIP_Y_WEBGL,
+                    gl.UNPACK_COLORSPACE_CONVERSION_WEBGL].map(p => gl.getParameter(p));
+                gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+                for (const c of capabilities) gl.disable(c);
+                gl.colorMask(true, true, true, true);
+                gl.blendEquation(gl.FUNC_ADD);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.BROWSER_DEFAULT_WEBGL);
+            },
+            exit: () => {
+                gl.bindVertexArray(saved.vao);
+                gl.bindBuffer(gl.ARRAY_BUFFER, saved.arrayBuffer);
+                gl.useProgram(saved.program);
+                saved.textures.forEach((texture, unit) => {
+                    gl.activeTexture(gl.TEXTURE0 + unit);
+                    gl.bindTexture(gl.TEXTURE_2D, texture);
+                });
+                gl.activeTexture(saved.activeTexture);
+                gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, saved.drawFramebuffer);
+                gl.bindFramebuffer(gl.READ_FRAMEBUFFER, saved.readFramebuffer);
+                gl.viewport(saved.viewport[0], saved.viewport[1], saved.viewport[2], saved.viewport[3]);
+                capabilities.forEach((c, i) => (saved.enabled[i] ? gl.enable(c) : gl.disable(c)));
+                const b = saved.blend;
+                gl.blendFuncSeparate(b[0], b[1], b[2], b[3]);
+                gl.blendEquationSeparate(b[4], b[5]);
+                const m = saved.colorMask;
+                gl.colorMask(m[0], m[1], m[2], m[3]);
+                const cc = saved.clearColor;
+                gl.clearColor(cc[0], cc[1], cc[2], cc[3]);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, saved.unpack[0]);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, saved.unpack[1]);
+                gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, saved.unpack[2]);
+            }
+        };
+        const begin = () => renderer.enterDrawRegion(region);
+        const end = () => renderer._doExitDrawRegion();
+        begin();
 
         const quadBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
@@ -3421,14 +3463,10 @@ Enjoy!! :D
             return texture;
         }
 
-        const outputCanvas = document.createElement('canvas');
-        outputCanvas.width = 1;
-        outputCanvas.height = 1;
-        outputCanvas.reusable = false;
-        const outputCtx = outputCanvas.getContext('2d');
+        end();
 
         return {
-            gl, canvas, quadVao, outputCanvas, outputCtx,
+            gl, framebuffer, copyFramebuffer, scratch, begin, end, width: 1, height: 1, quadVao,
             glyphProgram, solidProgram, roundRectProgram, borderedRoundRectProgram, maskWipeProgram,
             glyphUniforms, solidUniforms, roundRectUniforms, borderedRoundRectUniforms, maskWipeUniforms,
             getGlyphTexture, evictGlyphTexture, getMaskPatternTexture
@@ -3477,7 +3515,7 @@ Enjoy!! :D
         const gl = comp.gl;
         gl.useProgram(program);
         gl.bindVertexArray(comp.quadVao);
-        gl.uniform2f(uniforms.u_canvasSize, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.uniform2f(uniforms.u_canvasSize, comp.width, comp.height);
         gl.uniform2f(uniforms.u_origin, originX, originY);
         gl.uniform2f(uniforms.u_size, w, h);
         gl.uniform2f(uniforms.u_pivot, pivotX, pivotY);
@@ -3644,7 +3682,8 @@ Enjoy!! :D
             inv.e / texW, inv.f / texH, 1
         ]);
     }
-    function compositeGlyphsToCanvasWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY) {
+    // Desktop fork (section 303): draws into the target's IrisSkin texture (returned) instead of a canvas
+    function compositeGlyphsToSkinWebGL2(state, paintOps, docW, docH, textWidth, textHeight, textBoxOffsetX, originX, originY) {
         const comp = getGLCompositor();
         if (!comp) return null;
         const gl = comp.gl;
@@ -3656,12 +3695,12 @@ Enjoy!! :D
 
         const pixelW = Math.max(1, Math.round(docW * DEST_SCALE));
         const pixelH = Math.max(1, Math.round(docH * DEST_SCALE));
-        if (comp.canvas.width !== pixelW || comp.canvas.height !== pixelH) {
-            comp.canvas.width = pixelW;
-            comp.canvas.height = pixelH;
-        }
+        const skin = getIrisSkin(state);
+        comp.begin();
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, comp.scratch(pixelW, pixelH), 0);
+        comp.width = pixelW;
+        comp.height = pixelH;
         gl.viewport(0, 0, pixelW, pixelH);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.enable(gl.BLEND);
@@ -3858,14 +3897,16 @@ Enjoy!! :D
             }
         }
 
-        if (comp.outputCanvas.width !== pixelW || comp.outputCanvas.height !== pixelH) {
-            comp.outputCanvas.width = pixelW;
-            comp.outputCanvas.height = pixelH;
-        }
-        comp.outputCtx.setTransform(1, 0, 0, 1, 0, 0);
-        comp.outputCtx.clearRect(0, 0, pixelW, pixelH);
-        comp.outputCtx.drawImage(comp.canvas, 0, 0);
-        return comp.outputCanvas;
+        // into the skin's texture, turned over: GL's rows start at the bottom, a bitmap's at the top (the old route's 2D
+        // canvas turned it the same way); a same-size copy with NEAREST copies the pixels exactly
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, comp.copyFramebuffer);
+        gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, skin.pmTexture(pixelW, pixelH), 0);
+        gl.blitFramebuffer(0, 0, pixelW, pixelH, 0, pixelH, pixelW, 0, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+        gl.framebufferTexture2D(gl.DRAW_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, comp.framebuffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
+        comp.end();
+        return skin;
     }
 
     function drawUnderlineSegmentsGL(comp, glyph, glyphX, glyphY, startX, endX, y, lineWidth, color, alpha) {
@@ -3904,55 +3945,104 @@ Enjoy!! :D
         }
     }
 
-    function installLinearFiltering(skin, state) {
-        skin.useNearest = function(scale) {
-            if (!state.smoothing) return true;
-            const s = Math.max(Math.abs(scale[0]), Math.abs(scale[1]));
-            return s >= (DEST_SCALE * 100 - 5);
-        };
+    // Desktop fork (section 303): the text's skin. Its texture lives on the renderer's context and the compositor copies
+    // each new picture into it; size, rotation centre and nearest/linear choice are those the bitmap skin had (size = texture
+    // pixels / DEST_SCALE). Like the pen layer's, its silhouette (touching) is read from the texture only when a
+    // touching check needs it (premultiplied pixels).
+    let IrisSkin = null;
+    function getIrisSkin(state) {
+        const renderer = runtime.renderer;
+        if (!IrisSkin) {
+            IrisSkin = class extends renderer.exports.Skin {
+                constructor(id, skinRenderer, skinState) {
+                    super(id, skinRenderer);
+                    this._state = skinState;
+                    this._texture = null;
+                    this._textureSize = [0, 0];
+                    this._resolution = 1;
+                    this._silhouetteDirty = false;
+                }
+                dispose() {
+                    if (this._texture) {
+                        this._renderer.gl.deleteTexture(this._texture);
+                        this._texture = null;
+                    }
+                    super.dispose();
+                }
+                get size() {
+                    return [this._textureSize[0] / this._resolution, this._textureSize[1] / this._resolution];
+                }
+                getTexture(scale) {
+                    return this._texture || super.getTexture();
+                }
+                useNearest(scale) {
+                    if (!this._state.smoothing) return true;
+                    const s = Math.max(Math.abs(scale[0]), Math.abs(scale[1]));
+                    return s >= (DEST_SCALE * 100 - 5);
+                }
+                // the texture the picture is copied into, made or resized for this size; called inside the compositor
+                pmTexture(width, height) {
+                    const gl = this._renderer.gl;
+                    if (!this._texture) {
+                        this._texture = gl.createTexture();
+                        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                        this._textureSize = [0, 0];
+                    }
+                    if (this._textureSize[0] !== width || this._textureSize[1] !== height) {
+                        gl.bindTexture(gl.TEXTURE_2D, this._texture);
+                        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+                        this._textureSize = [width, height];
+                    }
+                    return this._texture;
+                }
+                // the texture holds a new picture
+                pmDrawn(resolution, rotationCenter) {
+                    this._resolution = resolution;
+                    this._rotationCenter[0] = rotationCenter[0];
+                    this._rotationCenter[1] = rotationCenter[1];
+                    this._silhouetteDirty = true;
+                    this.emitWasAltered();
+                }
+                updateSilhouette() {
+                    if (!this._silhouetteDirty || !this._texture || !glCompositorInstance) return;
+                    const comp = glCompositorInstance;
+                    const gl = comp.gl;
+                    const width = this._textureSize[0];
+                    const height = this._textureSize[1];
+                    const imageData = new ImageData(width, height);
+                    comp.begin();
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this._texture, 0);
+                    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(imageData.data.buffer));
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
+                    comp.end();
+                    this._silhouette.update(imageData, true /* isPremultiplied */);
+                    this._silhouetteDirty = false;
+                }
+            };
+        }
+        const current = state.skinId !== null ? renderer._allSkins[state.skinId] : null;
+        if (current instanceof IrisSkin) return current;
+        const skin = renderer.createCustomSkin(IrisSkin, renderer, state);
+        state.skinId = skin.id;
+        return skin;
     }
 
-    function pushCanvasToDrawable(target, canvas, width, height, anchorX, anchorY) {
-        const state = getState(target);
+    function pushSkinToDrawable(target, skin, width, height, anchorX, anchorY) {
         const renderer = runtime.renderer;
-        if (!renderer) return;
         const rotationCenter = [
             anchorX != null ? anchorX : width / 2,
             anchorY != null ? anchorY : height / 2
         ];
-
-        // a new skin gets the smoothing rule at once; a refreshed one only if it lost it (replaced by the renderer)
-        state.skinId = pmImage.setCanvasSkin(renderer, state.skinId, canvas, DEST_SCALE, rotationCenter);
-        const current = renderer._allSkins[state.skinId];
-        if (current && !Object.prototype.hasOwnProperty.call(current, 'useNearest')) {
-            installLinearFiltering(current, state);
-        }
+        skin.pmDrawn(DEST_SCALE, rotationCenter);
         const drawable = renderer._allDrawables[target.drawableID];
-        const skin = renderer._allSkins[state.skinId];
         if (!drawable || drawable.skin !== skin) {
-            renderer.updateDrawableSkinId(target.drawableID, state.skinId);
+            renderer.updateDrawableSkinId(target.drawableID, skin.id);
         }
         runtime.requestRedraw();
-    }
-
-    function pushImageBitmapToDrawable(target, bitmap, pixelW, pixelH, docW, docH) {
-        const state = getState(target);
-        let scratch = state.workerResultCanvas;
-        if (!scratch) {
-            scratch = document.createElement('canvas');
-            scratch.reusable = false;
-            state.workerResultCanvas = scratch;
-        }
-        if (scratch.width !== pixelW || scratch.height !== pixelH) {
-            scratch.width = pixelW;
-            scratch.height = pixelH;
-        }
-        const sctx = scratch.getContext('2d');
-        sctx.setTransform(1, 0, 0, 1, 0, 0);
-        sctx.clearRect(0, 0, pixelW, pixelH);
-        sctx.drawImage(bitmap, 0, 0);
-        bitmap.close();
-        pushCanvasToDrawable(target, scratch, docW, docH);
     }
 
     function clearTarget(target) {

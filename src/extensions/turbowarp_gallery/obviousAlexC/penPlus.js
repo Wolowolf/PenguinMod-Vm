@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's obviousAlexC/penPlus.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the renderer's pmPenClearHooks instead of replacing renderer.penClear; (section 125, step 5e) its triangle list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork").
+// the VM as a built-in extension. The code is the gallery file, except (section 120, step 5): the renderer's pmPenClearHooks instead of replacing renderer.penClear; (section 125, step 5e) its triangle list read with Variable.pmGetValue instead of `value`, so the list keeps its lookup table (marked "Desktop fork"); (section 303) its own shader compiler, never called, removed (its shaders go through the renderer's twgl).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
@@ -255,55 +255,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                   `,
       },
       ProgramInf: null,
-    },
-    createAndCompileShaders: (vert, frag) => {
-      //? compile vertex Shader
-      const vertShader = gl.createShader(gl.VERTEX_SHADER);
-      try {
-        gl.shaderSource(vertShader, vert.trim());
-        gl.compileShader(vertShader);
-        if (!gl.getShaderParameter(vertShader, gl.COMPILE_STATUS)) {
-          throw gl.getShaderInfoLog(vertShader);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      //? compile fragment Shader
-      const fragShader = gl.createShader(gl.FRAGMENT_SHADER);
-      try {
-        gl.shaderSource(fragShader, frag.trim());
-        gl.compileShader(fragShader);
-        if (!gl.getShaderParameter(fragShader, gl.COMPILE_STATUS)) {
-          throw gl.getShaderInfoLog(fragShader);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      //? compile program
-      const program = gl.createProgram();
-      try {
-        gl.attachShader(program, vertShader);
-        gl.attachShader(program, fragShader);
-        gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-          throw gl.getProgramInfoLog(program);
-        }
-
-        gl.validateProgram(program);
-        if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-          throw gl.getProgramInfoLog(program);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-
-      return {
-        program: program,
-        vert: vertShader,
-        frag: fragShader,
-      };
     },
   };
 

@@ -1,12 +1,13 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the TurboWarp gallery's Xeltalliv/simple3D.js as its build makes it, moved into
-// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5); lists read and written with Variable.pmGetValue / pmSetValue / pmItemsChanged instead of their `value`, so they keep their lookup tables (section 125, step 5e).
+// the VM as a built-in extension. The code is the gallery file, changed only where marked "Desktop fork": the renderer's RenderQualityUpdated event instead of replacing its drawable's setHighQuality (the editor crashed on the next stage resize, section 109), pmBeforeDrawHooks instead of replacing renderer.draw, and renderer.createCustomSkin instead of writing _allSkins (section 120, step 5); lists read and written with Variable.pmGetValue / pmSetValue / pmItemsChanged instead of their `value`, so they keep their lookup tables (section 125, step 5e); its shader programs built by the renderer's shader loader (section 303).
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
 const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
+const pmGlProgram = require('../../../util/gl-program'); // Desktop fork (section 303): the renderer's shader loader
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Simple 3D
 // ID: xeltallivSimple3D
@@ -1455,40 +1456,15 @@ void main() {
     console.log("Compiling program with flags:", flags);
     const defines =
       "#version 300 es\n" + flags.map((flag) => `#define ${flag}\n`).join("");
-    const vsh = gl.createShader(gl.VERTEX_SHADER);
-    const fsh = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(vsh, defines + vshSrc);
-    gl.shaderSource(fsh, defines + fshSrc);
-    gl.compileShader(vsh);
-    gl.compileShader(fsh);
-    const program = gl.createProgram();
-    gl.attachShader(program, vsh);
-    gl.attachShader(program, fsh);
-    gl.linkProgram(program);
-    const success = gl.getProgramParameter(program, gl.LINK_STATUS);
-    if (!success) {
+    // Desktop fork (section 303): compiled and linked by the renderer's shader loader (twgl) on Simple 3D's own
+    // context; on an error its message (source with line numbers and the compiler's log) is printed as before
+    let program;
+    try {
+      program = pmGlProgram.createProgram(renderer, gl, defines + vshSrc, defines + fshSrc);
+    } catch (e) {
       console.log("Shader error:");
-      console.log(gl.getShaderInfoLog(vsh));
-      console.log(gl.getShaderInfoLog(fsh));
-      console.log(gl.getProgramInfoLog(program));
+      console.log(e.message);
       console.log(flags);
-      console.log(
-        (defines + vshSrc)
-          .split("\n")
-          .map((m, i) => (i + 1 + "").padStart(3) + ": " + m)
-          .join("\n")
-      );
-      console.log(
-        (defines + fshSrc)
-          .split("\n")
-          .map((m, i) => (i + 1 + "").padStart(3) + ": " + m)
-          .join("\n")
-      );
-    }
-    gl.deleteShader(vsh);
-    gl.deleteShader(fsh);
-    if (!success) {
-      gl.deleteProgram(program);
       return {};
     }
     gl.useProgram(program);

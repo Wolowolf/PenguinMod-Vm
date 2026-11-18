@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/lighting.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged.
+// the VM as a built-in extension. The code is the gallery file unchanged, except (section 303): one GL setup (buildGLState) for its worker and main thread, not rebuilt when the canvas is resized.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
@@ -167,104 +167,19 @@ const FRAG_SRC   = ${JSON.stringify(FRAG_SRC)};
 
 let gl, prog, vao, u, lightTex, oc;
 
-function compile(type, src) {
-  const s = gl.createShader(type);
-  gl.shaderSource(s, src);
-  gl.compileShader(s);
-  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
-  return s;
-}
+const buildGLState = ${buildGLState.toString()};
 
 function init(w, h) {
   oc = new OffscreenCanvas(w, h);
   gl = oc.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false });
   if (!gl) throw new Error('webgl2 unavailable in worker');
-
-  prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
-
-  vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
-
-  const loc = gl.getAttribLocation(prog, 'a_pos');
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-
-  lightTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, lightTex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-  u = {
-    res:            gl.getUniformLocation(prog, 'u_res'),
-    ambient:        gl.getUniformLocation(prog, 'u_ambient'),
-    opacity:        gl.getUniformLocation(prog, 'u_opacity'),
-    nLights:        gl.getUniformLocation(prog, 'u_nLights'),
-    bloomAmount:    gl.getUniformLocation(prog, 'u_bloomAmount'),
-    bloomRadius:    gl.getUniformLocation(prog, 'u_bloomRadius'),
-    bloomThreshold: gl.getUniformLocation(prog, 'u_bloomThreshold'),
-    contrast:       gl.getUniformLocation(prog, 'u_contrast'),
-    colorTemp:      gl.getUniformLocation(prog, 'u_colorTemp'),
-    lightTex:       gl.getUniformLocation(prog, 'u_lightTex'),
-  };
-
-  gl.enable(gl.BLEND);
-  gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  ({ prog, vao, u, lightTex } = buildGLState(gl, VERT_SRC, FRAG_SRC));
 }
 
 function render(d) {
   if (oc.width !== d.pw || oc.height !== d.ph) {
     oc.width  = d.pw;
     oc.height = d.ph;
-
-    gl = oc.getContext('webgl2', { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false });
-
-    prog = gl.createProgram();
-    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
-    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
-    gl.linkProgram(prog);
-
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
-
-    vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-    const loc = gl.getAttribLocation(prog, 'a_pos');
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-
-    lightTex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, lightTex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-    u = {
-      res:            gl.getUniformLocation(prog, 'u_res'),
-      ambient:        gl.getUniformLocation(prog, 'u_ambient'),
-      opacity:        gl.getUniformLocation(prog, 'u_opacity'),
-      nLights:        gl.getUniformLocation(prog, 'u_nLights'),
-      bloomAmount:    gl.getUniformLocation(prog, 'u_bloomAmount'),
-      bloomRadius:    gl.getUniformLocation(prog, 'u_bloomRadius'),
-      bloomThreshold: gl.getUniformLocation(prog, 'u_bloomThreshold'),
-      contrast:       gl.getUniformLocation(prog, 'u_contrast'),
-      colorTemp:      gl.getUniformLocation(prog, 'u_colorTemp'),
-      lightTex:       gl.getUniformLocation(prog, 'u_lightTex'),
-    };
-
-    gl.enable(gl.BLEND);
-    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   }
 
   gl.viewport(0, 0, d.pw, d.ph);
@@ -312,7 +227,9 @@ self.onmessage = ({ data: msg }) => {
 };
 `;
 
-    function buildGLState(gl) {
+    // Desktop fork (section 303): the one GL setup of Lighting, used on the main thread and, sent as source text, in
+    // its worker (so it uses nothing from outside: the shader sources are passed in)
+    function buildGLState(gl, vertSrc, fragSrc) {
         const compile = (type, src) => {
             const s = gl.createShader(type);
             gl.shaderSource(s, src);
@@ -322,8 +239,8 @@ self.onmessage = ({ data: msg }) => {
         };
 
         const prog = gl.createProgram();
-        gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT_SRC));
-        gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG_SRC));
+        gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertSrc));
+        gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragSrc));
         gl.linkProgram(prog);
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
 
@@ -1225,7 +1142,7 @@ self.onmessage = ({ data: msg }) => {
                 this._glOffscreen = oc;
                 this._gl = gl;
                 this._stepLoadingProgress('Building GL pipeline');
-                this._glState = buildGLState(gl);
+                this._glState = buildGLState(gl, VERT_SRC, FRAG_SRC);
                 this._displayCtx = this.canvas.getContext('2d');
                 this._displayCtx.imageSmoothingEnabled = false;
                 this._mode = 'main';
@@ -1788,7 +1705,6 @@ self.onmessage = ({ data: msg }) => {
             if (oc.width !== pw || oc.height !== ph) {
                 oc.width = pw;
                 oc.height = ph;
-                this._glState = buildGLState(this._gl);
                 if (this._lastGLBitmap) {
                     this._lastGLBitmap.close();
                     this._lastGLBitmap = null;
