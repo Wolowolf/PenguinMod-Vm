@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: WebSocket
 // ID: gsaWebsocket
@@ -18,12 +19,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   }
 
   const blobToDataURL = (blob) =>
-    new Promise((resolve, reject) => {
-      const fr = new FileReader();
-      fr.onload = () => resolve(fr.result);
-      fr.onerror = () =>
-        reject(new Error(`Failed to read as data URL: ${fr.error}`));
-      fr.readAsDataURL(blob);
+    pmImage.blobToDataURL(blob).catch((error) => {
+      throw new Error(`Failed to read as data URL: ${error}`);
     });
 
   /* ------- BLOCKS -------- */

@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Network
 // ID: truefantomnetwork
@@ -20,13 +21,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   const Cast = Scratch.Cast;
 
   // Request headers, response headers, multipart forms and data: URLs come from HTTP by RedMan13 (MIT).
-  const blobToDataURL = (blob) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
+  const blobToDataURL = pmImage.blobToDataURL;
 
   const fetch_url = (
     { USER_URL, BODY, CONTENT_TYPE, RESPONSES_TYPES, SPLIT },

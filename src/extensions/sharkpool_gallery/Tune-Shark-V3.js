@@ -8,6 +8,7 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmMathUtil = require('../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Tune Shark V3
 // ID: SPtuneShark3
@@ -1605,12 +1606,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           .set(buffer.getChannelData(i).subarray(startSample, endSample));
       }
 
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => resolve("");
-        reader.readAsDataURL(this.bufferToWavBlob(croppedBuffer));
-      });
+      return pmImage.blobToDataURL(this.bufferToWavBlob(croppedBuffer)).catch(() => "");
     }
 
     joinSound(args) {
@@ -1643,12 +1639,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
         channel.set(buffer2.getChannelData(i), buffer1.length);
       }
 
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => resolve("");
-        reader.readAsDataURL(this.bufferToWavBlob(joinedBuffer));
-      });
+      return pmImage.blobToDataURL(this.bufferToWavBlob(joinedBuffer)).catch(() => "");
     }
 
     setVol(args) {

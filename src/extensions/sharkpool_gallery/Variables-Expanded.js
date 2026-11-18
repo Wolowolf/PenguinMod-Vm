@@ -10,6 +10,7 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Variables Expanded
 // ID: DICandSPmonitorsPlus
@@ -747,14 +748,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               else if (inputType.startsWith("file")) {
                 const file = event.target.files[0];
                 if (file) {
-                  const reader = new FileReader();
-                  reader.readAsDataURL(file);
-                  reader.onload = () => {
-                    variable.value = reader.result
-                  };
-                  reader.onerror = (e) => {
+                  pmImage.blobToDataURL(file).then((result) => {
+                    variable.value = result
+                  }, (e) => {
                     console.error(e)
-                  };
+                  });
                 }
               } else variable.value = input.value;
             });

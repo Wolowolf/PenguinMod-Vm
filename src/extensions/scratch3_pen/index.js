@@ -10,6 +10,7 @@ const formatMessage = require('format-message');
 const MathUtil = require('../../util/math-util');
 const log = require('../../util/log');
 const StageLayering = require('../../engine/stage-layering');
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 
 /**
  * Icon svg to be displayed at the left edge of each extension block, encoded as a data URI.
@@ -211,7 +212,7 @@ class Scratch3PenBlocks {
             this.bitmapCanvas = document.createElement('canvas');
             this.bitmapCanvas.width = this.runtime.stageWidth;
             this.bitmapCanvas.height = this.runtime.stageHeight;
-            this.bitmapSkinID = renderer.createBitmapSkin(this.bitmapCanvas, 1);
+            this.bitmapSkinID = pmImage.setCanvasSkin(renderer, null, this.bitmapCanvas, 1);
             this.bitmapDrawableID = renderer.createDrawable(StageLayering.PEN_LAYER);
             renderer.updateDrawableSkinId(this.bitmapDrawableID, this.bitmapSkinID);
             renderer.updateDrawableVisible(this.bitmapDrawableID, false);
@@ -967,14 +968,14 @@ class Scratch3PenBlocks {
         resultFont += `${this.printTextAttribute.weight} `;
         resultFont += `${this.printTextAttribute.size}px `;
         resultFont += this.printTextAttribute.font;
-        ctx.font = resultFont;
-
-        ctx.strokeStyle = this.printTextAttribute.strokeWidth > 0 ? this.printTextAttribute.strokeColor : this.printTextAttribute.color;
-        ctx.lineWidth = this.printTextAttribute.strokeWidth;
-        ctx.fillStyle = this.printTextAttribute.color;
-
-        if (this.printTextAttribute.strokeWidth > 0) ctx.strokeText(args.TEXT, args.X, -args.Y);
-        ctx.fillText(args.TEXT, args.X, -args.Y);
+        const hasOutline = this.printTextAttribute.strokeWidth > 0;
+        pmImage.drawText(ctx, args.TEXT, args.X, -args.Y, {
+            font: resultFont,
+            stroke: hasOutline ? this.printTextAttribute.strokeColor : this.printTextAttribute.color,
+            lineWidth: this.printTextAttribute.strokeWidth,
+            fill: this.printTextAttribute.color,
+            outline: hasOutline ? 'under' : null
+        });
 
         this._drawContextToPen(ctx);
     }

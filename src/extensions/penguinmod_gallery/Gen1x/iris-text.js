@@ -13,6 +13,7 @@
 const pmEasing = require('../../../extension-support/easing'); // Desktop fork (section 296): shared with jg_tween
 const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /*
 Iris Text by Gen1x - 2026
@@ -945,15 +946,13 @@ Enjoy!! :D
         const ctx = canvas.getContext('2d');
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.font = fontStr;
         ctx.textBaseline = 'alphabetic';
-        ctx.fillStyle = '#ffffff';
         try {
             ctx.textRendering = 'optimizeLegibility';
         } catch (e) {}
         const baselineX = pad + leftBearing;
         const baselineY = pad + ascent;
-        ctx.fillText(char, baselineX, baselineY);
+        pmImage.drawText(ctx, char, baselineX, baselineY, {font: fontStr, fill: '#ffffff'});
 
         return {
             canvas,
@@ -3922,19 +3921,11 @@ Enjoy!! :D
             anchorY != null ? anchorY : height / 2
         ];
 
-        if (state.skinId === null) {
-            const BitmapSkin = renderer.exports.BitmapSkin;
-            // Desktop fork (section 120): renderer.createCustomSkin instead of writing _allSkins
-            const skin = renderer.createCustomSkin(BitmapSkin, renderer);
-            installLinearFiltering(skin, state);
-            skin.setBitmap(canvas, DEST_SCALE, rotationCenter);
-            state.skinId = skin.id;
-        } else {
-            renderer.updateBitmapSkin(state.skinId, canvas, DEST_SCALE, rotationCenter);
-            const current = renderer._allSkins[state.skinId];
-            if (current && !Object.prototype.hasOwnProperty.call(current, 'useNearest')) {
-                installLinearFiltering(current, state);
-            }
+        // a new skin gets the smoothing rule at once; a refreshed one only if it lost it (replaced by the renderer)
+        state.skinId = pmImage.setCanvasSkin(renderer, state.skinId, canvas, DEST_SCALE, rotationCenter);
+        const current = renderer._allSkins[state.skinId];
+        if (current && !Object.prototype.hasOwnProperty.call(current, 'useNearest')) {
+            installLinearFiltering(current, state);
         }
         const drawable = renderer._allDrawables[target.drawableID];
         const skin = renderer._allSkins[state.skinId];

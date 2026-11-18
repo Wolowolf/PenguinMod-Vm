@@ -6,6 +6,7 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Video
 // ID: lmsVideo
@@ -106,11 +107,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
           const fontSize = Math.min(canvas.width, canvas.height);
-          ctx.fillStyle = "#000000";
-          ctx.font = `${fontSize}px serif`;
           ctx.textBaseline = "middle";
           ctx.textAlign = "center";
-          ctx.fillText("?", canvas.width / 2, canvas.height / 2);
+          pmImage.drawText(ctx, "?", canvas.width / 2, canvas.height / 2, {
+            font: `${fontSize}px serif`,
+            fill: "#000000",
+          });
         } else {
           // guess we can't draw the error then
         }

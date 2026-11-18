@@ -6,6 +6,7 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmColor = require('../../../util/color'); // Desktop fork (section 297): the shared colour toolkit
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Video sharing (v2.5.2) by pooiod7
 
@@ -266,11 +267,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           try {
             const response = await fetch(url);
             const blob = await response.blob();
-            return new Promise((resolve) => {
-              const reader = new FileReader();
-              reader.onloadend = () => resolve(reader.result);
-              reader.readAsDataURL(blob);
-            });
+            return pmImage.blobToDataURL(blob).catch(() => null);
           } catch (e) {
             removeSkin = true;
             return `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/ep7rVQAAAAASUVORK5CYII=`;
@@ -305,14 +302,10 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           target.updateAllDrawableProperties();
         }
 
-        if (doUpdate) {
-          renderer.updateBitmapSkin(drawables[drawableID]._skin._id, canvas, 2);
-          renderer.updateDrawableSkinId(drawableID, drawables[drawableID]._skin._id);
-        } else {
-          const skinId = renderer.createBitmapSkin(canvas);
-          skins[skinId].tmpSkin = true;
-          renderer.updateDrawableSkinId(drawableID, skinId);
-        }
+        // a new bitmap skin's default resolution is 2 too
+        const skinId = pmImage.setCanvasSkin(renderer, doUpdate ? drawables[drawableID]._skin._id : null, canvas, 2);
+        if (!doUpdate) skins[skinId].tmpSkin = true;
+        renderer.updateDrawableSkinId(drawableID, skinId);
 
         if (target.onTargetVisualChange) {
           target.onTargetVisualChange();

@@ -1,4 +1,5 @@
 const uid = require('../../util/uid');
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 
 class canvasStorage {
     /**
@@ -52,7 +53,7 @@ class canvasStorage {
 
         const skin = !this.runtime.renderer
             ? null
-            : this.runtime.renderer.createBitmapSkin(element, 1);
+            : pmImage.setCanvasSkin(this.runtime.renderer, null, element, 1);
 
         const data = {
             name: name,

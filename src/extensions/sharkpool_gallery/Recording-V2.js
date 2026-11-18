@@ -6,6 +6,7 @@
 // Desktop fork (section 156): its timers and animation frames that change what blocks do go through
 // Scratch.vm.runtime.pmSetTimeout / pmClearTimeout / pmSetInterval / pmClearInterval / pmRequestAnimationFrame /
 // pmCancelAnimationFrame (marked by the name).
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Recording V2
 // ID: SPrecording2
@@ -144,15 +145,10 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     blob2Base64(blob) {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result.split(",")[1];
-          resolve(`data:audio/wav;base64,${base64}`);
-        };
-        reader.onerror = () => resolve("");
-        reader.readAsDataURL(blob);
-      });
+      return pmImage.blobToDataURL(blob).then((result) => {
+        const base64 = result.split(",")[1];
+        return `data:audio/wav;base64,${base64}`;
+      }, () => "");
     }
 
     startRecording() {

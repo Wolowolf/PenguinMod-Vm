@@ -6,6 +6,7 @@
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
 // Scratch.vm.runtime.pmPage, the runtime's door to the page (marked by the name).
 const pmMathUtil = require('../../../util/math-util'); // Desktop fork (section 297): the shared clamp
+const pmImage = require('../../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Simple 3D
 // ID: xeltallivSimple3D
@@ -3817,16 +3818,10 @@ void main() {
         COLOR = Cast.toRgbColorObject(COLOR);
         imageSourceSync = null;
         imageSource = new Promise((resolve, reject) => {
-          const canv = document.createElement("canvas");
-          const ctx = canv.getContext("2d");
-          ctx.font = FONT;
-          const m = ctx.measureText(TEXT);
-          canv.width = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-          canv.height = m.fontBoundingBoxAscent + m.fontBoundingBoxDescent;
-          ctx.clearRect(0, 0, canv.width, canv.height);
-          ctx.font = FONT;
-          ctx.fillStyle = `rgba(${COLOR.r},${COLOR.g},${COLOR.b},${(COLOR.a ?? 255) / 255})`;
-          ctx.fillText(TEXT, m.actualBoundingBoxLeft, m.fontBoundingBoxAscent);
+          const { canvas: canv, ctx, x, y } = pmImage.textCanvas(TEXT, FONT);
+          pmImage.drawText(ctx, TEXT, x, y, {
+            fill: `rgba(${COLOR.r},${COLOR.g},${COLOR.b},${(COLOR.a ?? 255) / 255})`,
+          });
           imageSourceSync = {
             width: canv.width,
             height: canv.height,
@@ -3872,33 +3867,13 @@ void main() {
         const BORDERSIZECEIL = Math.ceil(BORDERSIZE);
         imageSourceSync = null;
         imageSource = new Promise((resolve, reject) => {
-          const canv = document.createElement("canvas");
-          const ctx = canv.getContext("2d");
-          ctx.font = FONT;
-          const m = ctx.measureText(TEXT);
-          canv.width =
-            m.actualBoundingBoxLeft +
-            m.actualBoundingBoxRight +
-            2 * BORDERSIZECEIL;
-          canv.height =
-            m.fontBoundingBoxAscent +
-            m.fontBoundingBoxDescent +
-            2 * BORDERSIZECEIL;
-          ctx.clearRect(0, 0, canv.width, canv.height);
-          ctx.font = FONT;
-          ctx.lineWidth = BORDERSIZE;
-          ctx.fillStyle = `rgba(${COLOR.r},${COLOR.g},${COLOR.b},${(COLOR.a ?? 255) / 255})`;
-          ctx.strokeStyle = `rgba(${BORDERCOLOR.r},${BORDERCOLOR.g},${BORDERCOLOR.b},${(BORDERCOLOR.a ?? 255) / 255})`;
-          ctx.fillText(
-            TEXT,
-            m.actualBoundingBoxLeft + BORDERSIZECEIL,
-            m.fontBoundingBoxAscent + BORDERSIZECEIL
-          );
-          ctx.strokeText(
-            TEXT,
-            m.actualBoundingBoxLeft + BORDERSIZECEIL,
-            m.fontBoundingBoxAscent + BORDERSIZECEIL
-          );
+          const { canvas: canv, ctx, x, y } = pmImage.textCanvas(TEXT, FONT, BORDERSIZECEIL);
+          pmImage.drawText(ctx, TEXT, x, y, {
+            lineWidth: BORDERSIZE,
+            fill: `rgba(${COLOR.r},${COLOR.g},${COLOR.b},${(COLOR.a ?? 255) / 255})`,
+            stroke: `rgba(${BORDERCOLOR.r},${BORDERCOLOR.g},${BORDERCOLOR.b},${(BORDERCOLOR.a ?? 255) / 255})`,
+            outline: "over",
+          });
           imageSourceSync = {
             width: canv.width,
             height: canv.height,

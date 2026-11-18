@@ -3,6 +3,7 @@
 // the VM as a built-in extension. The code is the gallery file unchanged.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: GIF Manager
 // ID: SPgifManager
@@ -179,13 +180,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Helper Funcs
     buffer2Img(buffer) {
-      return new Promise((resolve) => {
-        const blob = new Blob([buffer], { type: "image/jpeg" });
-        const reader = new FileReader();
-        reader.onloadend = () => { resolve(reader.result) };
-        reader.onerror = () => { resolve("Invalid GIF") };
-        reader.readAsDataURL(blob);
-      });
+      const blob = new Blob([buffer], { type: "image/jpeg" });
+      return pmImage.blobToDataURL(blob).catch(() => "Invalid GIF");
     }
 
     // Block Funcs

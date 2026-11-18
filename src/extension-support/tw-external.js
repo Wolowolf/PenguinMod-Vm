@@ -1,3 +1,5 @@
+const {blobToDataURL} = require('../util/image-util'); // Desktop fork (section 298): the shared picture helpers
+
 /**
  * @param {string} url
  * @returns {void} if URL is supported
@@ -53,12 +55,7 @@ external.fetch = async url => {
 external.dataURL = async url => {
     const res = await external.fetch(url);
     const blob = await res.blob();
-    return new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = () => reject(fr.error);
-        fr.readAsDataURL(blob);
-    });
+    return blobToDataURL(blob);
 };
 
 /**

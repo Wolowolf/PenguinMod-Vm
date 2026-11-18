@@ -1,4 +1,5 @@
 const formatMessage = require('format-message');
+const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
 const Cast = require('../../util/cast');
@@ -140,13 +141,7 @@ class JgPrismBlocks {
             if (window && !window.FileReader) return resolve("");
             if (window && !window.fetch) return resolve("");
             fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(String(args.URL))}`).then(r => {
-                r.blob().then(blob => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        resolve(e.target.result);
-                    };
-                    reader.readAsDataURL(blob);
-                })
+                r.blob().then(blob => pmImage.blobToDataURL(blob).then(resolve))
                     .catch(() => {
                         resolve("");
                     });
