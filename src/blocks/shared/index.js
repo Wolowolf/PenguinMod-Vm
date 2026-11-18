@@ -34,21 +34,28 @@
  *   interpreter converts once more what the extension manager already converted (the same value). `menu` may name
  *   several menus ("rd CS"; the option is their values joined by a space). Kind `c`, `order` and `pure`:
  *   shared/ext-pure.js.
+ *   Section 304 (blocks that remember a lookup, shared/ext-lookups.js): a file may export `sites` (kind -> {make,
+ *   plain, args}), and a block `sites` "NAME:kind:ARG NAME:kind:ARG": $NAME in its text is a lookup object. A compiled
+ *   script makes it once (`site`: jsgen.js gives the values fixed in the block, evaluateOnce); the interpreter makes
+ *   `plain` (or else `make`) on every call, each $value from the kind's `args` with @ = args.ARG. `thread` in a
+ *   template is the running thread (the interpreter declares it from util.thread).
  */
 const Cast = require('../../util/cast');
 const listLookup = require('../../engine/list-lookup');
 
 const FILES = [require('./operators'), require('./data'), require('./motion'), require('./looks'), require('./sound'),
-    require('./sensing'), require('./control'), require('./ext-expansions'), require('./ext-pure')];
+    require('./sensing'), require('./control'), require('./ext-expansions'), require('./ext-pure'), require('./ext-lookups')];
 
 const helpers = {};
 const blocks = {};
+const siteKinds = {};
 for (const file of FILES) {
     for (const name of Object.keys(file.helpers)) {
         const value = file.helpers[name];
         helpers[name] = typeof value === 'string' ? {js: value} : value;
     }
     Object.assign(blocks, file.blocks);
+    Object.assign(siteKinds, file.sites);
 }
 
 const PLACEHOLDER = /\$([A-Za-z_][A-Za-z0-9_]*)/g;
@@ -60,6 +67,11 @@ const inputsOf = definition => (definition.inputs ? definition.inputs.split(' ')
 }) : []);
 const fieldsOf = definition => inputsOf({inputs: definition.fields});
 const localsOf = definition => (definition.locals ? definition.locals.split(' ') : []);
+// (section 304)
+const sitesOf = definition => (definition.sites ? definition.sites.split(' ').map(entry => {
+    const [name, kind, arg] = entry.split(':');
+    return {name, kind, arg};
+}) : []);
 
 const templatesOf = definition => {
     if (!definition.menu) return [definition.js || definition.stack];
@@ -71,6 +83,10 @@ for (const opcode of Object.keys(blocks)) {
     const definition = blocks[opcode];
     const names = inputsOf(definition).map(input => input.name);
     const free = fieldsOf(definition).map(field => field.name).concat(localsOf(definition));
+    for (const site of sitesOf(definition)) {
+        if (!siteKinds[site.kind]) throw new Error(`shared block ${opcode}: unknown site kind ${site.kind}`);
+        free.push(site.name);
+    }
     for (const name of free) {
         if (names.indexOf(name) !== -1) throw new Error(`shared block ${opcode}: $${name} is an input and a field or local`);
     }
@@ -145,6 +161,19 @@ const inline = (opcode, values, menuOption) => {
 };
 
 /**
+ * Section 304: the compiler's code that makes one of a block's lookups (jsgen.js puts it into the script's setup).
+ * @param {string} opcode The block's opcode.
+ * @param {string} name The site's name in the block's `sites`.
+ * @param {object.<string, string>} values JavaScript (literals) by the kind's $value names.
+ * @param {boolean} plain Whether to make the kind's `plain` site (looks on every call).
+ * @returns {string} The JavaScript.
+ */
+const site = (opcode, name, values, plain) => {
+    const kind = siteKinds[sitesOf(blocks[opcode]).find(entry => entry.name === name).kind];
+    return (plain ? kind.plain : kind.make).replace(PLACEHOLDER, (match, value) => values[value]);
+};
+
+/**
  * @param {string} opcode A block without inputs whose definition is a fixed value ("new line").
  * @returns {*} The value.
  */
@@ -181,6 +210,12 @@ const interpreterSource = opcode => {
         body += `const field_${name} = Cast.toString(args.${name})${kind === 'lower' ? '.toLowerCase()' : ''};\n`;
     }
     for (const name of localsOf(definition)) values[name] = `local_${name}`;
+    // Section 304: a new lookup on every call, and the thread
+    for (const {name, kind, arg} of sitesOf(definition)) {
+        const {make, plain, args} = siteKinds[kind];
+        values[name] = (plain || make).replace(PLACEHOLDER, (match, value) => args[value].replace(/@/g, `args.${arg}`));
+    }
+    if (/(^|[^.\w$])thread\b/.test(all)) body += 'const thread = util.thread;\n';
     const fill = template => template.replace(PLACEHOLDER, (match, name) => values[name]);
     if (definition.skip) body += `if (${fill(definition.skip)}) return;\n`;
     // (each menu option in its own braces, so its constants and a command's end stay its own)
@@ -233,6 +268,7 @@ module.exports = {
     baseSource,
     option,
     inline,
+    site,
     value,
     interpreterBlocks
 };

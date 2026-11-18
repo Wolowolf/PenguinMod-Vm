@@ -6,6 +6,8 @@
 // Desktop fork (section 158): the timers' state is saved and restored through runtime.pmRegisterState (marked by the name).
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 304): the timer blocks are defined once for the interpreter and the compiler (src/blocks/shared/ext-lookups.js)
+const SharedBlocks = require('../../../blocks/shared');
 module.exports = require('../../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 /**
  * @overview
@@ -20,6 +22,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 (function(Scratch) {
 
 Scratch.translate.setup({});
+// Desktop fork (section 304): the shared definitions' functions
+const sharedBlocks = SharedBlocks.interpreterBlocks(Scratch.vm.runtime);
 
 const selfid = "steve0greatnesstimers";
 
@@ -550,49 +554,23 @@ class SteveZeroGreatnessExtraTimersExt {
   }
 
   // Blocks
-  add({ TIMER: timer, TIME: timing, UNITS: units }, util) {
-    let multi = Scratch.Cast.toNumber(units)
-    let time  = Scratch.Cast.toNumber(timing)
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).add(time * multi)
-  }
+  add(args, util) { return sharedBlocks.steve0greatnesstimers_add(args, util); }
 
-  getter({ TIMER: timer }, util) { 
-    return this.get_or_create(util.target, timer.id, timer.name ?? timer) * 0.001;
-  }
+  getter(args, util) { return sharedBlocks.steve0greatnesstimers_getter(args, util); }
 
-  pause({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).pause();
-  }
+  pause(args, util) { return sharedBlocks.steve0greatnesstimers_pause(args, util); }
 
-  unpause({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).unpause();
-  }
+  unpause(args, util) { return sharedBlocks.steve0greatnesstimers_unpause(args, util); }
 
-  toggle({ TIMER: timer }, util) {
-    const timer_var = this.get_or_create(util.target, timer.id, timer.name ?? timer);
-    if (timer_var.is_paused)
-      timer_var.unpause();
-    else
-      timer_var.pause();
-  }
+  toggle(args, util) { return sharedBlocks.steve0greatnesstimers_toggle(args, util); }
 
-  is_paused({ TIMER: timer }, util) {
-    return this.get_or_create(util.target, timer.id, timer.name ?? timer).is_paused;
-  }
+  is_paused(args, util) { return sharedBlocks.steve0greatnesstimers_is_paused(args, util); }
 
-  elapsed({ TIMER: timer, UNITS: units }, util) {
-    let multiplier = Scratch.Cast.toNumber(units);
-    return this.get_or_create(util.target, timer.id, timer.name ?? timer) * multiplier;
-  }
+  elapsed(args, util) { return sharedBlocks.steve0greatnesstimers_elapsed(args, util); }
 
-  restart({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).restart();
-  }
+  restart(args, util) { return sharedBlocks.steve0greatnesstimers_restart(args, util); }
 
-  stop({ TIMER: timer }, util) {
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).pause();
-    this.get_or_create(util.target, timer.id, timer.name ?? timer).restart();
-  }
+  stop(args, util) { return sharedBlocks.steve0greatnesstimers_stop(args, util); }
 
   whengt({ TIMER: timer, TIME: timing, UNITS: units }, util) {
     let multi = Scratch.Cast.toNumber(units);

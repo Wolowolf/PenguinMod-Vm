@@ -1576,79 +1576,79 @@ class JSGenerator {
             return new TypedInput(shared('pmSensingExpansion_getButtonIsDown', {MOUSE_BUTTON: this.exactNumber(this.descendInput(node.button))}), TYPE_BOOLEAN);
 
         // Desktop fork (section 195): blocks that search by a name fixed in the block (irgen.js
-        // descendNameSearchInline; helpers in jsexecute.js).
+        // descendNameSearchInline). Section 304: the code of each is its shared definition
+        // (src/blocks/shared/ext-lookups.js); the inputs and lookups are worked out in the order they were before.
         // Desktop fork (section 196)
         case 'search.fixedJson':
             // (TYPE_STRING: passed to the block as it is, not converted to text)
             return new TypedInput(this.evaluateOnce(node.bare ? `JSON.parse("${sanitize(node.json)}")` : `({pmFixedJson: JSON.parse("${sanitize(node.json)}")})`), TYPE_STRING);
         case 'search.varShowing':
-            return new TypedInput(`pmsVarShowing(runtime, thread.target, ${this.searchVariable(node.name)})`, TYPE_BOOLEAN);
+            return new TypedInput(shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name})}), TYPE_BOOLEAN);
         case 'search.varSlider':
-            return new TypedInput(`pmsVarSlider(runtime, thread.target, ${this.searchVariable(node.name)}, ${this.searchArgument(node.opcode, 'MINMAX', node.which)})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name}), MINMAX: this.searchArgument(node.opcode, 'MINMAX', node.which)}), TYPE_UNKNOWN);
         case 'search.varButton':
-            return new TypedInput(`pmsVarButton(runtime, thread.target, ${this.searchVariable(node.name)}, ${this.searchArgument(node.opcode, 'TYPE', node.type)})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name}), TYPE: this.searchArgument(node.opcode, 'TYPE', node.type)}), TYPE_UNKNOWN);
         case 'search.timerElapsed':
-            return new TypedInput(`(pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).elapsed * ${node.units})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {SITE: this.timerSite(node), UNITS: `${node.units}`}), TYPE_UNKNOWN);
         case 'search.timerPaused':
-            return new TypedInput(`pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).is_paused`, TYPE_BOOLEAN);
-        // Desktop fork (section 195)
+            return new TypedInput(shared(node.opcode, {SITE: this.timerSite(node)}), TYPE_BOOLEAN);
         // Desktop fork (section 198)
         case 'clones.mainGet':
-            return new TypedInput(`pmcMainGet(thread.target, ${this.clonesOneSite(node)})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {SITE: this.cloneSite(node, 'SITE', node.id)}), TYPE_UNKNOWN);
         case 'clones.get':
-            return new TypedInput(`pmcValue(pmcFind(thread.target.sprite.clones, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))}), ${this.clonesOneSite(node)})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {CHECK: this.cloneSite(node, 'CHECK', node.check), INPUTC: this.exactString(this.descendInput(node.expected)), SITE: this.cloneSite(node, 'SITE', node.id)}), TYPE_UNKNOWN);
         case 'clones.exists':
-            return new TypedInput(`(pmcFind(thread.target.sprite.clones, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))}) !== null)`, TYPE_BOOLEAN);
+            return new TypedInput(shared(node.opcode, {CHECK: this.cloneSite(node, 'CHECK', node.check), INPUTB: this.exactString(this.descendInput(node.expected))}), TYPE_BOOLEAN);
         case 'search.varValue':
-            return new TypedInput(`pmsVarValue(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_UNKNOWN);
         case 'search.varExists':
-            return new TypedInput(`pmsVarExists(thread.target, ${this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
+            return new TypedInput(shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name})}), node.kind === 'search.varExists' ? TYPE_BOOLEAN : TYPE_UNKNOWN);
         case 'search.broadcast':
-            return new TypedInput(`pmsReceived(${this.evaluateOnce(`new pmsBroadcast(runtime, "${sanitize(node.name)}")`)})`, TYPE_BOOLEAN);
+            return new TypedInput(shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name})}), TYPE_BOOLEAN);
 
-        // Desktop fork (section 149): the list and JSON blocks of Variables & Lists (irgen.js descendDataInline). Each does what the extension's function does with the arguments the extension
-        // manager's wrapper gives it (helpers in jsexecute.js; inputs in the block's order, the variable found
-        // inside the helper after them, as the function does). Text answers stay of unknown type, as in section 118.
+        // Desktop fork (section 149): the list and JSON blocks of Variables & Lists (irgen.js descendDataInline). Each
+        // does what the extension's function does with the arguments the extension manager's wrapper gives it (section
+        // 304: its shared definition; inputs in the block's order, the list found inside the helper after them, as the
+        // function does). Text answers stay of unknown type, as in section 118.
         case 'qxsck.toJson':
-            return new TypedInput(`pmdToJson(runtime, thread.target, "${node.type}", ${this.exactString(this.descendInput(node.start))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {START: this.exactString(this.descendInput(node.start))}), TYPE_UNKNOWN);
         case 'qxsck.itemOf': {
             const index = this.exactString(this.descendInput(node.index));
-            const v = this.dataName(node.name, 'list', false);
-            return new TypedInput(`pmdItemOf(thread.target, ${v.site}, ${index}, ${v.name})`, TYPE_UNKNOWN);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, INDEX: index, LIST: v.name}), TYPE_UNKNOWN);
         }
         case 'qxsck.indexesOf': {
             const value = this.exactString(this.descendInput(node.value));
-            const v = this.dataName(node.name, 'list', false);
-            return new TypedInput(`pmdIndexesOf(thread.target, ${v.site}, ${value}, ${v.name})`, TYPE_UNKNOWN);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, VALUE: value, LIST: v.name}), TYPE_UNKNOWN);
         }
         case 'qxsck.length': {
-            const v = this.dataName(node.name, 'list', false);
-            return new TypedInput(`pmdLength(thread.target, ${v.site}, ${v.name})`, TYPE_NUMBER);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, LIST: v.name}), TYPE_NUMBER);
         }
         case 'qxsck.contains': {
-            const v = this.dataName(node.name, 'list', false);
+            const v = this.dataName(node, node.name, 'SITE');
             const value = this.exactString(this.descendInput(node.value));
-            return new TypedInput(`pmdContains(thread.target, ${v.site}, ${v.name}, ${value})`, TYPE_BOOLEAN);
+            return new TypedInput(shared(node.opcode, {SITE: v.site, LIST: v.name, VALUE: value}), TYPE_BOOLEAN);
         }
         case 'lms.join': {
-            const v = this.dataName(node.name, 'list', true);
+            const v = this.dataName(node, node.name, 'SITE');
             const string = this.exactString(this.descendInput(node.string));
-            return new TypedInput(`pmlJoin(thread.target, ${v.site}, ${v.name}, ${string})`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.opcode, {SITE: v.site, LIST: v.name, STRING: string}), TYPE_UNKNOWN);
         }
         case 'lms.timesAppears': {
             const item = this.exactString(this.descendInput(node.item));
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlTimesAppears(thread.target, ${v.site}, ${item}, ${v.name})`, TYPE_NUMBER);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, ITEM: item, LIST: v.name}), TYPE_NUMBER);
         }
         case 'lms.itemIndex': {
             const index = this.exactString(this.descendInput(node.index));
             const item = this.exactString(this.descendInput(node.item));
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlItemIndex(thread.target, ${v.site}, ${index}, ${item}, ${v.name})`, TYPE_NUMBER);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, INDEX: index, ITEM: item, LIST: v.name}), TYPE_NUMBER);
         }
         case 'lms.orderIs': {
-            const v = this.dataName(node.name, 'list', true);
-            return new TypedInput(`pmlOrderIs(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}")`, TYPE_BOOLEAN);
+            const v = this.dataName(node, node.name, 'SITE');
+            return new TypedInput(shared(node.opcode, {SITE: v.site, LIST: v.name, ORDER: `"${sanitize(node.order)}"`}), TYPE_BOOLEAN);
         }
 
         case 'op.abs':
@@ -2728,104 +2728,101 @@ class JSGenerator {
             break;
 
         // Desktop fork (section 149): the list commands of Variables & Lists (irgen.js descendDataInline), as the
-        // extension's functions are.
+        // extension's functions are (section 304: their shared definitions, src/blocks/shared/ext-lookups.js).
         case 'qxsck.clear': {
-            const v = this.dataName(node.name, 'list', false);
-            this.source += `pmdClear(thread.target, ${v.site}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, LIST: v.name});
             break;
         }
         case 'qxsck.deleteOf': {
             const index = this.exactString(this.descendInput(node.index));
-            const v = this.dataName(node.name, 'list', false);
-            this.source += `pmdDeleteOf(thread.target, ${v.site}, ${index}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, INDEX: index, LIST: v.name});
             break;
         }
         case 'qxsck.add': {
             const value = this.exactString(this.descendInput(node.value));
-            const v = this.dataName(node.name, 'list', false);
-            this.source += `pmdAdd(thread.target, ${v.site}, ${value}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, VALUE: value, LIST: v.name});
             break;
         }
         case 'qxsck.replace': {
             const index = this.exactString(this.descendInput(node.index));
-            const v = this.dataName(node.name, 'list', false);
+            const v = this.dataName(node, node.name, 'SITE');
             const value = this.exactString(this.descendInput(node.value));
-            this.source += `pmdReplace(thread.target, ${v.site}, ${index}, ${v.name}, ${value});\n`;
+            this.source += shared(node.opcode, {SITE: v.site, INDEX: index, LIST: v.name, VALUE: value});
             break;
         }
         case 'qxsck.copy': {
-            const v1 = this.dataName(node.name1, 'list', false);
-            const v2 = this.dataName(node.name2, 'list', false);
-            this.source += `pmdCopy(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
+            const v1 = this.dataName(node, node.name1, 'SITE1');
+            const v2 = this.dataName(node, node.name2, 'SITE2');
+            this.source += shared(node.opcode, {SITE1: v1.site, SITE2: v2.site, LIST1: v1.name, LIST2: v2.name});
             break;
         }
         case 'lms.deleteItems': {
             const num1 = this.exactNumber(this.descendInput(node.num1));
             const num2 = this.exactNumber(this.descendInput(node.num2));
-            const v = this.dataName(node.name, 'list', true);
-            this.source += `pmlDeleteItems(thread.target, ${v.site}, ${num1}, ${num2}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, NUM1: num1, NUM2: num2, LIST: v.name});
             break;
         }
         case 'lms.deleteAll': {
             const item = this.exactString(this.descendInput(node.item));
-            const v = this.dataName(node.name, 'list', true);
-            this.source += `pmlDeleteAll(thread.target, ${v.site}, ${item}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, ITEM: item, LIST: v.name});
             break;
         }
         case 'lms.replaceAll': {
             const item1 = this.exactString(this.descendInput(node.item1));
             const item2 = this.exactString(this.descendInput(node.item2));
-            const v = this.dataName(node.name, 'list', true);
-            this.source += `pmlReplaceAll(thread.target, ${v.site}, ${item1}, ${item2}, ${v.name});\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, ITEM1: item1, ITEM2: item2, LIST: v.name});
             break;
         }
         case 'lms.repeat': {
-            const v1 = this.dataName(node.name1, 'list', true);
+            const v1 = this.dataName(node, node.name1, 'SITE1');
             const num = this.exactNumber(this.descendInput(node.num));
-            const v2 = this.dataName(node.name2, 'list', true);
-            this.source += `pmlRepeat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${num}, ${v2.name});\n`;
+            const v2 = this.dataName(node, node.name2, 'SITE2');
+            this.source += shared(node.opcode, {SITE1: v1.site, SITE2: v2.site, LIST1: v1.name, NUM: num, LIST2: v2.name});
             break;
         }
         case 'lms.order': {
-            const v = this.dataName(node.name, 'list', true);
-            this.source += `pmlOrder(thread.target, ${v.site}, ${v.name}, "${sanitize(node.order)}");\n`;
+            const v = this.dataName(node, node.name, 'SITE');
+            this.source += shared(node.opcode, {SITE: v.site, LIST: v.name, ORDER: `"${sanitize(node.order)}"`});
             break;
         }
         case 'lms.concat': {
-            const v1 = this.dataName(node.name1, 'list', true);
-            const v2 = this.dataName(node.name2, 'list', true);
-            this.source += `pmlConcat(thread.target, ${v1.site}, ${v2.site}, ${v1.name}, ${v2.name});\n`;
+            const v1 = this.dataName(node, node.name1, 'SITE1');
+            const v2 = this.dataName(node, node.name2, 'SITE2');
+            this.source += shared(node.opcode, {SITE1: v1.site, SITE2: v2.site, LIST1: v1.name, LIST2: v2.name});
             break;
         }
         // Desktop fork (section 198)
         case 'clones.mainSet':
-            this.source += `pmcMainSet(thread.target, ${this.clonesOneSite(node)}, ${this.exactString(this.descendInput(node.value))});\n`;
+            this.source += shared(node.opcode, {SITE: this.cloneSite(node, 'SITE', node.id), INPUTB: this.exactString(this.descendInput(node.value))});
             break;
         case 'clones.set':
-            this.source += `pmcSet(thread.target, ${this.clonesManySite(node, node.id)}, ${this.exactString(this.descendInput(node.value))}, ${this.clonesManySite(node, node.check)}, ${this.exactString(this.descendInput(node.expected))});\n`;
+            this.source += shared(node.opcode, {EDIT: this.cloneSite(node, 'EDIT', node.id), INPUTB: this.exactString(this.descendInput(node.value)),
+                CHECK: this.cloneSite(node, 'CHECK', node.check), INPUTD: this.exactString(this.descendInput(node.expected))});
             break;
         // Desktop fork (section 196)
         case 'search.varSet':
-            this.source += `pmsVarWrite(thread.target, ${this.searchWritable(node.name)}).value = ${this.searchArgument(node.opcode, node.valueName, node.value)};\n`;
+            this.source += shared(node.opcode, {SITE: this.sharedSite(node, 'SITE', {name: node.name}), STRING: this.searchArgument(node.opcode, node.valueName, node.value)});
             // Desktop fork (extension merges; section 151): the variable it set may hold another type now (as the merged
             // "Variable and list" set did)
             this.forgetVariablesNamed(node.name);
             break;
         case 'search.varSwap':
-            this.source += `pmsVarSwap(pmsVarWrite(thread.target, ${this.searchWritable(node.name1)}), pmsVarWrite(thread.target, ${this.searchWritable(node.name2)}));\n`;
+            this.source += shared(node.opcode, {SITE1: this.sharedSite(node, 'SITE1', {name: node.name1}), SITE2: this.sharedSite(node, 'SITE2', {name: node.name2})});
             this.forgetVariablesNamed(node.name1);
             this.forgetVariablesNamed(node.name2);
             break;
         case 'search.timerAdd':
-            this.source += `pmsTimerGet(thread.target, ${this.searchTimer(node.timer)}).add(${this.exactNumber(this.descendInput(node.time))} * ${node.units});\n`;
+            this.source += shared(node.opcode, {SITE: this.timerSite(node), TIME: this.exactNumber(this.descendInput(node.time)), UNITS: `${node.units}`});
             break;
-        case 'search.timerDo': {
-            const timer = `pmsTimerGet(thread.target, ${this.searchTimer(node.timer)})`;
-            if (node.what === 'toggle') this.source += `pmsTimerToggle(${timer});\n`;
-            else if (node.what === 'stop') this.source += `pmsTimerStop(${timer});\n`;
-            else this.source += `${timer}.${node.what}();\n`;
+        case 'search.timerDo':
+            this.source += shared(node.opcode, {SITE: this.timerSite(node)});
             break;
-        }
 
         case 'motion.changeX':
             this.source += shared('motion_changexby', {DX: this.descendInput(node.dx).asNumber()});
@@ -3617,21 +3614,19 @@ class JSGenerator {
     }
 
     /**
-     * Desktop fork (section 149): the input giving a variable's or list's name for a data block compiled to inline
-     * code, and the object that finds that variable as the extension does (jsexecute.js): for a name fixed in the
-     * block a pmdName, which looks once and again only for another sprite or after a variable was added, deleted
-     * or renamed; for any other name a pmdNameAny, which looks on every call.
-     * @param {*} node The input's node.
-     * @param {string} type '' (variable) or 'list'.
-     * @param {boolean} stageFirst List Tools: the stage's variables first.
-     * @returns {{site: string, name: string}} The finder's JS and the name's JS (converted as String does).
+     * Desktop fork (section 149): the input giving a list's name for a data block compiled to inline code, and the
+     * site that finds that list as the extension does (section 304: the definition's, src/blocks/shared/ext-lookups.js):
+     * for a name fixed in the block one that looks once and again only for another sprite or after a variable was
+     * added, deleted or renamed; for any other name the plain one, which looks on every call.
+     * @param {object} node The block's node (its opcode).
+     * @param {*} input The input's node.
+     * @param {string} site The site's name in the definition.
+     * @returns {{site: string, name: string}} The site's JS and the name's JS (converted as String does).
      */
-    dataName (node, type, stageFirst) {
-        const input = this.descendInput(node);
-        const site = input instanceof ConstantInput ?
-            this.evaluateOnce(`new pmdName(runtime, "${type}", ${stageFirst}, "${sanitize(String(input.constantValue))}")`) :
-            this.evaluateOnce(`new pmdNameAny(runtime, "${type}", ${stageFirst})`);
-        return {site, name: this.exactString(input), fixed: input instanceof ConstantInput ? String(input.constantValue) : null};
+    dataName (node, input, site) {
+        const compiled = this.descendInput(input);
+        const fixed = compiled instanceof ConstantInput;
+        return {site: this.sharedSite(node, site, fixed ? {name: compiled.constantValue} : {}, !fixed), name: this.exactString(compiled)};
     }
 
     /**
@@ -3841,49 +3836,39 @@ class JSGenerator {
     }
 
     /**
-     * Desktop fork (section 199): the site that remembers one target's variable for node.id.
-     * @param {object} node A clones.* node.
+     * Desktop fork (section 304): one of a lookup block's sites (src/blocks/shared/ext-lookups.js), made once in the
+     * compiled script's setup with the values fixed in the block.
+     * @param {object} node The block's node (its opcode).
+     * @param {string} name The site's name in the definition.
+     * @param {object} values The values by the site's $value names.
+     * @param {boolean} [plain] Make the site that looks on every call.
      * @returns {string} The JS.
      */
-    clonesOneSite (node) {
-        return this.evaluateOnce(`new ${node.forget ? 'pmcPlainOne' : 'pmcOneSite'}(runtime, "${sanitize(node.id)}")`);
+    sharedSite (node, name, values, plain) {
+        const literals = {};
+        for (const key of Object.keys(values)) literals[key] = `"${sanitize(String(values[key]))}"`;
+        return this.evaluateOnce(SharedBlocks.site(node.opcode, name, literals, !!plain));
     }
 
     /**
-     * Desktop fork (section 199): the site that remembers each clone's variable for this ID.
+     * Desktop fork (section 199): the site that remembers a target's (or each clone's) variable for this ID;
+     * runtime.pmNoClonesVarRemember (node.forget) looks on every call.
      * @param {object} node A clones.* node.
+     * @param {string} name The site's name in the definition.
      * @param {string} id The variable ID.
      * @returns {string} The JS.
      */
-    clonesManySite (node, id) {
-        return this.evaluateOnce(`new ${node.forget ? 'pmcPlainMany' : 'pmcManySite'}(runtime, "${sanitize(id)}")`);
-    }
-
-    /**
-     * Desktop fork (section 196): the site that remembers a Variables Expanded search for this name.
-     * @param {string} name The name.
-     * @returns {string} The JS.
-     */
-    searchVariable (name) {
-        return this.evaluateOnce(`new pmsVariable(runtime, "${sanitize(name)}")`);
-    }
-
-    /**
-     * Desktop fork (section 196): the site that remembers "look up or create" for this name.
-     * @param {string} name The name.
-     * @returns {string} The JS.
-     */
-    searchWritable (name) {
-        return this.evaluateOnce(`new pmsWritable(runtime, "${sanitize(name)}")`);
+    cloneSite (node, name, id) {
+        return this.sharedSite(node, name, {id}, node.forget);
     }
 
     /**
      * Desktop fork (section 196): the site that remembers a timer.
-     * @param {*} timer The timer's variable data.
+     * @param {object} node A search.timer* node.
      * @returns {string} The JS.
      */
-    searchTimer (timer) {
-        return this.evaluateOnce(`new pmsTimer(runtime, "${sanitize(timer.id)}", "${sanitize(timer.name)}")`);
+    timerSite (node) {
+        return this.sharedSite(node, 'SITE', {id: node.timer.id, name: node.timer.name});
     }
 
     /**

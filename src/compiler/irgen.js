@@ -2760,8 +2760,8 @@ class ScriptTreeGenerator {
      * Desktop fork (section 149): the list and JSON blocks of Variables & Lists (from TurboWarp's "Variable and list"
      * and List Tools; extension merges) get their own nodes instead of section 132's plain direct calls, like section 140; jsgen.js writes
      * code that does exactly what the extension's function does with the arguments the extension manager's wrapper
-     * gives it, and finds the variable or list by its name once when the name is fixed in the block (jsexecute.js
-     * pmdName). Inputs in the order of the block's text, checked like section 139 (coreInputsInOrder); only while
+     * gives it, and finds the variable or list by its name once when the name is fixed in the block (blocks/shared/ext-lookups.js
+     * pmdName, section 304). Inputs in the order of the block's text, checked like section 139 (coreInputsInOrder); only while
      * the extension is loaded (as the direct call). runtime.pmNoDataInline = true puts all of them back on the
      * direct calls (tests only).
      * @param {Block} block The block.
@@ -2772,13 +2772,13 @@ class ScriptTreeGenerator {
         if (this.runtime.pmNoDataInline || !opcodes.has(block.opcode) ||
             !this.runtime.getOpcodeFunction(block.opcode) ||
             !this.coreInputsInOrder(block, this.dataInlineNode)) return null;
-        return this.dataInlineNode(block, name => this.descendCoreInput(block, name));
+        return this.withOpcode(block, this.dataInlineNode(block, name => this.descendCoreInput(block, name)));
     }
 
     /**
      * Desktop fork (section 195): Variables Expanded "value of" and "exists", Events Expansion "is message received"
      * and Sensing+ list blocks search by name, or parse a menu's text, on every call. With the name fixed in the
-     * block they get their own nodes and remember that (jsexecute.js pms…); any other name keeps the direct call.
+     * block they get their own nodes and remember that (blocks/shared/ext-lookups.js pms…); any other name keeps the direct call.
      * runtime.pmNoNameSearchInline = true puts all of them back on the direct calls (tests only).
      * @param {Block} block The block.
      * @returns {Node|null} The node, or null when the block keeps the direct call.
@@ -2787,7 +2787,7 @@ class ScriptTreeGenerator {
         if (this.runtime.pmNoNameSearchInline || !NAME_SEARCH_INLINE.has(block.opcode) ||
             !this.runtime.getOpcodeFunction(block.opcode) ||
             !this.coreInputsInOrder(block, this.nameSearchNode)) return null;
-        return this.nameSearchNode(block, name => this.descendCoreInput(block, name));
+        return this.withOpcode(block, this.nameSearchNode(block, name => this.descendCoreInput(block, name)));
     }
 
     /**
@@ -2822,7 +2822,7 @@ class ScriptTreeGenerator {
 
     /**
      * Desktop fork (section 198): Clones+'s variable blocks do what the extension's functions do, without the call
-     * (jsexecute.js pmc…). The variable IDs are fixed in the block (a menu without reporters); any other form keeps
+     * (blocks/shared/ext-lookups.js pmc…). The variable IDs are fixed in the block (a menu without reporters); any other form keeps
      * the direct call. runtime.pmNoClonesVarInline = true puts all of them back on the direct calls (tests only).
      * @param {Block} block The block.
      * @param {Set} opcodes CLONES_VAR_INLINE_INPUTS or CLONES_VAR_INLINE_STACKS.
@@ -2835,6 +2835,18 @@ class ScriptTreeGenerator {
         const node = this.clonesVarNode(block, name => this.descendCoreInput(block, name));
         // Desktop fork (section 199): runtime.pmNoClonesVarRemember = true looks the variables up on every call (tests only)
         if (node) node.forget = !!this.runtime.pmNoClonesVarRemember;
+        return this.withOpcode(block, node);
+    }
+
+    /**
+     * Desktop fork (section 304): the node names its block's opcode (jsgen.js writes the shared definition's text,
+     * src/blocks/shared/ext-lookups.js).
+     * @param {Block} block The block.
+     * @param {Node|null} node The node, or null.
+     * @returns {Node|null} The node.
+     */
+    withOpcode (block, node) {
+        if (node) node.opcode = block.opcode;
         return node;
     }
 
@@ -2877,8 +2889,8 @@ class ScriptTreeGenerator {
     }
 
     /**
-     * Desktop fork (section 196): more Variables Expanded blocks and Extra Timers remember their search (jsexecute.js
-     * pms…); any other name, or a timer not given as a variable field, keeps the direct call.
+     * Desktop fork (section 196): more Variables Expanded blocks and Extra Timers remember their search
+     * (blocks/shared/ext-lookups.js pms…); any other name, or a timer not given as a variable field, keeps the direct call.
      * runtime.pmNoSearchParseInline = true puts all of them back on the direct calls (tests only).
      * @param {Block} block The block.
      * @param {Set} opcodes SEARCH_PARSE_INLINE_INPUTS or SEARCH_PARSE_INLINE_STACKS.
@@ -2888,7 +2900,7 @@ class ScriptTreeGenerator {
         if (this.runtime.pmNoSearchParseInline || !opcodes.has(block.opcode) ||
             !this.runtime.getOpcodeFunction(block.opcode) ||
             !this.coreInputsInOrder(block, this.searchParseNode)) return null;
-        return this.searchParseNode(block, name => this.descendCoreInput(block, name));
+        return this.withOpcode(block, this.searchParseNode(block, name => this.descendCoreInput(block, name)));
     }
 
     /**

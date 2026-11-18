@@ -3,6 +3,9 @@ const ArgumentType = require('../../extension-support/argument-type');
 const TargetType = require('../../extension-support/target-type');
 const Cast = require('../../util/cast');
 const Thread = require('../../engine/thread');
+// Desktop fork (section 304): "is broadcast received" is defined once for the interpreter and the compiler
+// (src/blocks/shared/ext-lookups.js)
+const SharedBlocks = require('../../blocks/shared');
 
 // Blocks that come from the former "More Events" (LilyMakesThings) and "Events+" (SharkPool) extensions,
 // merged into this one. Hats that have to be asked again every frame (they are not edge activated; since section
@@ -166,6 +169,8 @@ class pmEventsExpansion {
          * @type {runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 304): the shared definitions' functions
+        this.shared = SharedBlocks.interpreterBlocks(runtime);
 
         // --- from More Events / Events+ ---
         runtime.pmEventsExpansion = this;
@@ -1020,11 +1025,7 @@ class pmEventsExpansion {
     returnFromBroadcastFunc(args, util) {
         util.thread.__evex_returnDataa = args.VALUE;
     }
-    isBroadcastReceived(args, util) {
-        const broadcast = Cast.toString(args.BROADCAST);
-        const broadcastVar = util.runtime.getTargetForStage().lookupBroadcastMsg("", broadcast);
-        return Cast.toBoolean(broadcastVar && broadcastVar.isSent);
-    }
+    isBroadcastReceived(args, util) { return this.shared.pmEventsExpansion_isBroadcastReceived(args, util); }
     // Desktop fork: the interpreter's versions of these compiler blocks (jsgen.js
     // 'pmEventsExpansion.broadcastFunction' / 'broadcastFunctionArgs'), which returned nothing: start the
     // broadcast's scripts with the data, wait until they have finished and one frame more, then answer

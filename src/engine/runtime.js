@@ -768,7 +768,7 @@ class Runtime extends EventEmitter {
 
         /**
          * Desktop fork (section 149): goes up whenever a variable or list is added to a target, deleted or renamed,
-         * so the compiler's lookups of a variable by a fixed name (jsexecute.js pmdName) know they must look again.
+         * so the compiler's lookups of a variable by a fixed name (blocks/shared/ext-lookups.js sites, section 304) know they must look again.
          * @type {number}
          */
         this.pmVarNamesVersion = 0;

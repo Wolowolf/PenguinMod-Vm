@@ -10,6 +10,9 @@
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 154): random numbers and the clock come from the runtime: Math.random, Date.now,
 // performance.now and new Date() are Scratch.vm.runtime.pmRandom / pmDateNow / pmPerfNow (new Date(pmDateNow())).
+// Desktop fork (section 304): the list, JSON and search blocks are defined once for the interpreter and the compiler
+// (src/blocks/shared/ext-lookups.js)
+const SharedBlocks = require('../../blocks/shared');
 const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 module.exports = require('../../extension-support/desktop-gallery-extension')(function (Scratch, require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename) {
 // Name: Variables Expanded
@@ -22,22 +25,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
 (function (Scratch) {
   "use strict";
+  // Desktop fork (section 304): the shared definitions' functions
+  const sharedBlocks = SharedBlocks.interpreterBlocks(Scratch.vm.runtime);
   if (!Scratch.extensions.unsandboxed) throw new Error("Variables Expanded must run unsandboxed!");
 
   const Cast = Scratch.Cast;
   const vm = Scratch.vm;
   const runtime = vm.runtime;
-  // Desktop fork (extension merges): List Tools' list lookup (the stage's lists first)
-  const getVarObjectFromName = function (name, util, type) {
-    const stageTarget = runtime.getTargetForStage();
-    const target = util.target;
-    let listObject = Object.create(null);
-
-    listObject = stageTarget.lookupVariableByNameAndType(name, type);
-    if (listObject) return listObject;
-    listObject = target.lookupVariableByNameAndType(name, type);
-    if (listObject) return listObject;
-  };
   const isPM = Scratch.extensions.isPenguinMod;
 
   const menuIconURI =
@@ -771,12 +765,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
     }
 
     // Block Funcs
-    isShowing(args, util) {
-      const info = runtime.getMonitorState().get(this.findVariable(args.VARIABLE, util));
-      return info ? (info.get("visible") !== undefined && info.get("visible") !== false) : false;
-    }
+    isShowing(args, util) { return sharedBlocks.DICandSPmonitorsPlus_isShowing(args, util); }
 
-    exists(args, util) { return Cast.toBoolean(this.findVariable(args.VARIABLE, util)) }
+    exists(args, util) { return sharedBlocks.DICandSPmonitorsPlus_exists(args, util); }
 
     setVis(args, util) {
       const variable = util.target.lookupVariableByNameAndType(args.VAR, "");
@@ -786,24 +777,11 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }, runtime);
     }
 
-    setString(args, util) {
-      const variable = util.target.lookupOrCreateVariable("", Cast.toString(args.VARIABLE));
-      variable.value = args.STRING;
-    }
+    setString(args, util) { return sharedBlocks.DICandSPmonitorsPlus_setString(args, util); }
 
-    swapVars(args, util) {
-      const var1 = util.target.lookupOrCreateVariable("", Cast.toString(args.VAR1));
-      const var2 = util.target.lookupOrCreateVariable("", Cast.toString(args.VAR2));
-      const temp = var1.value;
-      var1.value = var2.value;
-      var2.value = temp;
-    }
+    swapVars(args, util) { return sharedBlocks.DICandSPmonitorsPlus_swapVars(args, util); }
 
-    reportVal(args, util) {
-      const variable = this.findVariable(args.VARIABLE, util);
-      if (!variable) return 0;
-      return util.target.lookupVariableById(variable).value;
-    }
+    reportVal(args, util) { return sharedBlocks.DICandSPmonitorsPlus_reportVal(args, util); }
 
     makeVariable(args, util) {
       const name = Cast.toString(args.VARIABLE);
@@ -901,12 +879,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
       }
     }
 
-    sliderMinMaxOfVarible(args, util) {
-      const varId = this.findVariable(args.VARIABLE, util);
-      const info = runtime.getMonitorState().get(varId);
-      if (info === undefined) return 0;
-      return info.get(args.MINMAX === "min" ? "sliderMin" : "sliderMax");
-    }
+    sliderMinMaxOfVarible(args, util) { return sharedBlocks.DICandSPmonitorsPlus_sliderMinMaxOfVarible(args, util); }
 
     setVariableToType(args, util) { this.setMonitor(args.VARIABLE, util, args.VARIABLE, args.TYPE) }
 
@@ -914,11 +887,9 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     whenButtonPressed(args, util) { return this.isButtonPressed(args, util) }
 
-    isButtonPressed(args, util) {
-      return this.pmButtonPressed(this.findVariable(args.VARIABLE, util), args.TYPE);
-    }
+    isButtonPressed(args, util) { return sharedBlocks.DICandSPmonitorsPlus_isButtonPressed(args, util); }
 
-    // Desktop fork (section 196): the block after its search (jsexecute.js pmsVarButton)
+    // Desktop fork (section 196): the block after its search (src/blocks/shared/ext-lookups.js pmsVarButton)
     pmButtonPressed(varId, type) {
       if (monitorButtons[varId] !== undefined) {
         if (type === "held") return true;
@@ -1030,341 +1001,28 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
     // Desktop fork (extension merges): TurboWarp "Variable and list"'s blocks (by name; list values through
     // pmGetValue / pmSetValue / pmItemsChanged / pmIndexOf, section 125; random indexes from the runtime, section 155)
-    seriVarsToJson(args, util) {
-      const start = Scratch.Cast.toString(args.START);
-      const serialized = {};
-      for (const variable of Object.values(
-        util.runtime.getTargetForStage().variables
-      )) {
-        if (variable.type === "" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.value;
-        }
-      }
-      for (const variable of Object.values(util.target.variables)) {
-        if (variable.type === "" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.value;
-        }
-      }
-      return JSON.stringify(serialized);
-    }
-    getValueOfList(args, util) {
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (!variable) return 0;
-      const index = Scratch.Cast.toListIndex(
-        args.INDEX,
-        variable.pmGetValue().length,
-        false,
-        Scratch.vm.runtime
-      );
-      if (index === "INVALID") return "";
-      return variable.pmGetValue()[index - 1];
-    }
-    seriListsToJson(args, util) {
-      const start = Scratch.Cast.toString(args.START);
-      const serialized = {};
-      for (const variable of Object.values(
-        util.runtime.getTargetForStage().variables
-      )) {
-        if (variable.type === "list" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
-        }
-      }
-      for (const variable of Object.values(util.target.variables)) {
-        if (variable.type === "list" && variable.name.startsWith(start)) {
-          serialized[variable.name.replace(start, "")] = variable.pmGetValue();
-        }
-      }
-      return JSON.stringify(serialized);
-    }
-    clearList(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (variable) {
-        variable.pmSetValue([]);
-      }
-    }
-    deleteOfList(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (variable) {
-        const index = Scratch.Cast.toListIndex(
-          args.INDEX,
-          variable.pmGetValue().length,
-          true,
-          Scratch.vm.runtime
-        );
-        if (index === "ALL") {
-          variable.pmSetValue([]);
-        } else if (index !== "INVALID") {
-          variable.pmGetValue().splice(index - 1, 1);
-          variable.pmItemsChanged();
-        }
-      }
-    }
-    addValueInList(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (variable) {
-        variable.pmGetValue().push(args.VALUE);
-        variable._monitorUpToDate = false;
-      }
-    }
-    replaceOfList(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (variable) {
-        const index = Scratch.Cast.toListIndex(
-          args.INDEX,
-          variable.pmGetValue().length,
-          false,
-          Scratch.vm.runtime
-        );
-        if (index !== "INVALID") {
-          variable.pmGetValue()[index - 1] = args.VALUE;
-          variable.pmItemsChanged();
-        }
-      }
-    }
-    getIndexesOfList(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      const value = args.VALUE;
-      if (variable) {
-        var indexes = [];
-        for (var i = 0; i < variable.pmGetValue().length; i++) {
-          if (Scratch.Cast.compare(variable.pmGetValue()[i], value) === 0)
-            indexes.push(i + 1);
-        }
-        if (indexes.length > 0) return indexes.toString();
-      }
-      return "0";
-    }
-    length(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      if (variable) {
-        return variable.pmGetValue().length;
-      }
-      return 0;
-    }
-    listContains(args, util) {
-      /** @type {VM.ListVariable} */
-      const variable = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST),
-        "list"
-      );
-      const value = args.VALUE;
-      if (variable) {
-        return variable.pmIndexOf(value) !== 0;
-      }
-      return false;
-    }
-    copyList(args, util) {
-      /** @type {VM.ListVariable} */
-      const list1 = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST1),
-        "list"
-      );
-      const list2 = util.target.lookupVariableByNameAndType(
-        Scratch.Cast.toString(args.LIST2),
-        "list"
-      );
-      if (list1 && list2) {
-        list2.pmSetValue(list1.pmGetValue().slice());
-      }
-    }
+    seriVarsToJson(args, util) { return sharedBlocks.DICandSPmonitorsPlus_seriVarsToJson(args, util); }
+    getValueOfList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_getValueOfList(args, util); }
+    seriListsToJson(args, util) { return sharedBlocks.DICandSPmonitorsPlus_seriListsToJson(args, util); }
+    clearList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_clearList(args, util); }
+    deleteOfList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_deleteOfList(args, util); }
+    addValueInList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_addValueInList(args, util); }
+    replaceOfList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_replaceOfList(args, util); }
+    getIndexesOfList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_getIndexesOfList(args, util); }
+    length(args, util) { return sharedBlocks.DICandSPmonitorsPlus_length(args, util); }
+    listContains(args, util) { return sharedBlocks.DICandSPmonitorsPlus_listContains(args, util); }
+    copyList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_copyList(args, util); }
     // Desktop fork (extension merges): List Tools' blocks (the stage's lists first; sections 125, 126, 154, 155)
-    deleteItems(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return false;
-      const listLength = list.pmGetValue().length;
-      let num1 = 0;
-      let num2 = 0;
-      if (!list) return;
-      if (args.NUM1 > args.NUM2) {
-        num1 = args.NUM2 - 1;
-        num2 = args.NUM1 - 1;
-      } else {
-        num1 = args.NUM1 - 1;
-        num2 = args.NUM2 - 1;
-      }
-      const listPart1 = list.pmGetValue().slice(0, num1);
-      const listPart2 = list.pmGetValue().slice(num2 + 1, listLength);
-      list.pmSetValue(listPart1.concat(listPart2));
-    }
-    deleteAllOfItem(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return;
-      const newList = list.pmGetValue().filter(function (model) {
-        return model !== args.ITEM;
-      });
-      list.pmSetValue(newList);
-    }
-    replaceAllOfItem(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return;
-      const listLength = list.pmGetValue().length;
-      const item1 = args.ITEM1;
-      const item2 = args.ITEM2;
-      let newList = [];
-      for (let i = 0; i < listLength; i++) {
-        if (list.pmGetValue()[i] === item1) {
-          newList.push(item2);
-        } else {
-          newList.push(list.pmGetValue()[i]);
-        }
-      }
-      list.pmSetValue(newList);
-    }
-    repeatList(args, util) {
-      const list1 = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST1),
-        util,
-        "list"
-      );
-      if (!list1) return;
-      const list2 = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST2),
-        util,
-        "list"
-      );
-      if (!list2) return;
-      const currentVal = list1.pmGetValue();
-      for (let i = 0; i < args.NUM; i++) {
-        list2.pmSetValue(list2.pmGetValue().concat(currentVal));
-      }
-    }
-    getListJoin(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return "";
-      return list.pmGetValue().join(args.STRING);
-    }
-    timesItemAppears(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return 0;
-      return list.pmGetValue().filter((model) => model == args.ITEM).length;
-    }
-    itemIndex(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return 0;
-      let indexes = [];
-      for (let index = 0; index < list.pmGetValue().length; index++) {
-        if (list.pmGetValue()[index] === args.ITEM) {
-          indexes.push(index);
-        }
-      }
-
-      // Desktop fork (section 126): the menu's values (were "_first_", "_last_", "_random_", which it never gives)
-      switch (args.INDEX) {
-        case "first":
-          return Scratch.Cast.toNumber(indexes[0] + 1);
-        case "last":
-          return Scratch.Cast.toNumber(indexes[indexes.length - 1] + 1);
-        case "random":
-          return Scratch.Cast.toNumber(
-            indexes[Math.floor(Scratch.vm.runtime.pmRandom() * indexes.length)] + 1
-          );
-        default:
-          return Scratch.Cast.toNumber(indexes[Scratch.Cast.toNumber(args.INDEX) - 1] + 1);
-      }
-    }
-    orderIs(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return false;
-
-      for (let i = 0; i < list.pmGetValue().length - 1; i++) {
-        const compare = Scratch.Cast.compare(list.pmGetValue()[i + 1], list.pmGetValue()[i]);
-        if (compare > 0 && args.ORDER === "descending") return false;
-        if (compare < 0 && args.ORDER === "ascending") return false;
-      }
-      return true;
-    }
-    orderList(args, util) {
-      const list = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST),
-        util,
-        "list"
-      );
-      if (!list) return;
-      if (args.ORDER === "reversed") {
-        list.pmGetValue().reverse();
-      } else if (args.ORDER === "randomised") {
-        const randomised = list.pmGetValue()
-          .map((value) => ({ value, sort: Scratch.vm.runtime.pmRandom() }))
-          .sort((a, b) => a.sort - b.sort)
-          .map(({ value }) => value);
-        list.pmSetValue(randomised);
-      } else if (args.ORDER === "ascending") {
-        list.pmGetValue().sort(Scratch.Cast.compare);
-      } else if (args.ORDER === "descending") {
-        list.pmGetValue().sort(Scratch.Cast.compare).reverse();
-      }
-      list.pmItemsChanged();
-    }
-    joinLists(args, util) {
-      const list1 = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST1),
-        util,
-        "list"
-      );
-      if (!list1) return;
-      const list2 = getVarObjectFromName(
-        Scratch.Cast.toString(args.LIST2),
-        util,
-        "list"
-      );
-      if (!list2) return;
-      list2.pmSetValue(list2.pmGetValue().concat(list1.pmGetValue()));
-    }
+    deleteItems(args, util) { return sharedBlocks.DICandSPmonitorsPlus_deleteItems(args, util); }
+    deleteAllOfItem(args, util) { return sharedBlocks.DICandSPmonitorsPlus_deleteAllOfItem(args, util); }
+    replaceAllOfItem(args, util) { return sharedBlocks.DICandSPmonitorsPlus_replaceAllOfItem(args, util); }
+    repeatList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_repeatList(args, util); }
+    getListJoin(args, util) { return sharedBlocks.DICandSPmonitorsPlus_getListJoin(args, util); }
+    timesItemAppears(args, util) { return sharedBlocks.DICandSPmonitorsPlus_timesItemAppears(args, util); }
+    itemIndex(args, util) { return sharedBlocks.DICandSPmonitorsPlus_itemIndex(args, util); }
+    orderIs(args, util) { return sharedBlocks.DICandSPmonitorsPlus_orderIs(args, util); }
+    orderList(args, util) { return sharedBlocks.DICandSPmonitorsPlus_orderList(args, util); }
+    joinLists(args, util) { return sharedBlocks.DICandSPmonitorsPlus_joinLists(args, util); }
     _getLists() {
       // @ts-expect-error - Blockly not typed yet
       const lists =
