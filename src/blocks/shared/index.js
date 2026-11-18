@@ -7,12 +7,13 @@
  *   every compiled script that names them.
  * docs/EXTENSION-INTEGRATION.md "Shared block definitions" in the desktop repo has the rules.
  *
- * A definitions file (shared/operators.js, shared/data.js) exports {helpers, blocks}:
+ * A definitions file (shared/operators.js, data.js, motion.js, looks.js, sound.js) exports {helpers, blocks}:
  * - helpers: name -> source of a value (normally an arrow function), or {js, base, extra}: `base` puts it into
  *   every compiled script (jsexecute.js baseRuntime), `extra` holds helpers only it uses (name -> source), written
  *   just before it. A helper reads only its parameters, other helpers, standard JavaScript and `globalState`
  *   (Cast, listLookup, thread.target.runtime): no `runtime`, compiled scripts' helpers cannot see it.
- * - blocks: opcode -> {inputs, js | stack, menu, options, otherwise, lowerCase, list, variable}:
+ * - blocks: opcode -> {inputs, js | stack, menu, options, otherwise, lowerCase, list, variable, fields, locals, skip,
+ *   command}:
  *   `inputs` "NAME:kind NAME:kind" in the block's order, kind n number, s text, b Boolean, r the value as it is
  *   (the interpreter converts with Cast.toNumber / toString / toBoolean; the compiler with its own converters to
  *   the same kind). `js` is an expression (a reporter), `stack` statements ending in a line break (a command).
@@ -21,11 +22,17 @@
  *   with `variable` (the variable field's name) $ID. `runtime` is the runtime. A block with `menu` (a field's
  *   name) has `options` (value -> js) and `otherwise` (js for any other value; `lowerCase` lowers the value
  *   first).
+ *   Section 292 (Motion, Looks, Sound): `target` is the sprite or stage running the block, `stage` the stage.
+ *   `fields` "NAME NAME:lower": fixed fields, $NAME is the field's text (lowered with `:lower`) as a string, as often
+ *   as needed (the compiler writes it as a string literal). `locals` "a b": $a, $b are names of new constants, as
+ *   often as needed (the compiler gives fresh names, so two blocks in one script never clash). `skip`: a condition
+ *   (fields and `target` only) under which the block does nothing; the interpreter tests it each time, the compiler
+ *   when it compiles (jsgen.js then writes nothing, not even the inputs). A command with a menu has `command: true`.
  */
 const Cast = require('../../util/cast');
 const listLookup = require('../../engine/list-lookup');
 
-const FILES = [require('./operators'), require('./data')];
+const FILES = [require('./operators'), require('./data'), require('./motion'), require('./looks'), require('./sound')];
 
 const helpers = {};
 const blocks = {};
@@ -44,6 +51,8 @@ const inputsOf = definition => (definition.inputs ? definition.inputs.split(' ')
     const [name, kind] = entry.split(':');
     return {name, kind};
 }) : []);
+const fieldsOf = definition => inputsOf({inputs: definition.fields});
+const localsOf = definition => (definition.locals ? definition.locals.split(' ') : []);
 
 const templatesOf = definition => {
     if (!definition.menu) return [definition.js || definition.stack];
@@ -54,10 +63,15 @@ const templatesOf = definition => {
 for (const opcode of Object.keys(blocks)) {
     const definition = blocks[opcode];
     const names = inputsOf(definition).map(input => input.name);
-    for (const template of templatesOf(definition)) {
+    const free = fieldsOf(definition).map(field => field.name).concat(localsOf(definition));
+    for (const name of free) {
+        if (names.indexOf(name) !== -1) throw new Error(`shared block ${opcode}: $${name} is an input and a field or local`);
+    }
+    for (const template of templatesOf(definition).concat(definition.skip ? [definition.skip] : [])) {
         const used = [];
         template.replace(PLACEHOLDER, (match, name) => {
             if (LIST_PLACEHOLDERS.indexOf(name) !== -1 && (definition.list || (definition.variable && name === 'ID'))) return match;
+            if (free.indexOf(name) !== -1) return match;
             if (names.indexOf(name) === -1) throw new Error(`shared block ${opcode}: unknown ${match}`);
             if (used.indexOf(name) !== -1) throw new Error(`shared block ${opcode}: ${match} used twice`);
             used.push(name);
@@ -150,11 +164,20 @@ const interpreterSource = opcode => {
         const cast = INTERPRETER_CAST[kind];
         values[name] = cast ? `${cast}(args.${name})` : `args.${name}`;
     }
-    const write = template => {
-        const source = template.replace(PLACEHOLDER, (match, name) => values[name]);
-        return definition.stack ? source : `return ${source};`;
-    };
     let body = definition.list ? `const list = util.target.lookupOrCreateList(args.${field}.id, args.${field}.name);\n` : '';
+    // Section 292: the sprite, the stage, fields and locals
+    const all = templatesOf(definition).concat(definition.skip || '').join('\n');
+    if (/(^|[^.\w$])target\b/.test(all)) body += 'const target = util.target;\n';
+    if (/(^|[^.\w$])stage\b/.test(all)) body += 'const stage = runtime.getTargetForStage();\n';
+    for (const {name, kind} of fieldsOf(definition)) {
+        values[name] = `field_${name}`;
+        body += `const field_${name} = Cast.toString(args.${name})${kind === 'lower' ? '.toLowerCase()' : ''};\n`;
+    }
+    for (const name of localsOf(definition)) values[name] = `local_${name}`;
+    const fill = template => template.replace(PLACEHOLDER, (match, name) => values[name]);
+    if (definition.skip) body += `if (${fill(definition.skip)}) return;\n`;
+    // (each menu option in its own braces, so its constants and a command's end stay its own)
+    const write = template => (definition.stack || definition.command ? `{\n${fill(template)}return;\n}` : `return ${fill(template)};`);
     if (definition.menu) {
         let menu = `Cast.toString(args.${definition.menu})`;
         if (definition.lowerCase) menu += '.toLowerCase()';
@@ -170,13 +193,22 @@ const interpreterSource = opcode => {
 };
 
 /**
- * The interpreter's functions of every shared block, made from the definitions once per runtime (a block package
- * calls this in its constructor). Their helpers reach the runtime as compiled scripts' helpers do, through
- * globalState.thread.target.runtime.
+ * The interpreter's functions of every shared block, made from the definitions once per runtime (each block package
+ * asks in its constructor; the first one makes them). Their helpers reach the runtime as compiled scripts' helpers
+ * do, through globalState.thread.target.runtime.
  * @param {Runtime} runtime The runtime.
  * @returns {object.<string, Function>} The functions by opcode.
  */
+const made = new WeakMap();
 const interpreterBlocks = runtime => {
+    // (unit tests make block packages without a runtime)
+    if (typeof runtime !== 'object' || runtime === null) return makeInterpreterBlocks(runtime);
+    if (made.has(runtime)) return made.get(runtime);
+    const result = makeInterpreterBlocks(runtime);
+    made.set(runtime, result);
+    return result;
+};
+const makeInterpreterBlocks = runtime => {
     const globalState = {Cast, listLookup, thread: {target: {runtime}}};
     let source = '';
     for (const name of Object.keys(helpers)) source += `${helperSource(name)};\n`;

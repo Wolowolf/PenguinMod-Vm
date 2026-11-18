@@ -582,62 +582,7 @@ runtimeFunctions.coreDistanceTo = `const coreDistanceTo = (x1, y1, x2, y2) => {
     const dy = y2 - y1;
     return Math.sqrt((dx * dx) + (dy * dy));
 }`;
-runtimeFunctions.coreTurnAround = `const coreTurnAround = (target, degrees, x, y) => {
-    const radians = (Math.PI * degrees) / 180;
-    const cos = Math.cos(radians);
-    const sin = Math.sin(radians);
-    const dx = target.x - x;
-    const dy = target.y - y;
-    target.setXY((cos * dx) - (sin * dy) + x, (cos * dy) + (sin * dx) + y);
-}`;
 // Desktop fork (section 184): more blocks of section 138's kind, written as their functions in src/blocks are
-runtimeFunctions.coreGoTo = `const coreGoTo = (runtime, target, to) => {
-    let x;
-    let y;
-    if (to === '_mouse_') {
-        x = runtime.ioDevices.mouse.getScratchX();
-        y = runtime.ioDevices.mouse.getScratchY();
-    } else if (to === '_random_') {
-        x = Math.round(runtime.stageWidth * (runtime.pmRandom() - 0.5));
-        y = Math.round(runtime.stageHeight * (runtime.pmRandom() - 0.5));
-    } else {
-        const other = runtime.getSpriteTargetByName(String(to));
-        if (!other) return;
-        x = other.x;
-        y = other.y;
-    }
-    target.setXY(x, y);
-}`;
-runtimeFunctions.corePointTowards = `const corePointTowards = (runtime, target, towards) => {
-    let x;
-    let y;
-    if (towards === '_mouse_') {
-        x = runtime.ioDevices.mouse.getScratchX();
-        y = runtime.ioDevices.mouse.getScratchY();
-    } else if (towards === '_random_') {
-        target.setDirection(Math.round(runtime.pmRandom() * 360) - 180);
-        return;
-    } else {
-        const other = runtime.getSpriteTargetByName(String(towards));
-        if (!other) return;
-        x = other.x;
-        y = other.y;
-    }
-    const dx = x - target.x;
-    const dy = y - target.y;
-    target.setDirection(90 - (Math.atan2(dy, dx) * 180 / Math.PI));
-}`;
-runtimeFunctions.coreOtherVisible = `const coreOtherVisible = (runtime, target, option) => {
-    const other = option === '_myself_' ? target : option === '_stage_' ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(option);
-    if (!other) return;
-    return other.visible;
-}`;
-runtimeFunctions.coreShowOrHide = `const coreShowOrHide = (runtime, target, option, show) => {
-    const other = option === '_myself_' ? target : option === '_stage_' ? runtime.getTargetForStage() : runtime.getSpriteTargetByName(option);
-    if (!other) return;
-    other.setVisible(show);
-    runtime.ext_scratch3_looks._renderBubble(other);
-}`;
 runtimeFunctions.coreScrolling = `const coreScrolling = (runtime, option) => {
     const delta = runtime.ioDevices.mouseWheel.getScrollDelta();
     return option === 'up' ? delta < 0 : option === 'down' ? delta > 0 : false;
@@ -669,17 +614,6 @@ runtimeFunctions.coreIoUtil = `const coreIoUtil = (runtime, target) => ({
         if (object && object[func]) return object[func].apply(object, args);
     }
 })`;
-
-/**
- * If a number is very close to a whole number, round to that whole number.
- * @param {number} value Value to round
- * @returns {number} Rounded number or original number
- */
-runtimeFunctions.limitPrecision = `const limitPrecision = value => {
-    const rounded = Math.round(value);
-    const delta = value - rounded;
-    return (Math.abs(delta) < 1e-9) ? rounded : value;
-}`;
 
 /**
  * Generate a random integer.

@@ -5,6 +5,8 @@ const uid = require('../util/uid');
 const StageLayering = require('../engine/stage-layering');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
 const MathUtil = require('../util/math-util');
+// Desktop fork (section 292): what most Looks blocks do is in shared/looks.js, used by the compiler too
+const SharedBlocks = require('./shared');
 
 /**
  * @typedef {object} BubbleState - the bubble state associated with a particular target.
@@ -23,6 +25,8 @@ class Scratch3LooksBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 292)
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
 
         this._onTargetChanged = this._onTargetChanged.bind(this);
         this._onResetBubbles = this._onResetBubbles.bind(this);
@@ -339,7 +343,7 @@ class Scratch3LooksBlocks {
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
     getPrimitives () {
-        return {
+        const primitives = {
             looks_say: this.say,
             looks_sayforsecs: this.sayforsecs,
             looks_think: this.think,
@@ -347,55 +351,18 @@ class Scratch3LooksBlocks {
             looks_setFont: this.setFont,
             looks_setColor: this.setColor,
             looks_setShape: this.setShape,
-            looks_show: this.show,
-            looks_hide: this.hide,
-            looks_getSpriteVisible: this.getSpriteVisible,
-            looks_getOtherSpriteVisible: this.getOtherSpriteVisible,
-            looks_switchcostumeto: this.switchCostume,
-            looks_switchbackdropto: this.switchBackdrop,
             looks_switchbackdroptoandwait: this.switchBackdropAndWait,
-            looks_nextcostume: this.nextCostume,
-            looks_nextbackdrop: this.nextBackdrop,
-            looks_changeeffectby: this.changeEffect,
-            looks_seteffectto: this.setEffect,
-            looks_cleargraphiceffects: this.clearEffects,
-            looks_getEffectValue: this.getEffectValue,
-            looks_changesizeby: this.changeSize,
-            looks_setsizeto: this.setSize,
-            looks_gotofrontback: this.goToFrontBack,
-            looks_goforwardbackwardlayers: this.goForwardBackwardLayers,
-            looks_goTargetLayer: this.goTargetLayer,
-            looks_layersSetLayer: this.setSpriteLayer,
-            looks_layersGetLayer: this.getSpriteLayer,
-            looks_size: this.getSize,
-            looks_costumenumbername: this.getCostumeNumberName,
-            looks_backdropnumbername: this.getBackdropNumberName,
-            looks_setStretch: this.stretchSet,
-            looks_changeStretch: this.changeStretch,
-            looks_stretchGetX: this.getStretchX,
-            looks_stretchGetY: this.getStretchY,
             looks_sayWidth: this.getBubbleWidth,
             looks_sayHeight: this.getBubbleHeight,
-            looks_changeVisibilityOfSpriteShow: this.showSprite,
-            looks_changeVisibilityOfSpriteHide: this.hideSprite,
             looks_stoptalking: this.stopTalking,
             looks_getinputofcostume: this.getCostumeValue,
             looks_tintColor: this.getTintColor,
             looks_setTintColor: this.setTintColor
         };
-    }
-
-    getSpriteLayer (_, util) {
-        const target = util.target;
-        return target.getLayerOrder();
-    }
-
-    setSpriteLayer (args, util) {
-        const target = util.target;
-        const targetLayer = Cast.toNumber(args.NUM);
-        const currentLayer = target.getLayerOrder();
-        // i dont know how to set layer lol
-        target.goForwardLayers(targetLayer - currentLayer);
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('looks_')) primitives[opcode] = this._shared[opcode];
+        }
+        return primitives;
     }
 
     _getBubbleSize (target) {
@@ -423,26 +390,6 @@ class Scratch3LooksBlocks {
             val = 0;
         }
         return val;
-    }
-
-    getStretchY (args, util) {
-        return util.target._getRenderedDirectionAndScale().stretch[1];
-    }
-    getStretchX (args, util) {
-        return util.target._getRenderedDirectionAndScale().stretch[0];
-    }
-
-    stretchSet (args, util) {
-        util.target.setStretch(
-            Cast.toNumber(args.X), Cast.toNumber(args.Y)
-        );
-    }
-
-    changeStretch(args, util) {
-        let [x, y] = util.target._getRenderedDirectionAndScale().stretch;
-        let new_x = x + Cast.toNumber(args.X);
-        let new_y = y + Cast.toNumber(args.Y);
-        util.target.setStretch(new_x, new_y);
     }
 
     setFont (args, util) {
@@ -572,67 +519,6 @@ class Scratch3LooksBlocks {
                 resolve();
             }, 1000 * args.SECS);
         });
-    }
-
-    show (args, util) {
-        util.target.setVisible(true);
-        this._renderBubble(util.target);
-    }
-
-    hide (args, util) {
-        util.target.setVisible(false);
-        this._renderBubble(util.target);
-    }
-
-    showOrHideSprite (args, util) {
-        const option = args.VISIBLE_OPTION;
-        const visibleOption = Cast.toString(args.VISIBLE_TYPE).toLowerCase();
-        // Set target
-        let target;
-        if (option === '_myself_') {
-            target = util.target;
-        } else if (option === '_stage_') {
-            target = this.runtime.getTargetForStage();
-        } else {
-            target = this.runtime.getSpriteTargetByName(option);
-        }
-        if (!target) return;
-        target.setVisible(visibleOption === 'show');
-        this._renderBubble(target);
-    }
-
-    showSprite (args, util) {
-        this.showOrHideSprite({ VISIBLE_OPTION: args.VISIBLE_OPTION, VISIBLE_TYPE: "show" }, util);
-    }
-    hideSprite (args, util) {
-        this.showOrHideSprite({ VISIBLE_OPTION: args.VISIBLE_OPTION, VISIBLE_TYPE: "hide" }, util);
-    }
-
-    getSpriteVisible (args, util) {
-        return util.target.visible;
-    }
-
-    getOtherSpriteVisible (args, util) {
-        const option = args.VISIBLE_OPTION;
-        // Set target
-        let target;
-        if (option === '_myself_') {
-            target = util.target;
-        } else if (option === '_stage_') {
-            target = this.runtime.getTargetForStage();
-        } else {
-            target = this.runtime.getSpriteTargetByName(option);
-        }
-        if (!target) return;
-        return target.visible;
-    }
-
-    getEffectValue (args, util) {
-        const effect = Cast.toString(args.EFFECT).toLowerCase();
-        const effects = util.target.effects;
-        if (!effects.hasOwnProperty(effect)) return 0;
-        const value = Cast.toNumber(effects[effect]);
-        return value;
     }
 
     getTintColor (_, util) {
@@ -818,20 +704,6 @@ class Scratch3LooksBlocks {
         });
     }
 
-    switchCostume (args, util) {
-        this._setCostume(util.target, args.COSTUME); // used by compiler
-    }
-
-    nextCostume (args, util) {
-        this._setCostume(
-            util.target, util.target.currentCostume + 1, true
-        );
-    }
-
-    switchBackdrop (args) {
-        this._setBackdrop(this.runtime.getTargetForStage(), args.BACKDROP);
-    }
-
     switchBackdropAndWait (args, util) {
         // Have we run before, starting threads?
         if (!util.stackFrame.startedThreads) {
@@ -870,13 +742,6 @@ class Scratch3LooksBlocks {
         }
     }
 
-    nextBackdrop () {
-        const stage = this.runtime.getTargetForStage();
-        this._setBackdrop(
-            stage, stage.currentCostume + 1, true
-        );
-    }
-
     clampEffect (effect, value) { // used by compiler
         let clampedValue = value;
         switch (effect) {
@@ -894,92 +759,6 @@ class Scratch3LooksBlocks {
         return clampedValue;
     }
 
-    changeEffect (args, util) {
-        const effect = Cast.toString(args.EFFECT).toLowerCase();
-        const change = Cast.toNumber(args.CHANGE);
-        if (!util.target.effects.hasOwnProperty(effect)) return;
-        let newValue = change + util.target.effects[effect];
-        newValue = this.clampEffect(effect, newValue);
-        util.target.setEffect(effect, newValue);
-    }
-
-    setEffect (args, util) {
-        const effect = Cast.toString(args.EFFECT).toLowerCase();
-        let value = Cast.toNumber(args.VALUE);
-        value = this.clampEffect(effect, value);
-        util.target.setEffect(effect, value);
-    }
-
-    clearEffects (args, util) {
-        util.target.clearEffects();
-        this._resetBubbles(util.target);
-    }
-
-    changeSize (args, util) {
-        const change = Cast.toNumber(args.CHANGE);
-        util.target.setSize(util.target.size + change);
-    }
-
-    setSize (args, util) {
-        const size = Cast.toNumber(args.SIZE);
-        util.target.setSize(size);
-    }
-
-    goToFrontBack (args, util) {
-        if (!util.target.isStage) {
-            if (args.FRONT_BACK === 'front') {
-                util.target.goToFront();
-            } else {
-                util.target.goToBack();
-            }
-        }
-    }
-
-    goForwardBackwardLayers (args, util) {
-        if (!util.target.isStage) {
-            if (args.FORWARD_BACKWARD === 'forward') {
-                util.target.goForwardLayers(Cast.toNumber(args.NUM));
-            } else {
-                util.target.goBackwardLayers(Cast.toNumber(args.NUM));
-            }
-        }
-    }
-
-    goTargetLayer (args, util) {
-        let target;
-        const option = args.VISIBLE_OPTION;
-        if (option === '_stage_') target = this.runtime.getTargetForStage();
-        else target = this.runtime.getSpriteTargetByName(option);
-        if (!util.target.isStage && target) {
-            if (args.FORWARD_BACKWARD === 'infront') {
-                util.target.goBehindOther(target);
-                util.target.goForwardLayers(1);
-            } else {
-                util.target.goBehindOther(target);
-            }
-        }
-    }
-
-    getSize (args, util) {
-        return Math.round(util.target.size);
-    }
-
-    getBackdropNumberName (args) {
-        const stage = this.runtime.getTargetForStage();
-        if (args.NUMBER_NAME === 'number') {
-            return stage.currentCostume + 1;
-        }
-        // Else return name
-        return stage.getCostumes()[stage.currentCostume].name;
-    }
-
-    getCostumeNumberName (args, util) {
-        if (args.NUMBER_NAME === 'number') {
-            return util.target.currentCostume + 1;
-        }
-        // Else return name
-        return util.target.getCostumes()[util.target.currentCostume].name;
-    }
 }
 
 module.exports = Scratch3LooksBlocks;

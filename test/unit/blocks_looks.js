@@ -51,9 +51,9 @@ const testCostume = (costumes, arg, currentCostume = 1, isStage = false) => {
     if (isStage) {
         target.isStage = true;
         rt.addTarget(target);
-        looks.switchBackdrop({BACKDROP: arg}, {target});
+        looks._shared.looks_switchbackdropto({BACKDROP: arg}, {target});
     } else {
-        looks.switchCostume({COSTUME: arg}, {target});
+        looks._shared.looks_switchcostumeto({COSTUME: arg}, {target});
     }
 
     return target.currentCostume + 1; // Convert to 1-indexed.
@@ -168,7 +168,7 @@ test('switch backdrop block runs correctly', t => {
 test('getCostumeNumberName returns 1-indexed costume number', t => {
     util.target.currentCostume = 0; // This is 0-indexed.
     const args = {NUMBER_NAME: 'number'};
-    const number = blocks.getCostumeNumberName(args, util);
+    const number = blocks._shared.looks_costumenumbername(args, util);
     t.strictEqual(number, 1);
     t.end();
 });
@@ -176,7 +176,7 @@ test('getCostumeNumberName returns 1-indexed costume number', t => {
 test('getCostumeNumberName can return costume name', t => {
     util.target.currentCostume = 0; // This is 0-indexed.
     const args = {NUMBER_NAME: 'name'};
-    const name = blocks.getCostumeNumberName(args, util);
+    const name = blocks._shared.looks_costumenumbername(args, util);
     t.strictEqual(name, 'first name');
     t.end();
 });
@@ -184,7 +184,7 @@ test('getCostumeNumberName can return costume name', t => {
 test('getBackdropNumberName returns 1-indexed costume number', t => {
     util.target.currentCostume = 2; // This is 0-indexed.
     const args = {NUMBER_NAME: 'number'};
-    const number = blocks.getBackdropNumberName(args, util);
+    const number = blocks._shared.looks_backdropnumbername(args, util);
     t.strictEqual(number, 3);
     t.end();
 });
@@ -192,7 +192,7 @@ test('getBackdropNumberName returns 1-indexed costume number', t => {
 test('getBackdropNumberName can return costume name', t => {
     util.target.currentCostume = 2; // This is 0-indexed.
     const args = {NUMBER_NAME: 'name'};
-    const number = blocks.getBackdropNumberName(args, util);
+    const number = blocks._shared.looks_backdropnumbername(args, util);
     t.strictEqual(number, 'third name');
     t.end();
 });
@@ -260,7 +260,10 @@ test('clamp graphic effects', t => {
         {EFFECT: 'mosaic', VALUE: -500, CLAMP: 'low'}
     ];
 
+    util.target.effects = {brightness: 0, ghost: 0, color: 0, fisheye: 0, whirl: 0, pixelate: 0, mosaic: 0};
+    let calls = 0;
     util.target.setEffect = function (effectName, actualValue) {
+        calls++;
         const clamp = actualValue > 0 ? 'high' : 'low';
         rt.emit(effectName + clamp, effectName, actualValue);
     };
@@ -271,7 +274,8 @@ test('clamp graphic effects', t => {
             t.strictEqual(actualValue, expected);
         });
 
-        looks.setEffect(arg, util);
+        looks._shared.looks_seteffectto(arg, util);
     }
+    t.strictEqual(calls, args.length);
     t.end();
 });

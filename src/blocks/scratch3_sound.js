@@ -2,6 +2,8 @@ const MathUtil = require('../util/math-util');
 const Cast = require('../util/cast');
 const Clone = require('../util/clone');
 const getMonitorIdForBlockWithArgs = require('../util/get-monitor-id');
+// Desktop fork (section 292): what the Sound block volume does is in shared/sound.js, used by the compiler too
+const SharedBlocks = require('./shared');
 
 /**
  * Occluded boolean value to make its use more understandable.
@@ -16,6 +18,8 @@ class Scratch3SoundBlocks {
          * @type {Runtime}
          */
         this.runtime = runtime;
+        // Desktop fork (section 292)
+        this._shared = SharedBlocks.interpreterBlocks(runtime);
 
         this.waitingSounds = {};
 
@@ -139,7 +143,7 @@ class Scratch3SoundBlocks {
      * @return {object.<string, Function>} Mapping of opcode to Function.
      */
     getPrimitives () {
-        return {
+        const primitives = {
             sound_play: this.playSound,
             sound_playallsounds: this.playSoundAllLolOpAOIUHFoiubea87fge87iufwhef87wye87fn,
             sound_playuntildone: this.playSoundAndWait,
@@ -153,7 +157,6 @@ class Scratch3SoundBlocks {
             sound_effects_menu: this.effectsMenu,
             sound_setvolumeto: this.setVolume,
             sound_changevolumeby: this.changeVolume,
-            sound_volume: this.getVolume,
             sound_isSoundPlaying: this.isSoundPlaying,
             sound_getEffectValue: this.getEffectValue,
             sound_getLength: this.getLength,
@@ -161,6 +164,10 @@ class Scratch3SoundBlocks {
             sound_play_at_seconds: this.playAtSeconds,
             sound_play_at_seconds_until_done: this.playAtSecondsAndWait
         };
+        for (const opcode of Object.keys(this._shared)) {
+            if (opcode.startsWith('sound_')) primitives[opcode] = this._shared[opcode];
+        }
+        return primitives;
     }
 
     getMonitored () {
@@ -527,10 +534,6 @@ class Scratch3SoundBlocks {
             return Promise.resolve();
         }
         this.runtime.requestRedraw();
-    }
-
-    getVolume (args, util) {
-        return util.target.volume;
     }
 
     soundsMenu (args) {

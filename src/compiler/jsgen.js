@@ -1318,27 +1318,26 @@ class JSGenerator {
             return new TypedInput('(thread._listFilterIndex ?? [0])[(thread._listFilterIndex ?? [0]).length - 1]', TYPE_NUMBER);
 
         case 'looks.size':
-            // Desktop fork (section 237): rounded like the interpreter's getSize (TurboWarp does the same)
-            return new TypedInput('Math.round(target.size)', TYPE_NUMBER);
+            return new TypedInput(shared('looks_size', {}), TYPE_NUMBER);
         case 'looks.tintColor':
             return new TypedInput('runtime.ext_scratch3_looks.getTintColor(null, { target: target })', TYPE_NUMBER);
         case 'looks.backdropName':
-            return new TypedInput('stage.getCostumes()[stage.currentCostume].name', TYPE_STRING);
+            return new TypedInput(shared('looks_backdropnumbername', {}, null), TYPE_STRING);
         case 'looks.backdropNumber':
-            return new TypedInput('(stage.currentCostume + 1)', TYPE_NUMBER);
+            return new TypedInput(shared('looks_backdropnumbername', {}, 'number'), TYPE_NUMBER);
         case 'looks.costumeName':
-            return new TypedInput('target.getCostumes()[target.currentCostume].name', TYPE_STRING);
+            return new TypedInput(shared('looks_costumenumbername', {}, null), TYPE_STRING);
         case 'looks.costumeNumber':
-            return new TypedInput('(target.currentCostume + 1)', TYPE_NUMBER);
+            return new TypedInput(shared('looks_costumenumbername', {}, 'number'), TYPE_NUMBER);
 
         case 'motion.direction':
-            return new TypedInput('target.direction', TYPE_NUMBER);
+            return new TypedInput(shared('motion_direction', {}), TYPE_NUMBER);
 
         // Desktop fork (section 186): rounded as the interpreter does, also with dangerous optimizations (always on here)
         case 'motion.x':
-            return new TypedInput('limitPrecision(target.x)', TYPE_NUMBER);
+            return new TypedInput(shared('motion_xposition', {}), TYPE_NUMBER);
         case 'motion.y':
-            return new TypedInput('limitPrecision(target.y)', TYPE_NUMBER);
+            return new TypedInput(shared('motion_yposition', {}), TYPE_NUMBER);
 
         case 'mouse.down':
             return new TypedInput('runtime.ioDevices.mouse.getIsDown()', TYPE_BOOLEAN);
@@ -1483,22 +1482,20 @@ class JSGenerator {
         case 'sensing.distanceTo':
             return new TypedInput(`coreDistanceTo(${this.rawValue(this.descendInput(node.x1))}, ${this.rawValue(this.descendInput(node.y1))}, ${this.rawValue(this.descendInput(node.x2))}, ${this.rawValue(this.descendInput(node.y2))})`, TYPE_NUMBER_NAN);
         case 'looks.visible':
-            return new TypedInput('(target.visible)', TYPE_UNKNOWN);
-        case 'looks.effectValue': {
-            const effect = sanitize(node.effect);
-            return new TypedInput(`(target.effects.hasOwnProperty("${effect}") ? coreNumber(target.effects["${effect}"]) : 0)`, TYPE_NUMBER);
-        }
+            return new TypedInput(shared('looks_getSpriteVisible', {}), TYPE_UNKNOWN);
+        case 'looks.effectValue':
+            return new TypedInput(shared('looks_getEffectValue', {EFFECT: `"${sanitize(node.effect)}"`}), TYPE_NUMBER);
         case 'looks.layer':
-            return new TypedInput('(target.getLayerOrder())', TYPE_UNKNOWN);
+            return new TypedInput(shared('looks_layersGetLayer', {}), TYPE_UNKNOWN);
         case 'looks.stretch':
-            return new TypedInput(`(target._getRenderedDirectionAndScale().stretch[${node.index}])`, TYPE_UNKNOWN);
+            return new TypedInput(shared(node.index ? 'looks_stretchGetY' : 'looks_stretchGetX', {}), TYPE_UNKNOWN);
         case 'list.itemExists':
             return new TypedInput(shared('data_itemexistslist', {INDEX: this.rawValue(this.descendInput(node.index)), ITEMS: this.listItems(node.list)}), TYPE_BOOLEAN);
         case 'list.isEmpty':
             return new TypedInput(shared('data_listisempty', {ITEMS: this.listItems(node.list)}), TYPE_BOOLEAN);
         // Desktop fork (section 184)
         case 'looks.otherVisible':
-            return new TypedInput(`coreOtherVisible(runtime, target, ${this.rawValue(this.descendInput(node.option))})`, TYPE_UNKNOWN);
+            return new TypedInput(shared('looks_getOtherSpriteVisible', {VISIBLE_OPTION: this.rawValue(this.descendInput(node.option))}), TYPE_UNKNOWN);
         case 'sensing.mouseClicked':
             return new TypedInput('runtime.ioDevices.mouse.getIsClicked()', TYPE_BOOLEAN);
         case 'sensing.keyHit':
@@ -1508,7 +1505,7 @@ class JSGenerator {
         case 'sensing.finger':
             return new TypedInput(`runtime.ioDevices.touch.${node.method}(${this.exactNumber(this.descendInput(node.finger))} - 1)`, TYPE_UNKNOWN);
         case 'sound.volume':
-            return new TypedInput('(target.volume)', TYPE_UNKNOWN);
+            return new TypedInput(shared('sound_volume', {}), TYPE_UNKNOWN);
         case 'sound.isPlaying':
             return new TypedInput(`runtime.ext_scratch3_sound.isSoundPlaying({SOUND_MENU: ${this.rawValue(this.descendInput(node.sound))}}, {target})`, TYPE_UNKNOWN);
         case 'control.ifReturn':
@@ -2590,85 +2587,54 @@ class JSGenerator {
             break;
 
         case 'looks.backwardLayers':
+        case 'looks.forwardLayers':
             if (!this.target.isStage) {
-                this.source += `target.goBackwardLayers(${this.descendInput(node.layers).asNumber()});\n`;
+                this.source += shared('looks_goforwardbackwardlayers', {NUM: this.descendInput(node.layers).asNumber()}, node.kind === 'looks.forwardLayers' ? 'forward' : null);
             }
             break;
         case 'looks.clearEffects':
-            this.source += 'target.clearEffects();\nruntime.ext_scratch3_looks._resetBubbles(target);\n';
+            this.source += shared('looks_cleargraphiceffects', {});
             break;
         case 'looks.changeEffect':
             if (this.target.effects.hasOwnProperty(node.effect)) {
-                this.source += `target.setEffect("${sanitize(node.effect)}", runtime.ext_scratch3_looks.clampEffect("${sanitize(node.effect)}", ${this.descendInput(node.value).asNumber()} + target.effects["${sanitize(node.effect)}"]));\n`;
+                this.source += shared('looks_changeeffectby', {CHANGE: this.descendInput(node.value).asNumber(), EFFECT: `"${sanitize(node.effect)}"`});
             }
             break;
         case 'looks.changeSize':
-            this.source += `target.setSize(target.size + ${this.descendInput(node.size).asNumber()});\n`;
-            break;
-        case 'looks.forwardLayers':
-            if (!this.target.isStage) {
-                this.source += `target.goForwardLayers(${this.descendInput(node.layers).asNumber()});\n`;
-            }
+            this.source += shared('looks_changesizeby', {CHANGE: this.descendInput(node.size).asNumber()});
             break;
         case 'looks.goToBack':
-            if (!this.target.isStage) {
-                this.source += 'target.goToBack();\n';
-            }
-            break;
         case 'looks.goToFront':
             if (!this.target.isStage) {
-                this.source += 'target.goToFront();\n';
+                this.source += shared('looks_gotofrontback', {}, node.kind === 'looks.goToFront' ? 'front' : null);
             }
             break;
         case 'looks.targetFront':
-            if (!this.target.isStage) {
-                const name = this.descendInput(node.layers).asString();
-                const objRefTarg = this.localVariables.next();
-                const targetLayer = this.localVariables.next();
-                const myLayer = this.localVariables.next();
-
-                this.source += `const ${objRefTarg} = runtime.getSpriteTargetByName(${name});\n`;
-                this.source += `if (${objRefTarg}) {\n`;
-                this.source += `const ${myLayer} = target.getLayerOrder();\n`;
-                this.source += `const ${targetLayer} = ${objRefTarg}.getLayerOrder();\n`;
-                this.source += `if (${targetLayer} > ${myLayer}) target.goForwardLayers(${targetLayer} - ${myLayer});\n`;
-                this.source += `else target.goForwardLayers(${targetLayer} - ${myLayer} + 1);\n`;
-                this.source += `}\n`;
-            }
-            break;
         case 'looks.targetBack':
             if (!this.target.isStage) {
-                const name = this.descendInput(node.layers).asString();
-                const objRefTarg = this.localVariables.next();
-                const targetLayer = this.localVariables.next();
+                const VISIBLE_OPTION = this.descendInput(node.layers).asString();
+                const other = this.localVariables.next();
+                const otherLayer = this.localVariables.next();
                 const myLayer = this.localVariables.next();
-
-                this.source += `const ${objRefTarg} = runtime.getSpriteTargetByName(${name});\n`;
-                this.source += `if (${objRefTarg}) {\n`;
-                this.source += `const ${myLayer} = target.getLayerOrder();\n`;
-                this.source += `const ${targetLayer} = ${objRefTarg}.getLayerOrder();\n`;
-                this.source += `if (${targetLayer} > ${myLayer}) target.goForwardLayers(${targetLayer} - ${myLayer} - 1);\n`;
-                this.source += `else target.goForwardLayers(${targetLayer} - ${myLayer});\n`;
-                this.source += `}\n`;
+                this.source += shared('looks_goTargetLayer', {VISIBLE_OPTION, other, otherLayer, myLayer}, node.kind === 'looks.targetFront' ? 'infront' : null);
             }
             break;
         case 'looks.hide':
-            this.source += 'target.setVisible(false);\n';
-            this.source += 'runtime.ext_scratch3_looks._renderBubble(target);\n';
+            this.source += shared('looks_hide', {});
             break;
         case 'looks.nextBackdrop':
-            this.source += 'runtime.ext_scratch3_looks._setBackdrop(stage, stage.currentCostume + 1, true);\n';
+            this.source += shared('looks_nextbackdrop', {});
             break;
         case 'looks.nextCostume':
-            this.source += 'target.setCostume(target.currentCostume + 1);\n';
+            this.source += shared('looks_nextcostume', {});
             break;
         case 'looks.setEffect':
             if (this.target.effects.hasOwnProperty(node.effect)) {
-                this.source += `target.setEffect("${sanitize(node.effect)}", runtime.ext_scratch3_looks.clampEffect("${sanitize(node.effect)}", ${this.descendInput(node.value).asNumber()}));\n`;
+                this.source += shared('looks_seteffectto', {VALUE: this.descendInput(node.value).asNumber(), EFFECT: `"${sanitize(node.effect)}"`});
             }
             break;
         case 'looks.setSize':
-            this.source += `target.setSize(${this.descendInput(node.size).asNumber()});\n`;
+            this.source += shared('looks_setsizeto', {SIZE: this.descendInput(node.size).asNumber()});
             break;
         case 'looks.setFont':
             this.source += `runtime.ext_scratch3_looks.setFont({ font: ${this.descendInput(node.font).asString()}, size: ${this.descendInput(node.size).asNumber()} }, { target: target });\n`;
@@ -2683,53 +2649,42 @@ class JSGenerator {
             this.source += `runtime.ext_scratch3_looks.setShape({ prop: "${sanitize(node.prop)}", color: ${this.descendInput(node.value).asColor()} }, { target: target });\n`;
             break;
         case 'looks.show':
-            this.source += 'target.setVisible(true);\n';
-            this.source += 'runtime.ext_scratch3_looks._renderBubble(target);\n';
+            this.source += shared('looks_show', {});
             break;
         case 'looks.switchBackdrop':
-            this.source += `runtime.ext_scratch3_looks._setBackdrop(stage, ${this.descendInput(node.backdrop).asSafe()});\n`;
+            this.source += shared('looks_switchbackdropto', {BACKDROP: this.descendInput(node.backdrop).asSafe()});
             break;
         case 'looks.switchCostume':
-            this.source += `runtime.ext_scratch3_looks._setCostume(target, ${this.descendInput(node.costume).asSafe()});\n`;
+            this.source += shared('looks_switchcostumeto', {COSTUME: this.descendInput(node.costume).asSafe()});
             break;
 
         // Desktop fork (section 138): core commands that used the compatibility layer (irgen.js
         // descendCoreInlineStack), written as their functions in src/blocks are: inputs first, in the block's order.
         case 'looks.setStretch':
-            this.source += `target.setStretch(${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+            this.source += shared('looks_setStretch', {X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
         case 'looks.changeStretch': {
             const x = this.localVariables.next();
             const y = this.localVariables.next();
             const stretch = this.localVariables.next();
-            this.source += `const ${x} = ${this.exactNumber(this.descendInput(node.x))};\n`;
-            this.source += `const ${y} = ${this.exactNumber(this.descendInput(node.y))};\n`;
-            this.source += `const ${stretch} = target._getRenderedDirectionAndScale().stretch;\n`;
-            this.source += `target.setStretch(${stretch}[0] + ${x}, ${stretch}[1] + ${y});\n`;
+            this.source += shared('looks_changeStretch', {x, y, stretch, X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
         }
         case 'motion.changeXY': {
             const dx = this.localVariables.next();
             const dy = this.localVariables.next();
-            this.source += `const ${dx} = ${this.exactNumber(this.descendInput(node.dx))};\n`;
-            this.source += `const ${dy} = ${this.exactNumber(this.descendInput(node.dy))};\n`;
-            this.source += `target.setXY(target.x + ${dx}, target.y + ${dy});\n`;
+            this.source += shared('motion_changebyxy', {dx, dy, DX: this.exactNumber(this.descendInput(node.dx)), DY: this.exactNumber(this.descendInput(node.dy))});
             break;
         }
         case 'motion.pointTowardsXY': {
             const x = this.localVariables.next();
             const y = this.localVariables.next();
-            this.source += `const ${x} = ${this.exactNumber(this.descendInput(node.x))};\n`;
-            this.source += `const ${y} = ${this.exactNumber(this.descendInput(node.y))};\n`;
-            // (MathUtil.radToDeg is r * 180 / Math.PI)
-            this.source += `target.setDirection(90 - (Math.atan2(${y} - target.y, ${x} - target.x) * 180 / Math.PI));\n`;
+            this.source += shared('motion_pointtowardsxy', {x, y, X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
         }
-        case 'motion.turnAround': {
-            const degrees = this.exactNumber(this.descendInput(node.degrees));
-            this.source += `coreTurnAround(target, ${node.right ? `-(${degrees})` : degrees}, ${this.exactNumber(this.descendInput(node.x))}, ${this.exactNumber(this.descendInput(node.y))});\n`;
+        case 'motion.turnAround':
+            this.source += shared(node.right ? 'motion_turnrightaroundxy' : 'motion_turnleftaroundxy', {DEGREES: this.exactNumber(this.descendInput(node.degrees)), X: this.exactNumber(this.descendInput(node.x)), Y: this.exactNumber(this.descendInput(node.y))});
             break;
-        }
         case 'list.reverse': {
             const list = this.referenceVariable(node.list);
             this.source += shared('data_reverselist', {ITEMS: this.listItems(node.list), CHANGED: this.listChanged(node.list), LIST: list});
@@ -2737,19 +2692,19 @@ class JSGenerator {
         }
         // Desktop fork (section 184)
         case 'motion.goTo':
-            this.source += `coreGoTo(runtime, target, ${this.rawValue(this.descendInput(node.to))});\n`;
+            this.source += shared('motion_goto', {TO: this.rawValue(this.descendInput(node.to))});
             break;
         case 'motion.pointTowards':
-            this.source += `corePointTowards(runtime, target, ${this.rawValue(this.descendInput(node.towards))});\n`;
+            this.source += shared('motion_pointtowards', {TOWARDS: this.rawValue(this.descendInput(node.towards))});
             break;
         case 'motion.xyBounce':
             this.source += `runtime.ext_scratch3_motion.ifOnXYBounce({X: ${this.rawValue(this.descendInput(node.x))}, Y: ${this.rawValue(this.descendInput(node.y))}}, {target});\n`;
             break;
         case 'looks.setLayer':
-            this.source += `target.goForwardLayers(${this.exactNumber(this.descendInput(node.layer))} - target.getLayerOrder());\n`;
+            this.source += shared('looks_layersSetLayer', {NUM: this.exactNumber(this.descendInput(node.layer))});
             break;
         case 'looks.showOrHide':
-            this.source += `coreShowOrHide(runtime, target, ${this.rawValue(this.descendInput(node.option))}, ${node.show});\n`;
+            this.source += shared(node.show ? 'looks_changeVisibilityOfSpriteShow' : 'looks_changeVisibilityOfSpriteHide', {VISIBLE_OPTION: this.rawValue(this.descendInput(node.option))});
             break;
         // Desktop fork (section 185)
         case 'sensing.setDragMode':
@@ -2873,29 +2828,32 @@ class JSGenerator {
         }
 
         case 'motion.changeX':
-            this.source += `target.setXY(target.x + ${this.descendInput(node.dx).asNumber()}, target.y);\n`;
+            this.source += shared('motion_changexby', {DX: this.descendInput(node.dx).asNumber()});
             break;
         case 'motion.changeY':
-            this.source += `target.setXY(target.x, target.y + ${this.descendInput(node.dy).asNumber()});\n`;
+            this.source += shared('motion_changeyby', {DY: this.descendInput(node.dy).asNumber()});
             break;
         case 'motion.ifOnEdgeBounce':
             this.source += `runtime.ext_scratch3_motion._ifOnEdgeBounce(target);\n`;
             break;
         case 'motion.setDirection':
-            this.source += `target.setDirection(${this.descendInput(node.direction).asNumber()});\n`;
+            this.source += shared('motion_pointindirection', {DIRECTION: this.descendInput(node.direction).asNumber()});
             break;
         case 'motion.setRotationStyle':
-            this.source += `target.setRotationStyle("${sanitize(node.style)}");\n`;
+            this.source += shared('motion_setrotationstyle', {STYLE: `"${sanitize(node.style)}"`});
             break;
-        case 'motion.setX': // fallthrough
-        case 'motion.setY': // fallthrough
-        case 'motion.setXY': {
+        case 'motion.setX':
             this.descendedIntoModulo = false;
-            const x = 'x' in node ? this.descendInput(node.x).asNumber() : 'target.x';
-            const y = 'y' in node ? this.descendInput(node.y).asNumber() : 'target.y';
-            this.source += `target.setXY(${x}, ${y});\n`;
+            this.source += shared('motion_setx', {X: this.descendInput(node.x).asNumber()});
             break;
-        }
+        case 'motion.setY':
+            this.descendedIntoModulo = false;
+            this.source += shared('motion_sety', {Y: this.descendInput(node.y).asNumber()});
+            break;
+        case 'motion.setXY':
+            this.descendedIntoModulo = false;
+            this.source += shared('motion_gotoxy', {X: this.descendInput(node.x).asNumber(), Y: this.descendInput(node.y).asNumber()});
+            break;
         case 'motion.step':
             this.source += `runtime.ext_scratch3_motion._moveSteps(${this.descendInput(node.steps).asNumber()}, target);\n`;
             break;
