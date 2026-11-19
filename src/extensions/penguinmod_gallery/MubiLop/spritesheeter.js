@@ -273,6 +273,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getSpritesheetNames',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
               blockType: BlockType.REPORTER,
               text: 'all spritesheet names',
             },
@@ -289,6 +290,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getSpritesheetDimensions',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
               blockType: BlockType.REPORTER,
               text: 'dimensions of spritesheet [NAME]',
               arguments: {
@@ -438,6 +440,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getFrameJSON',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
               blockType: BlockType.REPORTER,
               text: 'get JSON data for frame [FRAME] in spritesheet [NAME]',
               arguments: {
@@ -453,6 +456,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getFrameBase64',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a data URL or empty
               blockType: BlockType.REPORTER,
               text: 'get base64 image data for frame [FRAME] in spritesheet [NAME]',
               arguments: {
@@ -468,6 +472,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getCurrentFrameBase64',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a data URL or empty
               blockType: BlockType.REPORTER,
               text: 'get base64 image data for current frame in spritesheet [NAME]',
               arguments: {
@@ -514,6 +519,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getAllFrameNames',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
               blockType: BlockType.REPORTER,
               text: 'all frame names in spritesheet [NAME]',
               arguments: {
@@ -556,6 +562,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getFramesWithPrefix',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
               blockType: BlockType.REPORTER,
               text: 'frames with prefix [PREFIX] in spritesheet [NAME]',
               arguments: {
@@ -571,6 +578,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getGridDimensions',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
               blockType: BlockType.REPORTER,
               text: 'grid dimensions of spritesheet [NAME]',
               arguments: {
@@ -582,6 +590,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getFrameGroups',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
               blockType: BlockType.REPORTER,
               text: 'animation groups in spritesheet [NAME]',
               arguments: {
@@ -593,6 +602,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             },
             {
               opcode: 'getFramesInRange',
+              blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
               blockType: BlockType.REPORTER,
               text: 'frames from [START] to [END] in spritesheet [NAME]',
               arguments: {

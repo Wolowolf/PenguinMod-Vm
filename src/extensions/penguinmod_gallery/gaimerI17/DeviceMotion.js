@@ -157,6 +157,7 @@ class gaimeriDeviceMotionExtension {
                     disableMonitor: false
                 }, {
                     opcode: 'deviceTiltDirection',
+                    blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a direction word
                     blockType: Scratch.BlockType.REPORTER,
                     text: 'device tilt direction',
                     disableMonitor: false

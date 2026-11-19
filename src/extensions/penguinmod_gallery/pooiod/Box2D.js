@@ -782,10 +782,12 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 						arguments: {
 							a1: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 							a2: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 						},
@@ -797,18 +799,22 @@ but has since deviated to be its own thing. (made with box2D js es6) */
 						arguments: {
 							a1: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 							a2: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 							b1: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 							b2: { 
 								type: Scratch.ArgumentType.STRING, 
+								shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
 								defaultValue: "0" 
 							},
 						},

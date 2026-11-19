@@ -267,6 +267,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: 'formatPercentage',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always ends with %
             blockType: BlockType.REPORTER,
             text: 'format [NUMBER] as percentage with [DECIMALS] decimals',
             arguments: {

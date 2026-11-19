@@ -1925,6 +1925,7 @@ self.onmessage = ({ data: msg }) => {
                     },
                     {
                         opcode: 'renderMode',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, none, worker or main
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'render mode'
                     },
@@ -2291,6 +2292,7 @@ self.onmessage = ({ data: msg }) => {
                     },
                     {
                         opcode: 'getLightIds',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'all light IDs'
                     },

@@ -332,6 +332,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, only used as a number
                 defaultValue: "100",
               },
             },
@@ -561,6 +562,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               },
               NUM: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, read as a (big) number, other text counts as 0
                 defaultValue: "-0.1",
               },
             },
@@ -622,10 +624,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, read as a (big) number, other text counts as 0
                 defaultValue: "123.45",
               },
               NUM2: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, read as a (big) number, other text counts as 0
                 defaultValue: "1",
               },
             },
@@ -637,10 +641,12 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               NUM: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, read as a (big) number, other text counts as 0
                 defaultValue: "0.999",
               },
               NUM2: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 322): type shapes, read as a (big) number, other text counts as 0
                 defaultValue: "1.001",
               },
             },

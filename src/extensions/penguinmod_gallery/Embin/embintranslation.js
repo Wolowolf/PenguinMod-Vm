@@ -36,6 +36,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 blocks: [
                     {
                         opcode: 'get_user_language',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a language code like en-US
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'user language code',
                         disableMonitor: false
@@ -55,6 +56,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                     {
                         opcode: 'get_all_translation_json',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'get all translation data as json',
                         disableMonitor: true

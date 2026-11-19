@@ -554,22 +554,26 @@ TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/S
                         },
                         {
                             opcode: 'iceServers',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always JSON
                             blockType: Scratch2.BlockType.REPORTER,
                             text: 'STUN/TURN servers'
                         },
                         "---",
                         {
                             opcode: 'allPeers',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always JSON
                             blockType: Scratch2.BlockType.REPORTER,
                             text: 'All peer connection objects'
                         },
                         {
                             opcode: 'allConnectedPeers',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always JSON
                             blockType: Scratch2.BlockType.REPORTER,
                             text: 'All connected peers'
                         },
                         {
                             opcode: 'allPeerChannels',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always JSON
                             blockType: Scratch2.BlockType.REPORTER,
                             text: 'All channels of peer [peer]',
                             arguments: {
@@ -627,6 +631,7 @@ TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/S
                         },
                         {
                             opcode: 'getOffer',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, base64 of JSON or empty
                             blockType: Scratch2.BlockType.REPORTER,
                             arguments: {
                                 peer: {
@@ -654,6 +659,7 @@ TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/S
                         },
                         {
                             opcode: 'getAnswer',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, base64 of JSON or empty
                             blockType: Scratch2.BlockType.REPORTER,
                             arguments: {
                                 peer: {
@@ -677,6 +683,7 @@ TODO 3: Audio panning support https://developer.mozilla.org/en-US/docs/Web/API/S
                         },
                         {
                             opcode: 'getIce',
+                            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, base64 of JSON or empty
                             blockType: Scratch2.BlockType.REPORTER,
                             arguments: {
                                 peer: {

@@ -440,12 +440,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.LABEL, text: 'Random' },
                     {
                         opcode: 'randomUUID',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a UUID or empty
                         text: 'random UUID',
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true
                     },
                     {
                         opcode: 'randomValues',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON list
                         text: '[SCALE] of [AMOUNT] random values',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
@@ -470,6 +472,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.LABEL, text: 'HMAC' },
                     {
                         opcode: 'generateSignKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON key
                         text: 'generate HMAC key',
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true
@@ -498,12 +501,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.LABEL, text: 'AES-GCM Encryption' },
                     {
                         opcode: 'generateAESKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON key
                         text: 'generate AES-GCM key (256-bit)',
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true
                     },
                     {
                         opcode: 'encryptAES',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a JSON object or empty
                         text: 'encrypt [PLAINTEXT] with AES key [KEY]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
@@ -525,6 +530,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.LABEL, text: 'RSA-PSS' },
                     {
                         opcode: 'generateRSAKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON key
                         text: 'generate RSA-PSS keypair',
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true
@@ -550,6 +556,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                     {
                         opcode: 'rsaPublicKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a JSON object or empty
                         text: 'public key from [KEY]', // Desktop fork (section 259): was 'RSA public key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
@@ -558,6 +565,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     },
                     {
                         opcode: 'rsaPrivateKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a JSON object or empty
                         text: 'private key from [KEY]', // Desktop fork (section 259): was 'RSA private key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
@@ -572,12 +580,14 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                     { blockType: Scratch.BlockType.LABEL, text: 'ECDH key exchange' },
                     {
                         opcode: 'generateECDHKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON key
                         text: 'generate ECDH keypair',
                         blockType: Scratch.BlockType.REPORTER,
                         disableMonitor: true
                     },
                     {
                         opcode: 'ecdhSharedKey',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a JSON object or empty
                         text: 'shared AES key from my private key [PRIVATE] and their public key [PUBLIC]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {

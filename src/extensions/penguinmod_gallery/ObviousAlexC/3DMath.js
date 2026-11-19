@@ -103,6 +103,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "newV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "vector 3 x:[x] y:[y] z:[z]",
             arguments: {
@@ -114,6 +115,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "newV3fromValue",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "vector 3 from [value]",
             arguments: {
@@ -140,6 +142,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "addV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V3_MODULAR, locked: "+" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] + [b]",
@@ -151,6 +154,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "subV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V3_MODULAR, locked: "-" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] - [b]",
@@ -162,6 +166,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "mulV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V3_MODULAR, locked: "*" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] * [b]",
@@ -173,6 +178,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "divV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V3_MODULAR, locked: "/" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [a] / [b]",
@@ -201,6 +207,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "crossProductOfV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: cross product between [a] and [b]",
             arguments: {
@@ -229,6 +236,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "normalizeV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: normalize [a]",
             arguments: {
@@ -260,6 +268,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             disableMonitor: true,
             hideFromPalette: false,
             opcode: "projectV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: [project] length [len] direction [dir]",
             arguments: {
@@ -271,6 +280,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "reflectionV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: reflect [source] across [axis] normal [normal]",
             arguments: {
@@ -282,26 +292,28 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "rotateAroundPointV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: rotate [a] around [b] by yaw:[yaw] pitch:[pitch], and roll:[roll]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
-              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              yaw: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              pitch: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              roll: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
             },
           },
           {
             disableMonitor: true,
             opcode: "rotateAroundCenterV3",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V3: rotate [a] around the center by yaw:[yaw] pitch:[pitch], and roll:[roll]",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
-              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              yaw: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              pitch: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              roll: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
             },
           },
 
@@ -313,6 +325,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "newQuat",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "quaternion w:[w] x:[x] y:[y] z:[z]",
             arguments: {
@@ -325,6 +338,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatFromVector",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "quaternion from real [w] and vector [v]",
             arguments: {
@@ -335,6 +349,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatAroundAxis",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "quaternion around axis [axis] by [angle] degrees",
             arguments: {
@@ -345,6 +360,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatFromTo",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "quaternion from [a] to [b]",
             arguments: {
@@ -355,6 +371,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatOperation",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...QUAT_MODULAR, locked: true },
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: [a] [operation] [b]",
@@ -374,6 +391,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatScale",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: [a] * number [s]",
             arguments: {
@@ -385,6 +403,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             // Desktop fork (section 283): was "conjugate" in the function menu
             disableMonitor: true,
             opcode: "quatConjugate",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: conjugate of [a]",
             arguments: {
@@ -394,6 +413,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatFunction",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: [function] of [a]",
             arguments: {
@@ -414,6 +434,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "quatRotate",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "Q: rotate [v] by [q]",
             arguments: {
@@ -430,6 +451,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "newV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "vector 2 x:[x] y:[y]",
             arguments: {
@@ -440,6 +462,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "newV2fromValue",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "vector 2 from [value]",
             arguments: {
@@ -462,6 +485,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "project2DFromCam",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "get projected [a] to 2D from camera",
             arguments: {
@@ -486,6 +510,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "project2DFromPos",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "get projected [a] to 2D from [b] yaw:[yaw] pitch:[pitch] roll:[roll]",
             arguments: {
@@ -494,9 +519,9 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                 defaultValue: "[0,0,100]",
               },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0,0]" },
-              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              pitch: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
-              roll: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              yaw: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              pitch: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
+              roll: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
             },
           },
           {
@@ -506,6 +531,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "addV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V2_MODULAR, locked: "+" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] + [b]",
@@ -517,6 +543,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "subV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V2_MODULAR, locked: "-" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] - [b]",
@@ -528,6 +555,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "mulV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V2_MODULAR, locked: "*" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] * [b]",
@@ -539,6 +567,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "divV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             modular: { ...V2_MODULAR, locked: "/" },
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [a] / [b]",
@@ -595,6 +624,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "normalizeV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: normalize [a]",
             arguments: {
@@ -625,6 +655,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             disableMonitor: true,
             hideFromPalette: false,
             opcode: "projectV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: [project] length [len] direction [dir]",
             arguments: {
@@ -636,6 +667,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "reflectionV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: reflect [source] across [axis] normal [normal]",
             arguments: {
@@ -647,22 +679,24 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "rotateAroundPointV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: rotate [a] around [b] by [yaw] degrees",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
               b: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
-              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              yaw: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
             },
           },
           {
             disableMonitor: true,
             opcode: "rotateAroundCenterV2",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "V2: rotate [a] around the center by [yaw] degrees",
             arguments: {
               a: { type: Scratch.ArgumentType.STRING, defaultValue: "[0,0]" },
-              yaw: { type: Scratch.ArgumentType.STRING, defaultValue: "0" },
+              yaw: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: "0" }, // Desktop fork (section 322): type shapes, only used as a number
             },
           },
 
@@ -706,6 +740,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: false,
             opcode: "cam3DgetPosition",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "get camera position",
             arguments: {},
@@ -749,6 +784,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: false,
             opcode: "cam3DgetRotation",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "get camera rotation",
             arguments: {},
@@ -836,6 +872,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "spr3DgetPosition",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a vector or quaternion as a JSON list (or a list in "return parsed objects" mode)
             blockType: Scratch.BlockType.REPORTER,
             text: "my 3d position",
             arguments: {},

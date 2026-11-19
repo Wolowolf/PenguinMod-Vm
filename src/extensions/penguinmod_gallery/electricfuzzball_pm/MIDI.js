@@ -88,13 +88,17 @@ class MIDI {
                 { opcode: "currentInstrument", blockType: Scratch.BlockType.REPORTER, text: "current instrument number" },
                 { opcode: "isDrumInstrument", blockType: Scratch.BlockType.BOOLEAN, text: "is drum instrument?" },
 
-                { opcode: "notesPressed", blockType: Scratch.BlockType.REPORTER, text: "notes currently pressed" },
-                { opcode: "notesByChannel", blockType: Scratch.BlockType.REPORTER, text: "notes by channel" },
+                // Desktop fork (section 322): type shapes, always a JSON list
+                { opcode: "notesPressed", blockType: Scratch.BlockType.REPORTER, blockShape: Scratch.BlockShape.SQUARE, text: "notes currently pressed" },
+                // Desktop fork (section 322): type shapes, always a JSON list
+                { opcode: "notesByChannel", blockType: Scratch.BlockType.REPORTER, blockShape: Scratch.BlockShape.SQUARE, text: "notes by channel" },
 
-                { opcode: "notesOnChannel", blockType: Scratch.BlockType.REPORTER, text: "notes on channel [CHANNEL]",
+                // Desktop fork (section 322): type shapes, always a JSON list
+                { opcode: "notesOnChannel", blockType: Scratch.BlockType.REPORTER, blockShape: Scratch.BlockShape.SQUARE, text: "notes on channel [CHANNEL]",
                   arguments: { CHANNEL: { type: Scratch.ArgumentType.NUMBER, defaultValue: 1 } } },
 
-                { opcode: "noteNumberToName", blockType: Scratch.BlockType.REPORTER, text: "note name of [NOTE]",
+                // Desktop fork (section 322): type shapes, a note name with octave or empty
+                { opcode: "noteNumberToName", blockType: Scratch.BlockType.REPORTER, blockShape: Scratch.BlockShape.SQUARE, text: "note name of [NOTE]",
                   arguments: { NOTE: { type: Scratch.ArgumentType.NUMBER, defaultValue: 60 } } },
 
                 { opcode: "whenNotePressed", blockType: Scratch.BlockType.HAT, text: "when MIDI note pressed", pmEdgeHat: { signals: ["midi"] } /* Desktop fork (section 127) */ },
@@ -109,7 +113,8 @@ class MIDI {
                 { opcode: "getJoystickX", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt x" },
                 { opcode: "getJoystickY", blockType: Scratch.BlockType.REPORTER, text: "joystick tilt y" },
 
-                { opcode: "lastNNotesPressed", blockType: Scratch.BlockType.REPORTER, text: "last [N] notes pressed",
+                // Desktop fork (section 322): type shapes, always a JSON list
+                { opcode: "lastNNotesPressed", blockType: Scratch.BlockType.REPORTER, blockShape: Scratch.BlockShape.SQUARE, text: "last [N] notes pressed",
                   arguments: { N: { type: Scratch.ArgumentType.NUMBER, defaultValue: 5 } } },
 
                 { opcode: "noteHeldTime", blockType: Scratch.BlockType.REPORTER, text: "time note [NOTE] is held",

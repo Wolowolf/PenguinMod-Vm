@@ -176,6 +176,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: 'getPNG',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a data URL or nothing
             blockType: Scratch.BlockType.REPORTER,
             text: 'Get share PNG: rez [REZ]',
             arguments: {
@@ -187,6 +188,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: 'getWEBP',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a data URL or nothing
             blockType: Scratch.BlockType.REPORTER,
             text: 'Get share WEBP: rez [REZ] Quality [QUALITY]',
             arguments: {
@@ -202,6 +204,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: 'getJPEG',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a data URL or nothing
             blockType: Scratch.BlockType.REPORTER,
             text: 'Get share JPEG: rez [REZ] Quality [QUALITY]',
             arguments: {
@@ -238,6 +241,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: 'getAspectRatio',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always [width, height]
             blockType: Scratch.BlockType.REPORTER,
             text: 'Stream Size',
           },

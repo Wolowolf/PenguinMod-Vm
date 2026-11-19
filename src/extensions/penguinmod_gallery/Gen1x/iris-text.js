@@ -4916,6 +4916,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'exportSettings',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, always a JSON object
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'export settings as JSON'
                     },
@@ -5266,6 +5267,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'getCharacterStyle',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, a JSON object or empty
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'style of character [INDEX] as JSON',
                         arguments: {
@@ -5626,6 +5628,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'colorMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'color [TEXT] as [COLOR]',
                         arguments: {
@@ -5664,6 +5667,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'shadowMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'shadow [TEXT] with color [COLOR] opacity [OPACITY] % blur [BLUR] offset x [OFFSET_X] y [OFFSET_Y]',
                         arguments: {
@@ -5694,6 +5698,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'borderMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'border [TEXT] with color [COLOR] opacity [OPACITY] % size [SIZE]',
                         arguments: {
@@ -5716,6 +5721,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'styleMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'style [TEXT] as [STYLE]',
                         arguments: {
@@ -5732,6 +5738,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'sizeMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'size [TEXT] as [SIZE]',
                         arguments: {
@@ -5747,6 +5754,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'blurMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'blur [TEXT] by [INTENSITY] %',
                         arguments: {
@@ -5762,6 +5770,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'fontMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'font [TEXT] as [FONT]',
                         arguments: {
@@ -5793,6 +5802,7 @@ Enjoy!! :D
                     },
                     {
                         opcode: 'waitMarkup',
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, markup text starting with [
                         blockType: Scratch.BlockType.REPORTER,
                         text: 'wait [SECONDS] seconds',
                         arguments: {

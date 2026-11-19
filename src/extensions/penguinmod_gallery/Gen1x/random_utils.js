@@ -198,6 +198,7 @@ class RandomUtils {
         },
         {
           opcode: 'rndcolor',
+          blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 322): type shapes, #rrggbb or [r, g, b]
           blockType: Scratch.BlockType.REPORTER,
           text: 'random [COLOR] color',
           disableMonitor: true,
