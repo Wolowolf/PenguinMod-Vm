@@ -2,6 +2,7 @@ const formatMessage = require('format-message');
 const pmImage = require('../../util/image-util'); // Desktop fork (section 298): the shared picture helpers
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const Cast = require('../../util/cast');
 // const Cast = require('../../util/cast');
 
@@ -60,6 +61,7 @@ class JgPrismBlocks {
                 },
                 {
                     opcode: 'screenshotStage',
+                    blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is a data URL
                     text: formatMessage({
                         id: 'jgRuntime.blocks.screenshotStage',
                         default: 'screenshot the stage',
@@ -70,6 +72,7 @@ class JgPrismBlocks {
                 },
                 {
                     opcode: 'dataUriOfCostume',
+                    blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is a data URL or empty
                     text: formatMessage({
                         id: 'jgRuntime.blocks.dataUriOfCostume',
                         default: 'data url of costume #[INDEX]',
@@ -88,6 +91,7 @@ class JgPrismBlocks {
                 },
                 {
                     opcode: 'dataUriFromImageUrl',
+                    blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is a data URL or empty
                     text: formatMessage({
                         id: 'jgRuntime.blocks.dataUriFromImageUrl',
                         default: 'data url of image at url: [URL]',

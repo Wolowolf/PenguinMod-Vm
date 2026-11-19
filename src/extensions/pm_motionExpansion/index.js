@@ -4,6 +4,7 @@
 
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const Clone = require('../../util/clone');
 const Cast = require('../../util/cast');
 // Desktop fork (section 294): blocks defined once for the interpreter and the compiler
@@ -162,6 +163,7 @@ class pmMotionExpansion {
             blocks: [
                 {
                     opcode: "rotationStyle",
+                    blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is always a style name, never a number
                     blockType: BlockType.REPORTER,
                     text: "rotation style",
                     disableMonitor: true,

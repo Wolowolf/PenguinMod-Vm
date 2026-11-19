@@ -1,5 +1,6 @@
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const Cast = require('../../util/cast');
 
 class TailgatingExtension {
@@ -110,6 +111,7 @@ class TailgatingExtension {
         },
         {
           opcode: "getSpriteFollowPos",
+          blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is always JSON text
           blockType: BlockType.REPORTER,
           disableMonitor: true,
           text: "get position [INDEX] behind [NAME]",

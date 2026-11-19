@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const BlockType = require('../../extension-support/block-type');
 const TargetType = require('../../extension-support/target-type');
 const Cast = require('../../util/cast');
@@ -885,6 +886,7 @@ class Scratch3PenBlocks {
                     arguments: {
                         WEIGHT: {
                             type: ArgumentType.NUMBER,
+                            shape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, the weight also takes words (bold, normal) as text
                             defaultValue: 700
                         }
                     }

@@ -1,4 +1,5 @@
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const BlockType = require('../../extension-support/block-type');
 const Clone = require('../../util/clone');
 const Cast = require('../../util/cast');
@@ -776,6 +777,7 @@ class Scratch3MusicBlocks {
                     arguments: {
                         DRUM: {
                             type: ArgumentType.NUMBER,
+                            shape: BlockShape.ROUND, // Desktop fork (section 318): type shapes, only its number is used
                             menu: 'DRUM',
                             defaultValue: 1
                         },
@@ -830,6 +832,7 @@ class Scratch3MusicBlocks {
                     arguments: {
                         INSTRUMENT: {
                             type: ArgumentType.NUMBER,
+                            shape: BlockShape.ROUND, // Desktop fork (section 318): type shapes, only its number is used
                             menu: 'INSTRUMENT',
                             defaultValue: 1
                         }

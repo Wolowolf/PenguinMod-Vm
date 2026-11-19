@@ -1,5 +1,6 @@
 const BlockType = require('../../extension-support/block-type');
 const ArgumentType = require('../../extension-support/argument-type');
+const BlockShape = require('../../extension-support/block-shape');
 const formatMessage = require('format-message');
 const Cast = require('../../util/cast');
 // Desktop fork (section 294): blocks defined once for the interpreter and the compiler
@@ -137,6 +138,7 @@ class pmSensingExpansion {
                 },
                 {
                     opcode: 'pickColor',
+                    blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is always #rrggbb
                     text: 'grab color at x: [X] y: [Y]',
                     blockType: BlockType.REPORTER,
                     arguments: {
@@ -197,6 +199,7 @@ class pmSensingExpansion {
                     arguments: {
                         MOUSE_BUTTON: {
                             type: ArgumentType.NUMBER,
+                            shape: BlockShape.ROUND, // Desktop fork (section 318): type shapes, only its number is used
                             menu: 'mouseButton',
                             defaultValue: '0'
                         }

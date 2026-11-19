@@ -1,5 +1,6 @@
 const BlockType = require("../../extension-support/block-type");
 const ArgumentType = require("../../extension-support/argument-type");
+const BlockShape = require("../../extension-support/block-shape");
 const Cast = require("../../util/cast");
 const MathJS = require("./mathjs.js");
 const ExpandableBlocks = require("../../util/expandable-blocks");
@@ -270,6 +271,7 @@ class pmOperatorsExpansion {
         },
         {
           opcode: "simplifyRatio",
+          blockShape: BlockShape.SQUARE, // Desktop fork (section 318): type shapes, its answer is "a:b" or empty, never a number
           text: "simplify ratio [RATIO]",
           blockType: BlockType.REPORTER,
           extensions: ["colours_operators"],
