@@ -732,33 +732,6 @@ class Runtime extends EventEmitter {
 
         // list of variable types declared by extensions
         this._extensionVariables = {};
-        // lists all custom serializers
-        this.serializers = {
-            'pm-rendered-target': {
-                serialize: target => ({ id: target.id, name: target.getName() }),
-                deserialize: ({ id, name }) => this.getTargetById(id) ?? this.getSpriteTargetByName(name)
-            },
-            'pm-costume-asset': {
-                serialize: asset => ({ id: asset.assetId, name: asset.name }),
-                deserialize: ({ assetId, name }) => {
-                    for (let i = 0; i < this.targets.length; i++) {
-                        const assets = this.targets[i].getCostumes();
-                        const found = assets.find(asset => asset.assetId === assetId || asset.name === name);
-                        if (found) return found;
-                    }
-                }
-            },
-            'pm-sound-asset': {
-                serialize: asset => ({ id: asset.assetId, name: asset.name }),
-                deserialize: ({ assetId, name }) => {
-                    for (let i = 0; i < this.targets.length; i++) {
-                        const assets = this.targets[i].getSounds();
-                        const found = assets.find(asset => asset.assetId === assetId || asset.name === name);
-                        if (found) return found;
-                    }
-                }
-            }
-        };
 
         /**
          * An object to contain runtime variables from the
@@ -1941,7 +1914,8 @@ class Runtime extends EventEmitter {
             ];
         }
 
-        let notchAccepts = blockInfo.notchAccepts ?? 'normal'
+        // Desktop fork: every extension stack block uses the plain notch (custom notches removed, section 314)
+        const notchAccepts = 'normal';
 
         switch (blockInfo.blockType) {
         case BlockType.COMMAND:
@@ -2007,7 +1981,7 @@ class Runtime extends EventEmitter {
                 blockJSON[`args${outLineNum}`] = [{
                     type: 'input_statement',
                     name: `SUBSTACK${inBranchNum > 0 ? inBranchNum + 1 : ''}`,
-                    check: blockInfo.branches[inBranchNum].accepts ?? 'normal'
+                    check: 'normal'
                 }];
                 ++inBranchNum;
                 ++outLineNum;
@@ -2595,25 +2569,6 @@ class Runtime extends EventEmitter {
         this.renderer.offscreenTouching = !this.runtimeOptions.fencing;
         this.renderer.renderOffscreen = this.runtimeOptions.disableOffscreenRendering;
         this.updatePrivacy();
-    }
-
-    /**
-     * registers a custom serializer to allow saving custom data into standard variables
-     * @param {Function} id The custom type ID to register these for
-     * @param {Function} serialize the function to be ran on serialized data in variables.
-     * @param {Function} deserialize the function to be ran on serialized data in variables
-     */
-    registerSerializer (id, serialize, deserialize) {
-        if (typeof serialize !== 'function') {
-            throw new TypeError('serialize must be of type function');
-        }
-        if (typeof deserialize !== 'function') {
-            throw new TypeError('deserialize must be of type function');
-        }
-        this.serializers[id] = {
-            serialize,
-            deserialize
-        };
     }
 
     /**
@@ -4333,33 +4288,8 @@ class Runtime extends EventEmitter {
 
     /**
      * Report that the project has loaded in the Virtual Machine.
-     * and also handle the parsing of custom values to allow for
-     * minimal code when making cross-target refences
      */
     emitProjectLoaded () {
-        for (const target of this.targets) {
-            for (const varId in target.variables) {
-                const variable = target.variables[varId];
-                // PMDESKTOP_LISTLOOKUP (section 62): read lists without marking them as seen by outside code
-                const items = listLookup.items(variable);
-                if (variable.type === Variable.LIST_TYPE) {
-                    for (const idx in items) {
-                        const item = items[idx];
-                        // Desktop fork: a list item may be null (hand-made project files)
-                        if (item && item.customType) {
-                            const {deserialize} = this.serializers[item.typeId];
-                            items[idx] = deserialize(item.serialized, target, variable);
-                            listLookup.changed(variable);
-                        }
-                    }
-                }
-                if (items?.customType) {
-                    const customData = variable.value;
-                    const {deserialize} = this.serializers[customData.typeId];
-                    variable.value = deserialize(customData.serialized, target, variable);
-                }
-            }
-        }
         this.emit(Runtime.PROJECT_LOADED);
     }
 

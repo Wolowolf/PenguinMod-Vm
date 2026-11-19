@@ -505,44 +505,8 @@ const serializeSound = function (sound) {
     return obj;
 };
 
-// Serialize custom return types
-const makeSafeForJSON = (runtime, value) => {
-    // null and undefined should not be serialized, as they are illegal values
-    if (value === null || typeof value === 'undefined')
-        return ''
-    if (Array.isArray(value)) {
-        let copy = null;
-        for (let i = 0; i < value.length; i++) {
-            if (value[i]?.customId) {
-                if (!copy) {
-                    // Only copy the list when needed
-                    copy = value.slice();
-                }
-                const {serialize} = runtime.serializers[copy[i].customId];
-                copy[i] = {
-                    customType: true,
-                    typeId: copy[i].customId,
-                    serialized: serialize(copy[i])
-                };
-                continue;
-            }
-        }
-        if (copy) {
-            return copy;
-        }
-        return value;
-    }
-    if (value.customId) {
-        const {serialize} = runtime.serializers[value.customId];
-        return {
-            customType: true,
-            typeId: value.customId,
-            serialized: serialize(value)
-        };
-    }
-
-    return value;
-};
+// null and undefined are not valid in a saved project
+const makeSafeForJSON = value => ((value === null || typeof value === 'undefined') ? '' : value);
 
 /**
  * Serialize the given variables object.
@@ -565,10 +529,10 @@ const serializeVariables = function (obj, runtime, variables) {
                 obj.broadcasts[varId] = v.value; // name and value is the same for broadcast msgs
                 break;
             case Variable.LIST_TYPE:
-                obj.lists[varId] = [v.name, makeSafeForJSON(runtime, listLookup.items(v))];
+                obj.lists[varId] = [v.name, makeSafeForJSON(listLookup.items(v))];
                 break;
             case Variable.SCALAR_TYPE:
-                obj.variables[varId] = [v.name, makeSafeForJSON(runtime, v.value)];
+                obj.variables[varId] = [v.name, makeSafeForJSON(v.value)];
                 if (v.isCloud) obj.variables[varId].push(true);
                 break;
             default:

@@ -16,12 +16,7 @@ const BlockShape = {
     /**
      * Output shape: squared.
      */
-    SQUARE: 3,
-
-    /**
-     * pm: Output shape: octagonal (Crypto, Rigidbodies).
-     */
-    OCTAGONAL: 6
+    SQUARE: 3
 };
 
 module.exports = BlockShape;

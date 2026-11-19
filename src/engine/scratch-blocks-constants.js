@@ -21,13 +21,7 @@ const ScratchBlocksConstants = {
      * ENUM for output shape: squared (stack blocks, hats, polygon and custom inputs).
      * @const
      */
-    OUTPUT_SHAPE_SQUARE: 3,
-
-    /**
-     * ENUM for output shape: octagonal (Crypto, Rigidbodies).
-     * @const
-     */
-    OUTPUT_SHAPE_OCTAGONAL: 6
+    OUTPUT_SHAPE_SQUARE: 3
 };
 
 module.exports = ScratchBlocksConstants;

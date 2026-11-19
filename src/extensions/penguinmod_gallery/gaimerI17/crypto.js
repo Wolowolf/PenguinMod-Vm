@@ -472,7 +472,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'generateSignKey',
                         text: 'generate HMAC key',
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         disableMonitor: true
                     },
                     {
@@ -481,7 +480,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                     {
@@ -491,7 +490,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
 
@@ -501,7 +500,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'generateAESKey',
                         text: 'generate AES-GCM key (256-bit)',
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         disableMonitor: true
                     },
                     {
@@ -510,7 +508,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             PLAINTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                     {
@@ -519,7 +517,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             CIPHERTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'encrypted' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
 
@@ -529,7 +527,6 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'generateRSAKey',
                         text: 'generate RSA-PSS keypair',
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         disableMonitor: true
                     },
                     {
@@ -538,7 +535,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                     {
@@ -548,25 +545,23 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                     {
                         opcode: 'rsaPublicKey',
                         text: 'public key from [KEY]', // Desktop fork (section 259): was 'RSA public key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         arguments: {
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                     {
                         opcode: 'rsaPrivateKey',
                         text: 'private key from [KEY]', // Desktop fork (section 259): was 'RSA private key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         arguments: {
-                            KEY: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            KEY: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
 
@@ -579,17 +574,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         opcode: 'generateECDHKey',
                         text: 'generate ECDH keypair',
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         disableMonitor: true
                     },
                     {
                         opcode: 'ecdhSharedKey',
                         text: 'shared AES key from my private key [PRIVATE] and their public key [PUBLIC]',
                         blockType: Scratch.BlockType.REPORTER,
-                        blockShape: Scratch.BlockShape.OCTAGONAL,
                         arguments: {
-                            PRIVATE: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL },
-                            PUBLIC: { type: Scratch.ArgumentType.EMPTY, shape: Scratch.BlockShape.OCTAGONAL }
+                            PRIVATE: { type: Scratch.ArgumentType.EMPTY },
+                            PUBLIC: { type: Scratch.ArgumentType.EMPTY }
                         }
                     },
                 ],

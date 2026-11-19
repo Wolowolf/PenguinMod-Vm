@@ -8,8 +8,6 @@ const __xy = [0, 0];
 const Target = require('../engine/target');
 const StageLayering = require('../engine/stage-layering');
 const pmFindFromEnds = require('../util/pm-find-from-ends');
-const getCostumeUrl = require('../util/get-costume-url');
-const xmlEscape = require('../util/xml-escape');
 
 /**
  * Rendered target: instance of a sprite (clone), or the stage.
@@ -22,8 +20,6 @@ class RenderedTarget extends Target {
      */
     constructor (sprite, runtime) {
         super(runtime, sprite.blocks);
-
-        this.customId = 'pm-rendered-target';
 
         /**
          * Reference to the sprite that this is a render of.
@@ -1342,196 +1338,7 @@ class RenderedTarget extends Target {
         }
     }
 
-    // custom type implement so that targets can just be the returned without any prior setup
-    getCostumeType(idx) {
-        const owner = this;
-        const ent = this.getCostumes()[idx];
-        if (!ent) return;
-        ent.customId = 'pm-costume-asset';
-        // ensures that when this type is later reused it correctly expresses any changes
-        Object.defineProperty(ent, '_monitorUpToDate', {
-            get() {
-                if (this._oldName !== this.name) return false;
-                if (this._oldSizeX !== this.size[0]) return false;
-                if (this._oldSizeY !== this.size[1]) return false;
-                if (this._oldAssetId !== this.assetId) return false;
-                if (this._oldIndex !== owner.getCostumeIndexByName(this.name)) return false;
-                return true;
-            }
-        });
-        ent.toReporterContent = function() {
-            this._oldName = this.name;
-            this._oldSizeX = this.size[0];
-            this._oldSizeY = this.size[1];
-            this._oldAssetId = this.assetId;
-            this._oldIndex = owner.getCostumeIndexByName(this.name);
-            const wrap = document.createElement('div');
-            wrap.innerHTML = `<div style="
-                box-sizing: border-box;
-                width: 5rem;
-                height: 5rem;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                font-size: 0.625rem;
-                overflow: hidden;
-                border: 2px solid hsla(0, 0%, 0%, 0.15);
-                border-radius: 0.5rem;
-                color: hsla(225, 15%, 40%, 1);
-                user-select: none;
-            ">
-                <div style="
-                    width: 100%; 
-                    height: 100%; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center;
-                ">
-                    <div style="
-                        position: absolute; 
-                        font-weight: bold; 
-                        left: 0.45rem; 
-                        top: 0.55rem; 
-                        width: 1em; 
-                        height: 1em;
-                        white-space: nowrap;
-                    ">
-                        ${xmlEscape(((owner.getCostumeIndexByName(this.name) +1) || 'X').toString())}
-                    </div>
-                    <img 
-                        style="max-width: 32px; max-height: 32px;" 
-                        src="${xmlEscape(getCostumeUrl(this.asset))}"
-                    ></img>
-                </div>
-                <div style="padding: 0.25rem; text-overflow: ellipsis; white-space: nowrap;">
-                    ${xmlEscape(this.name)}
-                    <div style="font-size: 0.5rem; margin-top: 0.125rem">
-                        ${xmlEscape(Math.round(this.size[0]).toString())} x ${xmlEscape(Math.round(this.size[1]).toString())}
-                    </div>
-                </div>
-            </div>`;
-            return wrap;
-        };
-        return ent;
-    }
-    getSoundType(idx) {
-        const owner = this;
-        const ent = this.getSounds()[idx];
-        if (!ent) return;
-        ent.customId = 'pm-sound-asset';
-        Object.defineProperty(ent, '_monitorUpToDate', {
-            get() {
-                if (this._oldName !== this.name) return false;
-                if (this._oldAssetId !== this.assetId) return false;
-                if (this._oldSampleRate !== this.rate) return false;
-                if (this._oldSampleCount !== this.sampleCount) return false;
-                if (this._oldIndex !== owner.getSoundIndexByName(this.name)) return false;
-                return true;
-            }
-        });
-        ent.toReporterContent = function() {
-            this._oldName = this.name;
-            this._oldAssetId = this.assetId;
-            this._oldSampleRate = this.rate;
-            this._oldSampleCount = this.sampleCount;
-            this._oldIndex = owner.getSoundIndexByName(this.name);
-            const wrap = document.createElement('div');
-            wrap.innerHTML = `<div style="
-                box-sizing: border-box;
-                width: 5rem;
-                height: 5rem;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                font-size: 0.625rem;
-                overflow: hidden;
-                border: 2px solid hsla(0, 0%, 0%, 0.15);
-                border-radius: 0.5rem;
-                color: hsla(225, 15%, 40%, 1);
-                user-select: none;
-            ">
-                <div style="
-                    width: 100%; 
-                    height: 100%; 
-                    display: flex; 
-                    align-items: center; 
-                    justify-content: center;
-                ">
-                    <div style="
-                        position: absolute; 
-                        font-weight: bold; 
-                        left: 0.45rem; 
-                        top: 0.55rem; 
-                        width: 1em; 
-                        height: 1em;
-                        white-space: nowrap;
-                    ">
-                        ${xmlEscape(((owner.getSoundIndexByName(this.name) +1) || 'X').toString())}
-                    </div>
-                    <img 
-                        style="max-width: 32px; max-height: 32px;" 
-                        src="static/assets/63e5827c1506216bd7c9927a4e5eb558.svg"
-                    ></img>
-                </div>
-                <div style="padding: 0.25rem; text-overflow: ellipsis; white-space: nowrap;">
-                    ${xmlEscape(this.name)}
-                    <div style="font-size: 0.5rem; margin-top: 0.125rem">
-                        ${xmlEscape((this.sampleCount / this.rate).toFixed(2))}
-                    </div>
-                </div>
-            </div>`;
-            return wrap;
-        };
-        return ent;
-    }
-
-    get _monitorUpToDate() {
-        if (this._oldName !== this.getName()) return false;
-        if (this._oldCostumeIdx !== this.currentCostume) return false;
-        if (this._oldCostumeAssetId !== this.getCurrentCostume().assetId) return false;
-        return true;
-    }
     toString() { return this.getName(); }
-    toReporterContent() {
-        this._oldName = this.getName();
-        this._oldCostumeIdx = this.currentCostume;
-        this._oldCostumeAssetId = this.getCurrentCostume().assetId;
-        const wrap = document.createElement('div');
-        wrap.innerHTML = `<div style="
-            box-sizing: border-box;
-            width: 4rem;
-            height: 4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            font-size: 0.625rem;
-            overflow: hidden;
-            cursor: pointer;
-            border: 2px solid hsla(0, 0%, 0%, 0.15);
-            border-radius: 0.5rem;
-            color: hsla(225, 15%, 40%, 1);
-            user-select: none;
-        ">
-            <div style="
-                width: 100%; 
-                height: 100%; 
-                display: flex; 
-                align-items: center; 
-                justify-content: center;
-            ">
-                <img 
-                    style="max-width: 32px; max-height: 32px;" 
-                    src="${xmlEscape(getCostumeUrl(this.getCurrentCostume().asset))}"
-                ></img>
-            </div>
-            <div style="padding: 0.25rem; text-overflow: ellipsis; white-space: nowrap;">
-                ${xmlEscape(this.getName())}
-            </div>
-        </div>`;
-        wrap.onclick = () => 
-            this.runtime.vm.setEditingTarget(this.id);
-        return wrap;
-    }
 }
 
 module.exports = RenderedTarget;
