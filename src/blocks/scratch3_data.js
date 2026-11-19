@@ -83,31 +83,8 @@ class Scratch3DataBlocks {
         const list = util.target.lookupOrCreateList(
             args.LIST.id, args.LIST.name);
 
-        // with modern extensions, we could be receiving an actual array
-        // if so, no need for string validation
-        const arrayArg = args.VALUE;
-        let array;
-        if (typeof arrayArg === 'object') {
-            if (Array.isArray(arrayArg)) {
-                list.value = arrayArg;
-                return;
-            } else {
-                if (arrayArg.constructor?.name !== "Object") {
-                    // potential custom return API
-                    if (typeof arrayArg.toJSON === 'function') {
-                        array = arrayArg.toJSON();
-                        if (Array.isArray(array)) {
-                            list.value = array;
-                            return;
-                        }
-                    }
-
-                    array = arrayArg.toString();
-                }
-            }
-        }
-
-        array = validateArray(arrayArg).array.map(v => {
+        // Desktop fork (section 320): no block gives arrays or objects any more; only JSON text is read.
+        const array = validateArray(args.VALUE).array.map(v => {
             if (typeof v === 'object') return JSON.stringify(v);
             return String(v);
         });

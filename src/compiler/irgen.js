@@ -328,20 +328,6 @@ class ScriptTreeGenerator {
                 kind: 'constant',
                 value: block.fields.CHECKBOX.value == "TRUE"
             };
-        case 'polygon':
-            const points = [];
-            for (let point = 1; point <= block.mutation.points; point++) {
-                const xn = `x${point}`;
-                const yn = `y${point}`;
-                points.push({
-                    x: this.descendInputOfBlock(block, xn),
-                    y: this.descendInputOfBlock(block, yn)
-                });
-            };
-            return {
-                kind: 'math.polygon',
-                points
-            };
 
         case 'argument_reporter_string_number': {
             // Desktop fork (section 237): a name saved as a number is text, as the interpreter's lookup sees it

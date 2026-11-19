@@ -480,7 +480,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                     {
@@ -490,7 +490,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
 
@@ -508,7 +508,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             PLAINTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                     {
@@ -517,7 +517,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             CIPHERTEXT: { type: Scratch.ArgumentType.STRING, defaultValue: 'encrypted' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
 
@@ -535,7 +535,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                     {
@@ -545,7 +545,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         arguments: {
                             SIGNATURE: { type: Scratch.ArgumentType.STRING, defaultValue: 'signature' },
                             VALUE: { type: Scratch.ArgumentType.STRING, defaultValue: 'apple' },
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                     {
@@ -553,7 +553,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         text: 'public key from [KEY]', // Desktop fork (section 259): was 'RSA public key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                     {
@@ -561,7 +561,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         text: 'private key from [KEY]', // Desktop fork (section 259): was 'RSA private key from [KEY]'
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
-                            KEY: { type: Scratch.ArgumentType.EMPTY }
+                            KEY: { type: Scratch.ArgumentType.STRING }
                         }
                     },
 
@@ -581,8 +581,8 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
                         text: 'shared AES key from my private key [PRIVATE] and their public key [PUBLIC]',
                         blockType: Scratch.BlockType.REPORTER,
                         arguments: {
-                            PRIVATE: { type: Scratch.ArgumentType.EMPTY },
-                            PUBLIC: { type: Scratch.ArgumentType.EMPTY }
+                            PRIVATE: { type: Scratch.ArgumentType.STRING },
+                            PUBLIC: { type: Scratch.ArgumentType.STRING }
                         }
                     },
                 ],

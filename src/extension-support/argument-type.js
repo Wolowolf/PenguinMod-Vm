@@ -29,11 +29,6 @@ const ArgumentType = {
     STRING: 'string',
 
     /**
-     * String value with matrix field
-     */
-    MATRIX: 'matrix',
-
-    /**
      * MIDI note number with note picker (piano) field
      */
     NOTE: 'note',
@@ -42,11 +37,6 @@ const ArgumentType = {
      * Inline image on block (as part of the label)
      */
     IMAGE: 'image',
-
-    /**
-     * pm: creates an input with n x,y inputs
-     */
-    POLYGON: 'polygon',
 
     /**
      * pm: creates an user-defined DOM input

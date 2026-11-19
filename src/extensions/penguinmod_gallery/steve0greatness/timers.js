@@ -90,12 +90,6 @@ class Timer {
     return this.elapsed.toString();
   }
 
-  toReporterContent() {
-    const element = document.createElement("span");
-    element.innerText = this.toString();
-    return element;
-  }
-
   toXML(isLocal) {
     return `<variable type="${this.type}" id="${this.id}" islocal="${isLocal}" iscloud="false">${xml_escape(this.name)}</variable>`;
   }

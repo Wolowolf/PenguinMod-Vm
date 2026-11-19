@@ -18,7 +18,7 @@ const ScratchBlocksConstants = {
     OUTPUT_SHAPE_ROUND: 2,
 
     /**
-     * ENUM for output shape: squared (stack blocks, hats, polygon and custom inputs).
+     * ENUM for output shape: squared (stack blocks, hats and custom inputs).
      * @const
      */
     OUTPUT_SHAPE_SQUARE: 3

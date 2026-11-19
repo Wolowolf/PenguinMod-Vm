@@ -723,10 +723,8 @@ class ExtensionManager {
                 'color': "string",
                 'number': "number",
                 'string': "string",
-                'matrix': "string",
                 'note': "number",
                 'image': "string",
-                'polygon': "object",
                 // normalization exceptions
                 'list': "exception",
                 'broadcast': "exception"

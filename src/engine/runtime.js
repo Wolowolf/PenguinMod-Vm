@@ -121,12 +121,6 @@ const ArgumentTypeMap = (() => {
             fieldName: 'CHECKBOX'
         }
     };
-    map[ArgumentType.MATRIX] = {
-        shadow: {
-            type: 'matrix',
-            fieldName: 'MATRIX'
-        }
-    };
     map[ArgumentType.NOTE] = {
         shadow: {
             type: 'note',
@@ -137,12 +131,6 @@ const ArgumentTypeMap = (() => {
         // Inline images are weird because they're not actually "arguments".
         // They are more analagous to the label on a block.
         fieldType: 'field_image'
-    };
-    map[ArgumentType.POLYGON] = {
-        check: 'math_polygon',
-        shadow: {
-            type: 'polygon'
-        }
     };
     map[ArgumentType.CUSTOM] = {
         fieldType: 'field_customInput'
@@ -2343,15 +2331,6 @@ class Runtime extends EventEmitter {
             // TODO: This doesnt seem to work properly with fillIn. Default to shadow for now.
             if (blockType) {
                 context.inputList.push(`<block type="${xmlEscape.escapeAttribute(blockType)}">`);
-            }
-
-            if (shadowType === 'polygon') {
-                // eslint-disable-next-line max-len
-                context.inputList.push(`<mutation expanded="false" points="${argInfo.nodes}" color="${context.blockJSON.colour}" midle="[0,0]" scale="${argInfo.defaultSize || 30}"/>`);
-            }
-
-            if (shadowType === 'matrix') {
-                context.inputList.push(`<mutation width="${argInfo.matrixWidth || 5}" height="${argInfo.matrixHeight || 5}"/>`)
             }
 
             // A <field> displays a dynamic value: a user-editable text field, a drop-down menu, etc.

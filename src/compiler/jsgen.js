@@ -1267,17 +1267,6 @@ class JSGenerator {
             return new TypedInput(shared('control_error', {}), TYPE_STRING);
         case 'control.isclone':
             return new TypedInput('(!target.isOriginal)', TYPE_BOOLEAN);
-        case 'math.polygon':
-            let points = JSON.stringify(node.points.map((point, num) => ({x: `x${num}`, y: `y${num}`})));
-            for (let num = 0; num < node.points.length; num++) {
-                const point = node.points[num];
-                const xn = `"x${num}"`;
-                const yn = `"y${num}"`;
-                points = points
-                    .replace(xn, this.descendInput(point.x).asNumber())
-                    .replace(yn, this.descendInput(point.y).asNumber());
-            }
-            return new TypedInput(points, TYPE_UNKNOWN);
 
         case 'keyboard.pressed':
             return new TypedInput(shared('sensing_keypressed', {KEY_OPTION: this.descendInput(node.key).asSafe()}), TYPE_BOOLEAN);
