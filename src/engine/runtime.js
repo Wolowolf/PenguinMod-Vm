@@ -2061,6 +2061,8 @@ class Runtime extends EventEmitter {
             if (Array.isArray(modular.values) && modular.values.length > 0) settings.values = modular.values;
             settings.field = {math_number: 'NUM', text: 'TEXT', colour_picker: 'COLOUR'}[modular.shadow];
             if (modular.branches) settings.branches = true;
+            // Desktop fork (section 324): the slot inputs' shape (BlockShape), like an argument's shape
+            if (modular.shape) settings.shape = modular.shape;
             if (modular.locked === undefined) {
                 const menu = symbols ? ` menuvalues="${xmlEscape.escapeAttribute(String(symbols[0][1]))}"` : '';
                 const count = settings.pair ? Math.max(2, settings.min) : 2;

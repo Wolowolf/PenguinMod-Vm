@@ -90,9 +90,11 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
     return regex;
   };
   // Desktop fork (section 282): the modular blocks' symbols (text, code); each code is also one single block.
+  // Desktop fork (section 324): the inputs are only read as (big) numbers, other text counts as 0: round, on singles and modular blocks
   const MATH_MODULAR = {
     prefix: "NUM",
     shadow: "text",
+    shape: Scratch.BlockShape.ROUND,
     symbols: [["+", "+"], ["-", "-"], ["*", "*"], ["/", "/"], ["mod", "%"], ["^", "^"]],
   };
   const MATH_SINGLES = { "+": "add", "-": "sub", "*": "mul", "/": "div", "%": "mod", "^": "pow" };
@@ -100,13 +102,15 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
   const COMPARE_MODULAR = {
     prefix: "NUM",
     shadow: "text",
+    shape: Scratch.BlockShape.ROUND,
     symbols: [[">", "m"], ["≥", "M"], ["<", "l"], ["≤", "L"], ["=", "e"], ["≠", "n"]],
   };
   const COMPARE_SINGLES = { m: "gt", M: "ge", l: "lt", L: "le", e: "eq", n: "neq" };
-  const MAXMIN_MODULAR = { prefix: "NUM", shadow: "text", symbols: [["max", "M"], ["min", "m"]] };
+  const MAXMIN_MODULAR = { prefix: "NUM", shadow: "text", shape: Scratch.BlockShape.ROUND, symbols: [["max", "M"], ["min", "m"]] };
   const BITWISE_MODULAR = {
     prefix: "NUM",
     shadow: "text",
+    shape: Scratch.BlockShape.ROUND,
     symbols: [["and", "a"], ["or", "o"], ["xor", "x"], ["<<", "l"], [">>", "r"]],
   };
   const BITWISE_LEVELS = { o: 1, x: 2, a: 3, l: 4, r: 4 };
