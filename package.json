@@ -37,7 +37,6 @@
     "cannon-es": "0.20.0",
     "canvas-toBlob": "1.0.0",
     "decode-html": "2.0.0",
-    "diff-match-patch": "1.0.4",
     "dompurify": "^3.0.9",
     "format-message": "6.2.1",
     "htmlparser2": "^3.10.0",
