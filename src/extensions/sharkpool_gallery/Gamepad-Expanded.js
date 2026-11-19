@@ -111,6 +111,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               pad: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -128,6 +130,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               i: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: '1',
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: 'padMenu'
               }
             }
@@ -143,11 +147,15 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               b: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "buttonMenu",
               },
               i: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -166,6 +174,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               i: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -184,6 +194,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               i: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -205,6 +217,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               pad: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -223,6 +237,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               pad: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
@@ -291,6 +307,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               i: {
                 type: Scratch.ArgumentType.NUMBER,
                 defaultValue: "1",
+                // Desktop fork (section 322): not turned into a number, so the "any" item reaches the extension
+                exemptFromNormalization: true,
                 menu: "padMenu",
               },
             },
