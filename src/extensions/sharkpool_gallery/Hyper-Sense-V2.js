@@ -176,6 +176,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getKeyBlockers",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("blocked keys")
           },
@@ -203,6 +204,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "spritesTouching",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("sprites touching [SPRITE]"),
             arguments: {
@@ -211,6 +213,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getNeighbors",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("neighbors of [SPRITE] in range [DIAMETER]"),
             arguments: {
@@ -221,6 +224,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "objTouchingColor",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, #rrggbb or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("color touching [SPRITE]"),
             arguments: {

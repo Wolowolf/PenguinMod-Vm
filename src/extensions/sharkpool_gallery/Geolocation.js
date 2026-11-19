@@ -60,6 +60,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getCountryName",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a country name, error text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "get country name from code [CODE]",
             arguments: {

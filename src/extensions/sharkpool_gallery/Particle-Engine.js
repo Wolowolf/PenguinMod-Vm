@@ -843,6 +843,7 @@ void main() {
           },
           {
             opcode: "defaultTexture",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             disableMonitor: true,
             text: Scratch.translate("[TYPE] texture"),
@@ -925,6 +926,7 @@ void main() {
           },
           {
             opcode: "exportEmit",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("export emitter [NAME] in [TARGET]"),
             arguments: {

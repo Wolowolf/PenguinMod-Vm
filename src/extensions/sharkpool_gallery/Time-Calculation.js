@@ -75,6 +75,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "evaluateTime",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a date-time text or error text
             blockType: Scratch.BlockType.REPORTER,
             text: "[MATH] [START_TIME] and [END_TIME]",
             arguments: {
@@ -85,6 +86,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "converttotime",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always hh:mm:ss
             blockType: Scratch.BlockType.REPORTER,
             text: "convert [VALUE] seconds to [ROUND] time",
             arguments: {

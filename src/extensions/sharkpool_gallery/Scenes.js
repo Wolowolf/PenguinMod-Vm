@@ -266,6 +266,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "allScenes",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: "all scenes"
           },

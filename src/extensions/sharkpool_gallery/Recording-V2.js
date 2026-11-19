@@ -100,6 +100,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "recordedAudio",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             disableMonitor: true,
             text: Scratch.translate("recorded audio data.URI"),

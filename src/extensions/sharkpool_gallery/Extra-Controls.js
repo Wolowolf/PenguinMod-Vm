@@ -112,7 +112,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.LOOP,
             text: "repeat [NUM] or until [CON]",
             arguments: {
-              NUM: { type: Scratch.ArgumentType.STRING, defaultValue: 10 },
+              // Desktop fork (section 321): type shapes, only turned into a number
+              NUM: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: 10 },
               CON: { type: Scratch.ArgumentType.BOOLEAN }
             }
           },
@@ -122,7 +123,8 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             blockType: Scratch.BlockType.LOOP,
             text: "repeat for [NUM] secs or until [CON]",
             arguments: {
-              NUM: { type: Scratch.ArgumentType.STRING, defaultValue: 1 },
+              // Desktop fork (section 321): type shapes, only turned into a number
+              NUM: { type: Scratch.ArgumentType.STRING, shape: Scratch.BlockShape.ROUND, defaultValue: 1 },
               CON: { type: Scratch.ArgumentType.BOOLEAN }
             }
           },

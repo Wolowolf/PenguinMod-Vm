@@ -147,6 +147,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "exportGif",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "export GIF named [NAME]",
             arguments: {
@@ -164,6 +165,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getAllFrames",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: "get all frames from GIF url [GIF]",
             arguments: {
@@ -172,6 +174,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getFrame",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or error text
             blockType: Scratch.BlockType.REPORTER,
             text: "get frame #[NUM] from GIF url [GIF]",
             arguments: {

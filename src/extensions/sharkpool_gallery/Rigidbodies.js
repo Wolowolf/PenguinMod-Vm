@@ -615,6 +615,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "boundsOfBox",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             hideFromPalette: hideBlocks,
             text: Scratch.translate("bounding box of [OCT_SHAPE]"),

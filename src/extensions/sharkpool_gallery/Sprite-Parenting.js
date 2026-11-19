@@ -111,6 +111,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "contentsLink",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a JSON list or error text
             blockType: Scratch.BlockType.REPORTER,
             text: "children of family named [NAME]",
             arguments: {

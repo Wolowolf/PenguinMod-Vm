@@ -50,6 +50,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: "QR Creation" },
           {
             opcode: "createQR",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or error text
             blockType: Scratch.BlockType.REPORTER,
             text: "create QR with data [DATA] scaled to [SIZE] px",
             arguments: {

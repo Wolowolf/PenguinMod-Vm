@@ -49,6 +49,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: "Management" },
           {
             opcode: "penLayer",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "get pen layer",
             disableMonitor: true
@@ -103,6 +104,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "genShape",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or a data URL
             blockType: Scratch.BlockType.REPORTER,
             text: "make [TYPE] shape with points [POINTS] filled [COLOR] width [WIDTH] height [HEIGHT] x [X] y [Y] curve [LINE]",
             arguments: {
@@ -171,6 +173,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { opcode: "typeStringModular", blockType: Scratch.BlockType.REPORTER, modular: TYPE_MODULAR },
           {
             opcode: "shuffleArray",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a JSON list or error text
             blockType: Scratch.BlockType.REPORTER,
             text: "organize array [WORDS] by [SHUFFLE_OPTION]",
             arguments: {

@@ -249,6 +249,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Basic Filters") },
           {
             opcode: "targetAsSVG",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("[TARGET] as svg"),
             arguments: {
@@ -265,6 +266,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "expandViewBox",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("expand viewbox of [SRC] by x [x] y [y]"),
             arguments: {
@@ -276,6 +278,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "applyBlend",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [BLEND] blending to [SRC]"),
             arguments: {
@@ -285,6 +288,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyTint",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add tint [COLOR] to [SRC]"),
             arguments: {
@@ -294,6 +298,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applySimpleEffect",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [EFFECT] to [SRC] at [NUM] %"),
             arguments: {
@@ -304,6 +309,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applySpecialBlur",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [TYPE] to [SRC] at x [x] y [y]"),
             arguments: {
@@ -315,6 +321,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyPixelate",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add pixelation to [SRC] with [NUM] bits at [SIZE] %"),
             arguments: {
@@ -325,6 +332,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyOutline",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [COLOR] [TYPE] to [SRC] at [NUM] %"),
             arguments: {
@@ -336,6 +344,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyShadow",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [COLOR] shadow to [SRC] at x [x] y [y] at [NUM] %"),
             arguments: {
@@ -349,6 +358,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Advanced Filters") },
           {
             opcode: "applyColorSplit",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [TYPE] to [SRC] at x [x] y [y] using [COL1] [COL2] [COL3]"),
             arguments: {
@@ -363,6 +373,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyWave",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add wave to [SRC] on [AXIS] at x [x] y [y] seed [SEED]"),
             arguments: {
@@ -375,6 +386,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyGlitch",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add glitch to [SRC] on [AXIS] with [LINE] lines offset x [x] y [y] thickness [NUM]"),
             arguments: {
@@ -388,6 +400,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyVHS",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add vhs to [SRC] on [AXIS] offset x [x] y [y] at [NUM]%"),
             arguments: {
@@ -400,6 +413,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyTile",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add mosaic to [SRC] at x [x] y [y] size [NUM] %"),
             arguments: {
@@ -411,6 +425,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyDither",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add dither to [SRC] width [W] height [H]"),
             arguments: {
@@ -422,6 +437,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "distortionPreset",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("[TYPE] preset"),
             arguments: {
@@ -430,6 +446,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyDistortion",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [MAP] distortion to [SRC] at x [x] y [y] size [SIZE] intensity [NUM]"),
             arguments: {
@@ -444,6 +461,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Lighting") },
           {
             opcode: "applyBasicLight",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add [COLOR] light to [SRC] at x [x] y [y] z [z] intensity [NUM]"),
             arguments: {
@@ -457,6 +475,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "applyMapLight",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("add light to [SRC] using map [MAP] with [BLEND] mode"),
             arguments: {
@@ -468,6 +487,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: Scratch.translate("Transformations") },
           {
             opcode: "applyPattern",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("replace [COLOR] with pattern [PAT] scale [SIZE] in [SRC]"),
             arguments: {
@@ -480,6 +500,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "applyMask",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("[TYPE] mask [MASK] from [SRC] at x [x] y [y] width [W] height [H]"),
             arguments: {
@@ -495,6 +516,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "setXY",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("set [SRC] x [x] y [y]"),
             arguments: {
@@ -505,6 +527,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "setDIR",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("point [SRC] in direction [DIR]"),
             arguments: {
@@ -514,6 +537,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "setSCALE",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("stretch [SRC] to x [x] y [y]"),
             arguments: {
@@ -524,6 +548,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "setSKEW",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, SVG text or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("skew [SRC] to x [x] y [y]"),
             arguments: {

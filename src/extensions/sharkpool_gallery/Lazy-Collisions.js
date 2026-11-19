@@ -86,6 +86,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           { blockType: Scratch.BlockType.LABEL, text: "Clone Target Finder" },
           {
             opcode: "findID",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a clone ID or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "ID of clone [INDEX] of [TARGET] with [VAR] set to [VAL]",
             arguments: {

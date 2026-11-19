@@ -82,6 +82,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "allPapers",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: "all papers"
           },
@@ -102,6 +103,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           "---",
           {
             opcode: "paperDrawing",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "data.uri of paper [NAME]",
             arguments: {

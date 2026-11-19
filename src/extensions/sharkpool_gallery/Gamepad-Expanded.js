@@ -159,6 +159,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               b: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 321): type shapes, number menu: converted by the engine
                 defaultValue: "1",
                 menu: "buttonMenu",
               },
@@ -176,6 +177,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               b: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 321): type shapes, number menu: converted by the engine
                 defaultValue: "1",
                 menu: "axisMenu",
               },
@@ -196,6 +198,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               axis: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 321): type shapes, number menu: converted by the engine
                 defaultValue: "1",
                 menu: "axesGroupMenu",
               },
@@ -213,6 +216,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             arguments: {
               axis: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 321): type shapes, number menu: converted by the engine
                 defaultValue: "1",
                 menu: "axesGroupMenu",
               },

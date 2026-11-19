@@ -342,6 +342,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     "---",
                     {
                         opcode: "currentKeysPressed",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "current keys pressed",
                     },
@@ -473,6 +474,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     "---",
                     {
                         opcode: "keybindListTriggers",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "list triggers of [event]",
                         disableMonitor: true,
@@ -482,6 +484,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     },
                     {
                         opcode: "keybindKeysInTrigger",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "keys bound to [trigger] in [event]",
                         disableMonitor: true,
@@ -493,11 +496,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     "---",
                     {
                         opcode: "listAllKeybinds",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "list all keybindings"
                     },
                     {
                         opcode: "listActiveKeybinds",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "list active keybindings"
                     },
@@ -528,6 +533,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     "---",
                     {
                         opcode: "valueOfTag",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "value of tag: #[tag]",
                         arguments: {
@@ -536,6 +542,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     },
                     {
                         opcode: "listTags",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "list all tags"
                     },
@@ -551,12 +558,14 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
                     },
                     {
                         opcode: "importError",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, None or an error text
                         blockType: Scratch.BlockType.REPORTER,
                         text: "import error"
                     },
                     "---",
                     {
                         opcode: "export",
+                        blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always JSON
                         blockType: Scratch.BlockType.REPORTER,
                         text: "export [type]",
                         disableMonitor: true,

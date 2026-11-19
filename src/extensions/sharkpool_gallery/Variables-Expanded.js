@@ -135,6 +135,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           // Desktop fork (extension merges): from TurboWarp's "Variable and list"
           {
             opcode: "seriVarsToJson",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: "all variables starting with [START] as JSON",
             arguments: {
@@ -274,6 +275,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "seriListsToJson",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: "all lists starting with [START] as JSON",
             arguments: {
@@ -376,6 +378,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getVariableType",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a monitor type name
             blockType: Scratch.BlockType.REPORTER,
             text: "monitor type of [VARIABLE]",
             arguments: {

@@ -61,6 +61,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "changeHexAtt",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb(aa)
             blockType: Scratch.BlockType.REPORTER,
             text: "set [ATT] of [COLOR] to [NUM]",
             arguments: {
@@ -71,6 +72,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "mergeHex",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb
             blockType: Scratch.BlockType.REPORTER,
             text: "mix [COLOR] with [COLOR2] by [NUM]%",
             arguments: {
@@ -82,6 +84,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           {
             // Desktop fork (section 285): any number of colours (−/+), each with the same share
             opcode: "mixModular",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb
             blockType: Scratch.BlockType.REPORTER,
             modular: {
               prefix: "COLOR", shadow: "colour_picker", label: "mix", sep: "and",
@@ -90,6 +93,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "invertHex",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb
             blockType: Scratch.BlockType.REPORTER,
             text: "invert [COLOR]",
             arguments: {
@@ -126,6 +130,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "RGB2hex",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb(aa)
             blockType: Scratch.BlockType.REPORTER,
             text: "rgb [COLOR] to hex",
             arguments: {
@@ -134,6 +139,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "HSV2hex",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb
             blockType: Scratch.BlockType.REPORTER,
             text: "hsv [COLOR] to hex",
             arguments: {
@@ -142,6 +148,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "DEC2hex",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, always #rrggbb
             blockType: Scratch.BlockType.REPORTER,
             text: "decimal [COLOR] to hex",
             arguments: {

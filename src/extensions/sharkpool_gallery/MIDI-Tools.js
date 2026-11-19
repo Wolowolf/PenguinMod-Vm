@@ -134,6 +134,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: 'getMidiAsBase64',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, base64 MIDI data or empty
             blockType: Scratch.BlockType.REPORTER,
             text: 'current MIDI as base64'
           },
@@ -323,6 +324,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: 'getNotesAtTime',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: 'notes at time [TIME]',
             arguments: {
@@ -334,11 +336,13 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: 'allNotes',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: 'all notes in MIDI'
           },
           {
             opcode: 'notesCurrentlyPlaying',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: 'notes currently playing'
           },
@@ -384,6 +388,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: 'noteName',
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 321): type shapes, a note name with octave
             blockType: Scratch.BlockType.REPORTER,
             text: 'note name of [NOTE]',
             arguments: {
