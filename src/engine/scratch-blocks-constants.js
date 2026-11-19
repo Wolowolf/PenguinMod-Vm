@@ -18,58 +18,16 @@ const ScratchBlocksConstants = {
     OUTPUT_SHAPE_ROUND: 2,
 
     /**
-     * ENUM for output shape: squared (arrays).
+     * ENUM for output shape: squared (stack blocks, hats, polygon and custom inputs).
      * @const
      */
     OUTPUT_SHAPE_SQUARE: 3,
 
     /**
-     * ENUM for output shape: leaf (vectors).
+     * ENUM for output shape: octagonal (Crypto, Rigidbodies).
      * @const
      */
-    OUTPUT_SHAPE_LEAF: 4,
-
-    /**
-     * ENUM for output shape: plus (objects/classes or class instances).
-     * @const
-     */
-    OUTPUT_SHAPE_PLUS: 5,
-
-    /**
-     * ENUM for output shape: octagonal (Scratch targets).
-     * @const
-     */
-    OUTPUT_SHAPE_OCTAGONAL: 6,
-
-    /**
-     * ENUM for output shape: bumped (BigInt).
-     * @const
-     */
-    OUTPUT_SHAPE_BUMPED: 7,
-
-    /**
-     * ENUM for output shape: indented (Symbols).
-     * @const
-     */
-    OUTPUT_SHAPE_INDENTED: 8,
-
-    /**
-     * ENUM for output shape: scrapped (Maps).
-     * @const
-     */
-    OUTPUT_SHAPE_SCRAPPED: 9,
-
-    /**
-     * ENUM for output shape: arrow (Sets).
-     * @const
-     */
-    OUTPUT_SHAPE_ARROW: 10,
-
-    /**
-     * ENUM for output shape: ticket (Dates).
-     * @const
-     */
-    OUTPUT_SHAPE_TICKET: 11,
+    OUTPUT_SHAPE_OCTAGONAL: 6
 };
 
 module.exports = ScratchBlocksConstants;

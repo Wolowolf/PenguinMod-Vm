@@ -7,6 +7,8 @@ const Blocks = require('./blocks');
 const BlocksRuntimeCache = require('./blocks-runtime-cache');
 const BlockType = require('../extension-support/block-type');
 const BlockShape = require('../extension-support/block-shape');
+// Desktop fork: only the shapes scratch-blocks still draws; anything else keeps the block's default shape.
+const KNOWN_SHAPES = new Set(Object.values(BlockShape));
 const Profiler = require('./profiler');
 const Sequencer = require('./sequencer');
 const execute = require('./execute.js');
@@ -2044,13 +2046,7 @@ class Runtime extends EventEmitter {
         }
 
         const blockShape = blockInfo.blockShape;
-        if (typeof blockShape === 'number') blockJSON.outputShape = blockShape;
-        else if (typeof blockShape === 'string') {
-            // assume we are handling a custom shape...
-            // if it doesnt exist it will default to a round reporter
-            if (!blockShape.startsWith('custom-')) blockJSON.outputShape = 'custom-' + blockShape;
-            else blockJSON.outputShape = blockShape;
-        }
+        if (KNOWN_SHAPES.has(blockShape)) blockJSON.outputShape = blockShape;
         if (blockInfo.forceOutputType) {
             blockJSON.output = blockInfo.forceOutputType;
         }
@@ -2300,15 +2296,7 @@ class Runtime extends EventEmitter {
                 argJSON.check = argInfo.check || argTypeInfo.check;
             }
             const argShape = argTypeInfo.shape || argInfo.shape;
-            if (argShape) {
-                if (typeof argShape === 'number') argJSON.shape = argShape;
-                else {
-                    // assume we are handling a custom shape...
-                    // if it doesnt exist it will default to a null input
-                    if (!argShape.startsWith('custom-')) argJSON.shape = 'custom-' + argShape;
-                    else argJSON.shape = argShape;
-                }
-            }
+            if (KNOWN_SHAPES.has(argShape)) argJSON.shape = argShape;
 
             let valueName;
             let shadowType;
