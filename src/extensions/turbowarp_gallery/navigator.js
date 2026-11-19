@@ -114,6 +114,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
             // Desktop fork (section 270): moved here from Network ("network type"); answers on phones and Chromebooks,
             // empty where the system does not tell
             opcode: "connectionType",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a connection name or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("connection type"),
           },

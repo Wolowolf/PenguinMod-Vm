@@ -142,6 +142,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getBlend",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a blend mode name
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("blending"),
             filter: [Scratch.TargetType.SPRITE],

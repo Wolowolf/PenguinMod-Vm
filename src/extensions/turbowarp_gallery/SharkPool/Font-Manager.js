@@ -63,6 +63,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         blocks: [
           {
             opcode: "fontNames",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("all custom fonts"),
             disableMonitor: true,
@@ -164,6 +165,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "fontsChanged",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a JSON list or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("[ADDED] fonts"),
             arguments: {

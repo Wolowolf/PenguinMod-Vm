@@ -116,6 +116,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
           {
             opcode: "getAllSprites",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("all sprites"),
           },

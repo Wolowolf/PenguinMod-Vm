@@ -1313,6 +1313,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
           {
             opcode: "getNextPacket",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a packet as JSON (or "undefined")
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("pop next packet for [TYPE]"),
             arguments: {
@@ -1339,6 +1340,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
 
           {
             opcode: "getAndClearPacketQueue",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a JSON list of packets
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("pop all packets for [TYPE]"),
             arguments: {

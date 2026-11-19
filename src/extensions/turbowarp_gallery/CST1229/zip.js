@@ -182,6 +182,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "listArchives",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("currently open archives"),
             arguments: {},
@@ -407,6 +408,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getDir",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a JSON list or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("contents of directory [DIR]"),
             arguments: {
@@ -418,6 +420,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "currentDir",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a path starting with / or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("current directory path"),
           },
@@ -446,6 +449,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
 
           {
             opcode: "normalizePath",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a path starting with / or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("path [PATH] from [ORIGIN]"),
             arguments: {

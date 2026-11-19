@@ -254,6 +254,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           // Desktop fork (extension merges): from Prism
           {
             opcode: "deflate",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON byte list
             blockType: Scratch.BlockType.REPORTER,
             text: "compress byte list [bytes] with deflate",
             arguments: {
@@ -265,6 +266,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "inflate",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON byte list
             blockType: Scratch.BlockType.REPORTER,
             text: "decompress byte list [bytes] with deflate",
             arguments: {

@@ -338,6 +338,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               ID: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "fingerIDMenu",
               },
             },
@@ -362,6 +363,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               ID: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "fingerIDMenu",
               },
             },
@@ -385,6 +387,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               ID: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "fingerIDMenu",
               },
               PositionType: {
@@ -402,6 +405,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
             arguments: {
               ID: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "fingerIDMenu",
               },
             },

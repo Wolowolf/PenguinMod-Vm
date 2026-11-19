@@ -1808,6 +1808,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             disableMonitor: true,
             opcode: "getPenPlusCostumeURI",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate(
               "get data uri of [costume] in the pen+ costume library"
@@ -1843,6 +1844,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           {
             blockType: Scratch.BlockType.REPORTER,
             opcode: "getAllShaders",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             text: Scratch.translate("shaders in project"),
           },
           {
@@ -2530,6 +2532,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           "---",
           {
             opcode: "solidTriDef",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate(
               "define solid tri [x1] [y1] [c1], [x2] [y2] [c2] and [x3] [y3] [c3]"
@@ -2549,6 +2552,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "texTriDef",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate(
               "define textured tri [x1] [y1] [c1], [x2] [y2] [c2] and [x3] [y3] [c3] with the uv's [u1] [v1], [u2] [v2] and [u3] [v3]"
@@ -2655,6 +2659,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getRenderTextures",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("render textures"),
           },
@@ -2688,6 +2693,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getPenPVersion",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always the version text 7.1.9
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("Pen+ version"),
             disableMonitor: true,
@@ -2700,6 +2706,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getPenRenderLayer",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("data uri of pen layer"),
             disableMonitor: true,

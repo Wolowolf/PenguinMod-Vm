@@ -2556,6 +2556,7 @@ void main() {
         },
         ANISOTROPY: {
           type: ArgumentType.STRING,
+          shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, only its number is used
           menu: "powersOfTwo",
           defaultValue: 16,
         },
@@ -2925,6 +2926,7 @@ void main() {
         },
         SIZE: {
           type: ArgumentType.STRING,
+          shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, only its number is used
           defaultValue: 1,
         },
       },
@@ -2993,6 +2995,7 @@ void main() {
         },
         ALPHATEST: {
           type: ArgumentType.STRING,
+          shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, only its number is used
           defaultValue: 0.5,
         },
         MAKEOPAQUE: {
@@ -3685,6 +3688,7 @@ void main() {
     },
     {
       opcode: "textureFromUrl",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text ([texture data]) or empty
       blockType: BlockType.REPORTER,
       text: "texture from URL [TEXURL]",
       arguments: {
@@ -3732,6 +3736,7 @@ void main() {
     },
     {
       opcode: "textureFromCostume",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text ([texture data]) or empty
       blockType: BlockType.REPORTER,
       text: "texture from costume [NAME]",
       arguments: {
@@ -3772,6 +3777,7 @@ void main() {
     },
     {
       opcode: "textureFromText",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text ([texture data])
       blockType: BlockType.REPORTER,
       text: "texture from text [TEXT] font [FONT] color [COLOR]",
       arguments: {
@@ -3810,6 +3816,7 @@ void main() {
     },
     {
       opcode: "textureFromTextWithBorder",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text ([texture data])
       blockType: BlockType.REPORTER,
       text: "texture from text [TEXT] font [FONT] color [COLOR] border [BORDERSIZE] [BORDERCOLOR]",
       arguments: {
@@ -3862,6 +3869,7 @@ void main() {
     },
     {
       opcode: "textureFromList",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text or empty
       blockType: BlockType.REPORTER,
       text: "texture from list [NAME] at [POS] of size [WIDTH] [HEIGHT]",
       arguments: {
@@ -3934,6 +3942,7 @@ void main() {
     },
     {
       opcode: "textureFromSize",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text or empty
       blockType: BlockType.REPORTER,
       text: "texture of size [WIDTH] [HEIGHT]",
       arguments: {
@@ -3974,6 +3983,7 @@ void main() {
     },
     {
       opcode: "textureFromLMSVideo",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a status text or empty
       blockType: BlockType.REPORTER,
       text: "texture from video [NAME]",
       arguments: {
@@ -4071,6 +4081,7 @@ void main() {
     },
     {
       opcode: "getFont",
+      blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always <size>px <font>
       blockType: BlockType.REPORTER,
       text: "font [FONT] of size [SIZE]",
       arguments: {

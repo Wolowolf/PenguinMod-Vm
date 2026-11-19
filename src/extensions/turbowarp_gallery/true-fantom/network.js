@@ -143,6 +143,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
         blocks: [
           {
             opcode: "network_generation_block",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, 2g / 3g / 4g or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("network generation"),
           },
@@ -392,18 +393,22 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
               },
               WIDTH: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "default",
               },
               HEIGHT: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "default",
               },
               LEFT: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "default",
               },
               TOP: {
                 type: Scratch.ArgumentType.NUMBER,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, a number menu: the engine turns its value into a number
                 menu: "default",
               },
             },

@@ -99,6 +99,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
               },
               ID: {
                 type: Scratch.ArgumentType.STRING,
+                shape: Scratch.BlockShape.ROUND, // Desktop fork (section 319): type shapes, only its number is used
                 defaultValue: "",
               },
             },

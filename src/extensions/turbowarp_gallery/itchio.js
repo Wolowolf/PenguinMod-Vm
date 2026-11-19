@@ -139,6 +139,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "getGameDataJson",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, itch.io's game data as a JSON object or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("game data [user][game][secret] in .json"),
             arguments: {
@@ -158,6 +159,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           },
           {
             opcode: "returnGameDataJson",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, itch.io's game data as a JSON object
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("game data in .json"),
           },

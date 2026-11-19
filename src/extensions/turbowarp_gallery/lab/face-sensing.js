@@ -408,6 +408,7 @@ const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNv
           "---",
           {
             opcode: "videoFrame",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "video frame as data URL",
             disableMonitor: true,

@@ -217,6 +217,7 @@ module.exports = require('../../extension-support/desktop-gallery-extension')(fu
           // Desktop fork (extension merges): from Text Case
           {
             opcode: "caseOf",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a case name or empty
             blockType: Scratch.BlockType.REPORTER,
             text: "case of [STRING]",
             arguments: {

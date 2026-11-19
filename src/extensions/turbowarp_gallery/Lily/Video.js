@@ -232,6 +232,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getLoadedVideos",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, always a JSON list
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate("loaded videos"),
           },
@@ -323,6 +324,7 @@ module.exports = require('../../../extension-support/desktop-gallery-extension')
           },
           {
             opcode: "getFrame",
+            blockShape: Scratch.BlockShape.SQUARE, // Desktop fork (section 319): type shapes, a data URL or empty
             blockType: Scratch.BlockType.REPORTER,
             text: Scratch.translate(
               "screenshot of video [NAME] at current time"
