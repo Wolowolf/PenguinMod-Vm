@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Desktop fork (docs/EXTENSION-ROADMAP.md step 3): the PenguinMod gallery's Gen1x/lighting.js, moved into
-// the VM as a built-in extension. The code is the gallery file unchanged, except (section 303): one GL setup (buildGLState) for its worker and main thread, not rebuilt when the canvas is resized.
+// the VM as a built-in extension. The code is the gallery file unchanged, except (section 303): one GL setup (buildGLState) for its worker and main thread, not rebuilt when the canvas is resized; (section 311) its darkness layer stays off until the project runs one of its blocks.
 // It runs inside a function that gives it the gallery's Scratch object (extension-support/desktop-gallery-extension.js)
 // and hides the names a bundler would act on (require, module, exports, define, global, process, Buffer, setImmediate, __dirname, __filename): they are undefined, as in the gallery's <script>.
 // Desktop fork (section 159): its dialogs, localStorage and window / document event listeners go through
@@ -403,6 +403,22 @@ self.onmessage = ({ data: msg }) => {
                 this._markDirty();
             });
             this._loadRenderSettings();
+
+            // Desktop fork (section 311): the darkness layer (ambient colour over the whole stage) stays off until the
+            // project uses the extension: the first time any of its blocks or its settings button runs, it turns on for good.
+            this._inUse = false;
+            for (const block of this.getInfo().blocks) {
+                const op = block && (block.opcode || block.func);
+                const fn = op && this[op];
+                if (typeof fn !== 'function') continue;
+                this[op] = (...args) => {
+                    if (!this._inUse) {
+                        this._inUse = true;
+                        this._markDirty();
+                    }
+                    return fn.apply(this, args);
+                };
+            }
         }
 
         async openRenderSettings() {
@@ -1665,7 +1681,7 @@ self.onmessage = ({ data: msg }) => {
                         h,
                         pw,
                         ph,
-                        visible: this.visible,
+                        visible: this.visible && this._inUse, // Desktop fork (section 311)
                         lightBuf: this._uboData,
                         n,
                         ambient: ambientRGB,
@@ -1734,7 +1750,7 @@ self.onmessage = ({ data: msg }) => {
                 gl.clearColor(0, 0, 0, 0);
                 gl.clear(gl.COLOR_BUFFER_BIT);
 
-                if (this.visible) {
+                if (this.visible && this._inUse) { // Desktop fork (section 311)
                     gl.useProgram(prog);
                     gl.uniform2f(u.res, w, h);
                     gl.uniform3f(u.ambient, ambientRGB[0], ambientRGB[1], ambientRGB[2]);
