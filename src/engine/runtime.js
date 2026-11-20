@@ -1718,9 +1718,8 @@ class Runtime extends EventEmitter {
                             variable: menuInfo.defaultName
                         } : (menuInfo.isTypeable ?
                             {
-                                type: menuInfo.isNumeric
-                                    ? 'field_numberdropdown'
-                                    : 'field_textdropdown',
+                                type: 'field_input',
+                                numeric: !!menuInfo.isNumeric,
                                 name: menuName,
                                 options: menuItems
                             } : {
