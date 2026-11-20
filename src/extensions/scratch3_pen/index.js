@@ -919,7 +919,7 @@ class Scratch3PenBlocks {
                 },
                 FONT: {
                     items: '_getFonts',
-                    isTypeable: true
+                    acceptReporters: true
                 }
             }
         };

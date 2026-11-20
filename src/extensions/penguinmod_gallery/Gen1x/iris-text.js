@@ -5834,8 +5834,7 @@ Enjoy!! :D
                     },
                     FONT: {
                         items: 'getFontMenuItems',
-                        isTypeable: true,
-                        acceptText: true // for my 3 nitrobolt users :P
+                        acceptReporters: true
                     },
                     SPRITE: {
                         items: 'getSpriteMenuItems'
